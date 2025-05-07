@@ -1,40 +1,5 @@
 use crossterm::event::{Event, KeyCode, KeyEvent, KeyModifiers};
-
-#[derive(Debug, Clone)]
-pub enum Action {
-    Quit,
-    Help,
-    ToggleDebug,
-    Redraw,
-    Up,
-    Down,
-    Left,
-    Right,
-    Enter,
-    Back,
-
-    ToggleTriage,
-    ToggleZenMode,
-    ToggleSpotlight,
-    ToggleSettings,
-
-    NewInboxEntry,
-    AssignInboxTask(String),
-    SetTaskPriority(String, crate::inbox::Priority),
-    TagInboxTask(String, Vec<String>),
-    ArchiveTask(String),
-    TriageTask(String),
-
-    OpenScratchpad,
-    Submit,
-    MoveUp,
-    MoveDown,
-    Exit,
-    Input(char),
-    Backspace,
-    Char(char),
-    Ctrl(char),
-}
+use crate::actions::Action;
 
 pub struct Config;
 

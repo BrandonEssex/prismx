@@ -7,7 +7,7 @@ pub mod state;
 pub mod tests;
 pub mod ui;
 
-use crate::input::Action;
+use crate::actions::Action;
 use crate::spotlight::state::SpotlightState;
 use ratatui::Frame;
 

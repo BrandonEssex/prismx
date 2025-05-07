@@ -60,21 +60,10 @@ impl SpotlightState {
         self.debug_enabled = !self.debug_enabled;
     }
 
-    pub fn toggle_favorite(&mut self) {
-        // Implement integration with favorites module
-    }
-
-    pub fn queue_move(&mut self) {
-        // Implement shard reassignment
-    }
-
-    pub fn queue_delete(&mut self) {
-        // Trigger deletion
-    }
-
-    pub fn queue_export(&mut self) {
-        // Export content to .md
-    }
+    pub fn toggle_favorite(&mut self) {}
+    pub fn queue_move(&mut self) {}
+    pub fn queue_delete(&mut self) {}
+    pub fn queue_export(&mut self) {}
 
     fn refresh_matches(&mut self) {
         self.matched = self.engine.search(&self.query, self.scope.clone());

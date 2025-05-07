@@ -1,7 +1,7 @@
 use crate::actions::Action;
 use crate::state::AppState;
 use crate::view_triage::draw_triage_view;
-use crate::zen_mode::{ZenModeState};
+use crate::zen_mode::ZenModeState;
 use crate::scratchpad::Scratchpad;
 use crate::config::ZenConfig;
 use crate::spotlight::SpotlightModule;
@@ -31,7 +31,7 @@ impl Screen {
         }
     }
 
-    pub fn handle_event<B: Backend>(
+    pub fn handle_event(
         &mut self,
         evt: Event,
         action: Option<Action>,
@@ -83,7 +83,7 @@ impl Screen {
         }
     }
 
-    pub fn draw<B: Backend>(&mut self, f: &mut Frame<B>) {
+    pub fn draw(&mut self, f: &mut Frame) {
         match self.mode {
             Mode::Zen => {
                 if let Some(scratchpad) = &self.scratchpad {
@@ -91,13 +91,12 @@ impl Screen {
                 }
             }
             Mode::Triage => {
-                // Add Triage view rendering if needed
+                draw_triage_view(f, &AppState::default());
             }
             Mode::Spotlight => {
                 self.spotlight.render(f);
             }
             Mode::Normal => {
-                // Render standard dashboard or fallback
                 let area = f.size();
                 let paragraph = ratatui::widgets::Paragraph::new("Welcome to PrismX")
                     .block(ratatui::widgets::Block::default().title("PrismX").borders(ratatui::widgets::Borders::ALL));
