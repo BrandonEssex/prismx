@@ -1,0 +1,22 @@
+[package]
+name = "prismx"
+version = "0.1.0"
+edition = "2021"
+authors = ["PrismX Development Team"]
+description = "A modular terminal-based organizer for engineers, with plugin support, Zen mode, Spotlight search, and full TUI routing."
+
+[dependencies]
+crossterm = "0.27"
+ratatui = "0.26"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+uuid = { version = "1.4", features = ["v4"] }
+chrono = { version = "0.4", features = ["serde"] }
+log = "0.4"
+simplelog = "0.12"
+dirs = "5.0"
+tokio = { version = "1.37", features = ["full"] }
+wasmtime = "14.0"
+anyhow = "1.0"
+thiserror = "1.0"
+fuzzy-matcher = "0.3"

@@ -1,0 +1,18 @@
+{
+  "default": {
+    "border_color": "white",
+    "background_color": "black"
+  },
+  "mindmap": {
+    "border_color": "blue",
+    "background_color": "black"
+  },
+  "pinned": {
+    "border_color": "green",
+    "background_color": "black"
+  },
+  "extensions": {
+    "border_color": "magenta",
+    "background_color": "black"
+  }
+}

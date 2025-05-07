@@ -1,0 +1,24 @@
+{
+  "widgets": [
+    {
+      "widget_type": "mindmap",
+      "position": { "x": 0, "y": 0 },
+      "size": { "width": 50, "height": 20 },
+      "enabled": true
+    },
+    {
+      "widget_type": "pinned",
+      "position": { "x": 50, "y": 0 },
+      "size": { "width": 30, "height": 10 },
+      "enabled": true
+    },
+    {
+      "widget_type": "extensions",
+      "position": { "x": 50, "y": 10 },
+      "size": { "width": 30, "height": 10 },
+      "enabled": true
+    }
+  ],
+  "layout_version": "1.0",
+  "grid_snap": 5
+}

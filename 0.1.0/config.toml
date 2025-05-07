@@ -1,0 +1,8 @@
+[zen_mode]
+title_fade_delay_secs = 2
+autosave_interval_secs = 10
+scratchpad_path = "~/.config/prismx/zen_scratchpad.md"
+
+[extension_host]
+plugin_dir = "extensions/"
+log_level = "info"

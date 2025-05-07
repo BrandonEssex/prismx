@@ -1,0 +1,3 @@
+# Zen Scratchpad
+
+Start typing here...

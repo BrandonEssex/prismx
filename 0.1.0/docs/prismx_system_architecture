@@ -1,0 +1,75 @@
++---------------------------+
+|     PrismX Entry Point    |
+|   (main.rs + app.rs)      |
++------------+--------------+
+             |
+             v
++----------------------------+
+|        AppState            |<-------------------------------+
+|  - inbox: InboxState       |                                |
+|  - zen_state: ZenModeState |                                |
+|  - spotlight: Spotlight    |                                |
+|  - extension_host: Host    |                                |
+|  - config: Config          |                                |
++-----------+----------------+                                |
+            |                                                 |
+            v                                                 |
++-----------------------------+       +------------------------+
+|         Input               |       |       Tick Loop        |
+|   (input.rs → Action enum) |       |   (autosave, timers)   |
++--------------+--------------+       +-----------+------------+
+               |                                  |
+               v                                  v
++------------------------------+     +----------------------------+
+|         Screen               |     |     Periodic Updates       |
+| (screen.rs → match Mode)     |     |  - Autosave (Zen, Inbox)   |
+|                              |     |  - Scratchpad sync         |
++--------+----------+----------+     +----------------------------+
+         |          |       
+         |          v
+         |     +----------------------------+
+         |     |      Zen Mode (TUI)        |
+         |     |  - scratchpad buffer       |
+         |     |  - title fade, autosave    |
+         |     +----------------------------+
+         |
+         |          +-------------------------------+
+         |          |       Inbox/Triage View        |
+         |          |  - task list renderer           |
+         |          |  - archive, tag, assign         |
+         |          +-------------------------------+
+         |
+         |          +-----------------------------+
+         |          |     Spotlight Overlay       |
+         |          | - fuzzy matcher (Skim)      |
+         |          | - plugins, scoring, actions |
+         |          +-----------------------------+
+         |
+         |          +-------------------------------+
+         |          |        Dashboard (TUI)         |
+         |          | - widgets (mindmap, pinned...) |
+         |          +-------------------------------+
+
+
+
+## Additionaly component relationships
+
+[Zen Mode] <--> [Scratchpad.rs] <--> ~/.config/prismx/zen_scratchpad.md
+                                  --> Autosave to disk
+                                  --> Template fallback
+
+[Spotlight Engine] <--> [Searchable Plugins] via trait injection
+                      <--> Favorites System (score boosts)
+                      <--> Exports folder (Markdown .md)
+
+[Extension Host] --> [Wasmtime Sandbox]
+                  --> [Capability Model]
+                  --> [Profiling] (CPU/mem estimation)
+                  --> [Logs / stdout isolation]
+
+[Inbox Storage] --> inbox.json + inbox.bak
+[Mindmap Engine] --> mindmaps.json + mindmaps_backup.json
+[Dashboard] --> dashboard_config.json
+[Logger] --> spotlight.log, zen_debug.log, plugin logs
+
+[Global Config] --> ~/.config/prismx/config.toml

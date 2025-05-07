@@ -1,0 +1,7 @@
+{
+  "name": "Example Plugin",
+  "author": "PrismX Dev",
+  "version": "0.1.0",
+  "prismx_api_version": "0.1.0",
+  "entrypoint": "run"
+}
