@@ -1,7 +1,8 @@
-//! Sandbox environment management using Wasmtime.
-
-use wasmtime::{Engine, Store, Module, Instance, Limits, Config};
-use crate::{Plugin, Capability, PermissionSet, errors::{Result, ExtensionHostError}};
+use wasmtime::{Engine, Store, Module, Instance, Config};
+use super::plugin::Plugin;
+use super::capability::{Capability, PermissionSet};
+use super::errors::{Result, ExtensionHostError};
+use super::profiler::ResourceProfileReport;
 use tracing::{info, warn, debug};
 
 pub struct Sandbox {
@@ -25,17 +26,23 @@ impl Default for Sandbox {
 }
 
 impl Sandbox {
-    pub fn adjust_limits(&mut self, profile_report: &crate::ResourceProfileReport) -> Result<()> {
+    pub fn adjust_limits(&mut self, profile_report: &ResourceProfileReport) -> Result<()> {
         debug!("Adjusting sandbox limits based on profiling");
         if profile_report.estimated_memory_bytes > self.memory_limit {
-            warn!("Plugin estimated memory ({}) exceeds default limit ({}); adjusting accordingly.",
-                  profile_report.estimated_memory_bytes, self.memory_limit);
+            warn!(
+                "Plugin estimated memory ({}) exceeds default limit ({}); adjusting.",
+                profile_report.estimated_memory_bytes,
+                self.memory_limit
+            );
             self.memory_limit = profile_report.estimated_memory_bytes;
         }
 
         if profile_report.estimated_cpu_cycles > self.cpu_cycles {
-            warn!("Plugin estimated CPU cycles ({}) exceed default limit ({}); adjusting accordingly.",
-                  profile_report.estimated_cpu_cycles, self.cpu_cycles);
+            warn!(
+                "Plugin estimated CPU cycles ({}) exceed default limit ({}); adjusting.",
+                profile_report.estimated_cpu_cycles,
+                self.cpu_cycles
+            );
             self.cpu_cycles = profile_report.estimated_cpu_cycles;
         }
 

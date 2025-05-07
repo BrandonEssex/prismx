@@ -33,7 +33,9 @@ impl ResourceProfiler {
         let module = Module::from_binary(&self.engine, wasm_bytes)
             .map_err(|e| ExtensionHostError::ProfilingError(e.to_string()))?;
 
-        let estimated_memory_bytes = module.serialize()?.len() * 2;
+        let estimated_memory_bytes = module.serialize()
+            .map_err(|e| ExtensionHostError::ProfilingError(e.to_string()))?
+            .len() * 2;
         let estimated_cpu_cycles = (estimated_memory_bytes as u64) * 10;
 
         let mut warnings = Vec::new();
