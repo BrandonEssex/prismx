@@ -6,6 +6,7 @@ pub enum Action {
     Help,
     ToggleDebug,
     Redraw,
+
     Up,
     Down,
     Left,
@@ -24,6 +25,4 @@ pub enum Action {
     TagInboxTask(String, Vec<String>),
     ArchiveTask(String),
     TriageTask(String),
-
-    OpenScratchpad,
 }

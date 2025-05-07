@@ -1,9 +1,7 @@
 [package]
 name = "prismx"
-version = "0.1.2"
+version = "0.1.6"
 edition = "2021"
-authors = ["PrismX Development Team"]
-description = "A modular terminal-based organizer for engineers, with plugin support, Zen mode, Spotlight search, and full TUI routing."
 
 [dependencies]
 crossterm = "0.27"

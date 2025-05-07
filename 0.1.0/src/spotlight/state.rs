@@ -51,7 +51,6 @@ impl SpotlightState {
 
     pub fn activate_selected(&mut self) {
         if let Some(selected) = self.matched.get(self.selected) {
-            // Integration hook: `ctx.open_by_uid(&selected.uid)`
             log::info!("Activated UID: {}", selected.uid);
             self.close();
         }

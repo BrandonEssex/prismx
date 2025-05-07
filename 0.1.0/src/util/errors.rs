@@ -1,6 +1,6 @@
 use thiserror::Error;
 
-#[derive(Error, Debug)]
+#[derive(Debug, Error)]
 pub enum MindmapError {
     #[error("Node not found: {0}")]
     NodeNotFound(u64),

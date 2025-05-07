@@ -32,15 +32,6 @@ impl ZenModeState {
         }
     }
 
-    pub fn should_fade_title(&self) -> bool {
-        match self {
-            ZenModeState::Active { last_fade, config, .. } => {
-                last_fade.elapsed() >= config.title_fade_delay
-            }
-            _ => false,
-        }
-    }
-
     pub fn render_active_ui(&self, frame: &mut ratatui::Frame, scratchpad: &Scratchpad) {
         use ratatui::widgets::{Block, Paragraph, Borders};
         use ratatui::layout::{Layout, Constraint, Direction};

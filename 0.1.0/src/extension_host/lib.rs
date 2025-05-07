@@ -1,8 +1,8 @@
 use super::sandbox::Sandbox;
-use super::plugin::{Plugin, PluginManifest};
-use super::profiler::{ResourceProfiler, ResourceProfileReport};
-use super::capability::{Capability, PermissionSet};
-use super::errors::{ExtensionHostError, Result};
+use super::plugin::Plugin;
+use super::profiler::ResourceProfiler;
+use super::capability::PermissionSet;
+use super::errors::Result;
 use tracing::{debug, info};
 
 pub struct ExtensionHost {

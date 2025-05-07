@@ -1,6 +1,6 @@
 use wasmtime::{Engine, Store, Module, Instance, Config};
 use super::plugin::Plugin;
-use super::capability::{Capability, PermissionSet};
+use super::capability::PermissionSet;
 use super::errors::{Result, ExtensionHostError};
 use super::profiler::ResourceProfileReport;
 use tracing::{info, warn, debug};
