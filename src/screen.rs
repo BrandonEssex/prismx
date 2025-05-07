@@ -1,7 +1,7 @@
 use crate::actions::Action;
 use crate::state::AppState;
 use crate::spotlight::SpotlightModule;
-use ratatui::{Frame, Terminal};
+use ratatui::Frame;
 use crossterm::event::Event;
 
 pub struct Screen {
@@ -15,7 +15,7 @@ impl Screen {
         }
     }
 
-    pub fn handle_event(&mut self, evt: Event, action: Option<Action>, state: &mut AppState) -> bool {
+    pub fn handle_event(&mut self, _evt: Event, action: Option<Action>, state: &mut AppState) -> bool {
         match action {
             Some(Action::Quit) => return false,
             Some(act) => {
@@ -27,10 +27,7 @@ impl Screen {
         true
     }
 
-    pub fn draw<B>(&mut self, f: &mut Frame<B>)
-    where
-        B: ratatui::backend::Backend,
-    {
+    pub fn draw(&mut self, f: &mut Frame) {
         self.spotlight.render(f);
     }
 }

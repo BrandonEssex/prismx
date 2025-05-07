@@ -6,10 +6,9 @@ pub mod plugin;
 pub mod state;
 pub mod ui;
 
-use crate::input::Action;
-use crate::screen::AppState;
+use crate::actions::Action;
+use crate::state::AppState;
 use ratatui::Frame;
-use ratatui::backend::Backend;
 use state::SpotlightState;
 
 pub struct SpotlightModule {
@@ -23,22 +22,19 @@ impl SpotlightModule {
         }
     }
 
-    pub fn handle_action(&mut self, action: Action, _state: &mut AppState) -> bool {
+    pub fn handle_action(&mut self, action: Action, state: &mut AppState) -> bool {
         match action {
             Action::Char(c) => self.state.update_query(c),
             Action::Backspace => self.state.backspace(),
             Action::MoveUp => self.state.move_up(),
             Action::MoveDown => self.state.move_down(),
+            Action::Enter => self.state.activate_selected(state),
             _ => {}
         }
         true
     }
 
-    pub fn render<B: Backend>(&mut self, f: &mut Frame<B>) {
+    pub fn render(&mut self, f: &mut Frame) {
         ui::render_overlay(f, &mut self.state);
-    }
-
-    pub fn set_engine(&mut self, engine: engine::SpotlightEngine) {
-        self.state.set_engine(engine);
     }
 }

@@ -1,6 +1,6 @@
 use thiserror::Error;
 
-#[derive(Debug, Error)]
+#[derive(Error, Debug)]
 pub enum ExtensionHostError {
     #[error("Plugin manifest not found at path: {0}")]
     ManifestNotFound(String),
@@ -38,3 +38,5 @@ pub enum ExtensionHostError {
     #[error("Permission set error: {0}")]
     PermissionSetError(String),
 }
+
+pub type Result<T> = std::result::Result<T, ExtensionHostError>;
