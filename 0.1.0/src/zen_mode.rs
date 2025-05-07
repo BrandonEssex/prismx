@@ -36,7 +36,7 @@ impl ZenModeState {
     }
 
     pub fn render_active_ui(&self, frame: &mut ratatui::Frame, scratchpad: &Scratchpad) {
-        use ratatui::widgets::{Block, Paragraph, Borders};
+        use ratatui::widgets::{Block, Paragraph, Borders, Wrap};
         use ratatui::layout::{Layout, Constraint, Direction};
         use ratatui::style::{Style, Modifier};
 
@@ -57,7 +57,8 @@ impl ZenModeState {
             }
 
             let content = Paragraph::new(scratchpad.get_buffer())
-                .block(Block::default().borders(Borders::NONE));
+                .wrap(Wrap { trim: true })
+                .block(Block::default().borders(Borders::ALL).title("Scratchpad"));
             frame.render_widget(content, chunks[1]);
         }
     }
