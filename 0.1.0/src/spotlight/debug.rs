@@ -4,7 +4,7 @@ use chrono::Local;
 use ratatui::{
     layout::{Alignment, Constraint, Direction, Layout, Rect},
     style::{Style, Modifier},
-    text::{Span, Spans},
+    text::{Span, Line},
     widgets::{Block, Borders, Paragraph},
     Frame,
 };
@@ -36,24 +36,14 @@ pub fn render_debug_overlay(f: &mut Frame, state: &SpotlightState, area: Rect) {
         .split(area);
 
     let debug_text = vec![
-        Spans::from(vec![
+        Line::from(vec![
             Span::styled("📊 Spotlight Debug Info", Style::default().add_modifier(Modifier::BOLD)),
         ]),
-        Spans::from(vec![
-            Span::raw(format!("Query: {}", state.query)),
-        ]),
-        Spans::from(vec![
-            Span::raw(format!("Matched Results: {}", state.matched.len())),
-        ]),
-        Spans::from(vec![
-            Span::raw(format!("Selected Index: {}", state.selected)),
-        ]),
-        Spans::from(vec![
-            Span::raw(format!("Scope: {:?}", state.scope)),
-        ]),
-        Spans::from(vec![
-            Span::raw(format!("Debug Enabled: {}", state.debug_enabled)),
-        ]),
+        Line::from(vec![Span::raw(format!("Query: {}", state.query))]),
+        Line::from(vec![Span::raw(format!("Matched Results: {}", state.matched.len()))]),
+        Line::from(vec![Span::raw(format!("Selected Index: {}", state.selected))]),
+        Line::from(vec![Span::raw(format!("Scope: {:?}", state.scope))]),
+        Line::from(vec![Span::raw(format!("Debug Enabled: {}", state.debug_enabled))]),
     ];
 
     let debug_paragraph = Paragraph::new(debug_text)

@@ -1,4 +1,4 @@
-use std::time::{Duration, Instant};
+use std::time::Instant;
 use std::path::PathBuf;
 use crate::scratchpad::Scratchpad;
 use crate::config::ZenConfig;
