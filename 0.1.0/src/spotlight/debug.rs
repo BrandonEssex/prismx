@@ -1,14 +1,12 @@
-use std::fs::{OpenOptions};
+use std::fs::OpenOptions;
 use std::io::Write;
-use std::path::Path;
-
 use chrono::Local;
 use ratatui::{
     layout::{Alignment, Constraint, Direction, Layout, Rect},
     style::{Style, Modifier},
-    text::{Span, Spans},
+    text::{Span, Line},
     widgets::{Block, Borders, Paragraph},
-    Frame, backend::Backend,
+    Frame,
 };
 
 use super::state::SpotlightState;
@@ -29,7 +27,7 @@ pub fn log_event(message: &str) {
     }
 }
 
-pub fn render_debug_overlay<B: Backend>(f: &mut Frame<B>, state: &SpotlightState, area: Rect) {
+pub fn render_debug_overlay(f: &mut Frame, state: &SpotlightState, area: Rect) {
     let chunks = Layout::default()
         .direction(Direction::Vertical)
         .constraints([
@@ -38,28 +36,16 @@ pub fn render_debug_overlay<B: Backend>(f: &mut Frame<B>, state: &SpotlightState
         ])
         .split(area);
 
-    let debug_text = vec![
-        Spans::from(vec![
-            Span::styled("📊 Spotlight Debug Info", Style::default().add_modifier(Modifier::BOLD)),
-        ]),
-        Spans::from(vec![
-            Span::raw(format!("Query: {}", state.query)),
-        ]),
-        Spans::from(vec![
-            Span::raw(format!("Matched Results: {}", state.matched.len())),
-        ]),
-        Spans::from(vec![
-            Span::raw(format!("Selected Index: {}", state.selected)),
-        ]),
-        Spans::from(vec![
-            Span::raw(format!("Scope: {:?}", state.scope)),
-        ]),
-        Spans::from(vec![
-            Span::raw(format!("Debug Enabled: {}", state.debug_enabled)),
-        ]),
+    let debug_lines = vec![
+        Line::from(Span::styled("📊 Spotlight Debug Info", Style::default().add_modifier(Modifier::BOLD))),
+        Line::from(format!("Query: {}", state.query)),
+        Line::from(format!("Matched Results: {}", state.matched.len())),
+        Line::from(format!("Selected Index: {}", state.selected)),
+        Line::from(format!("Scope: {:?}", state.scope)),
+        Line::from(format!("Debug Enabled: {}", state.debug_enabled)),
     ];
 
-    let debug_paragraph = Paragraph::new(debug_text)
+    let debug_paragraph = Paragraph::new(debug_lines)
         .alignment(Alignment::Left)
         .block(Block::default().borders(Borders::ALL).title("Spotlight Debug"));
 

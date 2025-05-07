@@ -11,6 +11,7 @@ pub struct SearchResult {
     pub score: i64,
 }
 
+#[derive(Default)]
 pub struct SpotlightEngine {
     matcher: SkimMatcherV2,
     notes: Vec<Arc<dyn Searchable>>,
@@ -21,13 +22,7 @@ pub struct SpotlightEngine {
 
 impl SpotlightEngine {
     pub fn new() -> Self {
-        SpotlightEngine {
-            matcher: SkimMatcherV2::default(),
-            notes: vec![],
-            todos: vec![],
-            projects: vec![],
-            plugins: vec![],
-        }
+        Self::default()
     }
 
     pub fn update_notes(&mut self, items: Vec<Arc<dyn Searchable>>) {
@@ -69,7 +64,7 @@ impl SpotlightEngine {
         let mut results = Vec::new();
 
         for item in items {
-            if let Some((score, _indices)) = self.matcher.fuzzy_match(&item.searchable_text(), query).map(|s| (s, vec![])) {
+            if let Some(score) = self.matcher.fuzzy_match(&item.searchable_text(), query) {
                 results.push(SearchResult {
                     uid: item.uid(),
                     display_title: item.display_title(),

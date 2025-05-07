@@ -1,8 +1,9 @@
 use std::collections::HashMap;
 use std::sync::Arc;
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Default)]
 pub enum SearchScope {
+    #[default]
     All,
     Notes,
     Todos,

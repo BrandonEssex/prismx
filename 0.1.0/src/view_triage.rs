@@ -1,15 +1,14 @@
 use crate::inbox::{InboxTask, TaskStatus};
 use crate::state::AppState;
 use ratatui::{
-    backend::Backend,
     layout::{Constraint, Direction, Layout},
     style::{Modifier, Style},
-    text::{Span, Spans},
+    text::{Span, Line},
     widgets::{Block, Borders, List, ListItem, Paragraph},
     Frame,
 };
 
-pub fn draw_triage_view<B: Backend>(frame: &mut Frame<B>, state: &AppState) {
+pub fn draw_triage_view(frame: &mut Frame, state: &AppState) {
     let size = frame.size();
 
     let chunks = Layout::default()
@@ -33,24 +32,21 @@ pub fn draw_triage_view<B: Backend>(frame: &mut Frame<B>, state: &AppState) {
     let items: Vec<ListItem> = inbox_tasks
         .iter()
         .map(|task| {
-            let mut spans = vec![
-                Span::raw(format!("• [{}] ", task.priority.to_string())),
-                Span::styled(&task.title, Style::default().add_modifier(Modifier::BOLD)),
-            ];
+            let mut line = format!("• [{}] {}", task.priority, task.title);
 
             if let Some(ref shard) = task.shard {
-                spans.push(Span::raw(format!(" | Shard: {}", shard)));
+                line.push_str(&format!(" | Shard: {}", shard));
             }
 
             if !task.tags.is_empty() {
-                spans.push(Span::raw(format!(" | Tags: {}", task.tags.join(", "))));
+                line.push_str(&format!(" | Tags: {}", task.tags.join(", ")));
             }
 
             if let Some(ref owner) = task.assigned_to {
-                spans.push(Span::raw(format!(" | Assigned: {}", owner)));
+                line.push_str(&format!(" | Assigned: {}", owner));
             }
 
-            ListItem::new(Spans::from(spans))
+            ListItem::new(Line::from(Span::raw(line)))
         })
         .collect();
 

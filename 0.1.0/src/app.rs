@@ -8,6 +8,7 @@ use crossterm::{
 use ratatui::backend::CrosstermBackend;
 use ratatui::Terminal;
 use std::io::stdout;
+use std::path::PathBuf;
 
 pub fn run_app() -> anyhow::Result<()> {
     enable_raw_mode()?;
@@ -20,7 +21,7 @@ pub fn run_app() -> anyhow::Result<()> {
     let mut screen = Screen::new();
 
     loop {
-        terminal.draw(|f| screen.draw(f, &mut app_state))?;
+        terminal.draw(|f| screen.draw(f))?;
 
         if let Some(event) = config.poll_event()? {
             let continue_running = screen.handle_event(event, &mut app_state);

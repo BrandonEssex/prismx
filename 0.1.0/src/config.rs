@@ -1,7 +1,7 @@
 use std::path::PathBuf;
 use std::time::Duration;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct ZenConfig {
     pub title_fade_delay: Duration,
     pub autosave_interval: Duration,

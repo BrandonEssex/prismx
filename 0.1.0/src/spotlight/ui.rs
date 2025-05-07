@@ -1,8 +1,7 @@
 use ratatui::{
-    backend::Backend,
     layout::{Alignment, Constraint, Direction, Layout, Rect},
     style::{Modifier, Style},
-    text::{Span, Spans},
+    text::{Span, Line},
     widgets::{Block, Borders, List, ListItem, Paragraph},
     Frame,
 };
@@ -10,7 +9,7 @@ use ratatui::{
 use super::state::SpotlightState;
 use super::debug::render_debug_overlay;
 
-pub fn render_overlay<B: Backend>(f: &mut Frame<B>, state: &mut SpotlightState) {
+pub fn render_overlay(f: &mut Frame, state: &mut SpotlightState) {
     let size = f.size();
     let area = centered_rect(80, 60, size);
     let chunks = Layout::default()
@@ -36,7 +35,7 @@ pub fn render_overlay<B: Backend>(f: &mut Frame<B>, state: &mut SpotlightState) 
             if i == state.selected {
                 style = style.add_modifier(Modifier::REVERSED);
             }
-            ListItem::new(Spans::from(vec![Span::styled(res.display_title.clone(), style)]))
+            ListItem::new(Line::from(Span::styled(res.display_title.clone(), style)))
         })
         .collect();
 

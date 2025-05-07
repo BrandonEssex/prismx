@@ -1,11 +1,10 @@
 use std::path::PathBuf;
-use crate::inbox::{InboxState};
+use crate::inbox::InboxState;
 use crate::storage::inbox_storage::{load_inbox_from_disk, save_inbox_to_disk};
 
 pub struct AppState {
     pub inbox: InboxState,
     pub inbox_path: PathBuf,
-    // Add other module state fields here (zen_state, spotlight, etc.)
 }
 
 impl AppState {
@@ -19,14 +18,18 @@ impl AppState {
     }
 
     pub fn save_inbox(&self) {
-        if let Err(e) = save_inbox_to_disk(&self.inbox_path, &self.inbox) {
-            eprintln!("Failed to save inbox state: {:?}", e);
-        }
+        let _ = save_inbox_to_disk(&self.inbox_path, &self.inbox);
     }
 
     pub fn load_inbox(&mut self) {
         if let Ok(loaded) = load_inbox_from_disk(&self.inbox_path) {
             self.inbox = loaded;
         }
+    }
+}
+
+impl Default for AppState {
+    fn default() -> Self {
+        Self::new(PathBuf::from("data"))
     }
 }
