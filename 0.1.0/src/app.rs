@@ -1,6 +1,6 @@
 use crate::state::AppState;
 use crate::screen::Screen;
-use crate::input::{Action, Config};
+use crate::input::Config;
 use crossterm::{
     execute,
     terminal::{enable_raw_mode, disable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
@@ -8,7 +8,6 @@ use crossterm::{
 use ratatui::backend::CrosstermBackend;
 use ratatui::Terminal;
 use std::io::stdout;
-use std::path::PathBuf;
 
 pub fn run_app() -> anyhow::Result<()> {
     enable_raw_mode()?;

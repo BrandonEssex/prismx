@@ -1,4 +1,4 @@
-use crossterm::event::{Event, KeyCode, KeyEvent, KeyModifiers, KeyEventKind};
+use crossterm::event::{Event, KeyCode, KeyEvent, KeyModifiers};
 
 #[derive(Debug, Clone)]
 pub enum Action {

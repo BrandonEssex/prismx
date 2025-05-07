@@ -1,8 +1,7 @@
-use std::time::{Duration, Instant};
+use std::time::Instant;
 use std::path::PathBuf;
 use crate::scratchpad::Scratchpad;
 use crate::config::ZenConfig;
-use crate::logger::init_logging;
 
 #[derive(Debug, PartialEq)]
 pub enum ZenModeState {
@@ -19,7 +18,6 @@ impl ZenModeState {
     pub fn toggle(current: &mut ZenModeState, config: ZenConfig) {
         match current {
             ZenModeState::Inactive => {
-                init_logging(); // or log_zen("Zen Mode ACTIVATED");
                 let path = config.scratchpad_path();
                 *current = ZenModeState::Active {
                     title_shown: false,

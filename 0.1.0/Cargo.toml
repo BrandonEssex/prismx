@@ -1,6 +1,6 @@
 [package]
 name = "prismx"
-version = "0.1.0"
+version = "0.1.2"
 edition = "2021"
 authors = ["PrismX Development Team"]
 description = "A modular terminal-based organizer for engineers, with plugin support, Zen mode, Spotlight search, and full TUI routing."
@@ -20,3 +20,6 @@ wasmtime = "14.0"
 anyhow = "1.0"
 thiserror = "1.0"
 fuzzy-matcher = "0.3"
+notify = "6.1.1"
+lazy_static = "1.4"
+tracing = "0.1"

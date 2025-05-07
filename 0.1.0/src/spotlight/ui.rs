@@ -21,7 +21,7 @@ pub fn render_overlay(f: &mut Frame, state: &mut SpotlightState) {
         ])
         .split(area);
 
-    let input = Paragraph::new(state.query.as_ref())
+    let input = Paragraph::new(state.query.as_str())
         .style(Style::default())
         .block(Block::default().borders(Borders::ALL).title("Spotlight Search"));
     f.render_widget(input, chunks[0]);

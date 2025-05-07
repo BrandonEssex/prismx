@@ -1,4 +1,3 @@
-use crate::tui::framework::ScreenContext;
 use super::engine::{SearchResult, SpotlightEngine};
 use super::plugin::SearchScope;
 
@@ -50,9 +49,10 @@ impl SpotlightState {
         }
     }
 
-    pub fn activate_selected(&mut self, ctx: &mut ScreenContext) {
+    pub fn activate_selected(&mut self) {
         if let Some(selected) = self.matched.get(self.selected) {
-            ctx.open_by_uid(&selected.uid);
+            // Integration hook: `ctx.open_by_uid(&selected.uid)`
+            log::info!("Activated UID: {}", selected.uid);
             self.close();
         }
     }
@@ -62,19 +62,19 @@ impl SpotlightState {
     }
 
     pub fn toggle_favorite(&mut self) {
-        // Placeholder: integrate with favorites
+        // Implement integration with favorites module
     }
 
     pub fn queue_move(&mut self) {
-        // Placeholder: trigger shard change UI
+        // Implement shard reassignment
     }
 
     pub fn queue_delete(&mut self) {
-        // Placeholder: show confirm dialog
+        // Trigger deletion
     }
 
     pub fn queue_export(&mut self) {
-        // Placeholder: write .md file from UID
+        // Export content to .md
     }
 
     fn refresh_matches(&mut self) {

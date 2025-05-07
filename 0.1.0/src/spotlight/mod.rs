@@ -7,10 +7,10 @@ pub mod state;
 pub mod tests;
 pub mod ui;
 
-use crate::tui::framework::{Frame, ScreenContext};
-use crate::tui::input::Action;
-use crate::Mode;
-use state::SpotlightState;
+use crate::mode::Mode;
+use crate::input::Action;
+use crate::spotlight::state::SpotlightState;
+use ratatui::Frame;
 
 pub struct SpotlightModule {
     state: SpotlightState,
@@ -23,7 +23,7 @@ impl SpotlightModule {
         }
     }
 
-    pub fn handle_action(&mut self, action: Action, ctx: &mut ScreenContext) -> bool {
+    pub fn handle_action(&mut self, action: Action) -> bool {
         if !self.state.is_active {
             return false;
         }
@@ -31,7 +31,7 @@ impl SpotlightModule {
         match action {
             Action::MoveUp => self.state.move_up(),
             Action::MoveDown => self.state.move_down(),
-            Action::Submit => self.state.activate_selected(ctx),
+            Action::Submit => self.state.activate_selected(),
             Action::Exit => self.state.close(),
             Action::Char('m') => self.state.queue_move(),
             Action::Char('x') => self.state.queue_delete(),
@@ -48,7 +48,7 @@ impl SpotlightModule {
 
     pub fn render(&mut self, f: &mut Frame) {
         if self.state.is_active {
-            ui::render_overlay(f, &mut self.state);
+            crate::spotlight::ui::render_overlay(f, &mut self.state);
         }
     }
 
