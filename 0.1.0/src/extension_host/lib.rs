@@ -1,28 +1,16 @@
-//! PrismX Extension Host Library
-//! Main orchestrator for plugin sandboxing, profiling, and capability management.
-
-mod sandbox;
-mod plugin;
-mod profiler;
-mod capability;
-mod errors;
-
-pub use sandbox::Sandbox;
-pub use plugin::{Plugin, PluginManifest};
-pub use profiler::{ResourceProfiler, ResourceProfileReport};
-pub use capability::{Capability, PermissionSet};
-pub use errors::{ExtensionHostError, Result};
-
+use super::sandbox::Sandbox;
+use super::plugin::{Plugin, PluginManifest};
+use super::profiler::{ResourceProfiler, ResourceProfileReport};
+use super::capability::{Capability, PermissionSet};
+use super::errors::{ExtensionHostError, Result};
 use tracing::{debug, info};
 
-/// Central entry point orchestrating plugin loading, sandboxing, profiling, and capability enforcement.
 pub struct ExtensionHost {
     sandbox: Sandbox,
     profiler: ResourceProfiler,
 }
 
 impl ExtensionHost {
-    /// Creates a new ExtensionHost instance with default settings.
     pub fn new() -> Self {
         debug!("Initializing PrismX ExtensionHost");
         Self {
@@ -31,7 +19,6 @@ impl ExtensionHost {
         }
     }
 
-    /// Loads, profiles, and safely executes a plugin at the given path.
     pub fn load_plugin(&mut self, plugin_path: &str, permissions: PermissionSet) -> Result<()> {
         info!("Loading plugin: {}", plugin_path);
 

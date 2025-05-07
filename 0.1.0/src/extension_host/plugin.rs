@@ -1,7 +1,5 @@
-//! Plugin definition and loading utilities for PrismX Extension Host.
-
 use serde::Deserialize;
-use crate::errors::{Result, ExtensionHostError};
+use super::errors::{Result, ExtensionHostError};
 use std::{fs, path::Path};
 use tracing::{debug, warn};
 
@@ -22,7 +20,6 @@ pub struct Plugin {
 }
 
 impl Plugin {
-    /// Loads a plugin from a `.prismx-ext` directory containing `plugin.wasm` and `prismx-plugin.json`.
     pub fn from_path<P: AsRef<Path>>(path: P) -> Result<Self> {
         debug!("Loading plugin from path: {:?}", path.as_ref());
 

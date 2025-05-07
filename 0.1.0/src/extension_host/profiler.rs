@@ -1,50 +1,59 @@
-//! Plugin definition and loading utilities for PrismX Extension Host.
+use wasmtime::{Engine, Module};
+use super::errors::{Result, ExtensionHostError};
+use tracing::{debug, warn, info};
 
-use serde::Deserialize;
-use crate::errors::{Result, ExtensionHostError};
-use std::{fs, path::Path};
-use tracing::{debug, warn};
-
-const PRISMX_API_VERSION: &str = "0.1.0";
-
-#[derive(Debug, Deserialize)]
-pub struct PluginManifest {
-    pub name: String,
-    pub author: String,
-    pub version: String,
-    pub prismx_api_version: String,
-    pub entrypoint: String,
+#[derive(Debug)]
+pub struct ResourceProfileReport {
+    pub estimated_memory_bytes: usize,
+    pub estimated_cpu_cycles: u64,
+    pub warnings: Vec<String>,
+    pub recommendations: Vec<String>,
 }
 
-pub struct Plugin {
-    pub manifest: PluginManifest,
-    pub wasm_bytes: Vec<u8>,
+impl ResourceProfileReport {
+    pub fn log_warnings(&self) {
+        for warning in &self.warnings {
+            warn!("{}", warning);
+        }
+        for recommendation in &self.recommendations {
+            info!("Recommendation: {}", recommendation);
+        }
+    }
 }
 
-impl Plugin {
-    /// Loads a plugin from a `.prismx-ext` directory containing `plugin.wasm` and `prismx-plugin.json`.
-    pub fn from_path<P: AsRef<Path>>(path: P) -> Result<Self> {
-        debug!("Loading plugin from path: {:?}", path.as_ref());
+#[derive(Default)]
+pub struct ResourceProfiler {
+    engine: Engine,
+}
 
-        let manifest_path = path.as_ref().join("prismx-plugin.json");
-        let wasm_path = path.as_ref().join("plugin.wasm");
+impl ResourceProfiler {
+    pub fn profile_plugin(&self, wasm_bytes: &[u8]) -> Result<ResourceProfileReport> {
+        debug!("Profiling plugin resources");
 
-        let manifest_str = fs::read_to_string(&manifest_path)
-            .map_err(|_| ExtensionHostError::ManifestNotFound(manifest_path.display().to_string()))?;
-        let manifest: PluginManifest = serde_json::from_str(&manifest_str)
-            .map_err(|e| ExtensionHostError::ManifestParseError(e.to_string()))?;
+        let module = Module::from_binary(&self.engine, wasm_bytes)
+            .map_err(|e| ExtensionHostError::ProfilingError(e.to_string()))?;
 
-        if manifest.prismx_api_version != PRISMX_API_VERSION {
-            warn!("Plugin API version mismatch: found {}, expected {}", manifest.prismx_api_version, PRISMX_API_VERSION);
-            return Err(ExtensionHostError::IncompatibleApiVersion {
-                expected: PRISMX_API_VERSION.into(),
-                found: manifest.prismx_api_version,
-            });
+        let estimated_memory_bytes = module.serialize()?.len() * 2;
+        let estimated_cpu_cycles = (estimated_memory_bytes as u64) * 10;
+
+        let mut warnings = Vec::new();
+        let mut recommendations = Vec::new();
+
+        if estimated_memory_bytes > 20 * 1024 * 1024 {
+            warnings.push(format!("High memory usage predicted: {} bytes", estimated_memory_bytes));
+            recommendations.push("Consider reducing plugin memory footprint.".into());
         }
 
-        let wasm_bytes = fs::read(&wasm_path)
-            .map_err(|_| ExtensionHostError::WasmBinaryNotFound(wasm_path.display().to_string()))?;
+        if estimated_cpu_cycles > 100_000_000 {
+            warnings.push(format!("High CPU usage predicted: {} cycles", estimated_cpu_cycles));
+            recommendations.push("Optimize computational complexity to reduce CPU load.".into());
+        }
 
-        Ok(Self { manifest, wasm_bytes })
+        Ok(ResourceProfileReport {
+            estimated_memory_bytes,
+            estimated_cpu_cycles,
+            warnings,
+            recommendations,
+        })
     }
 }
