@@ -1,20 +1,22 @@
-use crate::state::AppState;
-use crate::screen::Screen;
 use crate::input::Config;
+use crate::screen::Screen;
+use crate::state::AppState;
+use ratatui::{Terminal, backend::CrosstermBackend};
 use crossterm::{
+    event::{self, DisableMouseCapture, EnableMouseCapture},
     execute,
-    terminal::{enable_raw_mode, disable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
+    terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
 };
-use ratatui::backend::CrosstermBackend;
-use ratatui::Terminal;
-use std::io::stdout;
+use std::io::{stdout, Stdout};
 
 pub fn run_app() -> anyhow::Result<()> {
     enable_raw_mode()?;
     let mut stdout = stdout();
-    execute!(stdout, EnterAlternateScreen)?;
+    execute!(stdout, EnterAlternateScreen, EnableMouseCapture)?;
+
     let backend = CrosstermBackend::new(stdout);
     let mut terminal = Terminal::new(backend)?;
+
     let config = Config;
     let mut app_state = AppState::default();
     let mut screen = Screen::new();
@@ -23,17 +25,15 @@ pub fn run_app() -> anyhow::Result<()> {
         terminal.draw(|f| screen.draw(f))?;
 
         if let Some(event) = config.poll_event()? {
-            let continue_running =
-                screen.handle_event(event.clone(), config.map(event.clone()), &mut app_state);
+            let continue_running = screen.handle_event(event, config.map(event), &mut app_state);
             if !continue_running {
                 break;
             }
         }
-
-        screen.update(&mut app_state);
     }
 
     disable_raw_mode()?;
-    execute!(terminal.backend_mut(), LeaveAlternateScreen)?;
+    execute!(terminal.backend_mut(), LeaveAlternateScreen, DisableMouseCapture)?;
+    terminal.show_cursor()?;
     Ok(())
 }

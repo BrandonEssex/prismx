@@ -1,8 +1,6 @@
 use thiserror::Error;
 
-pub type Result<T> = std::result::Result<T, ExtensionHostError>;
-
-#[derive(Error, Debug)]
+#[derive(Debug, Error)]
 pub enum ExtensionHostError {
     #[error("Plugin manifest not found at path: {0}")]
     ManifestNotFound(String),

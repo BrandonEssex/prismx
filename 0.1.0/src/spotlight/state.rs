@@ -3,30 +3,14 @@ use super::plugin::SearchScope;
 
 #[derive(Default)]
 pub struct SpotlightState {
-    pub is_active: bool,
     pub query: String,
     pub matched: Vec<SearchResult>,
     pub selected: usize,
-    pub scope: SearchScope,
     pub debug_enabled: bool,
     engine: SpotlightEngine,
 }
 
 impl SpotlightState {
-    pub fn open(&mut self) {
-        self.is_active = true;
-        self.query.clear();
-        self.matched.clear();
-        self.selected = 0;
-    }
-
-    pub fn close(&mut self) {
-        self.is_active = false;
-        self.query.clear();
-        self.matched.clear();
-        self.selected = 0;
-    }
-
     pub fn update_query(&mut self, c: char) {
         self.query.push(c);
         self.refresh_matches();
@@ -49,24 +33,8 @@ impl SpotlightState {
         }
     }
 
-    pub fn activate_selected(&mut self) {
-        if let Some(selected) = self.matched.get(self.selected) {
-            log::info!("Activated UID: {}", selected.uid);
-            self.close();
-        }
-    }
-
-    pub fn toggle_debug(&mut self) {
-        self.debug_enabled = !self.debug_enabled;
-    }
-
-    pub fn toggle_favorite(&mut self) {}
-    pub fn queue_move(&mut self) {}
-    pub fn queue_delete(&mut self) {}
-    pub fn queue_export(&mut self) {}
-
     fn refresh_matches(&mut self) {
-        self.matched = self.engine.search(&self.query, self.scope.clone());
+        self.matched = self.engine.search(&self.query, SearchScope::All);
         self.selected = 0;
     }
 

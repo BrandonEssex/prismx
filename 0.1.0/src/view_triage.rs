@@ -1,52 +1,43 @@
-use crate::inbox::{InboxTask, TaskStatus};
-use crate::state::AppState;
 use ratatui::{
     layout::{Constraint, Direction, Layout},
     style::{Modifier, Style},
-    text::{Span, Line},
+    text::{Line, Span},
     widgets::{Block, Borders, List, ListItem, Paragraph},
     Frame,
 };
+use crate::state::AppState;
+use crate::inbox::{TaskStatus, Priority};
 
-pub fn draw_triage_view(frame: &mut Frame, state: &AppState) {
-    let size = frame.size();
-
+pub fn draw_triage_view(f: &mut Frame, state: &AppState) {
+    let size = f.size();
     let chunks = Layout::default()
         .direction(Direction::Vertical)
-        .constraints(
-            [
-                Constraint::Length(3),
-                Constraint::Min(1),
-            ]
-            .as_ref(),
-        )
+        .constraints([Constraint::Length(3), Constraint::Min(1)].as_ref())
         .split(size);
 
     let header = Paragraph::new("📥 Triage Inbox — Use arrows to navigate, Ctrl+D to archive")
         .block(Block::default().borders(Borders::ALL).title("Inbox Triage"))
         .style(Style::default().add_modifier(Modifier::BOLD));
-    frame.render_widget(header, chunks[0]);
+    f.render_widget(header, chunks[0]);
 
-    let inbox_tasks: Vec<&InboxTask> = state.inbox.list_by_status(TaskStatus::Inbox);
+    let inbox_tasks: Vec<_> = state.inbox.list_by_status(TaskStatus::Inbox);
 
     let items: Vec<ListItem> = inbox_tasks
         .iter()
         .map(|task| {
-            let mut line = format!("• [{}] {}", task.priority, task.title);
+            let mut line = format!("• [{}] {}", format!("{:?}", task.priority), task.title);
 
-            if let Some(ref shard) = task.shard {
+            if let Some(shard) = &task.shard {
                 line.push_str(&format!(" | Shard: {}", shard));
             }
-
             if !task.tags.is_empty() {
                 line.push_str(&format!(" | Tags: {}", task.tags.join(", ")));
             }
-
-            if let Some(ref owner) = task.assigned_to {
+            if let Some(owner) = &task.assigned_to {
                 line.push_str(&format!(" | Assigned: {}", owner));
             }
 
-            ListItem::new(Line::from(Span::raw(line)))
+            ListItem::new(Line::from(vec![Span::raw(line)]))
         })
         .collect();
 
@@ -54,5 +45,5 @@ pub fn draw_triage_view(frame: &mut Frame, state: &AppState) {
         .block(Block::default().borders(Borders::ALL).title("Inbox Tasks"))
         .highlight_symbol(">> ");
 
-    frame.render_widget(list, chunks[1]);
+    f.render_widget(list, chunks[1]);
 }

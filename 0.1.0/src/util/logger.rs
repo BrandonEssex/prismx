@@ -1,14 +1,18 @@
-use simplelog::*;
-use std::fs::File;
-
-pub fn init_logger() -> Result<(), Box<dyn std::error::Error>> {
-    CombinedLogger::init(vec![
-        TermLogger::new(LevelFilter::Info, Config::default(), TerminalMode::Mixed, ColorChoice::Auto),
-        WriteLogger::new(LevelFilter::Debug, Config::default(), File::create("logs/zen_debug.log")?),
-    ])?;
-    Ok(())
-}
+use chrono::Local;
+use std::fs::{create_dir_all, OpenOptions};
+use std::io::Write;
 
 pub fn log_zen(msg: &str) {
-    log::info!("[ZEN] {}", msg);
+    let log_dir = "logs";
+    let log_file = format!("{}/zen_debug.log", log_dir);
+    let _ = create_dir_all(log_dir);
+
+    if let Ok(mut file) = OpenOptions::new()
+        .create(true)
+        .append(true)
+        .open(&log_file)
+    {
+        let timestamp = Local::now().format("%Y-%m-%d %H:%M:%S");
+        let _ = writeln!(file, "[{}] {}", timestamp, msg);
+    }
 }

@@ -19,31 +19,6 @@ impl Favorites {
         }
     }
 
-    pub fn mark_accessed(&mut self, uid: &str) {
-        let entry = self.map.entry(uid.to_string()).or_insert(UsageMetadata {
-            count: 0,
-            last_access: Local::now(),
-            pinned: false,
-        });
-
-        entry.count += 1;
-        entry.last_access = Local::now();
-    }
-
-    pub fn toggle_pin(&mut self, uid: &str) {
-        let entry = self.map.entry(uid.to_string()).or_insert(UsageMetadata {
-            count: 0,
-            last_access: Local::now(),
-            pinned: false,
-        });
-
-        entry.pinned = !entry.pinned;
-    }
-
-    pub fn is_pinned(&self, uid: &str) -> bool {
-        self.map.get(uid).map_or(false, |m| m.pinned)
-    }
-
     pub fn get_boost_score(&self, uid: &str) -> i64 {
         if let Some(meta) = self.map.get(uid) {
             let mut score = 0;
@@ -66,15 +41,5 @@ impl Favorites {
         } else {
             0
         }
-    }
-
-    pub fn merge_boosts(&self, base_results: &mut Vec<(String, String, i64)>) {
-        for res in base_results.iter_mut() {
-            let uid = &res.0;
-            let boost = self.get_boost_score(uid);
-            res.2 += boost;
-        }
-
-        base_results.sort_by(|a, b| b.2.cmp(&a.2));
     }
 }

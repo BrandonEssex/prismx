@@ -200,7 +200,3 @@ cargo build --release
 - **Overlay** – Popup-style modal in terminal
 
 ---
-
-_End of PrismX User Manual v1.0.0_
-
-All documentation retained. Let me know if you'd like this exported to a `.md` file, rendered to PDF, or embedded into the final archive.
