@@ -58,6 +58,8 @@ pub fn toggle_favorite(state: &mut SpotlightState) {
     }
 }
 
+// Helper functions
+
 fn timestamp() -> String {
     Local::now().format("%Y-%m-%d %H:%M:%S").to_string()
 }
