@@ -23,7 +23,7 @@ pub fn run_app() -> anyhow::Result<()> {
         terminal.draw(|f| screen.draw(f))?;
 
         if let Some(event) = config.poll_event()? {
-            let continue_running = screen.handle_event(event, &mut app_state);
+            let continue_running = screen.handle_event(event, config.map(event), &mut app_state);
             if !continue_running {
                 break;
             }

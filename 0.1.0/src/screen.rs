@@ -1,13 +1,19 @@
-use ratatui::Frame;
-use crate::input::{Action, Config};
-use crate::zen_mode::ZenModeState;
+use crate::actions::Action;
+use crate::state::AppState;
+use crate::view_triage::draw_triage_view;
+use crate::zen_mode::{ZenModeState};
 use crate::scratchpad::Scratchpad;
 use crate::config::ZenConfig;
-use crate::state::AppState;
+use crate::spotlight::SpotlightModule;
+use crate::mode::Mode;
+
+use ratatui::Frame;
+use ratatui::backend::Backend;
 use crossterm::event::Event;
 
 pub struct Screen {
-    config: Config,
+    pub mode: Mode,
+    spotlight: SpotlightModule,
     zen_state: ZenModeState,
     scratchpad: Option<Scratchpad>,
     zen_config: ZenConfig,
@@ -15,46 +21,57 @@ pub struct Screen {
 
 impl Screen {
     pub fn new() -> Self {
-        let config = Config;
         let zen_config = ZenConfig::default();
-
         Self {
-            config,
+            mode: Mode::Normal,
+            spotlight: SpotlightModule::new(),
             zen_state: ZenModeState::Inactive,
             scratchpad: None,
             zen_config,
         }
     }
 
-    pub fn handle_event(&mut self, evt: Event, _state: &mut AppState) -> bool {
-        if let Some(action) = self.config.map(evt.clone()) {
-            match action {
-                Action::Quit => return false,
+    pub fn handle_event<B: Backend>(
+        &mut self,
+        evt: Event,
+        action: Option<Action>,
+        state: &mut AppState,
+    ) -> bool {
+        match action {
+            Some(Action::Quit) => return false,
 
-                Action::ToggleZenMode => {
-                    ZenModeState::toggle(&mut self.zen_state, self.zen_config.clone());
-                    match &self.zen_state {
-                        ZenModeState::Active { scratchpad_path, .. } => {
-                            self.scratchpad = Some(Scratchpad::new(scratchpad_path.clone()));
-                        }
-                        ZenModeState::Inactive => {
-                            self.scratchpad = None;
-                        }
-                    }
+            Some(Action::ToggleZenMode) => {
+                ZenModeState::toggle(&mut self.zen_state, self.zen_config.clone());
+                self.mode = Mode::Zen;
+                if let ZenModeState::Active { scratchpad_path, .. } = &self.zen_state {
+                    self.scratchpad = Some(Scratchpad::new(scratchpad_path.clone()));
+                } else {
+                    self.scratchpad = None;
                 }
-
-                Action::OpenScratchpad => {
-                    if !matches!(self.zen_state, ZenModeState::Active { .. }) {
-                        ZenModeState::toggle(&mut self.zen_state, self.zen_config.clone());
-                    }
-
-                    if let ZenModeState::Active { scratchpad_path, .. } = &self.zen_state {
-                        self.scratchpad = Some(Scratchpad::new(scratchpad_path.clone()));
-                    }
-                }
-
-                _ => {}
             }
+
+            Some(Action::ToggleTriage) => {
+                self.mode = if self.mode == Mode::Triage {
+                    Mode::Normal
+                } else {
+                    Mode::Triage
+                };
+            }
+
+            Some(Action::ToggleSpotlight) => {
+                self.spotlight.toggle();
+                self.mode = if self.spotlight.is_active() {
+                    Mode::Spotlight
+                } else {
+                    Mode::Normal
+                };
+            }
+
+            Some(a) if self.spotlight.is_active() => {
+                self.spotlight.handle_action(a);
+            }
+
+            _ => {}
         }
 
         true
@@ -66,20 +83,26 @@ impl Screen {
         }
     }
 
-    pub fn draw(&mut self, frame: &mut Frame) {
-        match &self.zen_state {
-            ZenModeState::Active { .. } => {
+    pub fn draw<B: Backend>(&mut self, f: &mut Frame<B>) {
+        match self.mode {
+            Mode::Zen => {
                 if let Some(scratchpad) = &self.scratchpad {
-                    self.zen_state.render_active_ui(frame, scratchpad);
+                    self.zen_state.render_active_ui(f, scratchpad);
                 }
             }
-            _ => {
-                self.render_standard_ui(frame);
+            Mode::Triage => {
+                // Add Triage view rendering if needed
+            }
+            Mode::Spotlight => {
+                self.spotlight.render(f);
+            }
+            Mode::Normal => {
+                // Render standard dashboard or fallback
+                let area = f.size();
+                let paragraph = ratatui::widgets::Paragraph::new("Welcome to PrismX")
+                    .block(ratatui::widgets::Block::default().title("PrismX").borders(ratatui::widgets::Borders::ALL));
+                f.render_widget(paragraph, area);
             }
         }
-    }
-
-    fn render_standard_ui(&self, _frame: &mut Frame) {
-        // Placeholder for normal UI rendering
     }
 }

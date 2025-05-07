@@ -57,3 +57,11 @@ impl Mindmap {
 pub struct MindmapState {
     pub mindmap: Mindmap,
 }
+
+impl MindmapState {
+    pub fn new() -> Self {
+        Self {
+            mindmap: Mindmap::new(),
+        }
+    }
+}
