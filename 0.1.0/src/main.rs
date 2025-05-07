@@ -1,3 +1,4 @@
+mod mode;
 mod app;
 mod config;
 mod error_handling;
