@@ -1,13 +1,11 @@
+use crate::spotlight::state::SpotlightState;
 use ratatui::{
-    layout::{Alignment, Constraint, Direction, Layout, Rect},
+    layout::{Alignment, Constraint, Direction, Layout},
     style::{Modifier, Style},
     text::{Line, Span},
     widgets::{Block, Borders, List, ListItem, Paragraph},
     Frame,
 };
-
-use crate::spotlight::state::SpotlightState;
-use crate::spotlight::debug::render_debug_overlay;
 
 pub fn render_overlay(f: &mut Frame, state: &mut SpotlightState) {
     let size = f.size();
@@ -21,13 +19,11 @@ pub fn render_overlay(f: &mut Frame, state: &mut SpotlightState) {
         ])
         .split(area);
 
-    // Input Field
-    let input = Paragraph::new(state.query.clone())
+    let input = Paragraph::new(state.query.as_str())
         .style(Style::default())
         .block(Block::default().borders(Borders::ALL).title("Spotlight Search"));
     f.render_widget(input, chunks[0]);
 
-    // Results List
     let items: Vec<ListItem> = state
         .matched
         .iter()
@@ -47,18 +43,12 @@ pub fn render_overlay(f: &mut Frame, state: &mut SpotlightState) {
 
     f.render_widget(results, chunks[1]);
 
-    // Footer
     let footer = Paragraph::new("↑↓ to navigate • Enter to open • Esc to exit • Ctrl+D: debug")
         .alignment(Alignment::Center);
     f.render_widget(footer, chunks[2]);
-
-    // Optional Debug
-    if state.debug_enabled {
-        render_debug_overlay(f, state, size);
-    }
 }
 
-fn centered_rect(percent_x: u16, percent_y: u16, area: Rect) -> Rect {
+fn centered_rect(percent_x: u16, percent_y: u16, area: ratatui::layout::Rect) -> ratatui::layout::Rect {
     let popup_layout = Layout::default()
         .direction(Direction::Vertical)
         .constraints([

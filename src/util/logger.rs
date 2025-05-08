@@ -1,10 +1,10 @@
-use log::{info, warn, error};
-use std::fs;
+use log::{info};
+use std::fs::{self, File};
 use std::path::Path;
 use simplelog::*;
-use std::fs::File;
-use toml;
+use std::io::Read;
 use serde::Deserialize;
+use toml;
 
 #[derive(Debug, Deserialize, Clone)]
 pub struct LoggingConfig {
@@ -58,8 +58,4 @@ pub fn init_logging() -> Result<(), Box<dyn std::error::Error>> {
     CombinedLogger::init(loggers)?;
 
     Ok(())
-}
-
-pub fn log_zen(msg: &str) {
-    info!("[ZenMode] {}", msg);
 }

@@ -258,6 +258,7 @@ dependencies = [
  "iana-time-zone",
  "js-sys",
  "num-traits",
+ "serde",
  "wasm-bindgen",
  "windows-link",
 ]
@@ -1226,7 +1227,7 @@ dependencies = [
 
 [[package]]
 name = "prismx"
-version = "0.1.17"
+version = "0.1.21"
 dependencies = [
  "anyhow",
  "chrono",
@@ -1241,6 +1242,7 @@ dependencies = [
  "serde",
  "serde_json",
  "simplelog",
+ "thiserror",
  "tokio",
  "toml 0.8.22",
  "uuid",

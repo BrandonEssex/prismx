@@ -7,24 +7,16 @@ use ratatui::{
     widgets::{Block, Borders, List, ListItem, Paragraph},
     Frame,
 };
-use std::fmt;
-
-impl fmt::Display for TaskStatus {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            TaskStatus::Inbox => write!(f, "Inbox"),
-            TaskStatus::Triaged => write!(f, "Triaged"),
-            TaskStatus::Archived => write!(f, "Archived"),
-        }
-    }
-}
 
 pub fn draw_triage_view(frame: &mut Frame, state: &AppState) {
     let size = frame.size();
 
     let chunks = Layout::default()
         .direction(Direction::Vertical)
-        .constraints([Constraint::Length(3), Constraint::Min(1)])
+        .constraints([
+            Constraint::Length(3),
+            Constraint::Min(1),
+        ])
         .split(size);
 
     let header = Paragraph::new("📥 Triage Inbox — Use arrows to navigate, Ctrl+D to archive")
@@ -37,7 +29,7 @@ pub fn draw_triage_view(frame: &mut Frame, state: &AppState) {
     let items: Vec<ListItem> = inbox_tasks
         .iter()
         .map(|task| {
-            let line = format!("• [{}] {}", task.status, task.title);
+            let line = format!("• [{}] {}", format!("{:?}", task.status), task.title);
             ListItem::new(Line::from(vec![Span::raw(line)]))
         })
         .collect();

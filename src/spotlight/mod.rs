@@ -1,45 +1,42 @@
-pub mod actions;
-mod debug;
-mod engine;
-mod plugin;
-pub mod state;
-pub mod ui;
-
 use crate::actions::Action;
 use crate::spotlight::state::SpotlightState;
-use ratatui::Frame;
 use crate::screen::AppState;
+use ratatui::{Frame, backend::Backend};
+
+mod actions;
+mod debug;
+mod engine;
+mod favorites;
+mod plugin;
+mod state;
+mod ui;
 
 pub struct SpotlightModule {
-    pub state: SpotlightState,
+    state: SpotlightState,
 }
 
 impl SpotlightModule {
     pub fn new() -> Self {
-        Self {
+        SpotlightModule {
             state: SpotlightState::new(),
         }
     }
 
-    pub fn handle_action(&mut self, action: Action, _state: &mut AppState) -> bool {
+    pub fn handle_action(&mut self, action: Action, state: &mut AppState) -> bool {
         match action {
             Action::Up => self.state.move_up(),
             Action::Down => self.state.move_down(),
-            Action::Enter => self.state.activate_selected(),
-            Action::Backspace => self.state.backspace(),
             Action::Char('d') => self.state.toggle_debug(),
-            Action::Char('m') => self.state.queue_move(),
-            Action::Char('x') => self.state.queue_delete(),
-            Action::Char('e') => self.state.queue_export(),
-            Action::Char('f') => self.state.toggle_favorite(),
             Action::Char(c) => self.state.update_query(c),
+            Action::Backspace => self.state.backspace(),
+            Action::Enter => self.state.activate_selected(state),
             Action::Exit => self.state.close(),
             _ => {}
         }
         true
     }
 
-    pub fn render(&mut self, f: &mut Frame) {
+    pub fn render<B: Backend>(&mut self, f: &mut Frame<B>) {
         if self.state.is_active() {
             ui::render_overlay(f, &mut self.state);
         }

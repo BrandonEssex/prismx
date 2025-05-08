@@ -1,19 +1,20 @@
 use crate::util::logger;
-use log::{error, info};
+use crate::util::logger::LoggingConfig;
 use notify::{Event, EventKind, RecommendedWatcher, RecursiveMode, Watcher};
-use serde::Deserialize;
 use std::path::Path;
 use tokio::sync::mpsc::{channel, Receiver};
-use chrono::Utc;
+use log::{error, info};
+use tokio::fs;
 use toml;
+use serde::Deserialize;
 
 #[derive(Debug, Deserialize, Clone)]
 pub struct Config {
-    pub logging: logger::LoggingConfig,
+    pub logging: LoggingConfig,
 }
 
 pub async fn load_config(path: &str) -> Result<Config, Box<dyn std::error::Error>> {
-    let content = tokio::fs::read_to_string(path).await?;
+    let content = fs::read_to_string(path).await?;
     let config: Config = toml::from_str(&content)?;
     Ok(config)
 }
@@ -40,7 +41,7 @@ pub async fn watch_config_changes(path: &str) -> notify::Result<()> {
         match load_config(path).await {
             Ok(updated_config) => {
                 info!("Configuration file '{}' reloaded.", path);
-                if let Err(e) = logger::init_logger() {
+                if let Err(e) = logger::init_logging() {
                     error!("Failed to update logger settings: {}", e);
                 } else {
                     info!(

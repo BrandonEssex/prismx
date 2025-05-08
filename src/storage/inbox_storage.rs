@@ -1,8 +1,8 @@
 use crate::inbox::InboxState;
-use chrono::Utc;
 use std::fs::{self, File};
 use std::io::{Read, Write};
 use std::path::{Path, PathBuf};
+use chrono::Utc;
 
 pub fn load_inbox_from_disk<P: AsRef<Path>>(path: P) -> Result<InboxState, String> {
     let path = path.as_ref();
@@ -42,10 +42,8 @@ pub fn save_inbox_to_disk<P: AsRef<Path>>(path: P, state: &InboxState) -> Result
 }
 
 fn make_backup(original_path: &Path) -> Result<PathBuf, String> {
-    let backup_path = original_path.with_extension(format!(
-        "bak.{}",
-        Utc::now().format("%Y%m%dT%H%M%S")
-    ));
+    let timestamp = Utc::now().format("bak.%Y%m%dT%H%M%S").to_string();
+    let backup_path = original_path.with_extension(timestamp);
     fs::copy(original_path, &backup_path)
         .map_err(|e| format!("Failed to create backup: {}", e))?;
     Ok(backup_path)
