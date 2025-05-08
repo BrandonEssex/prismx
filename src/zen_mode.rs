@@ -1,15 +1,22 @@
-use std::time::{Duration, Instant};
-use std::path::PathBuf;
 use crate::scratchpad::Scratchpad;
 use crate::config::ZenConfig;
+use crate::util::logger::log_zen;
+use ratatui::{
+    layout::{Constraint, Direction, Layout},
+    style::{Modifier, Style},
+    text::Span,
+    widgets::{Block, Borders, Paragraph},
+    Frame,
+};
+use std::time::Instant;
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Clone)]
 pub enum ZenModeState {
     Inactive,
     Active {
         title_shown: bool,
         last_fade: Instant,
-        scratchpad_path: PathBuf,
+        scratchpad_path: std::path::PathBuf,
         config: ZenConfig,
     },
 }
@@ -18,6 +25,7 @@ impl ZenModeState {
     pub fn toggle(current: &mut ZenModeState, config: ZenConfig) {
         match current {
             ZenModeState::Inactive => {
+                log_zen("Zen Mode ACTIVATED");
                 let path = config.scratchpad_path();
                 *current = ZenModeState::Active {
                     title_shown: false,
@@ -27,24 +35,18 @@ impl ZenModeState {
                 };
             }
             ZenModeState::Active { .. } => {
+                log_zen("Zen Mode DEACTIVATED");
                 *current = ZenModeState::Inactive;
             }
         }
     }
 
-    pub fn render_active_ui(&self, frame: &mut ratatui::Frame, scratchpad: &Scratchpad) {
-        use ratatui::widgets::{Block, Paragraph, Borders};
-        use ratatui::layout::{Layout, Constraint, Direction};
-        use ratatui::style::{Style, Modifier};
-
+    pub fn render_active_ui(&self, frame: &mut Frame, scratchpad: &Scratchpad) {
         if let ZenModeState::Active { title_shown, .. } = self {
             let chunks = Layout::default()
                 .direction(Direction::Vertical)
                 .margin(2)
-                .constraints([
-                    Constraint::Length(1),
-                    Constraint::Min(1),
-                ])
+                .constraints([Constraint::Length(1), Constraint::Min(1)])
                 .split(frame.size());
 
             if *title_shown {

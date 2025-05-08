@@ -1,15 +1,9 @@
-// FINAL VERSION — File Delivery Progress: 1/1  
-// File: src/util/logger.rs
-
-use log::{info};
-use std::fs::File;
-use std::io::Read;
-use std::path::Path;
-use std::str::FromStr;
-
-use simplelog::{ColorChoice, Config, LevelFilter, TermLogger, TerminalMode, WriteLogger};
-use toml;
+use log::{LevelFilter};
 use serde::Deserialize;
+use std::error::Error;
+use std::fs::File;
+use std::io::{Read, Write};
+use std::path::Path;
 
 #[derive(Debug, Deserialize, Clone)]
 pub struct LoggingConfig {
@@ -17,26 +11,26 @@ pub struct LoggingConfig {
     pub file_output: Option<String>,
 }
 
-pub fn init_logging() -> Result<(), Box<dyn std::error::Error>> {
-    let config_path = Path::new("config.toml");
+pub fn init_logging(config: &LoggingConfig) -> Result<(), Box<dyn Error>> {
+    let level = LevelFilter::from_str(&config.level).unwrap_or(LevelFilter::Info);
+    let mut builder = env_logger::Builder::new();
+    builder.filter_level(level);
 
-    if config_path.exists() {
-        let mut config_content = String::new();
-        File::open(config_path)?.read_to_string(&mut config_content)?;
-
-        if let Ok(config): Result<LoggingConfig, _> = toml::from_str(&config_content) {
-            let level = LevelFilter::from_str(&config.level).unwrap_or(LevelFilter::Info);
-
-            if let Some(log_file) = config.file_output {
-                let file = File::create(log_file)?;
-                WriteLogger::init(level, Config::default(), file)?;
-            } else {
-                TermLogger::init(level, Config::default(), TerminalMode::Mixed, ColorChoice::Auto)?;
-            }
-            return Ok(());
-        }
+    if let Some(file_path) = &config.file_output {
+        let file = File::create(file_path)?;
+        builder.target(env_logger::Target::Pipe(Box::new(file)));
     }
 
-    TermLogger::init(LevelFilter::Info, Config::default(), TerminalMode::Mixed, ColorChoice::Auto)?;
+    builder.init();
     Ok(())
+}
+
+pub fn load_logging_config(path: &Path) -> Option<LoggingConfig> {
+    let mut content = String::new();
+    if let Ok(mut file) = File::open(path) {
+        file.read_to_string(&mut content).ok()?;
+        toml::from_str(&content).ok()
+    } else {
+        None
+    }
 }

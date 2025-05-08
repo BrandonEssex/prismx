@@ -1,5 +1,4 @@
-use crate::spotlight::engine::{SearchResult, SpotlightEngine};
-use crate::spotlight::plugin::SearchScope;
+use crate::spotlight::engine::{SpotlightEngine, SearchResult};
 
 #[derive(Debug)]
 pub struct SpotlightState {
@@ -12,7 +11,7 @@ pub struct SpotlightState {
 
 impl SpotlightState {
     pub fn new() -> Self {
-        SpotlightState {
+        Self {
             query: String::new(),
             matched: vec![],
             selected: 0,
@@ -63,19 +62,7 @@ impl SpotlightState {
         self.selected = 0;
     }
 
-    pub fn queue_move(&mut self) {
-        println!("Triggered move for selected index {}", self.selected);
-    }
-
-    pub fn queue_delete(&mut self) {
-        println!("Triggered delete for selected index {}", self.selected);
-    }
-
-    pub fn queue_export(&mut self) {
-        println!("Triggered export for selected index {}", self.selected);
-    }
-
-    pub fn toggle_favorite(&mut self) {
-        println!("Toggled favorite for selected index {}", self.selected);
+    pub fn is_active(&self) -> bool {
+        !self.query.is_empty() || !self.matched.is_empty()
     }
 }
