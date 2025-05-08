@@ -1,164 +1,118 @@
-# PrismX - Modular TUI Framework for Engineers & Plugin Developers
+# PrismX
 
 **Version:** 0.1.22  
-**License:** MIT  
-**Platform:** macOS/Linux (Unix-like)  
-**Interface:** Terminal (TUI) + CLI  
-**Audience:** DevOps Engineers, Plugin Developers, Power Users
+**Repository:** https://github.com/BrandonEssex/prismx  
+**Author:** BrandonEssex
 
 ---
 
-## ✨ Overview
+## Overview
 
-PrismX is a modular, extensible terminal-based system designed to help engineers organize and control projects, notes, mindmaps, tasks, dashboards, and external WASM-based plugins.
-
-It offers powerful plugin support, JSON-backed storage, real-time TUI rendering, keyboard-centric navigation, and a growing ecosystem of enhancements.
+PrismX is a modular, TUI-powered task and knowledge management platform built for developers, system engineers, and productivity-driven users. It supports project tracking, to-do triaging, mind mapping, plugin loading (WASM), and note management—all fully extendable via Rust or WASM-based plugins.
 
 ---
 
-## ✅ Key Features
+## Features
 
-- **Modular Plugin Host** with WASM sandboxing and runtime profiling.
-- **Zen Mode** scratchpad for focused writing/editing.
-- **Inbox & Triage** system for task management.
-- **Mindmap Engine** with live canvas rendering.
-- **Spotlight Search** with fuzzy matching & ranking.
-- **Dashboard Engine** (optional plugin integration).
-- **Config Watcher** with hot-reloading.
-- **Themed Logging** and autosave-safe fallback behavior.
-- **TUI optimized** for mouse-free keyboard navigation.
-- **JSON-structured** persistent data storage.
+- TUI-based dashboard with project/task/idea triage
+- Inbox-based task management
+- JSON-backed data models (no DB required)
+- Markdown note support
+- Mindmap canvas system
+- Spotlight-style fuzzy search across all data
+- Zen mode and customizable shortcuts
+- Plugin support via `.prismx-ext` folders with `plugin.wasm` and manifest
+- Modular code layout with auto-loaded extensions
 
 ---
 
-## 🚀 Getting Started
+## Getting Started
 
-### 1. **Build & Launch**
-
+### Running PrismX
 ```bash
-git clone https://github.com/your-org/prismx.core.git
-cd prismx.core
-cargo build --release
-./target/release/prismx
+cargo run --release
+```
 
-    Required Dependencies:
+### Directory Layout
+```bash
+data/
+├── inbox.json
+├── mindmaps.json
+├── notes/
+│   ├── note1.md
+│   └── ...
+├── dashboard_config.json
+├── widget_themes.json
 
-        Rust 1.70+
+extensions/
+└── myplugin.prismx-ext/
+    ├── plugin.wasm
+    └── prismx-plugin.json
+```
 
-        libwasmtime for WASM plugins
+---
 
-        macOS/Linux terminal with UTF-8
+## Creating a Plugin (WASM)
 
-2. Directory Layout
-
-prismx/
-├── assets/               # Templates & initial JSON
-├── config.toml           # Main configuration
-├── data/                 # Persisted state (mindmaps, inbox)
-├── logs/                 # Logs and debug traces
-├── extensions/           # PrismX-compatible WASM plugins
-├── src/                  # Core source
-├── README.md             # You’re here
-
-⌨️ CLI/TUI Usage
-Global Shortcuts
-
-    Ctrl + Z – Toggle Zen Mode
-
-    Ctrl + / – Toggle Spotlight Search
-
-    Ctrl + D – Archive selected Inbox Task
-
-    Ctrl + Alt + N – Add New Inbox Entry
-
-    Esc – Back
-
-    q – Quit
-
-TUI Navigation (Inbox & Spotlight)
-
-    ↑ / ↓ – Move selection
-
-    Enter – Activate / Edit
-
-    m – Move item (Spotlight)
-
-    x – Delete item
-
-    e – Export item to Markdown
-
-    f – Toggle favorite
-
-🧩 Plugin Development Guide
-Plugin Structure
-
-A PrismX-compatible plugin must contain:
-
-example-plugin.prismx-ext/
-├── plugin.wasm              # Compiled WASM binary
-└── prismx-plugin.json       # Manifest
-
-Manifest Format
-
+### Plugin Manifest Example
+```json
 {
-  "name": "Hello Plugin",
-  "author": "devx",
-  "version": "1.0.0",
-  "prismx_api_version": "0.1.0",
-  "entrypoint": "run"
+  "name": "MyPlugin",
+  "version": "0.1.0",
+  "author": "BrandonEssex",
+  "entrypoint": "run",
+  "prismx_api_version": "0.1.0"
 }
+```
 
-Plugin Entrypoint (Rust/AssemblyScript)
-
+### Plugin Rust Entrypoint
+```rust
 #[no_mangle]
 pub extern "C" fn run() {
-    // Your logic here
+    // Your plugin logic
 }
+```
 
-    Tip: Use wasmtime and target wasm32-unknown-unknown.
+Compile to wasm:
+```bash
+rustup target add wasm32-unknown-unknown
+cargo build --release --target wasm32-unknown-unknown
+```
 
-⚙️ Configuration
+---
 
-Edit config.toml:
+## Key Shortcuts
 
-[logging]
-enabled = true
-log_level = "info"
-log_to_file = true
-log_file_path = "logs/prismx.log"
+| Action                 | Shortcut            |
+|------------------------|---------------------|
+| Toggle Zen Mode        | Ctrl+Z              |
+| Open Scratchpad        | Ctrl+Alt+N          |
+| Toggle Spotlight       | Ctrl+/              |
+| Archive task (inbox)   | Ctrl+D              |
+| Open task entry        | Ctrl+Alt+I          |
+| Navigate (Inbox)       | ↑ ↓ Enter           |
 
-🛠️ Extension Development Roadmap
+---
 
-Zen Mode with autosave
+## Extension System
 
-WASM Plugin execution
+- Register `.wasm` plugin modules in `extensions/` directory.
+- Plugins run in isolated sandboxed environment.
+- Profiles and permissions enforced using heuristics + runtime limits.
+- Supports `Capability::Filesystem`, `Capability::Network`, `Capability::Memory`, etc.
 
-Spotlight Search engine
+---
 
-Mindmap canvas + API
+## Contributing
 
-Inbox triage view
+- All modules are designed to be plugin-expandable.
+- Contributions welcome at:  
+  [https://github.com/BrandonEssex/prismx](https://github.com/BrandonEssex/prismx)
 
-Plugin-injected dashboard
+For questions: contact `BrandonEssex` on GitHub.
 
-Configurable themes
+---
 
-    LSP Plugin support
+## License
 
-🧪 Testing
-
-cargo test        # Run unit tests
-cargo test -- --ignored  # Run integration tests (plugin/dash)
-
-🛡️ Security Notes
-
-    All WASM plugins are sandboxed via wasmtime.
-
-    Capability-based permission model under development.
-
-🧠 Contributing
-
-Pull requests welcome! For advanced plugin authorship or engine integration, check the Developer Manual (coming soon).
-📄 License
-
-MIT © 2024-2025 PrismX Contributors
+MIT License
