@@ -1,10 +1,9 @@
-use crate::util::logger;
-use crate::util::logger::LoggingConfig;
-use notify::{Event, EventKind, RecommendedWatcher, RecursiveMode, Watcher};
+use notify::{RecommendedWatcher, RecursiveMode, Watcher};
 use std::path::Path;
-use tokio::sync::mpsc::{channel, Receiver};
-use log::{error, info};
-use tokio::fs;
+use std::sync::mpsc::{channel, Receiver};
+use std::time::Duration;
+use std::thread;
+use crate::util::logger::{init_logging, LoggingConfig};
 use toml;
 use serde::Deserialize;
 
@@ -13,46 +12,28 @@ pub struct Config {
     pub logging: LoggingConfig,
 }
 
-pub async fn load_config(path: &str) -> Result<Config, Box<dyn std::error::Error>> {
-    let content = fs::read_to_string(path).await?;
-    let config: Config = toml::from_str(&content)?;
-    Ok(config)
-}
+pub fn watch_config_changes(path: &str) -> notify::Result<Receiver<()>> {
+    let (tx, rx) = channel();
 
-pub async fn watch_config_changes(path: &str) -> notify::Result<()> {
-    let (tx, mut rx) = channel(1);
-
-    let mut watcher = RecommendedWatcher::new(
-        move |res: notify::Result<Event>| {
-            if let Ok(event) = res {
-                if matches!(event.kind, EventKind::Modify(_)) {
-                    let _ = tx.blocking_send(());
-                }
-            }
-        },
-        notify::Config::default(),
-    )?;
+    let mut watcher: RecommendedWatcher = notify::recommended_watcher(move |res| {
+        if let Ok(event) = res {
+            let _ = tx.send(());
+        }
+    })?;
 
     watcher.watch(Path::new(path), RecursiveMode::NonRecursive)?;
 
-    info!("Configuration watcher initialized for '{}'.", path);
+    Ok(rx)
+}
 
-    while rx.recv().await.is_some() {
-        match load_config(path).await {
-            Ok(updated_config) => {
-                info!("Configuration file '{}' reloaded.", path);
-                if let Err(e) = logger::init_logging() {
-                    error!("Failed to update logger settings: {}", e);
-                } else {
-                    info!(
-                        "Logger settings updated: level '{}'",
-                        updated_config.logging.log_level
-                    );
+pub fn reload_config_on_change(path: &str) {
+    if let Ok(rx) = watch_config_changes(path) {
+        thread::spawn(move || {
+            for _ in rx.iter() {
+                if let Err(e) = init_logging() {
+                    eprintln!("Failed to reload logger config: {}", e);
                 }
             }
-            Err(e) => error!("Failed to reload config '{}': {}", path, e),
-        }
+        });
     }
-
-    Ok(())
 }

@@ -20,3 +20,5 @@ pub enum ExtensionHostError {
     #[error("Profiling error: {0}")]
     ProfilingError(String),
 }
+
+pub type Result<T> = std::result::Result<T, ExtensionHostError>;

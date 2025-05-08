@@ -1,11 +1,6 @@
 use wasmtime::{Engine, Module};
 
-pub struct ResourceProfileReport {
-    pub estimated_memory_bytes: usize,
-    pub estimated_cpu_cycles: u64,
-    pub warnings: Vec<String>,
-    pub recommendations: Vec<String>,
-}
+use crate::extension_host::errors::{ExtensionHostError, Result};
 
 pub struct ResourceProfiler {
     engine: Engine,
@@ -13,33 +8,27 @@ pub struct ResourceProfiler {
 
 impl ResourceProfiler {
     pub fn new() -> Self {
-        let engine = Engine::default();
-        Self { engine }
+        ResourceProfiler {
+            engine: Engine::default(),
+        }
     }
 
-    pub fn profile_plugin(&self, wasm_bytes: &[u8]) -> ResourceProfileReport {
-        let estimated_memory_bytes = wasm_bytes.len() * 2;
-        let estimated_cpu_cycles = (estimated_memory_bytes as u64) * 10;
+    pub fn profile_plugin(&self, wasm_bytes: &[u8]) -> Result<ResourceProfileReport> {
+        let module = Module::from_binary(&self.engine, wasm_bytes)
+            .map_err(|e| ExtensionHostError::ProfilingError(e.to_string()))?;
 
-        let mut warnings = Vec::new();
-        let mut recommendations = Vec::new();
+        let estimated_memory_bytes = module.serialize().unwrap_or_default().len() * 2;
+        let estimated_cpu_cycles = wasm_bytes.len() as u64 * 10;
 
-        if estimated_memory_bytes > 20 * 1024 * 1024 {
-            warnings.push(format!("High memory usage predicted: {} bytes", estimated_memory_bytes));
-            recommendations.push("Consider reducing plugin memory footprint.".into());
-        }
-
-        if estimated_cpu_cycles > 100_000_000 {
-            warnings.push(format!("High CPU usage predicted: {} cycles", estimated_cpu_cycles));
-            recommendations.push("Optimize computational complexity to reduce CPU load.".into());
-        }
-
-        ResourceProfileReport {
+        Ok(ResourceProfileReport {
             estimated_memory_bytes,
             estimated_cpu_cycles,
-            warnings,
-            recommendations,
-        }
+        })
     }
 }
-``
+
+#[derive(Debug)]
+pub struct ResourceProfileReport {
+    pub estimated_memory_bytes: usize,
+    pub estimated_cpu_cycles: u64,
+}

@@ -1,32 +1,37 @@
-use serde::{Serialize, Deserialize};
-use std::{path::PathBuf, time::SystemTime};
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum Capability {
-    Memory(usize),
-    Cpu(u64),
-    Filesystem(Vec<PathBuf>),
-    Network(bool),
+    ReadFilesystem,
+    WriteFilesystem,
+    AccessNetwork,
+    AccessClipboard,
+    ModifyState,
+    ExecuteShell,
+    Custom(String),
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Debug, Default)]
 pub struct PermissionSet {
-    pub capabilities: Vec<Capability>,
-    pub granted_at: SystemTime,
-    pub expires_at: Option<SystemTime>,
+    granted: std::collections::HashSet<Capability>,
 }
 
-impl Default for PermissionSet {
-    fn default() -> Self {
-        Self {
-            capabilities: vec![
-                Capability::Memory(16 * 1024 * 1024),
-                Capability::Cpu(50_000_000),
-                Capability::Filesystem(vec![]),
-                Capability::Network(false),
-            ],
-            granted_at: SystemTime::now(),
-            expires_at: None,
+impl PermissionSet {
+    pub fn grant(&mut self, capability: Capability) {
+        self.granted.insert(capability);
+    }
+
+    pub fn revoke(&mut self, capability: &Capability) {
+        self.granted.remove(capability);
+    }
+
+    pub fn has(&self, capability: &Capability) -> bool {
+        self.granted.contains(capability)
+    }
+
+    pub fn enforce(&self, capability: &Capability) -> Result<(), String> {
+        if self.has(capability) {
+            Ok(())
+        } else {
+            Err(format!("Permission denied: {:?}", capability))
         }
     }
 }

@@ -1,9 +1,8 @@
-use log::info;
+use log::{LevelFilter, debug, error, info, warn};
+use simplelog::{ColorChoice, Config, TermLogger, TerminalMode, WriteLogger};
 use std::fs::File;
 use std::io::Read;
-use std::path::PathBuf;
-use env_logger::Env;
-use toml;
+use std::path::Path;
 use serde::Deserialize;
 
 #[derive(Debug, Deserialize, Clone)]
@@ -12,31 +11,45 @@ pub struct LoggingConfig {
     pub file_output: Option<String>,
 }
 
-pub fn init_logging() {
-    if let Some(config_path) = get_config_path() {
-        if let Ok(mut file) = File::open(&config_path) {
-            let mut config_content = String::new();
-            if file.read_to_string(&mut config_content).is_ok() {
-                if let Ok(config): Result<LoggingConfig, _> = toml::from_str(&config_content) {
-                    let env = Env::default().default_filter_or(config.level);
-                    env_logger::Builder::from_env(env).init();
-                    if let Some(log_file) = config.file_output {
-                        info!("Logging to file: {}", log_file);
-                    }
-                    return;
-                }
-            }
-        }
+pub fn init_logging() -> Result<(), Box<dyn std::error::Error>> {
+    let config_path = Path::new("config.toml");
+
+    if !config_path.exists() {
+        TermLogger::init(
+            LevelFilter::Info,
+            Config::default(),
+            TerminalMode::Mixed,
+            ColorChoice::Auto,
+        )?;
+        return Ok(());
     }
 
-    let env = Env::default().default_filter_or("info");
-    env_logger::Builder::from_env(env).init();
+    let mut config_content = String::new();
+    File::open(config_path)?.read_to_string(&mut config_content)?;
+
+    let config: LoggingConfig = toml::from_str(&config_content)?;
+
+    let level = match config.level.as_str() {
+        "debug" => LevelFilter::Debug,
+        "warn" => LevelFilter::Warn,
+        "error" => LevelFilter::Error,
+        _ => LevelFilter::Info,
+    };
+
+    let loggers: Vec<Box<dyn simplelog::SharedLogger>> = if let Some(path) = config.file_output {
+        let file = File::create(path)?;
+        vec![WriteLogger::new(level, Config::default(), file)]
+    } else {
+        vec![TermLogger::new(level, Config::default(), TerminalMode::Mixed, ColorChoice::Auto)]
+    };
+
+    simplelog::CombinedLogger::init(loggers)?;
+    Ok(())
 }
 
-fn get_config_path() -> Option<PathBuf> {
-    dirs::config_dir().map(|mut path| {
-        path.push("prismx");
-        path.push("logging.toml");
-        path
-    })
+pub fn log_zen(msg: &str) {
+    if let Ok(mut file) = File::create("logs/zen_debug.log") {
+        use std::io::Write;
+        let _ = writeln!(file, "{}", msg);
+    }
 }
