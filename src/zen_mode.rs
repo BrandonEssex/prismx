@@ -1,8 +1,7 @@
-use std::time::Instant;
+use std::time::{Duration, Instant};
 use std::path::PathBuf;
 use crate::scratchpad::Scratchpad;
 use crate::config::ZenConfig;
-use crate::logger::log_zen;
 
 #[derive(Debug, PartialEq)]
 pub enum ZenModeState {
@@ -19,7 +18,6 @@ impl ZenModeState {
     pub fn toggle(current: &mut ZenModeState, config: ZenConfig) {
         match current {
             ZenModeState::Inactive => {
-                log_zen("Zen Mode ACTIVATED");
                 let path = config.scratchpad_path();
                 *current = ZenModeState::Active {
                     title_shown: false,
@@ -29,14 +27,13 @@ impl ZenModeState {
                 };
             }
             ZenModeState::Active { .. } => {
-                log_zen("Zen Mode DEACTIVATED");
                 *current = ZenModeState::Inactive;
             }
         }
     }
 
     pub fn render_active_ui(&self, frame: &mut ratatui::Frame, scratchpad: &Scratchpad) {
-        use ratatui::widgets::{Block, Paragraph, Borders, Wrap};
+        use ratatui::widgets::{Block, Paragraph, Borders};
         use ratatui::layout::{Layout, Constraint, Direction};
         use ratatui::style::{Style, Modifier};
 
@@ -57,8 +54,7 @@ impl ZenModeState {
             }
 
             let content = Paragraph::new(scratchpad.get_buffer())
-                .wrap(Wrap { trim: true })
-                .block(Block::default().borders(Borders::ALL).title("Scratchpad"));
+                .block(Block::default().borders(Borders::NONE));
             frame.render_widget(content, chunks[1]);
         }
     }

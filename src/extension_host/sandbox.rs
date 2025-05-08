@@ -1,9 +1,10 @@
 use wasmtime::{Engine, Store, Module, Instance, Config};
-use super::plugin::Plugin;
-use super::capability::PermissionSet;
-use super::errors::{Result, ExtensionHostError};
-use super::profiler::ResourceProfileReport;
 use tracing::{info, warn, debug};
+
+use super::plugin::Plugin;
+use super::capability::{Capability, PermissionSet};
+use super::errors::{ExtensionHostError, Result};
+use super::profiler::ResourceProfileReport;
 
 pub struct Sandbox {
     engine: Engine,
@@ -31,8 +32,7 @@ impl Sandbox {
         if profile_report.estimated_memory_bytes > self.memory_limit {
             warn!(
                 "Plugin estimated memory ({}) exceeds default limit ({}); adjusting.",
-                profile_report.estimated_memory_bytes,
-                self.memory_limit
+                profile_report.estimated_memory_bytes, self.memory_limit
             );
             self.memory_limit = profile_report.estimated_memory_bytes;
         }
@@ -40,8 +40,7 @@ impl Sandbox {
         if profile_report.estimated_cpu_cycles > self.cpu_cycles {
             warn!(
                 "Plugin estimated CPU cycles ({}) exceed default limit ({}); adjusting.",
-                profile_report.estimated_cpu_cycles,
-                self.cpu_cycles
+                profile_report.estimated_cpu_cycles, self.cpu_cycles
             );
             self.cpu_cycles = profile_report.estimated_cpu_cycles;
         }

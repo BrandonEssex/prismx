@@ -27,8 +27,8 @@ impl Scratchpad {
 
     fn load_or_default(path: &PathBuf) -> String {
         match fs::read_to_string(path) {
-            Ok(content) if !content.trim().is_empty() => content,
-            _ => {
+            Ok(content) => content,
+            Err(_) => {
                 if let Some(parent) = path.parent() {
                     let _ = fs::create_dir_all(parent);
                 }

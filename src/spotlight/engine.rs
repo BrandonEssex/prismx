@@ -4,23 +4,21 @@ pub struct SearchResult {
     pub score: i64,
 }
 
-#[derive(Debug)]
 pub struct SpotlightEngine;
 
 impl SpotlightEngine {
     pub fn new() -> Self {
-        Self
+        SpotlightEngine
     }
 
     pub fn search(&self, query: &str) -> Vec<SearchResult> {
         if query.is_empty() {
-            return vec![];
+            vec![]
+        } else {
+            vec![
+                SearchResult { title: format!("Match for: {}", query), score: 100 },
+                SearchResult { title: "Example result".into(), score: 80 },
+            ]
         }
-
-        // Placeholder search logic — returns mock result
-        vec![SearchResult {
-            title: format!("Result for '{}'", query),
-            score: 100,
-        }]
     }
 }

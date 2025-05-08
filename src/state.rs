@@ -1,8 +1,7 @@
-use std::path::PathBuf;
-use crate::inbox::{InboxState, Priority};
+use crate::inbox::InboxState;
 use crate::storage::inbox_storage::{load_inbox_from_disk, save_inbox_to_disk};
+use std::path::PathBuf;
 
-#[derive(Debug)]
 pub struct AppState {
     pub inbox: InboxState,
     pub inbox_path: PathBuf,

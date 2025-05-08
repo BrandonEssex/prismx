@@ -38,5 +38,3 @@ pub enum ExtensionHostError {
     #[error("Permission set error: {0}")]
     PermissionSetError(String),
 }
-
-pub type Result<T> = std::result::Result<T, ExtensionHostError>;

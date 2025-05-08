@@ -1,29 +1,25 @@
 use crate::spotlight::state::SpotlightState;
 
-pub fn perform_move(state: &SpotlightState) {
+pub fn perform_move(state: &mut SpotlightState) {
     if let Some(item) = state.matched.get(state.selected) {
-        println!("Move triggered for item: {}", item.title);
-        // Placeholder: show shard move interface
+        println!("Move triggered for UID: {}", item.title);
     }
 }
 
-pub fn perform_delete(state: &SpotlightState) {
+pub fn perform_delete(state: &mut SpotlightState) {
     if let Some(item) = state.matched.get(state.selected) {
-        println!("Delete triggered for item: {}", item.title);
-        // Placeholder: show confirmation dialog
+        println!("Delete triggered for UID: {}", item.title);
     }
 }
 
-pub fn perform_export(state: &SpotlightState) {
+pub fn perform_export(state: &mut SpotlightState) {
     if let Some(item) = state.matched.get(state.selected) {
-        println!("Export triggered for item: {}", item.title);
-        // Placeholder: write to .md file
+        println!("Export triggered for UID: {}", item.title);
     }
 }
 
-pub fn toggle_favorite(state: &SpotlightState) {
+pub fn toggle_favorite(state: &mut SpotlightState) {
     if let Some(item) = state.matched.get(state.selected) {
-        println!("Favorite toggled for item: {}", item.title);
-        // Placeholder: toggle pinned state
+        println!("Favorite toggled for UID: {}", item.title);
     }
 }

@@ -1,14 +1,31 @@
+use crate::inbox::Priority;
+
 #[derive(Debug, Clone)]
 pub enum Action {
     Quit,
+    Help,
     ToggleDebug,
-    ToggleZenMode,
-    NewInboxEntry,
-    MoveUp,
-    MoveDown,
+    Redraw,
+
+    Up,
+    Down,
+    Left,
+    Right,
     Enter,
-    Exit,
-    Backspace,
+    Back,
+
+    ToggleTriage,
+    ToggleZenMode,
+    ToggleSettings,
+    ToggleSpotlight,
+
+    NewInboxEntry,
+    AssignInboxTask(String),
+    SetTaskPriority(String, Priority),
+    TagInboxTask(String, Vec<String>),
+    ArchiveTask(String),
+    TriageTask(String),
+
     Char(char),
     Ctrl(char),
 }

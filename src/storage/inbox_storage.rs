@@ -1,5 +1,3 @@
-// src/storage/inbox_storage.rs
-
 use crate::inbox::InboxState;
 use chrono::Utc;
 use std::fs::{self, File};

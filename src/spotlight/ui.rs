@@ -1,5 +1,3 @@
-// src/spotlight/ui.rs
-
 use ratatui::{
     layout::{Alignment, Constraint, Direction, Layout, Rect},
     style::{Modifier, Style},
@@ -8,8 +6,7 @@ use ratatui::{
     Frame,
 };
 
-use crate::spotlight::state::SpotlightState;
-use crate::spotlight::debug::render_debug_overlay;
+use super::state::SpotlightState;
 
 pub fn render_overlay(f: &mut Frame, state: &SpotlightState) {
     let size = f.size();
@@ -50,14 +47,9 @@ pub fn render_overlay(f: &mut Frame, state: &SpotlightState) {
     f.render_widget(results, chunks[1]);
 
     // Footer
-    let footer = Paragraph::new("↑↓ to navigate • Enter to open • Esc to exit • Ctrl+D: debug")
+    let footer = Paragraph::new("↑↓ to navigate • Enter to open • Esc to exit")
         .alignment(Alignment::Center);
     f.render_widget(footer, chunks[2]);
-
-    // Optional Debug
-    if state.debug_enabled {
-        render_debug_overlay(f, state);
-    }
 }
 
 fn centered_rect(percent_x: u16, percent_y: u16, area: Rect) -> Rect {
