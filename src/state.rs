@@ -1,27 +1,29 @@
+use crate::config::Config;
 use crate::inbox::InboxState;
-use std::path::PathBuf;
+use crate::scratchpad::Scratchpad;
 
-#[derive(Debug)]
 pub struct AppState {
+    pub config: Config,
+    pub scratchpad: Scratchpad,
     pub inbox: InboxState,
-    pub inbox_path: PathBuf,
+    pub should_quit: bool,
 }
 
 impl AppState {
-    pub fn new(data_dir: PathBuf) -> Self {
-        let inbox_path = data_dir.join("inbox.json");
-        let inbox = InboxState::default();
-        AppState {
-            inbox,
-            inbox_path,
+    pub fn new(config: Config) -> Self {
+        Self {
+            scratchpad: Scratchpad::new(),
+            inbox: InboxState::default(),
+            should_quit: false,
+            config,
         }
     }
 
-    pub fn save_inbox(&self) {
-        // placeholder
+    pub fn is_running(&self) -> bool {
+        !self.should_quit
     }
 
-    pub fn load_inbox(&mut self) {
-        // placeholder
+    pub fn quit(&mut self) {
+        self.should_quit = true;
     }
 }

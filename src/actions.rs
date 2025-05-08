@@ -1,29 +1,9 @@
+// actions.rs
 #[derive(Debug, Clone)]
 pub enum Action {
     Quit,
-    Help,
-    ToggleDebug,
-    Redraw,
-    Up,
-    Down,
-    Left,
-    Right,
-    Enter,
-    Back,
-    ToggleSettings,
-    NewInboxEntry,
-    AssignInboxTask(String),
-    SetTaskPriority(String, crate::inbox::Priority),
-    TagInboxTask(String, Vec<String>),
-    ArchiveTask(String),
-    TriageTask(String),
     ToggleZenMode,
-    ToggleSpotlight,
     OpenScratchpad,
-    Ctrl(char),
-    Input(char),
-    Char(char),
-    Backspace,
-    Submit,
-    Exit,
+    ToggleTriage,
+    // Extend with more actions as needed
 }
