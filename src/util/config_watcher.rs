@@ -1,34 +1,19 @@
 use crate::util::logger;
 use log::{error, info};
+use notify::{Event, EventKind, RecommendedWatcher, RecursiveMode, Watcher};
 use serde::Deserialize;
 use std::path::Path;
 use tokio::sync::mpsc::{channel, Receiver};
-use tokio::fs;
-use notify::{Event, EventKind, RecommendedWatcher, RecursiveMode, Watcher};
+use chrono::Utc;
 use toml;
 
 #[derive(Debug, Deserialize, Clone)]
 pub struct Config {
-    pub logging: LoggingConfig,
-    pub persistence: PersistenceConfig,
-}
-
-#[derive(Debug, Deserialize, Clone)]
-pub struct LoggingConfig {
-    pub enabled: bool,
-    pub log_level: String,
-    pub log_to_file: bool,
-    pub log_file_path: String,
-}
-
-#[derive(Debug, Deserialize, Clone)]
-pub struct PersistenceConfig {
-    pub autosave_interval: u64,
-    pub default_save_path: String,
+    pub logging: logger::LoggingConfig,
 }
 
 pub async fn load_config(path: &str) -> Result<Config, Box<dyn std::error::Error>> {
-    let content = fs::read_to_string(path).await?;
+    let content = tokio::fs::read_to_string(path).await?;
     let config: Config = toml::from_str(&content)?;
     Ok(config)
 }

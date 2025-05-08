@@ -1,11 +1,11 @@
 use log::LevelFilter;
-use serde::Deserialize;
 use simplelog::*;
 use std::fs::{self, File};
 use std::path::Path;
 use toml;
+use env_logger::Env;
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug)]
 pub struct LoggingConfig {
     pub enabled: bool,
     pub log_level: String,
@@ -59,6 +59,6 @@ pub fn init_logger() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-pub fn log_action(action: &str, node_id: u64) {
-    log::info!("Action: '{}', Node ID: {}", action, node_id);
+pub fn log_zen(msg: &str) {
+    println!("[ZenLog] {}", msg);
 }
