@@ -1,7 +1,7 @@
 use std::fs;
-use std::path::Path;
+use std::path::{Path, PathBuf};
+
 use serde::Deserialize;
-use crate::extension_host::errors::ExtensionHostError;
 
 #[derive(Debug, Deserialize)]
 pub struct PluginManifest {
@@ -18,18 +18,17 @@ pub struct Plugin {
 }
 
 impl Plugin {
-    pub fn from_path<P: AsRef<Path>>(path: P) -> Result<Self, ExtensionHostError> {
+    pub fn from_path<P: AsRef<Path>>(path: P) -> Result<Self, String> {
         let manifest_path = path.as_ref().join("prismx-plugin.json");
         let wasm_path = path.as_ref().join("plugin.wasm");
 
         let manifest_str = fs::read_to_string(&manifest_path)
-            .map_err(|_| ExtensionHostError::ManifestNotFound(manifest_path.display().to_string()))?;
-
+            .map_err(|e| format!("Failed to read manifest: {}", e))?;
         let manifest: PluginManifest = serde_json::from_str(&manifest_str)
-            .map_err(|e| ExtensionHostError::ManifestParseError(e.to_string()))?;
+            .map_err(|e| format!("Failed to parse manifest: {}", e))?;
 
         let wasm_bytes = fs::read(&wasm_path)
-            .map_err(|_| ExtensionHostError::WasmBinaryNotFound(wasm_path.display().to_string()))?;
+            .map_err(|e| format!("Failed to read WASM binary: {}", e))?;
 
         Ok(Self { manifest, wasm_bytes })
     }

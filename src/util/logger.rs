@@ -1,61 +1,42 @@
-use log::{info};
-use std::fs::{self, File};
-use std::path::Path;
-use simplelog::*;
+use log::info;
+use std::fs::File;
 use std::io::Read;
-use serde::Deserialize;
+use std::path::PathBuf;
+use env_logger::Env;
 use toml;
+use serde::Deserialize;
 
 #[derive(Debug, Deserialize, Clone)]
 pub struct LoggingConfig {
-    pub enabled: bool,
-    pub log_level: String,
-    pub log_to_file: bool,
-    pub log_file_path: String,
+    pub level: String,
+    pub file_output: Option<String>,
 }
 
-pub fn init_logging() -> Result<(), Box<dyn std::error::Error>> {
-    let config_content = fs::read_to_string("config.toml")?;
-    let config: toml::Value = toml::from_str(&config_content)?;
-    let logging_cfg: LoggingConfig = config
-        .get("logging")
-        .ok_or("Missing [logging] section")?
-        .clone()
-        .try_into()?;
-
-    if !logging_cfg.enabled {
-        return Ok(());
-    }
-
-    let level = match logging_cfg.log_level.to_lowercase().as_str() {
-        "trace" => LevelFilter::Trace,
-        "debug" => LevelFilter::Debug,
-        "info" => LevelFilter::Info,
-        "warn" => LevelFilter::Warn,
-        "error" => LevelFilter::Error,
-        _ => LevelFilter::Info,
-    };
-
-    let mut loggers: Vec<Box<dyn SharedLogger>> = vec![TermLogger::new(
-        level,
-        Config::default(),
-        TerminalMode::Mixed,
-        ColorChoice::Auto,
-    )];
-
-    if logging_cfg.log_to_file {
-        let path = Path::new(&logging_cfg.log_file_path);
-        if let Some(parent) = path.parent() {
-            fs::create_dir_all(parent)?;
+pub fn init_logging() {
+    if let Some(config_path) = get_config_path() {
+        if let Ok(mut file) = File::open(&config_path) {
+            let mut config_content = String::new();
+            if file.read_to_string(&mut config_content).is_ok() {
+                if let Ok(config): Result<LoggingConfig, _> = toml::from_str(&config_content) {
+                    let env = Env::default().default_filter_or(config.level);
+                    env_logger::Builder::from_env(env).init();
+                    if let Some(log_file) = config.file_output {
+                        info!("Logging to file: {}", log_file);
+                    }
+                    return;
+                }
+            }
         }
-        loggers.push(WriteLogger::new(
-            level,
-            Config::default(),
-            File::create(path)?,
-        ));
     }
 
-    CombinedLogger::init(loggers)?;
+    let env = Env::default().default_filter_or("info");
+    env_logger::Builder::from_env(env).init();
+}
 
-    Ok(())
+fn get_config_path() -> Option<PathBuf> {
+    dirs::config_dir().map(|mut path| {
+        path.push("prismx");
+        path.push("logging.toml");
+        path
+    })
 }

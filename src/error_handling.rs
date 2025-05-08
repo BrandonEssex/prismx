@@ -1,7 +1,5 @@
+use crate::util::errors::DashboardError;
 use thiserror::Error;
-use crate::dashboard::error::DashboardError;
-use serde_json;
-use std::io;
 
 #[derive(Debug, Error)]
 pub enum PrismXError {
@@ -15,7 +13,7 @@ pub enum PrismXError {
     SaveConfig(String),
 
     #[error("Widget initialization error: {0}")]
-    InitError(String),
+    WidgetInit(String),
 
     #[error("Widget rendering error: {0}")]
     RenderError(String),
@@ -30,7 +28,7 @@ pub enum PrismXError {
     General(String),
 
     #[error("IO error: {0}")]
-    Io(#[from] io::Error),
+    Io(#[from] std::io::Error),
 
     #[error("JSON serialization/deserialization error: {0}")]
     SerdeJson(#[from] serde_json::Error),

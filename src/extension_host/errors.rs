@@ -1,6 +1,6 @@
 use thiserror::Error;
 
-#[derive(Debug, Error)]
+#[derive(Error, Debug)]
 pub enum ExtensionHostError {
     #[error("Plugin manifest not found at path: {0}")]
     ManifestNotFound(String),
