@@ -1,3 +1,6 @@
+level = "info"
+theme = "dark"
+
 [zen_mode]
 title_fade_delay_secs = 2
 autosave_interval_secs = 10
