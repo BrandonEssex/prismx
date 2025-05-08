@@ -1,24 +1,7 @@
 use thiserror::Error;
 
 #[derive(Error, Debug)]
-pub enum ExtensionHostError {
-    #[error("Plugin manifest not found at path: {0}")]
-    ManifestNotFound(String),
-
-    #[error("Failed to parse plugin manifest: {0}")]
-    ManifestParseError(String),
-
-    #[error("Plugin WASM binary not found at path: {0}")]
-    WasmBinaryNotFound(String),
-
-    #[error("Entrypoint function '{0}' not found in WASM module")]
-    EntrypointNotFound(String),
-
-    #[error("Plugin execution failed: {0}")]
-    PluginExecutionError(String),
-
-    #[error("Profiling error: {0}")]
-    ProfilingError(String),
+pub enum PluginError {
+    #[error("Plugin load failure")]
+    LoadFailure,
 }
-
-pub type Result<T> = std::result::Result<T, ExtensionHostError>;
