@@ -21,7 +21,9 @@ impl AppState {
     }
 
     pub fn save_inbox(&self) {
-        let _ = save_inbox_to_disk(&self.inbox_path, &self.inbox);
+        if let Err(e) = save_inbox_to_disk(&self.inbox_path, &self.inbox) {
+            eprintln!("Failed to save inbox state: {:?}", e);
+        }
     }
 
     pub fn load_inbox(&mut self) {

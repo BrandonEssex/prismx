@@ -3,13 +3,12 @@
 use ratatui::{
     layout::{Alignment, Constraint, Direction, Layout},
     style::{Modifier, Style},
-    text::{Line, Span},
+    text::{Span, Spans},
     widgets::{Block, Borders, List, ListItem, Paragraph},
     Frame,
 };
 
 use crate::spotlight::state::SpotlightState;
-use crate::spotlight::debug::render_debug_overlay;
 
 pub fn render_overlay(f: &mut Frame, state: &mut SpotlightState) {
     let size = f.size();
@@ -23,7 +22,7 @@ pub fn render_overlay(f: &mut Frame, state: &mut SpotlightState) {
         ])
         .split(area);
 
-    let input = Paragraph::new(Line::from(vec![Span::raw(state.query.as_str())]))
+    let input = Paragraph::new(state.query.clone())
         .style(Style::default())
         .block(Block::default().borders(Borders::ALL).title("Spotlight Search"));
     f.render_widget(input, chunks[0]);
@@ -37,7 +36,7 @@ pub fn render_overlay(f: &mut Frame, state: &mut SpotlightState) {
             if i == state.selected {
                 style = style.add_modifier(Modifier::REVERSED);
             }
-            ListItem::new(Line::from(vec![Span::styled(res.display_title.clone(), style)]))
+            ListItem::new(Spans::from(vec![Span::styled(res.display_title.clone(), style)]))
         })
         .collect();
 
@@ -50,10 +49,6 @@ pub fn render_overlay(f: &mut Frame, state: &mut SpotlightState) {
     let footer = Paragraph::new("↑↓ to navigate • Enter to open • Esc to exit • Ctrl+D: debug")
         .alignment(Alignment::Center);
     f.render_widget(footer, chunks[2]);
-
-    if state.debug_enabled {
-        render_debug_overlay(f, state, size);
-    }
 }
 
 fn centered_rect(percent_x: u16, percent_y: u16, area: ratatui::layout::Rect) -> ratatui::layout::Rect {

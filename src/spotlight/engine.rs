@@ -1,54 +1,26 @@
-use fuzzy_matcher::skim::SkimMatcherV2;
-use fuzzy_matcher::FuzzyMatcher;
+// src/spotlight/engine.rs
 
-#[derive(Clone)]
+#[derive(Debug)]
 pub struct SearchResult {
-    pub uid: String,
-    pub display_title: String,
-    pub score: i64,
+    pub title: String,
 }
 
-pub struct SpotlightEngine {
-    matcher: SkimMatcherV2,
-    items: Vec<SearchResult>,
-}
+#[derive(Debug)]
+pub struct SpotlightEngine;
 
 impl SpotlightEngine {
     pub fn new() -> Self {
-        SpotlightEngine {
-            matcher: SkimMatcherV2::default(),
-            items: vec![
-                SearchResult {
-                    uid: "1".into(),
-                    display_title: "Welcome to PrismX".into(),
-                    score: 100,
-                },
-                SearchResult {
-                    uid: "2".into(),
-                    display_title: "Getting Started Guide".into(),
-                    score: 90,
-                },
-                SearchResult {
-                    uid: "3".into(),
-                    display_title: "Plugin API Overview".into(),
-                    score: 80,
-                },
-            ],
-        }
+        SpotlightEngine
     }
 
     pub fn search(&self, query: &str) -> Vec<SearchResult> {
-        let mut results = vec![];
-
-        for item in &self.items {
-            if let Some((score, _)) = self.matcher.fuzzy_match(&item.display_title, query).map(|s| (s, ())) {
-                let mut matched = item.clone();
-                matched.score = score;
-                results.push(matched);
-            }
+        if query.is_empty() {
+            vec![]
+        } else {
+            vec![
+                SearchResult { title: format!("Result for '{}'", query) },
+                SearchResult { title: "Another result".into() },
+            ]
         }
-
-        results.sort_by(|a, b| b.score.cmp(&a.score));
-        results
     }
 }

@@ -2,11 +2,9 @@
 
 use crate::spotlight::engine::{SearchResult, SpotlightEngine};
 use crate::spotlight::plugin::SearchScope;
-use crate::screen::AppState;
 
-#[derive(Default)]
+#[derive(Debug)]
 pub struct SpotlightState {
-    pub is_active: bool,
     pub query: String,
     pub matched: Vec<SearchResult>,
     pub selected: usize,
@@ -15,18 +13,14 @@ pub struct SpotlightState {
 }
 
 impl SpotlightState {
-    pub fn open(&mut self) {
-        self.is_active = true;
-        self.query.clear();
-        self.matched.clear();
-        self.selected = 0;
-    }
-
-    pub fn close(&mut self) {
-        self.is_active = false;
-        self.query.clear();
-        self.matched.clear();
-        self.selected = 0;
+    pub fn new() -> Self {
+        SpotlightState {
+            query: String::new(),
+            matched: Vec::new(),
+            selected: 0,
+            debug_enabled: false,
+            engine: SpotlightEngine::default(),
+        }
     }
 
     pub fn update_query(&mut self, c: char) {
@@ -51,28 +45,12 @@ impl SpotlightState {
         }
     }
 
-    pub fn activate_selected(&mut self, _state: &mut AppState) {
-        self.close();
-    }
-
     pub fn toggle_debug(&mut self) {
         self.debug_enabled = !self.debug_enabled;
     }
 
-    pub fn toggle_favorite(&mut self) {}
-
-    pub fn queue_move(&mut self) {}
-
-    pub fn queue_delete(&mut self) {}
-
-    pub fn queue_export(&mut self) {}
-
     fn refresh_matches(&mut self) {
         self.matched = self.engine.search(&self.query);
         self.selected = 0;
-    }
-
-    pub fn set_engine(&mut self, engine: SpotlightEngine) {
-        self.engine = engine;
     }
 }
