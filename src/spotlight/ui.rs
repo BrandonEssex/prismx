@@ -8,7 +8,7 @@ use ratatui::{
 
 use super::state::SpotlightState;
 
-pub fn render_overlay(f: &mut Frame, state: &SpotlightState) {
+pub fn render_overlay(f: &mut Frame, state: &mut SpotlightState) {
     let size = f.size();
     let area = centered_rect(80, 60, size);
     let chunks = Layout::default()
@@ -20,40 +20,37 @@ pub fn render_overlay(f: &mut Frame, state: &SpotlightState) {
         ])
         .split(area);
 
-    // Input Field
-    let input = Paragraph::new(state.query.as_str())
+    let input = Paragraph::new(Line::from(state.query.clone()))
         .style(Style::default())
         .block(Block::default().borders(Borders::ALL).title("Spotlight Search"));
     f.render_widget(input, chunks[0]);
 
-    // Results List
     let items: Vec<ListItem> = state
         .matched
         .iter()
         .enumerate()
         .map(|(i, res)| {
-            let mut style = Style::default();
-            if i == state.selected {
-                style = style.add_modifier(Modifier::REVERSED);
-            }
+            let style = if i == state.selected {
+                Style::default().add_modifier(Modifier::REVERSED)
+            } else {
+                Style::default()
+            };
             ListItem::new(Line::from(vec![Span::styled(res.title.clone(), style)]))
         })
         .collect();
 
     let results = List::new(items)
         .block(Block::default().borders(Borders::ALL).title("Results"))
-        .highlight_style(Style::default().add_modifier(Modifier::BOLD));
-
+        .highlight_symbol(">> ");
     f.render_widget(results, chunks[1]);
 
-    // Footer
-    let footer = Paragraph::new("↑↓ to navigate • Enter to open • Esc to exit")
+    let footer = Paragraph::new("↑↓ to navigate • Enter to open • Esc to exit • Ctrl+D: debug")
         .alignment(Alignment::Center);
     f.render_widget(footer, chunks[2]);
 }
 
 fn centered_rect(percent_x: u16, percent_y: u16, area: Rect) -> Rect {
-    let popup_layout = Layout::default()
+    let vertical = Layout::default()
         .direction(Direction::Vertical)
         .constraints([
             Constraint::Percentage((100 - percent_y) / 2),
@@ -69,5 +66,5 @@ fn centered_rect(percent_x: u16, percent_y: u16, area: Rect) -> Rect {
             Constraint::Percentage(percent_x),
             Constraint::Percentage((100 - percent_x) / 2),
         ])
-        .split(popup_layout[1])[1]
+        .split(vertical[1])[1]
 }

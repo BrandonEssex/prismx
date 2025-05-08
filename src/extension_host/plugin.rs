@@ -1,10 +1,6 @@
 use serde::Deserialize;
-use std::{fs, path::Path};
-use tracing::{debug, warn};
-
 use super::errors::ExtensionHostError;
-
-const PRISMX_API_VERSION: &str = "0.1.0";
+use std::{fs, path::Path};
 
 #[derive(Debug, Deserialize)]
 pub struct PluginManifest {
@@ -22,8 +18,6 @@ pub struct Plugin {
 
 impl Plugin {
     pub fn from_path<P: AsRef<Path>>(path: P) -> Result<Self, ExtensionHostError> {
-        debug!("Loading plugin from path: {:?}", path.as_ref());
-
         let manifest_path = path.as_ref().join("prismx-plugin.json");
         let wasm_path = path.as_ref().join("plugin.wasm");
 
@@ -31,17 +25,6 @@ impl Plugin {
             .map_err(|_| ExtensionHostError::ManifestNotFound(manifest_path.display().to_string()))?;
         let manifest: PluginManifest = serde_json::from_str(&manifest_str)
             .map_err(|e| ExtensionHostError::ManifestParseError(e.to_string()))?;
-
-        if manifest.prismx_api_version != PRISMX_API_VERSION {
-            warn!(
-                "Plugin API version mismatch: found {}, expected {}",
-                manifest.prismx_api_version, PRISMX_API_VERSION
-            );
-            return Err(ExtensionHostError::IncompatibleApiVersion {
-                expected: PRISMX_API_VERSION.into(),
-                found: manifest.prismx_api_version,
-            });
-        }
 
         let wasm_bytes = fs::read(&wasm_path)
             .map_err(|_| ExtensionHostError::WasmBinaryNotFound(wasm_path.display().to_string()))?;

@@ -1,24 +1,43 @@
 use thiserror::Error;
-use crate::extension_host::errors::ExtensionHostError;
-use crate::spotlight::plugin::SearchScope;
 
-#[derive(Error, Debug)]
+#[derive(Debug, Error)]
+pub enum DashboardError {
+    #[error("Failed to load dashboard configuration: {0}")]
+    ConfigLoadError(String),
+
+    #[error("Failed to parse dashboard configuration: {0}")]
+    ConfigParseError(String),
+
+    #[error("Failed to save dashboard configuration: {0}")]
+    ConfigSaveError(String),
+
+    #[error("Widget initialization error: {0}")]
+    WidgetInitError(String),
+
+    #[error("Widget rendering error: {0}")]
+    WidgetRenderError(String),
+
+    #[error("Widget event handling error: {0}")]
+    WidgetEventError(String),
+
+    #[error("Unknown widget type: {0}")]
+    UnknownWidgetType(String),
+
+    #[error("General dashboard error: {0}")]
+    GeneralError(String),
+}
+
+#[derive(Debug, Error)]
 pub enum PrismXError {
-    #[error("Extension host error: {0}")]
-    ExtensionHost(#[from] ExtensionHostError),
-
-    #[error("Spotlight plugin error: {0}")]
-    PluginError(String),
-
-    #[error("Invalid search scope: {0:?}")]
-    InvalidSearchScope(SearchScope),
-
-    #[error("I/O error: {0}")]
+    #[error("IO error: {0}")]
     Io(#[from] std::io::Error),
 
-    #[error("JSON error: {0}")]
-    Json(#[from] serde_json::Error),
+    #[error("JSON serialization/deserialization error: {0}")]
+    SerdeJson(#[from] serde_json::Error),
 
-    #[error("General error: {0}")]
-    General(String),
+    #[error("Dashboard module error: {0}")]
+    Dashboard(#[from] DashboardError),
+
+    #[error("Unknown error: {0}")]
+    Unknown(String),
 }
