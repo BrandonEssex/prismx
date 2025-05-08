@@ -1,28 +1,14 @@
-use std::path::PathBuf;
-use std::time::Duration;
+use std::fs;
+use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, PartialEq)]
-pub struct ZenConfig {
-    pub title_fade_delay: Duration,
-    pub autosave_interval: Duration,
-    pub scratchpad_path: PathBuf,
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Config {
+    pub level: String,
+    pub theme: String,
 }
 
-impl ZenConfig {
-    pub fn scratchpad_path(&self) -> PathBuf {
-        self.scratchpad_path.clone()
-    }
-}
-
-impl Default for ZenConfig {
-    fn default() -> Self {
-        ZenConfig {
-            title_fade_delay: Duration::from_secs(2),
-            autosave_interval: Duration::from_secs(10),
-            scratchpad_path: dirs::config_dir()
-                .unwrap_or_else(|| PathBuf::from("."))
-                .join("prismx")
-                .join("zen_scratchpad.md"),
-        }
-    }
+pub fn load_config() -> Result<Config, Box<dyn std::error::Error>> {
+    let content = fs::read_to_string("config.toml")?;
+    let config: Config = toml::from_str(&content)?;
+    Ok(config)
 }

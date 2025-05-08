@@ -4,14 +4,16 @@ use crate::screen::Screen;
 use crate::state::AppState;
 use crate::extension_host::ExtensionHost;
 use crate::spotlight::SpotlightModule;
+use crate::actions::Action;
 
 use std::io::{stdout, Write};
 use crossterm::terminal;
+use ratatui::{prelude::Backend, Frame};
 
 pub fn run() -> Result<(), Box<dyn std::error::Error>> {
     let config = load_config()?;
     let mut state = AppState::new(config.clone());
-    let spotlight = SpotlightModule::new(); // Assumes this exists
+    let spotlight = SpotlightModule::new();
     let mut screen = Screen::new(config, spotlight);
 
     terminal::enable_raw_mode()?;
@@ -40,7 +42,6 @@ pub fn run() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-// Dummy placeholder for draw target
-fn screen_terminal_frame<B: Backend>() -> Frame<B> {
+fn screen_terminal_frame<B: Backend>() -> Frame<'_> {
     unimplemented!("This should return the real terminal frame for drawing.")
 }

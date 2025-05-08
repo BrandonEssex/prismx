@@ -1,3 +1,5 @@
+use env_logger::init;
+
 mod app;
 mod config;
 mod input;
@@ -10,7 +12,7 @@ mod mode;
 mod extension_host;
 
 fn main() {
-    logger::init().expect("Failed to initialize logger");
+    init().expect("Failed to initialize logger");
     if let Err(e) = app::run() {
         eprintln!("Application error: {:?}", e);
     }
