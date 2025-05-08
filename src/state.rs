@@ -1,5 +1,5 @@
 use crate::config::Config;
-use crate::inbox::InboxState;
+use crate::storage::inbox_storage::InboxState;
 use crate::scratchpad::Scratchpad;
 
 pub struct AppState {
@@ -13,7 +13,7 @@ impl AppState {
     pub fn new(config: Config) -> Self {
         Self {
             scratchpad: Scratchpad::new(),
-            inbox: InboxState::default(),
+            inbox: InboxState::new(),
             should_quit: false,
             config,
         }

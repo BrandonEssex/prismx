@@ -1,7 +1,6 @@
 use crate::scratchpad::Scratchpad;
 use crate::config::Config;
 
-use log::info;
 use ratatui::{
     layout::{Alignment, Rect},
     style::{Color, Modifier, Style},
@@ -16,7 +15,7 @@ pub struct ZenModeState {
 }
 
 impl ZenModeState {
-    pub fn new(config: &Config) -> Self {
+    pub fn new(_config: &Config) -> Self {
         Self {
             enabled: false,
             scratchpad: Scratchpad::new(),
@@ -25,10 +24,10 @@ impl ZenModeState {
 
     pub fn toggle(&mut self) {
         self.enabled = !self.enabled;
-        info!("Zen Mode toggled: {}", self.enabled);
+        log::info!("Zen Mode toggled: {}", self.enabled);
     }
 
-    pub fn render<B: ratatui::backend::Backend>(&self, frame: &mut Frame<B>, area: Rect) {
+    pub fn render<B: ratatui::backend::Backend>(&self, frame: &mut Frame<'_>, area: Rect) {
         if self.enabled {
             let block = Block::default()
                 .title("Zen Mode")

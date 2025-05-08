@@ -6,7 +6,7 @@ use crate::extension_host::ExtensionHost;
 use crate::spotlight::SpotlightModule;
 use crate::actions::Action;
 
-use std::io::{stdout, Write};
+use std::io::{stdout};
 use crossterm::terminal;
 use ratatui::{prelude::Backend, Frame};
 
