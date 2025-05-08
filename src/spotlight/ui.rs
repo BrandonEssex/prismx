@@ -1,3 +1,5 @@
+// src/spotlight/ui.rs
+
 use ratatui::{
     layout::{Alignment, Constraint, Direction, Layout, Rect},
     style::{Modifier, Style},
@@ -6,10 +8,10 @@ use ratatui::{
     Frame,
 };
 
-use super::state::SpotlightState;
-use super::debug::render_debug_overlay;
+use crate::spotlight::state::SpotlightState;
+use crate::spotlight::debug::render_debug_overlay;
 
-pub fn render_overlay(f: &mut Frame, state: &mut SpotlightState) {
+pub fn render_overlay(f: &mut Frame, state: &SpotlightState) {
     let size = f.size();
     let area = centered_rect(80, 60, size);
     let chunks = Layout::default()
@@ -33,11 +35,10 @@ pub fn render_overlay(f: &mut Frame, state: &mut SpotlightState) {
         .iter()
         .enumerate()
         .map(|(i, res)| {
-            let style = if i == state.selected {
-                Style::default().add_modifier(Modifier::REVERSED)
-            } else {
-                Style::default()
-            };
+            let mut style = Style::default();
+            if i == state.selected {
+                style = style.add_modifier(Modifier::REVERSED);
+            }
             ListItem::new(Line::from(vec![Span::styled(res.title.clone(), style)]))
         })
         .collect();

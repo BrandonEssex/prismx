@@ -7,6 +7,17 @@ use ratatui::{
     widgets::{Block, Borders, List, ListItem, Paragraph},
     Frame,
 };
+use std::fmt;
+
+impl fmt::Display for TaskStatus {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            TaskStatus::Inbox => write!(f, "Inbox"),
+            TaskStatus::Triaged => write!(f, "Triaged"),
+            TaskStatus::Archived => write!(f, "Archived"),
+        }
+    }
+}
 
 pub fn draw_triage_view(frame: &mut Frame, state: &AppState) {
     let size = frame.size();

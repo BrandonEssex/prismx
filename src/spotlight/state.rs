@@ -1,4 +1,4 @@
-use crate::spotlight::engine::{SearchResult, SpotlightEngine};
+use super::engine::{SearchResult, SpotlightEngine};
 
 pub struct SpotlightState {
     pub query: String,
@@ -45,20 +45,8 @@ impl SpotlightState {
         self.debug_enabled = !self.debug_enabled;
     }
 
-    pub fn refresh_matches(&mut self) {
+    fn refresh_matches(&mut self) {
         self.matched = self.engine.search(&self.query);
         self.selected = 0;
-    }
-
-    pub fn selected(&self) -> Option<&SearchResult> {
-        self.matched.get(self.selected)
-    }
-
-    pub fn engine_mut(&mut self) -> &mut SpotlightEngine {
-        &mut self.engine
-    }
-
-    pub fn engine(&self) -> &SpotlightEngine {
-        &self.engine
     }
 }

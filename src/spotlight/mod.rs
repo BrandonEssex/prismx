@@ -1,49 +1,39 @@
-mod engine;
-mod state;
-mod ui;
 mod actions;
 mod debug;
+mod engine;
+mod favorites;
 mod plugin;
+mod state;
+mod ui;
 
-use ratatui::Frame;
 use crate::actions::Action;
-use crate::screen::AppState;
+use ratatui::Frame;
 use state::SpotlightState;
 
 pub struct SpotlightModule {
     state: SpotlightState,
-    is_active: bool,
 }
 
 impl SpotlightModule {
     pub fn new() -> Self {
         SpotlightModule {
             state: SpotlightState::new(),
-            is_active: false,
         }
     }
 
-    pub fn handle_action(&mut self, action: Action, state: &mut AppState) -> bool {
-        if !self.is_active {
-            return false;
-        }
-
+    pub fn handle_action(&mut self, action: Action, _state: &mut crate::state::AppState) -> bool {
         match action {
             Action::Up => self.state.move_up(),
             Action::Down => self.state.move_down(),
-            Action::Enter => {
-                if let Some(result) = self.state.selected() {
-                    println!("Selected: {}", result.title);
-                    self.toggle();
-                }
-            }
-            Action::Char('m') => actions::perform_move(&mut self.state),
-            Action::Char('x') => actions::perform_delete(&mut self.state),
-            Action::Char('e') => actions::perform_export(&mut self.state),
-            Action::Char('f') => actions::toggle_favorite(&mut self.state),
-            Action::Char(c) => self.state.update_query(c),
+            Action::Enter => self.state.activate_selected(),
+            Action::Back => self.state.close(),
+            Action::Char('m') => self.state.queue_move(),
+            Action::Char('x') => self.state.queue_delete(),
+            Action::Char('e') => self.state.queue_export(),
+            Action::Char('f') => self.state.toggle_favorite(),
+            Action::Ctrl('d') => self.state.toggle_debug(),
+            Action::Input(c) => self.state.update_query(c),
             Action::Backspace => self.state.backspace(),
-            Action::Exit => self.toggle(),
             _ => {}
         }
 
@@ -51,16 +41,20 @@ impl SpotlightModule {
     }
 
     pub fn render(&mut self, f: &mut Frame) {
-        if self.is_active {
+        if self.state.is_open() {
             ui::render_overlay(f, &mut self.state);
         }
     }
 
     pub fn toggle(&mut self) {
-        self.is_active = !self.is_active;
+        if self.state.is_open() {
+            self.state.close();
+        } else {
+            self.state.open();
+        }
     }
 
     pub fn is_active(&self) -> bool {
-        self.is_active
+        self.state.is_open()
     }
 }
