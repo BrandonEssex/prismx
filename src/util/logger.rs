@@ -3,6 +3,7 @@ use serde::Deserialize;
 use simplelog::*;
 use std::fs::{self, File};
 use std::path::Path;
+use toml;
 
 #[derive(Debug, Deserialize)]
 pub struct LoggingConfig {
@@ -60,9 +61,4 @@ pub fn init_logger() -> Result<(), Box<dyn std::error::Error>> {
 
 pub fn log_action(action: &str, node_id: u64) {
     log::info!("Action: '{}', Node ID: {}", action, node_id);
-}
-
-pub fn log_zen(msg: &str) {
-    let timestamp = chrono::Local::now().format("%Y-%m-%d %H:%M:%S");
-    log::info!("[{}] {}", timestamp, msg);
 }

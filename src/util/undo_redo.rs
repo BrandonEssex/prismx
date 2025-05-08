@@ -4,6 +4,7 @@ pub enum NodeAction {
     Delete(u64),
 }
 
+#[derive(Debug)]
 pub struct ActionStack {
     undo_stack: Vec<NodeAction>,
     redo_stack: Vec<NodeAction>,

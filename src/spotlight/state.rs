@@ -1,34 +1,49 @@
-use super::engine::{SearchResult, SpotlightEngine};
+use crate::spotlight::engine::{SearchResult, SpotlightEngine};
 
+#[derive(Debug)]
 pub struct SpotlightState {
-    pub is_active: bool,
     pub query: String,
     pub matched: Vec<SearchResult>,
     pub selected: usize,
     pub debug_enabled: bool,
     pub engine: SpotlightEngine,
+    active: bool,
 }
 
 impl SpotlightState {
     pub fn new() -> Self {
-        SpotlightState {
-            is_active: false,
+        Self {
             query: String::new(),
             matched: Vec::new(),
             selected: 0,
             debug_enabled: false,
             engine: SpotlightEngine::new(),
+            active: false,
         }
     }
 
+    pub fn is_active(&self) -> bool {
+        self.active
+    }
+
     pub fn open(&mut self) {
-        self.is_active = true;
+        self.active = true;
         self.query.clear();
         self.refresh_matches();
     }
 
     pub fn close(&mut self) {
-        self.is_active = false;
+        self.active = false;
+    }
+
+    pub fn update_query(&mut self, c: char) {
+        self.query.push(c);
+        self.refresh_matches();
+    }
+
+    pub fn backspace(&mut self) {
+        self.query.pop();
+        self.refresh_matches();
     }
 
     pub fn move_up(&mut self) {
@@ -43,18 +58,10 @@ impl SpotlightState {
         }
     }
 
-    pub fn update_query(&mut self, c: char) {
-        self.query.push(c);
-        self.refresh_matches();
-    }
-
-    pub fn backspace(&mut self) {
-        self.query.pop();
-        self.refresh_matches();
-    }
-
     pub fn activate_selected(&mut self) {
-        // Placeholder
+        if let Some(item) = self.matched.get(self.selected) {
+            println!("Activated item: {}", item.title);
+        }
         self.close();
     }
 
@@ -63,19 +70,27 @@ impl SpotlightState {
     }
 
     pub fn toggle_favorite(&mut self) {
-        // Placeholder
+        if let Some(item) = self.matched.get(self.selected) {
+            println!("Favorite toggled for UID: {}", item.title);
+        }
     }
 
     pub fn queue_move(&mut self) {
-        // Placeholder
+        if let Some(item) = self.matched.get(self.selected) {
+            println!("Move triggered for UID: {}", item.title);
+        }
     }
 
     pub fn queue_delete(&mut self) {
-        // Placeholder
+        if let Some(item) = self.matched.get(self.selected) {
+            println!("Delete triggered for UID: {}", item.title);
+        }
     }
 
     pub fn queue_export(&mut self) {
-        // Placeholder
+        if let Some(item) = self.matched.get(self.selected) {
+            println!("Export triggered for UID: {}", item.title);
+        }
     }
 
     fn refresh_matches(&mut self) {

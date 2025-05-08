@@ -1,8 +1,9 @@
-use serde::Deserialize;
-use super::errors::ExtensionHostError;
-use std::{fs, path::Path};
+use std::fs;
+use std::path::Path;
 
-#[derive(Debug, Deserialize)]
+use super::errors::ExtensionHostError;
+
+#[derive(Debug)]
 pub struct PluginManifest {
     pub name: String,
     pub author: String,
@@ -23,12 +24,13 @@ impl Plugin {
 
         let manifest_str = fs::read_to_string(&manifest_path)
             .map_err(|_| ExtensionHostError::ManifestNotFound(manifest_path.display().to_string()))?;
+
         let manifest: PluginManifest = serde_json::from_str(&manifest_str)
             .map_err(|e| ExtensionHostError::ManifestParseError(e.to_string()))?;
 
         let wasm_bytes = fs::read(&wasm_path)
             .map_err(|_| ExtensionHostError::WasmBinaryNotFound(wasm_path.display().to_string()))?;
 
-        Ok(Self { manifest, wasm_bytes })
+        Ok(Plugin { manifest, wasm_bytes })
     }
 }

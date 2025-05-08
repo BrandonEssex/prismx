@@ -42,8 +42,8 @@ pub async fn move_node(node_id: u64, x: f64, y: f64) -> Result<(), MindmapError>
 
 pub async fn update_node_content(node_id: u64, new_content: &str) -> Result<(), MindmapError> {
     let mut state = STATE.lock().await;
-    if let Some(node) = state.mindmap.nodes.iter_mut().find(|n| n.id == node_id) {
-        node.content = new_content.to_string();
+    if let Some(node) = state.mindmap.nodes.get_mut(&node_id) {
+        node.title = new_content.to_string();
         debug!("Updated node {} content to '{}'", node_id, new_content);
         Ok(())
     } else {
@@ -57,8 +57,7 @@ pub async fn get_node(node_id: u64) -> Result<crate::tui::mindmap::Node, Mindmap
     state
         .mindmap
         .nodes
-        .iter()
-        .find(|n| n.id == node_id)
+        .get(&node_id)
         .cloned()
         .ok_or_else(|| {
             error!("Attempted to get nonexistent node {}", node_id);

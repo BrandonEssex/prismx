@@ -1,65 +1,30 @@
-use wasmtime::{Engine, Module};
 use super::errors::ExtensionHostError;
-use log::{debug, warn};
+use wasmtime::{Engine, Module};
 
+#[derive(Debug)]
 pub struct ResourceProfileReport {
     pub estimated_memory_bytes: usize,
     pub estimated_cpu_cycles: u64,
-    pub warnings: Vec<String>,
-    pub recommendations: Vec<String>,
-}
-
-impl ResourceProfileReport {
-    pub fn log_warnings(&self) {
-        for warning in &self.warnings {
-            warn!("{}", warning);
-        }
-        for recommendation in &self.recommendations {
-            debug!("Recommendation: {}", recommendation);
-        }
-    }
 }
 
 pub struct ResourceProfiler {
     engine: Engine,
 }
 
-impl Default for ResourceProfiler {
-    fn default() -> Self {
+impl ResourceProfiler {
+    pub fn new() -> Self {
         Self {
             engine: Engine::default(),
         }
     }
-}
 
-impl ResourceProfiler {
     pub fn profile_plugin(&self, wasm_bytes: &[u8]) -> Result<ResourceProfileReport, ExtensionHostError> {
-        debug!("Profiling plugin resources");
-
-        let module = Module::from_binary(&self.engine, wasm_bytes)
+        let _ = Module::from_binary(&self.engine, wasm_bytes)
             .map_err(|e| ExtensionHostError::ProfilingError(e.to_string()))?;
 
-        let estimated_memory_bytes = wasm_bytes.len() * 2;
-        let estimated_cpu_cycles = (estimated_memory_bytes as u64) * 10;
-
-        let mut warnings = Vec::new();
-        let mut recommendations = Vec::new();
-
-        if estimated_memory_bytes > 20 * 1024 * 1024 {
-            warnings.push(format!("High memory usage predicted: {} bytes", estimated_memory_bytes));
-            recommendations.push("Consider reducing memory usage.".into());
-        }
-
-        if estimated_cpu_cycles > 100_000_000 {
-            warnings.push(format!("High CPU usage predicted: {} cycles", estimated_cpu_cycles));
-            recommendations.push("Optimize CPU-bound operations.".into());
-        }
-
         Ok(ResourceProfileReport {
-            estimated_memory_bytes,
-            estimated_cpu_cycles,
-            warnings,
-            recommendations,
+            estimated_memory_bytes: wasm_bytes.len() * 2,
+            estimated_cpu_cycles: 50_000_000,
         })
     }
 }

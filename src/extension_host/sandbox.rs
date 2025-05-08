@@ -1,8 +1,8 @@
-use wasmtime::{Engine, Store, Module, Instance, Config};
 use super::plugin::Plugin;
 use super::capability::{PermissionSet};
 use super::errors::ExtensionHostError;
-use log::{info, warn, debug};
+use log::{info, debug};
+use wasmtime::{Engine, Store, Module, Instance};
 
 pub struct Sandbox {
     engine: Engine,
@@ -11,49 +11,45 @@ pub struct Sandbox {
     permissions: PermissionSet,
 }
 
-impl Default for Sandbox {
-    fn default() -> Self {
-        let mut config = Config::default();
-        config.consume_fuel(true);
-        Self {
-            engine: Engine::new(&config).expect("Wasmtime engine initialization failed"),
-            memory_limit: 16 * 1024 * 1024,
-            cpu_cycles: 50_000_000,
+impl Sandbox {
+    pub fn new() -> Self {
+        let engine = Engine::default();
+        Sandbox {
+            engine,
+            memory_limit: 32 * 1024 * 1024,
+            cpu_cycles: 1_000_000_000,
             permissions: PermissionSet::default(),
         }
     }
-}
 
-impl Sandbox {
-    pub fn adjust_limits(&mut self) {
+    pub fn configure_limits(&mut self, profile_report: super::profiler::ResourceProfileReport) {
         debug!("Adjusting sandbox limits");
+        self.memory_limit = profile_report.estimated_memory_bytes;
+        self.cpu_cycles = profile_report.estimated_cpu_cycles;
     }
 
     pub fn set_permissions(&mut self, permissions: PermissionSet) {
-        debug!("Setting sandbox permissions");
         self.permissions = permissions;
     }
 
     pub fn execute_plugin(&self, plugin: Plugin) -> Result<(), ExtensionHostError> {
-        info!("Executing plugin: {}", plugin.manifest.name);
-
         let module = Module::from_binary(&self.engine, &plugin.wasm_bytes)
             .map_err(|e| ExtensionHostError::PluginExecutionError(e.to_string()))?;
 
         let mut store = Store::new(&self.engine, ());
         store.add_fuel(self.cpu_cycles)
-            .map_err(|e| ExtensionHostError::ResourceLimitError(e.to_string()))?;
+            .map_err(|e| ExtensionHostError::PluginExecutionError(e.to_string()))?;
 
         let instance = Instance::new(&mut store, &module, &[])
             .map_err(|e| ExtensionHostError::PluginExecutionError(e.to_string()))?;
 
-        let func = instance
-            .get_typed_func::<(), ()>(&mut store, &plugin.manifest.entrypoint)
-            .map_err(|_| ExtensionHostError::EntrypointNotFound(plugin.manifest.entrypoint.clone()))?;
+        let func = instance.get_func(&mut store, &plugin.manifest.entrypoint)
+            .ok_or_else(|| ExtensionHostError::EntrypointNotFound(plugin.manifest.entrypoint.clone()))?;
 
-        func.call(&mut store, ())
+        func.call(&mut store, &[], &mut [])
             .map_err(|e| ExtensionHostError::PluginExecutionError(e.to_string()))?;
 
+        info!("Plugin executed successfully.");
         Ok(())
     }
 }

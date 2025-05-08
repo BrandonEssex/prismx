@@ -1,21 +1,17 @@
 use ratatui::{
-    layout::{Alignment, Constraint, Direction, Layout},
-    style::{Modifier, Style},
+    layout::{Alignment, Constraint, Direction, Layout, Rect},
+    style::{Style, Modifier},
     text::{Line, Span},
     widgets::{Block, Borders, Paragraph},
     Frame,
 };
 
-use super::state::SpotlightState;
+use crate::spotlight::state::SpotlightState;
 
-pub fn render_debug_overlay(f: &mut Frame, state: &SpotlightState) {
-    let area = f.size();
-    let vertical = Layout::default()
+pub fn render_debug_overlay(f: &mut Frame, state: &SpotlightState, area: Rect) {
+    let chunks = Layout::default()
         .direction(Direction::Vertical)
-        .constraints([
-            Constraint::Percentage(90),
-            Constraint::Percentage(10),
-        ])
+        .constraints([Constraint::Percentage(90), Constraint::Percentage(10)])
         .split(area);
 
     let debug_lines = vec![
@@ -33,5 +29,5 @@ pub fn render_debug_overlay(f: &mut Frame, state: &SpotlightState) {
         .alignment(Alignment::Left)
         .block(Block::default().borders(Borders::ALL).title("Spotlight Debug"));
 
-    f.render_widget(debug_paragraph, vertical[1]);
+    f.render_widget(debug_paragraph, chunks[1]);
 }

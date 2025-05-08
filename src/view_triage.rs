@@ -29,8 +29,7 @@ pub fn draw_triage_view(frame: &mut Frame, state: &AppState) {
     let items: Vec<ListItem> = inbox_tasks
         .iter()
         .map(|task| {
-            let status_label = format!("{:?}", task.status);
-            let line = format!("• [{}] {}", status_label, task.title);
+            let line = format!("• [{}] {}", format!("{:?}", task.status), task.title);
             ListItem::new(Line::from(vec![Span::raw(line)]))
         })
         .collect();

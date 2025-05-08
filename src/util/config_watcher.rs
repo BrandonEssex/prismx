@@ -1,9 +1,11 @@
-use notify::{Event, EventKind, RecommendedWatcher, RecursiveMode, Watcher};
+use crate::util::logger;
+use log::{error, info};
 use serde::Deserialize;
 use std::path::Path;
 use tokio::sync::mpsc::{channel, Receiver};
-use crate::util::logger;
-use log::{error, info};
+use tokio::fs;
+use notify::{Event, EventKind, RecommendedWatcher, RecursiveMode, Watcher};
+use toml;
 
 #[derive(Debug, Deserialize, Clone)]
 pub struct Config {
@@ -26,7 +28,7 @@ pub struct PersistenceConfig {
 }
 
 pub async fn load_config(path: &str) -> Result<Config, Box<dyn std::error::Error>> {
-    let content = tokio::fs::read_to_string(path).await?;
+    let content = fs::read_to_string(path).await?;
     let config: Config = toml::from_str(&content)?;
     Ok(config)
 }
