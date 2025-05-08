@@ -1,63 +1,45 @@
 use crate::scratchpad::Scratchpad;
-use crate::config::ZenConfig;
-use crate::util::logger::log_zen;
+use crate::config::Config;
+
+use log::info;
 use ratatui::{
-    layout::{Constraint, Direction, Layout},
-    style::{Modifier, Style},
-    text::Span,
+    layout::{Alignment, Rect},
+    style::{Color, Modifier, Style},
+    text::{Span, Spans},
     widgets::{Block, Borders, Paragraph},
     Frame,
 };
-use std::time::Instant;
 
-#[derive(Debug, Clone)]
-pub enum ZenModeState {
-    Inactive,
-    Active {
-        title_shown: bool,
-        last_fade: Instant,
-        scratchpad_path: std::path::PathBuf,
-        config: ZenConfig,
-    },
+pub struct ZenModeState {
+    pub enabled: bool,
+    pub scratchpad: Scratchpad,
 }
 
 impl ZenModeState {
-    pub fn toggle(current: &mut ZenModeState, config: ZenConfig) {
-        match current {
-            ZenModeState::Inactive => {
-                log_zen("Zen Mode ACTIVATED");
-                let path = config.scratchpad_path();
-                *current = ZenModeState::Active {
-                    title_shown: false,
-                    last_fade: Instant::now(),
-                    scratchpad_path: path,
-                    config,
-                };
-            }
-            ZenModeState::Active { .. } => {
-                log_zen("Zen Mode DEACTIVATED");
-                *current = ZenModeState::Inactive;
-            }
+    pub fn new(config: &Config) -> Self {
+        Self {
+            enabled: false,
+            scratchpad: Scratchpad::new(),
         }
     }
 
-    pub fn render_active_ui(&self, frame: &mut Frame, scratchpad: &Scratchpad) {
-        if let ZenModeState::Active { title_shown, .. } = self {
-            let chunks = Layout::default()
-                .direction(Direction::Vertical)
-                .margin(2)
-                .constraints([Constraint::Length(1), Constraint::Min(1)])
-                .split(frame.size());
+    pub fn toggle(&mut self) {
+        self.enabled = !self.enabled;
+        info!("Zen Mode toggled: {}", self.enabled);
+    }
 
-            if *title_shown {
-                let title = Paragraph::new("Zen Mode – Scratchpad")
-                    .style(Style::default().add_modifier(Modifier::ITALIC));
-                frame.render_widget(title, chunks[0]);
-            }
-
-            let content = Paragraph::new(scratchpad.get_buffer())
-                .block(Block::default().borders(Borders::NONE));
-            frame.render_widget(content, chunks[1]);
+    pub fn render<B: ratatui::backend::Backend>(&self, frame: &mut Frame<B>, area: Rect) {
+        if self.enabled {
+            let block = Block::default()
+                .title("Zen Mode")
+                .borders(Borders::ALL)
+                .border_style(Style::default().fg(Color::Blue));
+            let paragraph = Paragraph::new(Spans::from(vec![
+                Span::styled("Type here...", Style::default().add_modifier(Modifier::ITALIC)),
+            ]))
+            .block(block)
+            .alignment(Alignment::Left);
+            frame.render_widget(paragraph, area);
         }
     }
 }
