@@ -1,11 +1,12 @@
-use log::LevelFilter;
-use simplelog::*;
-use std::fs::{self, File};
+use log::{info, warn, error};
+use std::fs;
 use std::path::Path;
+use simplelog::*;
+use std::fs::File;
 use toml;
-use env_logger::Env;
+use serde::Deserialize;
 
-#[derive(Debug)]
+#[derive(Debug, Deserialize, Clone)]
 pub struct LoggingConfig {
     pub enabled: bool,
     pub log_level: String,
@@ -13,7 +14,7 @@ pub struct LoggingConfig {
     pub log_file_path: String,
 }
 
-pub fn init_logger() -> Result<(), Box<dyn std::error::Error>> {
+pub fn init_logging() -> Result<(), Box<dyn std::error::Error>> {
     let config_content = fs::read_to_string("config.toml")?;
     let config: toml::Value = toml::from_str(&config_content)?;
     let logging_cfg: LoggingConfig = config
@@ -60,5 +61,5 @@ pub fn init_logger() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 pub fn log_zen(msg: &str) {
-    println!("[ZenLog] {}", msg);
+    info!("[ZenMode] {}", msg);
 }

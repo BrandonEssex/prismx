@@ -1,36 +1,36 @@
 use thiserror::Error;
-
-#[derive(Debug, Error)]
-pub enum DashboardError {
-    #[error("Failed to load dashboard configuration: {0}")]
-    ConfigLoadError(String),
-
-    #[error("Failed to parse dashboard configuration: {0}")]
-    ConfigParseError(String),
-
-    #[error("Failed to save dashboard configuration: {0}")]
-    ConfigSaveError(String),
-
-    #[error("Widget initialization error: {0}")]
-    WidgetInitError(String),
-
-    #[error("Widget rendering error: {0}")]
-    WidgetRenderError(String),
-
-    #[error("Widget event handling error: {0}")]
-    WidgetEventError(String),
-
-    #[error("Unknown widget type: {0}")]
-    UnknownWidgetType(String),
-
-    #[error("General dashboard error: {0}")]
-    GeneralError(String),
-}
+use crate::dashboard::error::DashboardError;
+use serde_json;
+use std::io;
 
 #[derive(Debug, Error)]
 pub enum PrismXError {
+    #[error("Failed to load dashboard configuration: {0}")]
+    LoadConfig(String),
+
+    #[error("Failed to parse dashboard configuration: {0}")]
+    ParseConfig(String),
+
+    #[error("Failed to save dashboard configuration: {0}")]
+    SaveConfig(String),
+
+    #[error("Widget initialization error: {0}")]
+    InitError(String),
+
+    #[error("Widget rendering error: {0}")]
+    RenderError(String),
+
+    #[error("Widget event handling error: {0}")]
+    EventError(String),
+
+    #[error("Unknown widget type: {0}")]
+    UnknownWidget(String),
+
+    #[error("General dashboard error: {0}")]
+    General(String),
+
     #[error("IO error: {0}")]
-    Io(#[from] std::io::Error),
+    Io(#[from] io::Error),
 
     #[error("JSON serialization/deserialization error: {0}")]
     SerdeJson(#[from] serde_json::Error),

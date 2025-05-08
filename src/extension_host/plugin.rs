@@ -1,9 +1,9 @@
 use std::fs;
 use std::path::Path;
+use serde::Deserialize;
+use crate::extension_host::errors::ExtensionHostError;
 
-use super::errors::ExtensionHostError;
-
-#[derive(Debug)]
+#[derive(Debug, Deserialize)]
 pub struct PluginManifest {
     pub name: String,
     pub author: String,
@@ -31,6 +31,6 @@ impl Plugin {
         let wasm_bytes = fs::read(&wasm_path)
             .map_err(|_| ExtensionHostError::WasmBinaryNotFound(wasm_path.display().to_string()))?;
 
-        Ok(Plugin { manifest, wasm_bytes })
+        Ok(Self { manifest, wasm_bytes })
     }
 }

@@ -1,4 +1,5 @@
 use thiserror::Error;
+use std::io;
 
 #[derive(Debug, Error)]
 pub enum MindmapError {
@@ -21,7 +22,7 @@ pub enum MindmapError {
     ConfigError(String),
 
     #[error("IO error: {0}")]
-    IOError(#[from] std::io::Error),
+    IOError(#[from] io::Error),
 
     #[error("Serialization/Deserialization error: {0}")]
     SerdeError(#[from] serde_json::Error),

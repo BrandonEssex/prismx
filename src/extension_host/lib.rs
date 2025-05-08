@@ -1,8 +1,8 @@
-use super::plugin::Plugin;
-use super::profiler::ResourceProfiler;
-use super::capability::PermissionSet;
-use super::sandbox::Sandbox;
-use super::errors::ExtensionHostError;
+use crate::extension_host::capability::{PermissionSet};
+use crate::extension_host::errors::ExtensionHostError;
+use crate::extension_host::plugin::Plugin;
+use crate::extension_host::profiler::{ResourceProfiler, ResourceProfileReport};
+use crate::extension_host::sandbox::Sandbox;
 
 pub struct ExtensionHost {
     sandbox: Sandbox,
@@ -12,18 +12,15 @@ pub struct ExtensionHost {
 impl ExtensionHost {
     pub fn new() -> Self {
         Self {
-            sandbox: Sandbox::new(),
-            profiler: ResourceProfiler::new(),
+            sandbox: Sandbox::default(),
+            profiler: ResourceProfiler::default(),
         }
     }
 
     pub fn load_plugin(&mut self, plugin_path: &str, permissions: PermissionSet) -> Result<(), ExtensionHostError> {
-        // Load plugin and validate manifest
         let plugin = Plugin::from_path(plugin_path)?;
-
-        // Profile and configure
         let profile_report = self.profiler.profile_plugin(&plugin.wasm_bytes)?;
-        self.sandbox.configure_limits(profile_report);
+        self.sandbox.adjust_limits(profile_report);
         self.sandbox.set_permissions(permissions);
         self.sandbox.execute_plugin(plugin)
     }
