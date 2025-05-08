@@ -5,7 +5,7 @@ use log::info;
 use ratatui::{
     layout::{Alignment, Rect},
     style::{Color, Modifier, Style},
-    text::{Span, Spans},
+    text::{Span, Line},
     widgets::{Block, Borders, Paragraph},
     Frame,
 };
@@ -34,7 +34,7 @@ impl ZenModeState {
                 .title("Zen Mode")
                 .borders(Borders::ALL)
                 .border_style(Style::default().fg(Color::Blue));
-            let paragraph = Paragraph::new(Spans::from(vec![
+            let paragraph = Paragraph::new(Line::from(vec![
                 Span::styled("Type here...", Style::default().add_modifier(Modifier::ITALIC)),
             ]))
             .block(block)

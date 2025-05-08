@@ -1,7 +1,6 @@
 use crate::state::AppState;
-use crate::actions::Action;
 use crate::spotlight::SpotlightModule;
-use ratatui::{backend::Backend, Terminal, Frame};
+use ratatui::{backend::Backend, Frame};
 
 pub struct Screen {
     config: crate::config::Config,
@@ -13,8 +12,7 @@ impl Screen {
         Self { config, spotlight }
     }
 
-    pub fn draw<B: Backend>(&mut self, terminal: &mut Frame<'_>, state: &mut AppState)pub fn draw<B: Backend>(&mut self, terminal: &mut Frame<'_>, state: &mut AppState) {
-        // Placeholder: real render logic omitted
-        log::info!("Drawing PrismX TUI...");
+    pub fn draw<B: Backend>(&mut self, _f: &mut Frame<'_>, _state: &mut AppState) {
+        log::info!("Drawing screen... (stub)");
     }
 }

@@ -42,6 +42,6 @@ pub fn run() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-fn screen_terminal_frame<B: Backend>() -> Frame<'_> {
+fn screen_terminal_frame<'a, B: Backend>() -> Frame<'a> {
     unimplemented!("This should return the real terminal frame for drawing.")
 }
