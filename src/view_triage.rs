@@ -1,12 +1,12 @@
-use ratatui::{
-    layout::{Constraint, Direction, Layout},
-    style::{Style, Modifier},
-    widgets::{Block, Borders, List, ListItem, Paragraph},
-    text::{Span},
-    Frame,
-};
 use crate::inbox::{InboxTask, TaskStatus};
 use crate::state::AppState;
+use ratatui::{
+    layout::{Constraint, Direction, Layout},
+    style::{Modifier, Style},
+    text::{Line, Span},
+    widgets::{Block, Borders, List, ListItem, Paragraph},
+    Frame,
+};
 
 pub fn draw_triage_view(frame: &mut Frame, state: &AppState) {
     let size = frame.size();
@@ -24,16 +24,13 @@ pub fn draw_triage_view(frame: &mut Frame, state: &AppState) {
         .style(Style::default().add_modifier(Modifier::BOLD));
     frame.render_widget(header, chunks[0]);
 
-    let inbox_tasks: Vec<&InboxTask> = state.inbox.all_tasks()
-        .iter()
-        .filter(|t| t.status == TaskStatus::Inbox)
-        .collect();
+    let inbox_tasks: Vec<&InboxTask> = state.inbox.list_by_status(TaskStatus::Inbox);
 
     let items: Vec<ListItem> = inbox_tasks
         .iter()
         .map(|task| {
-            let line = format!("• [{}] {}", task.status_string(), task.title);
-            ListItem::new(Span::raw(line))
+            let line = format!("• [{}] {}", task.status, task.title);
+            ListItem::new(Line::from(vec![Span::raw(line)]))
         })
         .collect();
 

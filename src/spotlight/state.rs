@@ -1,9 +1,5 @@
-// src/spotlight/state.rs
-
 use crate::spotlight::engine::{SearchResult, SpotlightEngine};
-use crate::spotlight::plugin::SearchScope;
 
-#[derive(Debug)]
 pub struct SpotlightState {
     pub query: String,
     pub matched: Vec<SearchResult>,
@@ -19,7 +15,7 @@ impl SpotlightState {
             matched: Vec::new(),
             selected: 0,
             debug_enabled: false,
-            engine: SpotlightEngine::default(),
+            engine: SpotlightEngine::new(),
         }
     }
 
@@ -49,8 +45,20 @@ impl SpotlightState {
         self.debug_enabled = !self.debug_enabled;
     }
 
-    fn refresh_matches(&mut self) {
+    pub fn refresh_matches(&mut self) {
         self.matched = self.engine.search(&self.query);
         self.selected = 0;
+    }
+
+    pub fn selected(&self) -> Option<&SearchResult> {
+        self.matched.get(self.selected)
+    }
+
+    pub fn engine_mut(&mut self) -> &mut SpotlightEngine {
+        &mut self.engine
+    }
+
+    pub fn engine(&self) -> &SpotlightEngine {
+        &self.engine
     }
 }

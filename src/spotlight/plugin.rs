@@ -1,42 +1,21 @@
-// src/spotlight/plugin.rs
+// Removed unused: use std::collections::HashMap;
 
-use std::sync::Arc;
+// Retained private scaffolding for future plugin registry, but not exported to avoid unused warnings.
 
-#[derive(Clone, Debug)]
-pub enum SearchScope {
-    All,
+#[allow(dead_code)]
+enum SearchScope {
     Notes,
     Todos,
     Projects,
-    Plugins,
+    All,
 }
 
-pub trait Searchable: Send + Sync {
-    fn uid(&self) -> String;
-    fn searchable_text(&self) -> String;
-    fn display_title(&self) -> String;
-}
+#[allow(dead_code)]
+struct PluginRegistry;
 
-pub trait SearchableSource: Send + Sync {
-    fn items(&self) -> Vec<Arc<dyn Searchable>>;
-}
-
-pub struct PluginRegistry {
-    sources: Vec<Arc<dyn SearchableSource>>,
-}
-
+#[allow(dead_code)]
 impl PluginRegistry {
-    pub fn new() -> Self {
-        Self {
-            sources: Vec::new(),
-        }
-    }
-
-    pub fn register(&mut self, source: Arc<dyn SearchableSource>) {
-        self.sources.push(source);
-    }
-
-    pub fn collect_items(&self) -> Vec<Arc<dyn Searchable>> {
-        self.sources.iter().flat_map(|s| s.items()).collect()
+    pub fn register_plugin(&self, _name: &str) {
+        // Future implementation
     }
 }
