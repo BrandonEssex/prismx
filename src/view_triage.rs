@@ -1,3 +1,6 @@
+// FINAL VERSION — File Delivery Progress: 1/1  
+// File: src/view_triage.rs
+
 use crate::inbox::{InboxTask, TaskStatus};
 use crate::state::AppState;
 use ratatui::{
@@ -29,7 +32,7 @@ pub fn draw_triage_view(frame: &mut Frame, state: &AppState) {
     let items: Vec<ListItem> = inbox_tasks
         .iter()
         .map(|task| {
-            let line = format!("• [{}] {}", format!("{:?}", task.status), task.title);
+            let line = format!("• [{}] {}", task.status, task.title);
             ListItem::new(Line::from(vec![Span::raw(line)]))
         })
         .collect();
