@@ -1,125 +1,164 @@
-# PrismX — Modular Terminal Organizer (v0.1.14)
+# PrismX - Modular TUI Framework for Engineers & Plugin Developers
 
-**Built for System Engineers, DevOps, Developers, and Plugin Hackers**
+**Version:** 0.1.22  
+**License:** MIT  
+**Platform:** macOS/Linux (Unix-like)  
+**Interface:** Terminal (TUI) + CLI  
+**Audience:** DevOps Engineers, Plugin Developers, Power Users
 
 ---
 
 ## ✨ Overview
 
-PrismX is a customizable TUI (terminal UI) productivity environment built in Rust.  
-It blends project triage, note-taking, timers, dashboards, and plugin execution into one smooth terminal experience.
+PrismX is a modular, extensible terminal-based system designed to help engineers organize and control projects, notes, mindmaps, tasks, dashboards, and external WASM-based plugins.
 
-Built with:
-
-- **Ratatui**: Responsive, styled terminal UI
-- **Crossterm**: Cross-platform input/output
-- **Serde/JSON**: Config and data persistence
-- **WASM Plugins**: Extension support with sandboxed execution
-- **Tokio**: Async support for plugin loading and IO
+It offers powerful plugin support, JSON-backed storage, real-time TUI rendering, keyboard-centric navigation, and a growing ecosystem of enhancements.
 
 ---
 
-## ⚙️ Installation
+## ✅ Key Features
 
-### Prerequisites
+- **Modular Plugin Host** with WASM sandboxing and runtime profiling.
+- **Zen Mode** scratchpad for focused writing/editing.
+- **Inbox & Triage** system for task management.
+- **Mindmap Engine** with live canvas rendering.
+- **Spotlight Search** with fuzzy matching & ranking.
+- **Dashboard Engine** (optional plugin integration).
+- **Config Watcher** with hot-reloading.
+- **Themed Logging** and autosave-safe fallback behavior.
+- **TUI optimized** for mouse-free keyboard navigation.
+- **JSON-structured** persistent data storage.
 
-- Rust 1.70+
-- macOS/Linux terminal
-- [Optional] For plugin development: `wasm-pack`, `wasmtime`
+---
+
+## 🚀 Getting Started
+
+### 1. **Build & Launch**
 
 ```bash
-git clone https://github.com/yourname/prismx
-cd prismx
+git clone https://github.com/your-org/prismx.core.git
+cd prismx.core
 cargo build --release
-🚀 Usage
-
 ./target/release/prismx
-⌨️ Keyboard Shortcuts
 
-Keys  Action
-Ctrl + Z  Toggle Zen Mode
-Ctrl + /  Open Spotlight Search
-Ctrl + N  Create Inbox Task
-Ctrl + T  Toggle Triage View
-Ctrl + P  Start Pomodoro Timer
-Ctrl + W  Start Stopwatch
-Ctrl + Q  Quit
-📦 Modules & Features
+    Required Dependencies:
 
-Inbox & Triage
-Manage tasks with shards, tags, priority, assignment, and archival.
+        Rust 1.70+
 
-Spotlight
-Fuzzy-search any resource via plugins with real-time filtering and inline actions.
+        libwasmtime for WASM plugins
 
-Zen Mode
-Fullscreen writing zone. Autosaves to ~/.config/prismx/zen_scratchpad.md.
+        macOS/Linux terminal with UTF-8
 
-Dashboard (Experimental)
-Grid-based layout with draggable widgets like Mindmap, Extensions, and Notes.
+2. Directory Layout
 
-🧩 Plugins (WASM)
+prismx/
+├── assets/               # Templates & initial JSON
+├── config.toml           # Main configuration
+├── data/                 # Persisted state (mindmaps, inbox)
+├── logs/                 # Logs and debug traces
+├── extensions/           # PrismX-compatible WASM plugins
+├── src/                  # Core source
+├── README.md             # You’re here
 
-Write Your Own Plugin
-Every plugin is a .prismx-ext directory with:
+⌨️ CLI/TUI Usage
+Global Shortcuts
+
+    Ctrl + Z – Toggle Zen Mode
+
+    Ctrl + / – Toggle Spotlight Search
+
+    Ctrl + D – Archive selected Inbox Task
+
+    Ctrl + Alt + N – Add New Inbox Entry
+
+    Esc – Back
+
+    q – Quit
+
+TUI Navigation (Inbox & Spotlight)
+
+    ↑ / ↓ – Move selection
+
+    Enter – Activate / Edit
+
+    m – Move item (Spotlight)
+
+    x – Delete item
+
+    e – Export item to Markdown
+
+    f – Toggle favorite
+
+🧩 Plugin Development Guide
+Plugin Structure
+
+A PrismX-compatible plugin must contain:
 
 example-plugin.prismx-ext/
-├── plugin.wasm
-└── prismx-plugin.json
-Manifest Example (prismx-plugin.json):
+├── plugin.wasm              # Compiled WASM binary
+└── prismx-plugin.json       # Manifest
+
+Manifest Format
 
 {
-  "name": "SysInspector",
-  "author": "you",
+  "name": "Hello Plugin",
+  "author": "devx",
   "version": "1.0.0",
   "prismx_api_version": "0.1.0",
   "entrypoint": "run"
 }
-WASM Entry Point:
+
+Plugin Entrypoint (Rust/AssemblyScript)
 
 #[no_mangle]
 pub extern "C" fn run() {
-    println!("Hello from plugin!");
+    // Your logic here
 }
-Compile Your Plugin
-wasm-pack build --target web
-🧪 CLI Testing
 
-RUST_LOG=debug cargo run --release
-📂 File Structure (User Edition)
+    Tip: Use wasmtime and target wasm32-unknown-unknown.
 
-prismx/
-├── data/                  # JSON notes, tasks, mindmaps
-├── extensions/            # Plugin directories (*.prismx-ext)
-├── logs/                  # Debug logs
-├── assets/                # Templates (e.g. scratchpad)
-├── exports/               # .md export destination
-├── config.toml           # Global config
-└── target/release/prismx
-✅ Confirmed Functional Modules
+⚙️ Configuration
 
- Zen Mode (autosave, hotkeys)
- Inbox Triage (create, assign, archive)
- Pomodoro + Stopwatch
- Plugin sandboxing (wasmtime)
- Spotlight search engine
- Persistent JSON/Markdown data
-🔧 Configuration
+Edit config.toml:
 
-Edit config.toml or override scratchpad path:
+[logging]
+enabled = true
+log_level = "info"
+log_to_file = true
+log_file_path = "logs/prismx.log"
 
-[zen_mode]
-autosave_interval_secs = 5
-scratchpad_path = "~/.config/prismx/my_scratchpad.md"
-🔒 Security
+🛠️ Extension Development Roadmap
 
-WASM plugins sandboxed with memory + CPU limits
-Filesystem access is explicitly restricted by capabilities
-❤️ Contribute
+Zen Mode with autosave
 
-Fork + PR. New plugins welcome!
+WASM Plugin execution
 
-🧠 Final Notes
+Spotlight Search engine
 
-This README is kept in sync with every new version.
-Plugin authors, system admins, and terminal hackers — welcome.
+Mindmap canvas + API
+
+Inbox triage view
+
+Plugin-injected dashboard
+
+Configurable themes
+
+    LSP Plugin support
+
+🧪 Testing
+
+cargo test        # Run unit tests
+cargo test -- --ignored  # Run integration tests (plugin/dash)
+
+🛡️ Security Notes
+
+    All WASM plugins are sandboxed via wasmtime.
+
+    Capability-based permission model under development.
+
+🧠 Contributing
+
+Pull requests welcome! For advanced plugin authorship or engine integration, check the Developer Manual (coming soon).
+📄 License
+
+MIT © 2024-2025 PrismX Contributors
