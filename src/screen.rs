@@ -1,8 +1,9 @@
-use crate::actions::Action;
-use crate::state::AppState;
-use crate::spotlight::SpotlightModule;
-use ratatui::Frame;
-use crossterm::event::Event;
+use ratatui::{Frame};
+use crate::{
+    actions::Action,
+    state::AppState,
+    spotlight::SpotlightModule,
+};
 
 pub struct Screen {
     spotlight: SpotlightModule,
@@ -10,16 +11,21 @@ pub struct Screen {
 
 impl Screen {
     pub fn new() -> Self {
-        Self {
+        Screen {
             spotlight: SpotlightModule::new(),
         }
     }
 
-    pub fn handle_event(&mut self, _evt: Event, action: Option<Action>, state: &mut AppState) -> bool {
+    pub fn handle_event(
+        &mut self,
+        _evt: &crossterm::event::Event,
+        action: Option<Action>,
+        _state: &mut AppState,
+    ) -> bool {
         match action {
             Some(Action::Quit) => return false,
-            Some(act) => {
-                self.spotlight.handle_action(act, state);
+            Some(a) => {
+                self.spotlight.handle_action(a, _state);
             }
             _ => {}
         }

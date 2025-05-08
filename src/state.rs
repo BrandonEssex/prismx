@@ -1,58 +1,29 @@
-use crate::state::AppState;
-use super::engine::{SearchResult, SpotlightEngine};
+use std::path::PathBuf;
+use crate::inbox::{InboxState, Priority};
+use crate::storage::inbox_storage::{load_inbox_from_disk, save_inbox_to_disk};
 
-#[derive(Default)]
-pub struct SpotlightState {
-    pub query: String,
-    pub matched: Vec<SearchResult>,
-    pub selected: usize,
-    pub debug_enabled: bool,
-    engine: SpotlightEngine,
+#[derive(Debug)]
+pub struct AppState {
+    pub inbox: InboxState,
+    pub inbox_path: PathBuf,
 }
 
-impl SpotlightState {
-    pub fn update_query(&mut self, c: char) {
-        self.query.push(c);
-        self.refresh_matches();
+impl AppState {
+    pub fn new(data_dir: PathBuf) -> Self {
+        let inbox_path = data_dir.join("inbox.json");
+        let inbox = load_inbox_from_disk(&inbox_path).unwrap_or_else(|_| InboxState::new());
+        Self { inbox, inbox_path }
     }
 
-    pub fn backspace(&mut self) {
-        self.query.pop();
-        self.refresh_matches();
-    }
-
-    pub fn move_up(&mut self) {
-        if self.selected > 0 {
-            self.selected -= 1;
+    pub fn save_inbox(&self) {
+        if let Err(e) = save_inbox_to_disk(&self.inbox_path, &self.inbox) {
+            eprintln!("Error saving inbox: {}", e);
         }
     }
 
-    pub fn move_down(&mut self) {
-        if self.selected + 1 < self.matched.len() {
-            self.selected += 1;
+    pub fn load_inbox(&mut self) {
+        if let Ok(inbox) = load_inbox_from_disk(&self.inbox_path) {
+            self.inbox = inbox;
         }
-    }
-
-    pub fn toggle_debug(&mut self) {
-        self.debug_enabled = !self.debug_enabled;
-    }
-
-    pub fn close(&mut self) {
-        self.query.clear();
-        self.matched.clear();
-        self.selected = 0;
-        self.debug_enabled = false;
-    }
-
-    pub fn activate_selected(&mut self, _state: &mut AppState) {
-        if let Some(selected) = self.matched.get(self.selected) {
-            let _uid = &selected.uid;
-            self.close();
-        }
-    }
-
-    fn refresh_matches(&mut self) {
-        self.matched = self.engine.search(&self.query, super::plugin::SearchScope::All);
-        self.selected = 0;
     }
 }

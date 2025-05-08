@@ -1,141 +1,125 @@
-# PrismX TUI Organizer (v0.1.12)
+# PrismX — Modular Terminal Organizer (v0.1.14)
 
-PrismX is a modular, extensible, terminal-based productivity suite for system engineers, DevOps professionals, and CLI-first users. It combines real-time task management, mindmapping, plugin execution, and distraction-free note-taking—customizable via extensions and written entirely in Rust.
+**Built for System Engineers, DevOps, Developers, and Plugin Hackers**
 
 ---
 
-## ✨ Features
+## ✨ Overview
 
-- **Interactive TUI Dashboard** with mode switching (Inbox, Zen Mode, Spotlight Search)
-- **Zen Mode**: Minimalist autosaving markdown scratchpad
-- **Inbox & Triage View**: Task intake, tagging, and routing
-- **Mindmap Engine**: JSON-based, node-level asynchronous control API
-- **Spotlight**: Real-time fuzzy search with action commands
-- **WASM Plugin Engine**: Safe, profile-aware extension execution
-- **Cross-platform**: macOS & Linux ready
+PrismX is a customizable TUI (terminal UI) productivity environment built in Rust.  
+It blends project triage, note-taking, timers, dashboards, and plugin execution into one smooth terminal experience.
+
+Built with:
+
+- **Ratatui**: Responsive, styled terminal UI
+- **Crossterm**: Cross-platform input/output
+- **Serde/JSON**: Config and data persistence
+- **WASM Plugins**: Extension support with sandboxed execution
+- **Tokio**: Async support for plugin loading and IO
 
 ---
 
 ## ⚙️ Installation
 
+### Prerequisites
+
+- Rust 1.70+
+- macOS/Linux terminal
+- [Optional] For plugin development: `wasm-pack`, `wasmtime`
+
 ```bash
-git clone https://github.com/your-org/prismx
+git clone https://github.com/yourname/prismx
 cd prismx
 cargo build --release
+🚀 Usage
+
 ./target/release/prismx
-🧑‍💻 Usage Walkthrough
+⌨️ Keyboard Shortcuts
 
-Launch PrismX
-./prismx
-Keyboard Shortcuts
-Shortcut  Action
+Keys  Action
 Ctrl + Z  Toggle Zen Mode
-Ctrl + Alt + N  New Inbox Entry (from anywhere)
-Ctrl + D  Toggle Spotlight Debug Overlay
-Esc Exit modes or cancel input
-Arrow Keys  Navigate TUI widgets
-Enter Confirm/Activate item
-📥 Inbox/Triage Mode
+Ctrl + /  Open Spotlight Search
+Ctrl + N  Create Inbox Task
+Ctrl + T  Toggle Triage View
+Ctrl + P  Start Pomodoro Timer
+Ctrl + W  Start Stopwatch
+Ctrl + Q  Quit
+📦 Modules & Features
 
-Launch with Ctrl + Alt + N or via TUI
-Tasks are autosaved to data/inbox.json
-Supports tagging, assigning, prioritizing, and archiving
-🧘 Zen Mode
+Inbox & Triage
+Manage tasks with shards, tags, priority, assignment, and archival.
 
-Toggle with Ctrl + Z
-Scratchpad stored at ~/.config/prismx/zen_scratchpad.md
-Auto-saves every 10 seconds
-Uses fallback if file is missing
-🔍 Spotlight
+Spotlight
+Fuzzy-search any resource via plugins with real-time filtering and inline actions.
 
-Triggered by Ctrl + /
-Searches across notes, projects, plugins (extendable)
-Inline actions:
-m: Move
-x: Delete
-e: Export .md
-f: Favorite
-📦 WASM Plugin Engine
+Zen Mode
+Fullscreen writing zone. Autosaves to ~/.config/prismx/zen_scratchpad.md.
 
-Example Plugin Directory
-extensions/
-└── example-plugin.prismx-ext/
-    ├── plugin.wasm
-    └── prismx-plugin.json
-Manifest Format (prismx-plugin.json)
+Dashboard (Experimental)
+Grid-based layout with draggable widgets like Mindmap, Extensions, and Notes.
+
+🧩 Plugins (WASM)
+
+Write Your Own Plugin
+Every plugin is a .prismx-ext directory with:
+
+example-plugin.prismx-ext/
+├── plugin.wasm
+└── prismx-plugin.json
+Manifest Example (prismx-plugin.json):
+
 {
-  "name": "Example Plugin",
-  "author": "You",
+  "name": "SysInspector",
+  "author": "you",
   "version": "1.0.0",
   "prismx_api_version": "0.1.0",
-  "entrypoint": "main"
+  "entrypoint": "run"
 }
-Entrypoint
-Your plugin must export a no-arg WASM function matching the manifest entrypoint.
+WASM Entry Point:
 
 #[no_mangle]
-pub extern "C" fn main() {
-    // Your plugin logic here
+pub extern "C" fn run() {
+    println!("Hello from plugin!");
 }
-Plugin Capabilities
-Plugins run in Wasmtime sandbox
-CPU and memory limits enforced
-Future: networking, file access (capability gated)
-🧪 CLI & JSON Usage Examples
+Compile Your Plugin
+wasm-pack build --target web
+🧪 CLI Testing
 
-Triage Task from CLI (Simulated via file)
-{
-  "title": "Restart CI agents",
-  "tags": ["infra", "urgent"],
-  "assigned_to": "team-devops",
-  "priority": "High"
-}
-Drop this JSON into data/inbox.json or use TUI to modify interactively.
+RUST_LOG=debug cargo run --release
+📂 File Structure (User Edition)
 
-Mindmap API Example (via mindmap_api.rs)
-create_node("New Node", 42.0, 24.0).await;
-move_node(1, 88.0, 50.0).await;
-delete_node(1).await;
-🛠 Configuration
+prismx/
+├── data/                  # JSON notes, tasks, mindmaps
+├── extensions/            # Plugin directories (*.prismx-ext)
+├── logs/                  # Debug logs
+├── assets/                # Templates (e.g. scratchpad)
+├── exports/               # .md export destination
+├── config.toml           # Global config
+└── target/release/prismx
+✅ Confirmed Functional Modules
 
-Configuration can be expanded in ~/.config/prismx/config.toml:
+ Zen Mode (autosave, hotkeys)
+ Inbox Triage (create, assign, archive)
+ Pomodoro + Stopwatch
+ Plugin sandboxing (wasmtime)
+ Spotlight search engine
+ Persistent JSON/Markdown data
+🔧 Configuration
+
+Edit config.toml or override scratchpad path:
 
 [zen_mode]
-title_fade_delay_secs = 2
-autosave_interval_secs = 10
-scratchpad_path = "~/.config/prismx/zen_scratchpad.md"
-📂 File Structure
+autosave_interval_secs = 5
+scratchpad_path = "~/.config/prismx/my_scratchpad.md"
+🔒 Security
 
-data/
-├── inbox.json
-├── dashboard_config.json
-├── mindmaps.json
-└── widget_themes.json
+WASM plugins sandboxed with memory + CPU limits
+Filesystem access is explicitly restricted by capabilities
+❤️ Contribute
 
-logs/
-├── zen_debug.log
-└── spotlight.log
+Fork + PR. New plugins welcome!
 
-assets/
-└── default_scratchpad.md
+🧠 Final Notes
 
-extensions/
-└── example-plugin.prismx-ext/
-    ├── plugin.wasm
-    └── prismx-plugin.json
-🔧 Developers & Contributors
-
-Extend the TUI via Rust modules under src/
-Add plugins by registering in extensions/
-Submit patches via pull request
-🔄 Version History
-
-0.1.12 — Stable TUI, Spotlight fixes, plugin integration revalidated
-0.1.11 — Ingestable JSON, Inbox fully patched
-0.1.10 — Mindmap refactored, diagnostics added
-🧩 Coming Soon
-
-Plugin capabilities UI
-Cloud-sync options
-Markdown import/export for notes and mindmaps
-MIT Licensed | Built with Rust | DevOps ready
+This README is kept in sync with every new version.
+Plugin authors, system admins, and terminal hackers — welcome.

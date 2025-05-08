@@ -1,18 +1,20 @@
-use chrono::Local;
 use ratatui::{
     layout::{Alignment, Constraint, Direction, Layout, Rect},
     style::{Style, Modifier},
-    text::{Line, Span},
+    text::{Span, Line},
     widgets::{Block, Borders, Paragraph},
-    Frame,
+    Frame, backend::Backend,
 };
 
 use crate::spotlight::state::SpotlightState;
 
-pub fn render_debug_overlay(f: &mut Frame, state: &SpotlightState, area: Rect) {
+pub fn render_debug_overlay<B: Backend>(f: &mut Frame<B>, state: &SpotlightState, area: Rect) {
     let chunks = Layout::default()
         .direction(Direction::Vertical)
-        .constraints([Constraint::Percentage(90), Constraint::Percentage(10)])
+        .constraints([
+            Constraint::Percentage(90),
+            Constraint::Percentage(10),
+        ])
         .split(area);
 
     let debug_lines = vec![
