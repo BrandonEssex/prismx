@@ -5,7 +5,9 @@ use crate::input::InputHandler;
 use crate::actions::Action;
 use crate::spotlight::SpotlightModule;
 use crossterm::terminal::{enable_raw_mode, disable_raw_mode};
-use ratatui::prelude::*;
+use ratatui::backend::CrosstermBackend;
+use ratatui::Terminal;
+use std::io::stdout;
 
 pub fn run() -> Result<(), Box<dyn std::error::Error>> {
     let config = load_config()?;
@@ -15,12 +17,12 @@ pub fn run() -> Result<(), Box<dyn std::error::Error>> {
     let input = InputHandler;
 
     enable_raw_mode()?;
-    let backend = CrosstermBackend::new(std::io::stdout());
+    let backend = CrosstermBackend::new(stdout());
     let mut terminal = Terminal::new(backend)?;
 
     loop {
         terminal.draw(|f| {
-            screen.draw(f, &mut state);
+            screen.draw::<CrosstermBackend<_>>(f, &mut state);
         })?;
 
         if let Some(event) = input.poll_event()? {
