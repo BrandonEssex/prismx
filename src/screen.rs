@@ -57,7 +57,7 @@ impl Screen {
                 self.active = match self.active {
                     ActiveView::Triage => ActiveView::Mindmap,
                     _ => ActiveView::Triage,
-                }
+                };
             }
             Action::ToggleZenMode => {
                 self.zen.toggle();
@@ -73,3 +73,16 @@ impl Screen {
             Action::Tick => {
                 self.zen.tick();
             }
+            _ => match self.active {
+                ActiveView::Mindmap => self.mindmap.handle_action(action),
+                ActiveView::Triage => match action {
+                    Action::NavigateNext => self.inbox.next(),
+                    Action::NavigatePrev => self.inbox.prev(),
+                    Action::OpenContextMenu => self.inbox.toggle_context(),
+                    _ => {}
+                },
+                _ => {}
+            },
+        }
+    }
+}
