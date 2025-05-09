@@ -22,6 +22,7 @@ impl InputHandler {
                 KeyCode::Char('t') => Some(Action::ToggleTriage),
                 KeyCode::Char('e') => Some(Action::EnterEditNode),
                 KeyCode::Char('m') => Some(Action::ToggleMindmapLayout),
+                KeyCode::Char('c') => Some(Action::OpenContextMenu),
                 KeyCode::Esc => Some(Action::CancelEdit),
                 KeyCode::Enter => Some(Action::CommitEdit),
                 KeyCode::Backspace => Some(Action::PopEditChar),

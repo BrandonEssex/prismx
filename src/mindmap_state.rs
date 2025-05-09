@@ -1,14 +1,15 @@
 use std::collections::HashMap;
 use uuid::Uuid;
+use serde::{Serialize, Deserialize};
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub enum MindmapLayout {
     Radial,
     Tree,
     Timeline,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Node {
     pub id: Uuid,
     pub label: String,
@@ -18,7 +19,7 @@ pub struct Node {
     pub meta: HashMap<String, String>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MindmapState {
     pub nodes: HashMap<Uuid, Node>,
     pub root_id: Uuid,
@@ -26,6 +27,8 @@ pub struct MindmapState {
     pub selected: Option<Uuid>,
     pub editing: Option<Uuid>,
     pub edit_buffer: String,
+    pub context_open: bool,
+    pub context_selection: usize,
 }
 
 impl MindmapState {
@@ -65,6 +68,8 @@ impl MindmapState {
             selected: Some(root_id),
             editing: None,
             edit_buffer: String::new(),
+            context_open: false,
+            context_selection: 0,
         }
     }
 
@@ -127,5 +132,10 @@ impl MindmapState {
                 self.selected = Some(all_ids[prev]);
             }
         }
+    }
+
+    pub fn toggle_context_menu(&mut self) {
+        self.context_open = !self.context_open;
+        self.context_selection = 0;
     }
 }

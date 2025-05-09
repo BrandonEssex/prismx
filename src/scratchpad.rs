@@ -1,4 +1,3 @@
-// scratchpad.rs
 #[derive(Debug, Clone)]
 pub struct Scratchpad {
     pub content: String,

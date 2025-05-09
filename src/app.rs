@@ -7,9 +7,11 @@ use crate::input::InputHandler;
 use crate::actions::Action;
 
 use crossterm::terminal;
-use ratatui::{Terminal};
+use ratatui::Terminal;
 use ratatui::backend::CrosstermBackend;
 use std::io::stdout;
+use std::path::Path;
+use crate::storage::mindmap_disk;
 
 pub fn run() -> Result<(), Box<dyn std::error::Error>> {
     let config = load_config()?;
@@ -44,6 +46,7 @@ pub fn run() -> Result<(), Box<dyn std::error::Error>> {
         }
     }
 
+    mindmap_disk::save_to_file(&screen.mindmap, Path::new("data/mindmap.json"))?;
     terminal::disable_raw_mode()?;
     Ok(())
 }

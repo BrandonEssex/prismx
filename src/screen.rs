@@ -11,9 +11,11 @@ pub struct Screen {
 
 impl Screen {
     pub fn new(_config: crate::config::Config, _spotlight: SpotlightModule) -> Self {
-        Self {
-            mindmap: MindmapState::new(),
-        }
+        use std::path::Path;
+        use crate::storage::mindmap_disk;
+        let mindmap = mindmap_disk::load_from_file(Path::new("data/mindmap.json"))
+            .unwrap_or_else(|_| MindmapState::new());
+        Self { mindmap }
     }
 
     pub fn draw(&mut self, f: &mut Frame<'_>, _state: &mut AppState) {
@@ -31,6 +33,7 @@ impl Screen {
             Action::PopEditChar => self.mindmap.pop_edit_char(),
             Action::NavigateNext => self.mindmap.select_next(),
             Action::NavigatePrev => self.mindmap.select_prev(),
+            Action::OpenContextMenu => self.mindmap.toggle_context_menu(),
             _ => {}
         }
     }
