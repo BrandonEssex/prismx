@@ -13,6 +13,7 @@ mod storage;
 mod scratchpad;
 mod zen_mode;
 mod dashboard;
+mod dashboard_widgets;
 mod shortcut_overlay;
 
 fn main() {

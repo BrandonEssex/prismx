@@ -8,7 +8,7 @@ use crate::zen_mode::ZenModeState;
 use crate::dashboard::Dashboard;
 use crate::shortcut_overlay::render_shortcuts;
 use crate::actions::Action;
-use ratatui::Frame;
+use ratatui::{backend::Backend, Frame};
 
 pub enum ActiveView {
     Mindmap,
@@ -38,13 +38,13 @@ impl Screen {
         }
     }
 
-    pub fn draw(&mut self, f: &mut Frame<'_>, _state: &mut AppState) {
+    pub fn draw<B: Backend>(&mut self, f: &mut Frame<'_>, _state: &mut AppState) {
         let area = f.size();
 
         match self.active {
             ActiveView::Mindmap => render_mindmap(f, area, &self.mindmap),
             ActiveView::Triage => render_triage(f, area, &self.inbox, self.inbox.context_open),
-            ActiveView::Zen => self.zen.render(f, area),
+            ActiveView::Zen => self.zen.render::<B>(f, area),
             ActiveView::Dashboard => self.dashboard.render(f, area),
         }
 

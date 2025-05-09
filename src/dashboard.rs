@@ -33,7 +33,7 @@ impl Dashboard {
         }
     }
 
-    pub fn render<B: ratatui::backend::Backend>(&self, f: &mut Frame<B>, area: Rect) {
+    pub fn render(&self, f: &mut Frame<'_>, area: Rect) {
         for slot in &self.slots {
             if !slot.enabled {
                 continue;
