@@ -7,7 +7,7 @@ use ratatui::{
 };
 use chrono::Local;
 
-pub fn render_clock_widget<B: ratatui::backend::Backend>(f: &mut Frame<B>, area: Rect) {
+pub fn render_clock_widget(f: &mut Frame<'_>, area: Rect) {
     let now = Local::now().format("%H:%M:%S").to_string();
 
     let para = Paragraph::new(Line::from(vec![Span::styled(
