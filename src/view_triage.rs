@@ -1,53 +1,44 @@
+// FINAL FULL FILE DELIVERY
+// Filename: /src/view_triage.rs
+
 use ratatui::{
+    backend::Backend,
     layout::Rect,
-    widgets::{Block, Borders, Paragraph},
+    style::{Color, Style},
     text::{Line, Span},
-    style::{Style, Modifier, Color},
+    widgets::{Block, Borders, Paragraph},
     Frame,
 };
 
 use crate::storage::inbox_storage::InboxState;
 
-pub fn render_triage(f: &mut Frame<'_>, area: Rect, state: &InboxState, context_open: bool) {
-    let lines: Vec<Line> = state.items.iter().enumerate().map(|(i, item)| {
-        let style = if i == state.selected {
-            Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD)
-        } else {
-            Style::default()
-        };
-
-        let line = format!("[P{}] {} [{}]", item.priority, item.title, item.shard);
-        Line::from(Span::styled(line, style))
-    }).collect();
-
+pub fn render_triage<B: Backend>(
+    f: &mut Frame<'_>,
+    area: Rect,
+    state: &InboxState,
+    context_open: bool,
+) {
     let block = Block::default()
-        .title("Inbox")
-        .borders(Borders::ALL);
+        .title("Inbox / Triage")
+        .borders(Borders::ALL)
+        .border_style(Style::default().fg(Color::Cyan));
+
+    let mut lines = vec![];
+    for (i, task) in state.tasks.iter().enumerate() {
+        let prefix = if context_open { format!("#{} > ", i + 1) } else { format!("- ") };
+        lines.push(Line::from(Span::styled(
+            format!("{}{}", prefix, task),
+            Style::default().fg(Color::White),
+        )));
+    }
+
+    if lines.is_empty() {
+        lines.push(Line::from(Span::styled(
+            "No tasks available.",
+            Style::default().fg(Color::DarkGray),
+        )));
+    }
 
     let para = Paragraph::new(lines).block(block);
     f.render_widget(para, area);
-
-    if context_open {
-        render_context_menu(f, area);
-    }
-}
-
-fn render_context_menu(f: &mut Frame<'_>, area: Rect) {
-    let items = vec!["Mark Done", "Edit", "Archive"];
-    let lines: Vec<Line> = items.iter().map(|label| {
-        Line::from(Span::styled(*label, Style::default().fg(Color::Magenta)))
-    }).collect();
-
-    let block = Block::default()
-        .title("Item Menu")
-        .borders(Borders::ALL)
-        .border_style(Style::default().fg(Color::DarkGray));
-
-    let para = Paragraph::new(lines).block(block);
-    let width = 22;
-    let height = items.len() as u16 + 2;
-    let x = area.width.saturating_sub(width) - 1;
-    let y = area.y + 1;
-
-    f.render_widget(para, Rect::new(x, y, width, height));
 }

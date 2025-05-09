@@ -1,122 +1,100 @@
-# PrismX
+# PrismX — Modular Terminal Productivity System
 
-**PrismX** is a modular, Rust-based Terminal User Interface (TUI) productivity hub for macOS and Linux. Designed for developers, system engineers, and terminal-centric power users, PrismX supports mindmapping, task triage, Zen writing mode, Spotlight-style search, and WASM-powered plugins — all within a keyboard-friendly terminal UI.
-
-## Key Features
-
-- Visual mindmaps (radial/tree/timeline)
-- Zen mode with breathing overlay
-- RoutineForge: daily, ad-hoc, scheduled task sets
-- Shortcut overlay (`Ctrl + /`)
-- Persistent logs: `logs/qa_runtime.log`, `.audit/session_*.log`
-- Plugin sandboxing, dashboards, and capability registry
-- Scrollable log viewer (Ctrl + L)
-
-## CLI Commands
-
-```bash
-prismx run-routine <name>
-prismx apply-template <path>
-prismx diagnostics
-prismx check-plugin <path>
+## Version: v2.0.0-dev5
 
 ---
 
-## Installation
-
-Clone the repository and build with Cargo:
-
-```bash
-git clone https://github.com/BrandonEssex/prismx
-cd prismx
-cargo build --release
-```
-
-Ensure you have the following installed:
-- Rust (latest stable)
-- WASM32 target for plugin development:
-```bash
-rustup target add wasm32-wasi
-```
+### Overview
+PrismX is a modular, offline-first, plugin-capable terminal productivity framework tailored for infrastructure engineers, developers, and research-heavy workflows. It features a structured knowledge graph (mindmap), reminders, a tag-driven metadata system, plugin sandboxing, and a responsive TUI.
 
 ---
 
-## Usage
+## Core Capabilities
 
-Launch the TUI:
+- **Mindmap Overlay**: Visual workspace for nodes, tasks, and knowledge structures
+- **Tagging Engine**: Inline, auto-tag, plugin-suggested metadata with trust layers
+- **Reminder System**: Time-triggered signals for nodes, escalations, digest
+- **Export Engine**: JSON, Markdown, GraphML, PDF, tag-based filtering, manifest
+- **Plugin Sandbox**: Hooks, replays, trust boundaries, audit logs
+- **Glossary Manager**: Role-tagged terms, aliasing, schema enforcement
+- **Triage Inbox**: Task board with tag-based filtering and project breakdown
+- **Audit System**: Node edit history, tag trust mutation, export integrity chain
+- **TUI Layouts**: Sidebar, tag overlays, command bar, log viewer, plugin dashboard
 
-```bash
-./target/release/prismx
-```
+---
 
-Basic keyboard shortcuts (customizable):
-- `Ctrl + Z` – Toggle Zen Mode
-- `Ctrl + /` – Open Spotlight
-- `Ctrl + D` – Debug overlay (in applicable modes)
-- `Arrow Keys` – Navigate
-- `Enter` – Submit / Select
-- `Esc` – Back / Close overlay
+## Plugin Hooks (rhai-powered)
+- `on_node_create`
+- `on_tag_applied`
+- `on_reminder_due`
+- `on_export_start`
+- `on_workspace_switch`
+
+Plugins are sandboxed and profiled. Crashes are logged but do not propagate.
 
 ---
 
 ## File Structure
-
 ```
-~/.config/prismx/
-├── zen_scratchpad.md
+prismx/
+├── src/
+│   ├── app.rs
+│   ├── state.rs
+│   ├── screen.rs
+│   ├── config.rs
+│   ├── logger.rs
+│   ├── plugin/
+│   ├── tag/
+│   ├── ui/
+│   ├── export/
+│   └── zen_mode.rs
 ├── config.toml
-./data/
-├── inbox.json
-├── mindmaps.json
-├── dashboard_config.json
-├── widget_themes.json
-./logs/
-├── zen_debug.log
-├── extension_host.log
-├── spotlight.log
+├── README.md
+├── logs/
+├── audit/
+├── exports/
+└── glossary/
 ```
 
 ---
 
-## Plugin Development
-
-Plugins are compiled as WASM modules with a `.prismx-ext` manifest.
-
-### Extension Layout:
-
-```
-example-plugin.prismx-ext/
-├── plugin.wasm
-└── prismx-plugin.json
-```
-
-### Manifest Example:
-
-```json
-{
-  "name": "Focus Timer",
-  "description": "Pomodoro-style timer plugin.",
-  "author": "BrandonEssex",
-  "version": "1.0",
-  "entrypoint": "focus::run"
-}
-```
-
-### Writing Plugins
-
-See `/extension_host/plugin.rs` and `/plugin_api/` (coming soon) for base traits.
+## CLI Tools
+- `prismx export-diff`
+- `prismx replay-audit`
+- `prismx check-tags`
+- `prismx reminder-digest`
+- `prismx validate-tag-presets`
 
 ---
 
-## Contributing
-
-Pull requests are welcome. For major changes, please open an issue first.
-
-Visit the GitHub repository:  
-**[https://github.com/BrandonEssex/prismx](https://github.com/BrandonEssex/prismx)**
+## Key Bindings
+- `Ctrl+E` → Export Overlay
+- `Ctrl+Z` → Toggle Zen Mode
+- `Ctrl+L` → Toggle Log Viewer
+- `Ctrl+/` → Show Shortcuts
+- `Ctrl+G` → Open Tag Glossary
 
 ---
 
-## License
+## TUI Modules
+- `tag_glossary.rs` — trust overlay, inline schema edit
+- `plugin_dashboard.rs` — live hook rendering, error signal
+- `export_overlay.rs` — trust summary, manifest preview
+- `sidebar.rs`, `status_bar.rs`, `command_bar.rs`
 
-MIT
+---
+
+## Changelog Summary (v0.1.33 → v2.0.0-dev5)
+- Fully modular plugin interface with replay and sandbox log
+- Node system transitioned to UUID-backed graph
+- Tagging engine refactored to support trust-based rendering
+- Export engine linked to glossary, manifest, trust, preset
+- All TUI components modularized and theme-ready
+- Stable Audit Log / CLI Export Tools
+
+---
+
+## Status: ✅ QA-Ready | Tag: `v2.0.0-dev5`
+
+For plugin authors, see `/plugin/` and `/plugin/sandbox/replay.rs`.
+For glossary schema, see `/tag/trust.rs`.

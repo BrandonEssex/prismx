@@ -1,3 +1,6 @@
+// FINAL FULL FILE DELIVERY
+// Filename: /src/ui/command_bar.rs
+
 use ratatui::{
     layout::Rect,
     widgets::{Block, Borders, Paragraph},
@@ -7,7 +10,7 @@ use ratatui::{
 };
 
 pub fn render_command_bar<B: ratatui::backend::Backend>(
-    f: &mut Frame<B>,
+    f: &mut Frame<'_>,
     area: Rect,
     prompt: &str,
     query: &str,
