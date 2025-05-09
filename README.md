@@ -2,18 +2,23 @@
 
 **PrismX** is a modular, Rust-based Terminal User Interface (TUI) productivity hub for macOS and Linux. Designed for developers, system engineers, and terminal-centric power users, PrismX supports mindmapping, task triage, Zen writing mode, Spotlight-style search, and WASM-powered plugins — all within a keyboard-friendly terminal UI.
 
----
+## Key Features
 
-## Features
+- Visual mindmaps (radial/tree/timeline)
+- Zen mode with breathing overlay
+- RoutineForge: daily, ad-hoc, scheduled task sets
+- Shortcut overlay (`Ctrl + /`)
+- Persistent logs: `logs/qa_runtime.log`, `.audit/session_*.log`
+- Plugin sandboxing, dashboards, and capability registry
+- Scrollable log viewer (Ctrl + L)
 
-- **Mindmap Builder** – Visualize ideas hierarchically in a node-based layout.
-- **Inbox & Triage** – GTD-inspired inbox view with tag-based filtering.
-- **Zen Mode** – Minimal writing interface with autosave & scratchpad.
-- **Spotlight Search** – Global fuzzy search overlay with keyboard-driven commands.
-- **Custom Dashboards** – Add widgets and plugin outputs to a central workspace.
-- **WASM Plugin System** – Load sandboxed WebAssembly extensions dynamically.
-- **JSON State Storage** – Persist data for notes, tasks, projects in local `.json`.
-- **TUI-first Navigation** – Built with `ratatui` and `crossterm`.
+## CLI Commands
+
+```bash
+prismx run-routine <name>
+prismx apply-template <path>
+prismx diagnostics
+prismx check-plugin <path>
 
 ---
 

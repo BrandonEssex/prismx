@@ -16,6 +16,10 @@ mod dashboard;
 mod dashboard_widgets;
 mod shortcut_overlay;
 mod logger;
+mod log_viewer;
+mod unlock;
+mod routine_forge;
+mod template_engine;
 
 fn main() {
     logger::init_logger();

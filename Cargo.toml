@@ -1,9 +1,9 @@
 [package]
 name = "prismx"
-version = "0.1.33"
+version = "1.0.0"
 edition = "2021"
 authors = ["BrandonEssex"]
-description = "Modular TUI productivity hub with plugin support"
+description = "Modular TUI productivity hub with secure plugin sandbox, offline support, and dashboard routines"
 
 [dependencies]
 anyhow = "1.0"
@@ -25,7 +25,4 @@ lazy_static = "1.4"
 chrono = { version = "0.4", features = ["serde"] }
 toml = "0.8"
 notify = "6.1"
-
-[features]
-default = []
-config_toml = []
+rhai = "1.16"

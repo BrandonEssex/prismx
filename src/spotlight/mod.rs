@@ -7,6 +7,6 @@ impl SpotlightModule {
     }
 
     pub fn run(&self) {
-        log::info!("Running spotlight search...");
+        log::info!("Spotlight module activated.");
     }
 }

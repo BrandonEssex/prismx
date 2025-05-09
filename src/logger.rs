@@ -3,15 +3,11 @@ use std::io::Write;
 use simplelog::*;
 
 pub fn init_logger() {
-    let log_dir = "logs";
-    let log_file = "logs/qa_runtime.log";
-
-    let _ = create_dir_all(log_dir);
-
+    let _ = create_dir_all("logs");
     let file = OpenOptions::new()
         .create(true)
         .append(true)
-        .open(log_file)
+        .open("logs/qa_runtime.log")
         .unwrap();
 
     CombinedLogger::init(vec![

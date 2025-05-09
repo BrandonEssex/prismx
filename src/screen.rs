@@ -6,6 +6,7 @@ use crate::view_mindmap::render_mindmap;
 use crate::view_triage::render_triage;
 use crate::zen_mode::ZenModeState;
 use crate::dashboard::Dashboard;
+use crate::log_viewer::render_log_viewer;
 use crate::shortcut_overlay::render_shortcuts;
 use crate::actions::Action;
 use ratatui::{backend::Backend, Frame};
@@ -14,6 +15,7 @@ pub enum ActiveView {
     Mindmap,
     Triage,
     Zen,
+    Log,
 }
 
 pub struct Screen {
@@ -44,9 +46,12 @@ impl Screen {
             ActiveView::Mindmap => render_mindmap(f, area, &self.mindmap),
             ActiveView::Triage => render_triage(f, area, &self.inbox, self.inbox.context_open),
             ActiveView::Zen => self.zen.render::<B>(f, area),
+            ActiveView::Log => render_log_viewer(f, area),
         }
 
-        render_shortcuts::<B>(f, area, self.shortcut_overlay);
+        if self.shortcut_overlay {
+            render_shortcuts::<B>(f, area, true);
+        }
     }
 
     pub fn handle_action(&mut self, action: Action) {
@@ -67,6 +72,12 @@ impl Screen {
             }
             Action::ToggleShortcuts => {
                 self.shortcut_overlay = !self.shortcut_overlay;
+            }
+            Action::ToggleLogViewer => {
+                self.active = match self.active {
+                    ActiveView::Log => ActiveView::Mindmap,
+                    _ => ActiveView::Log,
+                };
             }
             Action::Tick => {
                 self.zen.tick();

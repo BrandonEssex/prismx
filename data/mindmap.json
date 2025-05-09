@@ -1,58 +1,58 @@
 {
   "state": {
     "nodes": {
-      "25615e80-a709-4784-81da-4a2800e1af85": {
-        "id": "25615e80-a709-4784-81da-4a2800e1af85",
-        "label": "Root is testing a long entry.",
+      "869f95f4-8474-4cb7-87ee-6fcc77a3d33e": {
+        "id": "869f95f4-8474-4cb7-87ee-6fcc77a3d33e",
+        "label": "Child 3",
+        "parent": "410f5d2f-ee51-4fc7-822f-6e54e13f4a9d",
+        "children": [],
+        "tags": [],
+        "meta": {}
+      },
+      "0036cea8-8876-48fd-ad9d-f586a90ac84d": {
+        "id": "0036cea8-8876-48fd-ad9d-f586a90ac84d",
+        "label": "Child 4",
+        "parent": "410f5d2f-ee51-4fc7-822f-6e54e13f4a9d",
+        "children": [],
+        "tags": [],
+        "meta": {}
+      },
+      "08c6ee6d-e156-476a-ac58-8b978ef0a7a5": {
+        "id": "08c6ee6d-e156-476a-ac58-8b978ef0a7a5",
+        "label": "Child 1",
+        "parent": "410f5d2f-ee51-4fc7-822f-6e54e13f4a9d",
+        "children": [],
+        "tags": [],
+        "meta": {}
+      },
+      "410f5d2f-ee51-4fc7-822f-6e54e13f4a9d": {
+        "id": "410f5d2f-ee51-4fc7-822f-6e54e13f4a9d",
+        "label": "testingsdwsa",
         "parent": null,
         "children": [
-          "7ea09cfa-54e8-4dad-8d45-f7db68296863",
-          "a3cda10d-8c2c-4041-9587-276809a48f92",
-          "90e53af0-18b0-4d17-a396-234557314cd2",
-          "20c4af89-f88a-4a9a-8ca5-d0fc16a06987"
+          "08c6ee6d-e156-476a-ac58-8b978ef0a7a5",
+          "15316c13-718d-4f7d-81d2-1605015d28aa",
+          "869f95f4-8474-4cb7-87ee-6fcc77a3d33e",
+          "0036cea8-8876-48fd-ad9d-f586a90ac84d"
         ],
         "tags": [],
         "meta": {}
       },
-      "90e53af0-18b0-4d17-a396-234557314cd2": {
-        "id": "90e53af0-18b0-4d17-a396-234557314cd2",
-        "label": "Child 3",
-        "parent": "25615e80-a709-4784-81da-4a2800e1af85",
-        "children": [],
-        "tags": [],
-        "meta": {}
-      },
-      "20c4af89-f88a-4a9a-8ca5-d0fc16a06987": {
-        "id": "20c4af89-f88a-4a9a-8ca5-d0fc16a06987",
-        "label": "Child 4",
-        "parent": "25615e80-a709-4784-81da-4a2800e1af85",
-        "children": [],
-        "tags": [],
-        "meta": {}
-      },
-      "7ea09cfa-54e8-4dad-8d45-f7db68296863": {
-        "id": "7ea09cfa-54e8-4dad-8d45-f7db68296863",
-        "label": "Child 1",
-        "parent": "25615e80-a709-4784-81da-4a2800e1af85",
-        "children": [],
-        "tags": [],
-        "meta": {}
-      },
-      "a3cda10d-8c2c-4041-9587-276809a48f92": {
-        "id": "a3cda10d-8c2c-4041-9587-276809a48f92",
+      "15316c13-718d-4f7d-81d2-1605015d28aa": {
+        "id": "15316c13-718d-4f7d-81d2-1605015d28aa",
         "label": "Child 2",
-        "parent": "25615e80-a709-4784-81da-4a2800e1af85",
+        "parent": "410f5d2f-ee51-4fc7-822f-6e54e13f4a9d",
         "children": [],
         "tags": [],
         "meta": {}
       }
     },
-    "root_id": "25615e80-a709-4784-81da-4a2800e1af85",
+    "root_id": "410f5d2f-ee51-4fc7-822f-6e54e13f4a9d",
     "layout": "Radial",
-    "selected": "25615e80-a709-4784-81da-4a2800e1af85",
+    "selected": "410f5d2f-ee51-4fc7-822f-6e54e13f4a9d",
     "editing": null,
-    "edit_buffer": "",
-    "context_open": true,
+    "edit_buffer": "4",
+    "context_open": false,
     "context_selection": 0
   }
 }
