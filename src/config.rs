@@ -1,4 +1,4 @@
-use serde::{Deserialize};
+use serde::Deserialize;
 use std::fs;
 
 #[derive(Debug, Clone, Deserialize)]

@@ -7,7 +7,7 @@ use crate::input::InputHandler;
 use crate::actions::Action;
 
 use crossterm::terminal;
-use ratatui::{Terminal};
+use ratatui::Terminal;
 use ratatui::backend::CrosstermBackend;
 use std::io::stdout;
 use std::path::Path;
@@ -61,7 +61,6 @@ pub fn run() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     mindmap_disk::save_to_file(&screen.mindmap, Path::new("data/mindmap.json"))?;
-
     let inbox_json = serde_json::to_string_pretty(&screen.inbox)?;
     std::fs::write("data/inbox.json", inbox_json)?;
 
