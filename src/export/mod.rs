@@ -1,6 +1,7 @@
 use crate::state::ExportSummary;
 use std::fs::File;
 use std::io::Write;
+use serde::Serialize;
 
 pub fn write_manifest(summary: &ExportSummary) -> std::io::Result<()> {
     let mut file = File::create("exports/manifest.json")?;

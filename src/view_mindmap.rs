@@ -1,89 +1,57 @@
+// FINAL FULL FILE DELIVERY
+// Filename: /src/view_mindmap.rs
+
 use ratatui::{
+    backend::Backend,
     layout::Rect,
-    widgets::{Block, Borders, Paragraph},
+    style::{Color, Style},
     text::{Line, Span},
-    style::{Style, Modifier, Color},
+    widgets::{Block, Borders, Paragraph},
     Frame,
 };
-use crate::mindmap_state::{MindmapState, MindmapLayout};
 
-pub fn render_mindmap(f: &mut Frame<'_>, area: Rect, state: &MindmapState) {
-    match state.layout {
-        MindmapLayout::Radial => render_radial(f, area, state),
-        MindmapLayout::Tree => render_tree(f, area, state),
-        MindmapLayout::Timeline => render_timeline(f, area, state),
-    }
+use crate::mindmap_state::{MindmapState, Node};
 
-    render_edit_overlay(f, area, state);
-}
+pub fn render_mindmap<B: Backend>(f: &mut Frame<B>, area: Rect, state: &MindmapState) {
+    let block = Block::default().title("Mindmap").borders(Borders::ALL);
+    let mut lines = vec![];
 
-fn render_radial(f: &mut Frame<'_>, area: Rect, state: &MindmapState) {
-    let center_x = area.width / 2;
-    let center_y = area.height / 2;
-    let radius = (area.width.min(area.height) / 3).max(6);
-
-    let mut used = std::collections::HashSet::new();
-    let mut labels = vec![];
-
-    if let Some(root) = state.nodes.get(&state.root_id) {
-        labels.push((center_x, center_y, &root.label, state.selected == Some(root.id)));
-
-        let child_count = root.children.len().max(1);
-
-        for (i, child_id) in root.children.iter().enumerate() {
-            if let Some(child) = state.nodes.get(child_id) {
-                let angle = (i as f32 / child_count as f32) * std::f32::consts::TAU;
-                let dx = (radius as f32 * angle.cos()).round() as i16;
-                let dy = (radius as f32 * angle.sin()).round() as i16;
-
-                let x = center_x.saturating_add_signed(dx).saturating_sub(6);
-                let y = center_y.saturating_add_signed(dy);
-                if !used.insert((x, y)) { continue; }
-
-                labels.push((x, y, &child.label, state.selected == Some(child.id)));
-            }
+    if let Some(root_id) = state.root_id {
+        if let Some(root_node) = state.nodes.get(&root_id) {
+            render_node(&mut lines, root_node, state, 0);
         }
     }
 
-    for (x, y, label, selected) in labels {
-        let text = label.to_string();
-        let w = text.len() as u16 + 2;
-        let h = 1;
-        let box_area = Rect::new(x.min(area.width - w), y.min(area.height - h), w, h);
-
-        let para = Paragraph::new(text).style(
-            if selected {
-                Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD)
-            } else {
-                Style::default().fg(Color::White)
-            },
-        );
-        f.render_widget(para, box_area);
-    }
+    let para = Paragraph::new(lines).block(block);
+    f.render_widget(para, area);
 }
 
-fn render_tree(_f: &mut Frame<'_>, _area: Rect, _state: &MindmapState) {}
-fn render_timeline(_f: &mut Frame<'_>, _area: Rect, _state: &MindmapState) {}
+fn render_node(
+    lines: &mut Vec<Line<'_>>,
+    node: &Node,
+    state: &MindmapState,
+    indent: usize,
+) {
+    let prefix = "  ".repeat(indent);
+    let selected = state.selected == Some(node.id);
+    let editing = state.editing == Some(node.id);
 
-fn render_edit_overlay(f: &mut Frame<'_>, area: Rect, state: &MindmapState) {
-    if let Some(id) = state.editing {
-        if state.nodes.get(&id).is_some() {
-            let label = format!("✏ {}", state.edit_buffer);
-            let width = label.len() as u16 + 4;
+    let mut styled = Style::default().fg(Color::White);
+    if selected {
+        styled = styled.fg(Color::LightGreen);
+    }
+    if editing {
+        styled = styled.bg(Color::Blue);
+    }
 
-            let para = Paragraph::new(Line::from(Span::styled(
-                &label,
-                Style::default().fg(Color::Magenta).add_modifier(Modifier::BOLD),
-            )))
-            .block(Block::default().borders(Borders::ALL).title("Node Edit"));
+    lines.push(Line::from(Span::styled(
+        format!("{}{}", prefix, node.label),
+        styled,
+    )));
 
-            let center_x = area.width / 2;
-            let center_y = area.height / 2;
-            let h = 3;
-            let x = center_x.saturating_sub(width / 2);
-            let y = center_y;
-
-            f.render_widget(para, Rect::new(x, y, width, h));
+    for child_id in &node.children {
+        if let Some(child) = state.nodes.get(child_id) {
+            render_node(lines, child, state, indent + 1);
         }
     }
 }

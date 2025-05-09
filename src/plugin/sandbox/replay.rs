@@ -1,14 +1,15 @@
-use crate::plugin::SandboxedPlugin;
 use std::collections::VecDeque;
 use log::info;
+use serde::{Serialize, Deserialize};
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Default, Clone, Serialize, Deserialize)]
 pub struct ReplayEvent {
     pub signal: String,
     pub timestamp: String,
     pub plugin_name: String,
 }
 
+#[derive(Debug, Default, Clone, Serialize, Deserialize)]
 pub struct ReplayEngine {
     history: VecDeque<ReplayEvent>,
 }
@@ -20,11 +21,11 @@ impl ReplayEngine {
         }
     }
 
-    pub fn log_event(&mut self, plugin: &SandboxedPlugin, signal: &str) {
+    pub fn log_event(&mut self, plugin_name: &str, signal: &str) {
         let event = ReplayEvent {
             signal: signal.into(),
             timestamp: chrono::Utc::now().to_rfc3339(),
-            plugin_name: plugin.name.clone(),
+            plugin_name: plugin_name.into(),
         };
         info!("REPLAY: {:?}", event);
         self.history.push_back(event);

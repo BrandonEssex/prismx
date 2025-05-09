@@ -1,13 +1,19 @@
-// spotlight/mod.rs
-#[derive(Debug, Clone)]
-pub struct SpotlightModule;
-
-impl SpotlightModule {
-    pub fn new() -> Self {
-        SpotlightModule
-    }
-
-    pub fn run(&self) {
-        log::info!("Running spotlight search...");
-    }
-}
+pub mod app;
+pub mod config;
+pub mod screen;
+pub mod input;
+pub mod state;
+pub mod actions;
+pub mod logger;
+pub mod export;
+pub mod spotlight;
+pub mod plugin;
+pub mod tag;
+pub mod ui;
+pub mod zen_mode;
+pub mod dashboard;
+pub mod view_mindmap;
+pub mod view_triage;
+pub mod mindmap_state;
+pub mod log_viewer;
+pub mod shortcut_overlay;
