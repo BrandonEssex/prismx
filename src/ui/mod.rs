@@ -1,3 +1,6 @@
+// FINAL FULL FILE DELIVERY
+// Filename: /src/ui/mod.rs
+
 pub mod sidebar;
 pub mod status_bar;
 pub mod tag_glossary;

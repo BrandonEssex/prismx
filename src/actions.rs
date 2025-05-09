@@ -1,43 +1,29 @@
+// FINAL FULL FILE DELIVERY
+// Filename: /src/actions.rs
+
 #[derive(Debug, Clone)]
 pub enum Action {
     Quit,
     ToggleZenMode,
-    OpenScratchpad,
-    ToggleTriage,
     ToggleShortcuts,
     ToggleLogViewer,
-    Tick,
-
-    // Mindmap core
+    ToggleTriage,
     EnterEditNode,
-    OpenContextMenu,
-    ToggleMindmapLayout,
     PushEditChar(char),
     PopEditChar,
-    CancelEdit,
     CommitEdit,
+    CancelEdit,
     NavigateNext,
     NavigatePrev,
-
-    // Node creation/manipulation
     CreateSiblingNode,
     CreateChildNode,
-    DuplicateNode,
     DeleteNode,
-
-    // Navigation
-    NavigateParent,
-    NavigateChild,
-    NavigateLeft,
-    NavigateRight,
-
-    // View / Interaction
-    ToggleMarkdownPreview,
+    DuplicateNode,
     ToggleTimelineView,
+    ToggleMarkdownPreview,
     ToggleTagFilterMenu,
-    CollapseNode,
-    ExpandNode,
-    TriggerTemplate(String),
-    SwitchWorkspace,
     SearchNode,
+    ExpandNode,
+    CollapseNode,
+    SwitchWorkspace,
 }
