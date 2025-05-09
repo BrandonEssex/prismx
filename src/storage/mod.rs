@@ -1,2 +1,2 @@
 pub mod inbox_storage;
-pub mod json_store;
+pub mod mindmap_disk;

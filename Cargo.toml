@@ -1,32 +1,30 @@
 [package]
 name = "prismx"
-version = "0.1.27-dev6"
+version = "0.1.28"
 edition = "2021"
 authors = ["BrandonEssex"]
 description = "Modular TUI productivity hub with plugin support"
-license = "MIT"
-repository = "https://github.com/BrandonEssex/prismx"
 
 [dependencies]
 anyhow = "1.0"
-chrono = { version = "0.4", features = ["serde"] }
 crossterm = "0.27"
-dirs = "5.0"
-env_logger = "0.11"
-fuzzy-matcher = "0.3"
-lazy_static = "1.4"
-log = "0.4"
-notify = "6.1"
 ratatui = "0.26"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 serde_yaml = "0.9"
-simplelog = "0.12"
-thiserror = "1.0"
-toml = "0.8"
 tokio = { version = "1.28", features = ["full"] }
-uuid = { version = "1", features = ["v4"] }
+thiserror = "1.0"
+log = "0.4"
+simplelog = "0.12"
+env_logger = "0.11"
+dirs = "5.0"
+fuzzy-matcher = "0.3"
 wasmtime = { version = "14.0", features = ["wat", "component-model"] }
+uuid = { version = "1", features = ["v4", "serde"] }
+lazy_static = "1.4"
+chrono = { version = "0.4", features = ["serde"] }
+toml = "0.8"
+notify = "6.1"
 
 [features]
 default = []
