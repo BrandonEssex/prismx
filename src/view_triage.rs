@@ -1,45 +1,53 @@
-// FINAL VERSION — File Delivery Progress: 1/1  
-// File: src/view_triage.rs
-
-use crate::inbox::{InboxTask, TaskStatus};
-use crate::state::AppState;
 use ratatui::{
-    layout::{Constraint, Direction, Layout},
-    style::{Modifier, Style},
+    layout::Rect,
+    widgets::{Block, Borders, Paragraph},
     text::{Line, Span},
-    widgets::{Block, Borders, List, ListItem, Paragraph},
+    style::{Style, Modifier, Color},
     Frame,
 };
 
-pub fn draw_triage_view(frame: &mut Frame, state: &AppState) {
-    let size = frame.size();
+use crate::storage::inbox_storage::InboxState;
 
-    let chunks = Layout::default()
-        .direction(Direction::Vertical)
-        .constraints([
-            Constraint::Length(3),
-            Constraint::Min(1),
-        ])
-        .split(size);
+pub fn render_triage(f: &mut Frame<'_>, area: Rect, state: &InboxState, context_open: bool) {
+    let lines: Vec<Line> = state.items.iter().enumerate().map(|(i, item)| {
+        let style = if i == state.selected {
+            Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD)
+        } else {
+            Style::default()
+        };
 
-    let header = Paragraph::new("📥 Triage Inbox — Use arrows to navigate, Ctrl+D to archive")
-        .block(Block::default().borders(Borders::ALL).title("Inbox Triage"))
-        .style(Style::default().add_modifier(Modifier::BOLD));
-    frame.render_widget(header, chunks[0]);
+        let line = format!("[P{}] {} [{}]", item.priority, item.title, item.shard);
+        Line::from(Span::styled(line, style))
+    }).collect();
 
-    let inbox_tasks: Vec<&InboxTask> = state.inbox.list_by_status(TaskStatus::Inbox);
+    let block = Block::default()
+        .title("Inbox")
+        .borders(Borders::ALL);
 
-    let items: Vec<ListItem> = inbox_tasks
-        .iter()
-        .map(|task| {
-            let line = format!("• [{}] {}", task.status, task.title);
-            ListItem::new(Line::from(vec![Span::raw(line)]))
-        })
-        .collect();
+    let para = Paragraph::new(lines).block(block);
+    f.render_widget(para, area);
 
-    let list = List::new(items)
-        .block(Block::default().borders(Borders::ALL).title("Inbox Tasks"))
-        .highlight_symbol(">> ");
+    if context_open {
+        render_context_menu(f, area);
+    }
+}
 
-    frame.render_widget(list, chunks[1]);
+fn render_context_menu(f: &mut Frame<'_>, area: Rect) {
+    let items = vec!["Mark Done", "Edit", "Archive"];
+    let lines: Vec<Line> = items.iter().map(|label| {
+        Line::from(Span::styled(*label, Style::default().fg(Color::Magenta)))
+    }).collect();
+
+    let block = Block::default()
+        .title("Item Menu")
+        .borders(Borders::ALL)
+        .border_style(Style::default().fg(Color::DarkGray));
+
+    let para = Paragraph::new(lines).block(block);
+    let width = 22;
+    let height = items.len() as u16 + 2;
+    let x = area.width.saturating_sub(width) - 1;
+    let y = area.y + 1;
+
+    f.render_widget(para, Rect::new(x, y, width, height));
 }

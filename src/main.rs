@@ -8,6 +8,7 @@ mod spotlight;
 mod extension_host;
 mod mindmap_state;
 mod view_mindmap;
+mod view_triage;
 mod storage;
 mod scratchpad;
 

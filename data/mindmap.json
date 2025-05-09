@@ -1,0 +1,58 @@
+{
+  "state": {
+    "nodes": {
+      "b4aeebda-9b6c-46c1-941b-891b4780086e": {
+        "id": "b4aeebda-9b6c-46c1-941b-891b4780086e",
+        "label": "Child 4pllp",
+        "parent": "3796f302-c028-4296-b853-b2eab91e8e9d",
+        "children": [],
+        "tags": [],
+        "meta": {}
+      },
+      "242560cc-20e3-4af5-833d-b0ddfa757281": {
+        "id": "242560cc-20e3-4af5-833d-b0ddfa757281",
+        "label": "Child 1",
+        "parent": "3796f302-c028-4296-b853-b2eab91e8e9d",
+        "children": [],
+        "tags": [],
+        "meta": {}
+      },
+      "2dd9037a-61f8-424b-b8f9-4a063df2107c": {
+        "id": "2dd9037a-61f8-424b-b8f9-4a063df2107c",
+        "label": "Child 3al",
+        "parent": "3796f302-c028-4296-b853-b2eab91e8e9d",
+        "children": [],
+        "tags": [],
+        "meta": {}
+      },
+      "3796f302-c028-4296-b853-b2eab91e8e9d": {
+        "id": "3796f302-c028-4296-b853-b2eab91e8e9d",
+        "label": "Root",
+        "parent": null,
+        "children": [
+          "242560cc-20e3-4af5-833d-b0ddfa757281",
+          "8caa0dfa-1d70-45d7-9979-d6e21099ce6d",
+          "2dd9037a-61f8-424b-b8f9-4a063df2107c",
+          "b4aeebda-9b6c-46c1-941b-891b4780086e"
+        ],
+        "tags": [],
+        "meta": {}
+      },
+      "8caa0dfa-1d70-45d7-9979-d6e21099ce6d": {
+        "id": "8caa0dfa-1d70-45d7-9979-d6e21099ce6d",
+        "label": "Child 2",
+        "parent": "3796f302-c028-4296-b853-b2eab91e8e9d",
+        "children": [],
+        "tags": [],
+        "meta": {}
+      }
+    },
+    "root_id": "3796f302-c028-4296-b853-b2eab91e8e9d",
+    "layout": "Radial",
+    "selected": "b4aeebda-9b6c-46c1-941b-891b4780086e",
+    "editing": null,
+    "edit_buffer": "",
+    "context_open": false,
+    "context_selection": 0
+  }
+}
