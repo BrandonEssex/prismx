@@ -1,4 +1,4 @@
-use crate::capability::Capability;
+use crate::extension_host::capability::Capability;
 use std::fs;
 use std::collections::HashSet;
 use serde::Deserialize;

@@ -13,6 +13,14 @@ impl InputHandler {
         }
     }
 
+    pub fn poll_event_timeout(&self, timeout: Duration) -> std::io::Result<Option<Event>> {
+        if poll(timeout)? {
+            Ok(Some(read()?))
+        } else {
+            Ok(None)
+        }
+    }
+
     pub fn handle_event(&self, event: Event) -> Option<Action> {
         if let Event::Key(KeyEvent { code, modifiers: _, .. }) = event {
             match code {
@@ -20,6 +28,7 @@ impl InputHandler {
                 KeyCode::Char('z') => Some(Action::ToggleZenMode),
                 KeyCode::Char('s') => Some(Action::OpenScratchpad),
                 KeyCode::Char('t') => Some(Action::ToggleTriage),
+                KeyCode::Char('?') => Some(Action::ToggleShortcuts),
                 KeyCode::Char('e') => Some(Action::EnterEditNode),
                 KeyCode::Char('m') => Some(Action::ToggleMindmapLayout),
                 KeyCode::Char('c') => Some(Action::OpenContextMenu),

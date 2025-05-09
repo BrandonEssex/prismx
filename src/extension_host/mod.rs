@@ -19,7 +19,7 @@ impl ExtensionHost {
         }
     }
 
-    pub fn load_all(&mut self) -> Result<(), self::errors::PluginError> {
+    pub fn load_all(&mut self) -> Result<(), Box<dyn std::error::Error>> {
         self.loader.load_all_plugins()
     }
 }
