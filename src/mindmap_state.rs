@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 use uuid::Uuid;
 use serde::{Serialize, Deserialize};
+use crate::actions::Action;
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub enum MindmapLayout {
@@ -137,5 +138,20 @@ impl MindmapState {
     pub fn toggle_context_menu(&mut self) {
         self.context_open = !self.context_open;
         self.context_selection = 0;
+    }
+
+    pub fn handle_action(&mut self, action: Action) {
+        match action {
+            Action::EnterEditNode => self.start_edit(),
+            Action::CancelEdit => self.cancel_edit(),
+            Action::CommitEdit => self.commit_edit(),
+            Action::PushEditChar(c) => self.push_edit_char(c),
+            Action::PopEditChar => self.pop_edit_char(),
+            Action::NavigateNext => self.select_next(),
+            Action::NavigatePrev => self.select_prev(),
+            Action::ToggleMindmapLayout => self.toggle_layout(),
+            Action::OpenContextMenu => self.toggle_context_menu(),
+            _ => {}
+        }
     }
 }

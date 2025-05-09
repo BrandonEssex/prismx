@@ -11,10 +11,9 @@ use ratatui::Terminal;
 use ratatui::backend::CrosstermBackend;
 use std::io::stdout;
 use std::path::Path;
+use std::time::{Duration, Instant};
 
 use crate::storage::mindmap_disk;
-use crate::storage::inbox_storage::{InboxState, TriageItem};
-
 use serde_json;
 
 pub fn run() -> Result<(), Box<dyn std::error::Error>> {
@@ -34,19 +33,30 @@ pub fn run() -> Result<(), Box<dyn std::error::Error>> {
     ext_host.load_all()?;
 
     let input = InputHandler;
+    let mut last_tick = Instant::now();
+    let tick_rate = Duration::from_millis(750);
 
     while state.is_running() {
         terminal.draw(|f| {
             screen.draw(f, &mut state);
         })?;
 
-        if let Some(event) = input.poll_event()? {
+        let timeout = tick_rate
+            .checked_sub(last_tick.elapsed())
+            .unwrap_or_else(|| Duration::from_secs(0));
+
+        if let Some(event) = input.poll_event_timeout(timeout)? {
             if let Some(action) = input.handle_event(event) {
                 match action {
                     Action::Quit => state.quit(),
                     _ => screen.handle_action(action),
                 }
             }
+        }
+
+        if last_tick.elapsed() >= tick_rate {
+            screen.handle_action(Action::Tick);
+            last_tick = Instant::now();
         }
     }
 

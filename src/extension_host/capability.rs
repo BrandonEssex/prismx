@@ -1,6 +1,9 @@
 #[derive(Debug, Clone)]
 pub enum Capability {
-    ReadOnly,
-    WriteAccess,
+    FileRead,
+    FileWrite,
     NetworkAccess,
+    RenderOverlay,
+    RegisterKeybind,
+    EmitSignal,
 }

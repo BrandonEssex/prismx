@@ -4,6 +4,8 @@ pub enum Action {
     ToggleZenMode,
     OpenScratchpad,
     ToggleTriage,
+    ToggleShortcuts,
+    Tick,
 
     // Mindmap actions
     EnterEditNode,

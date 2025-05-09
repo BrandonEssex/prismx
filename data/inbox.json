@@ -1,1 +1,27 @@
-[]
+{
+  "items": [
+    {
+      "id": "a1",
+      "title": "Urgent network alert",
+      "shard": "infra",
+      "tags": [
+        "alert",
+        "urgent"
+      ],
+      "priority": 1,
+      "created": "2025-05-09T02:12:14.080568Z"
+    },
+    {
+      "id": "a2",
+      "title": "Pending code review",
+      "shard": "dev",
+      "tags": [
+        "review"
+      ],
+      "priority": 3,
+      "created": "2025-05-09T02:12:14.080568Z"
+    }
+  ],
+  "selected": 0,
+  "context_open": true
+}
