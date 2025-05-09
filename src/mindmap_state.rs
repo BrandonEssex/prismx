@@ -97,12 +97,12 @@ impl MindmapState {
     }
 
     pub fn commit_edit(&mut self) {
-        if let Some(id) = self.editing {
+        if let Some(id) = self.editing.take() {
             if let Some(node) = self.nodes.get_mut(&id) {
-                node.label = self.edit_buffer.clone();
+                node.label = self.edit_buffer.trim().to_string();
             }
+            self.edit_buffer.clear();
         }
-        self.cancel_edit();
     }
 
     pub fn push_edit_char(&mut self, c: char) {

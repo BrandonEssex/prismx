@@ -1,4 +1,4 @@
-use crossterm::event::{poll, read, Event, KeyCode, KeyEvent};
+use crossterm::event::{poll, read, Event, KeyCode, KeyEvent, KeyModifiers};
 use std::time::Duration;
 use crate::actions::Action;
 
@@ -22,22 +22,23 @@ impl InputHandler {
     }
 
     pub fn handle_event(&self, event: Event) -> Option<Action> {
-        if let Event::Key(KeyEvent { code, modifiers: _, .. }) = event {
-            match code {
-                KeyCode::Char('q') => Some(Action::Quit),
-                KeyCode::Char('z') => Some(Action::ToggleZenMode),
-                KeyCode::Char('s') => Some(Action::OpenScratchpad),
-                KeyCode::Char('t') => Some(Action::ToggleTriage),
-                KeyCode::Char('?') => Some(Action::ToggleShortcuts),
-                KeyCode::Char('e') => Some(Action::EnterEditNode),
-                KeyCode::Char('m') => Some(Action::ToggleMindmapLayout),
-                KeyCode::Char('c') => Some(Action::OpenContextMenu),
-                KeyCode::Esc => Some(Action::CancelEdit),
-                KeyCode::Enter => Some(Action::CommitEdit),
-                KeyCode::Backspace => Some(Action::PopEditChar),
-                KeyCode::Right | KeyCode::Down => Some(Action::NavigateNext),
-                KeyCode::Left | KeyCode::Up => Some(Action::NavigatePrev),
-                KeyCode::Char(c) => Some(Action::PushEditChar(c)),
+        if let Event::Key(KeyEvent { code, modifiers, .. }) = event {
+            match (code, modifiers) {
+                (KeyCode::Char('q'), KeyModifiers::CONTROL) => Some(Action::Quit),
+                (KeyCode::Char('e'), KeyModifiers::CONTROL) => Some(Action::EnterEditNode),
+                (KeyCode::Char('m'), KeyModifiers::CONTROL) => Some(Action::ToggleMindmapLayout),
+                (KeyCode::Char('c'), KeyModifiers::CONTROL) => Some(Action::OpenContextMenu),
+                (KeyCode::Char('i'), KeyModifiers::CONTROL) => Some(Action::ToggleTriage),
+                (KeyCode::Char('z'), KeyModifiers::CONTROL) => Some(Action::ToggleZenMode),
+                (KeyCode::Char('/'), KeyModifiers::CONTROL) => Some(Action::ToggleShortcuts),
+
+                (KeyCode::Esc, _) => Some(Action::CancelEdit),
+                (KeyCode::Enter, _) => Some(Action::CommitEdit),
+                (KeyCode::Backspace, _) => Some(Action::PopEditChar),
+                (KeyCode::Right | KeyCode::Down, _) => Some(Action::NavigateNext),
+                (KeyCode::Left | KeyCode::Up, _) => Some(Action::NavigatePrev),
+
+                (KeyCode::Char(c), _) => Some(Action::PushEditChar(c)),
                 _ => None,
             }
         } else {

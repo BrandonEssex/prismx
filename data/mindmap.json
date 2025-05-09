@@ -1,58 +1,58 @@
 {
   "state": {
     "nodes": {
-      "9da841f8-6279-4328-9454-45469d0cea9b": {
-        "id": "9da841f8-6279-4328-9454-45469d0cea9b",
-        "label": "Child 2",
-        "parent": "e9b152a5-abfd-4d17-ba87-d2030c039023",
+      "80c19146-60e1-4f46-8e70-7d6797eb7ba8": {
+        "id": "80c19146-60e1-4f46-8e70-7d6797eb7ba8",
+        "label": "Child 1",
+        "parent": "b2128cdf-93a1-4110-b32e-bfd0b7a8976a",
         "children": [],
         "tags": [],
         "meta": {}
       },
-      "cb2c0bc1-76f3-466f-823d-d2f42349f623": {
-        "id": "cb2c0bc1-76f3-466f-823d-d2f42349f623",
-        "label": "Child 3",
-        "parent": "e9b152a5-abfd-4d17-ba87-d2030c039023",
-        "children": [],
-        "tags": [],
-        "meta": {}
-      },
-      "e9b152a5-abfd-4d17-ba87-d2030c039023": {
-        "id": "e9b152a5-abfd-4d17-ba87-d2030c039023",
-        "label": "Rootighh lo_r() {),",
+      "b2128cdf-93a1-4110-b32e-bfd0b7a8976a": {
+        "id": "b2128cdf-93a1-4110-b32e-bfd0b7a8976a",
+        "label": "Rootdfgadfadfda",
         "parent": null,
         "children": [
-          "f24dff63-1ac7-4ec8-aec9-a443dea7b759",
-          "9da841f8-6279-4328-9454-45469d0cea9b",
-          "cb2c0bc1-76f3-466f-823d-d2f42349f623",
-          "d2067032-0d6c-419a-868d-c09d7552bbcd"
+          "80c19146-60e1-4f46-8e70-7d6797eb7ba8",
+          "d90e6e96-e957-4fa6-b918-3c295cbb0056",
+          "c8b2a8af-8a65-4213-adf3-9ae505abfc75",
+          "b9592c3a-eddd-4ece-a4c5-3dafcb8923d6"
         ],
         "tags": [],
         "meta": {}
       },
-      "d2067032-0d6c-419a-868d-c09d7552bbcd": {
-        "id": "d2067032-0d6c-419a-868d-c09d7552bbcd",
-        "label": "Child 4",
-        "parent": "e9b152a5-abfd-4d17-ba87-d2030c039023",
+      "c8b2a8af-8a65-4213-adf3-9ae505abfc75": {
+        "id": "c8b2a8af-8a65-4213-adf3-9ae505abfc75",
+        "label": "Child 3",
+        "parent": "b2128cdf-93a1-4110-b32e-bfd0b7a8976a",
         "children": [],
         "tags": [],
         "meta": {}
       },
-      "f24dff63-1ac7-4ec8-aec9-a443dea7b759": {
-        "id": "f24dff63-1ac7-4ec8-aec9-a443dea7b759",
-        "label": "Child 1",
-        "parent": "e9b152a5-abfd-4d17-ba87-d2030c039023",
+      "d90e6e96-e957-4fa6-b918-3c295cbb0056": {
+        "id": "d90e6e96-e957-4fa6-b918-3c295cbb0056",
+        "label": "Child 2",
+        "parent": "b2128cdf-93a1-4110-b32e-bfd0b7a8976a",
+        "children": [],
+        "tags": [],
+        "meta": {}
+      },
+      "b9592c3a-eddd-4ece-a4c5-3dafcb8923d6": {
+        "id": "b9592c3a-eddd-4ece-a4c5-3dafcb8923d6",
+        "label": "Child 4",
+        "parent": "b2128cdf-93a1-4110-b32e-bfd0b7a8976a",
         "children": [],
         "tags": [],
         "meta": {}
       }
     },
-    "root_id": "e9b152a5-abfd-4d17-ba87-d2030c039023",
-    "layout": "Timeline",
-    "selected": "f24dff63-1ac7-4ec8-aec9-a443dea7b759",
-    "editing": "e9b152a5-abfd-4d17-ba87-d2030c039023",
-    "edit_buffer": "Rootighh lo_r() {),ppiy",
-    "context_open": true,
+    "root_id": "b2128cdf-93a1-4110-b32e-bfd0b7a8976a",
+    "layout": "Radial",
+    "selected": "b2128cdf-93a1-4110-b32e-bfd0b7a8976a",
+    "editing": null,
+    "edit_buffer": "poiuy",
+    "context_open": false,
     "context_selection": 0
   }
 }
