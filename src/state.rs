@@ -14,6 +14,7 @@ pub struct AppState {
     pub export: ExportSummary,
     pub plugins: Vec<PluginStatus>,
     pub replay_engine: ReplayEngine,
+    running: bool,
 }
 
 impl AppState {
@@ -23,7 +24,16 @@ impl AppState {
             export: ExportSummary::default(),
             plugins: Vec::new(),
             replay_engine: ReplayEngine::new(),
+            running: true,
         }
+    }
+
+    pub fn is_running(&self) -> bool {
+        self.running
+    }
+
+    pub fn quit(&mut self) {
+        self.running = false;
     }
 }
 
