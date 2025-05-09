@@ -17,11 +17,14 @@ where
     let bindings = vec![
         "Ctrl+Q - Quit",
         "Ctrl+E - Edit Node",
+        "Ctrl+N - New Sibling Node",
+        "Ctrl+Tab - New Child Node",
+        "Ctrl+D - Duplicate Node",
+        "Ctrl+Backspace - Delete Node",
         "Ctrl+M - Toggle Layout",
-        "Ctrl+C - Context Menu",
-        "Ctrl+I - Inbox View",
         "Ctrl+Z - Zen Mode",
-        "Ctrl+/ - Shortcuts",
+        "Ctrl+/ - Show Shortcuts",
+        "Ctrl+L - View Logs",
     ];
 
     let lines: Vec<Line> = bindings
@@ -31,7 +34,7 @@ where
 
     let block = Block::default().title("Shortcuts").borders(Borders::ALL);
     let para = Paragraph::new(lines).block(block);
-    let width = 34;
+    let width = 38;
     let height = bindings.len() as u16 + 2;
 
     frame.render_widget(para, Rect::new(area.width - width - 1, area.y + 1, width, height));

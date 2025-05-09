@@ -67,17 +67,22 @@ fn render_timeline(_f: &mut Frame<'_>, _area: Rect, _state: &MindmapState) {}
 
 fn render_edit_overlay(f: &mut Frame<'_>, area: Rect, state: &MindmapState) {
     if let Some(id) = state.editing {
-        if let Some(node) = state.nodes.get(&id) {
-            let label = format!("Edit: {}", state.edit_buffer);
+        if let Some(_node) = state.nodes.get(&id) {
+            let label = format!("✏ {}", state.edit_buffer);
             let para = Paragraph::new(Line::from(Span::styled(
                 label,
                 Style::default().fg(Color::Magenta).add_modifier(Modifier::BOLD),
             )))
-            .block(Block::default().title("Editing").borders(Borders::ALL));
+            .block(Block::default().borders(Borders::ALL).title("Node Edit"));
 
-            let x = area.width.saturating_sub(32);
-            let y = area.height.saturating_sub(3);
-            f.render_widget(para, Rect::new(x, y, 30, 3));
+            let center_x = area.width / 2;
+            let center_y = area.height / 2;
+            let w = label.len() as u16 + 4;
+            let h = 3;
+            let x = center_x.saturating_sub(w / 2);
+            let y = center_y;
+
+            f.render_widget(para, Rect::new(x, y, w, h));
         }
     }
 }

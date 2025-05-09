@@ -70,14 +70,14 @@ impl Screen {
                     ActiveView::Mindmap
                 };
             }
-            Action::ToggleShortcuts => {
-                self.shortcut_overlay = !self.shortcut_overlay;
-            }
             Action::ToggleLogViewer => {
                 self.active = match self.active {
                     ActiveView::Log => ActiveView::Mindmap,
                     _ => ActiveView::Log,
                 };
+            }
+            Action::ToggleShortcuts => {
+                self.shortcut_overlay = !self.shortcut_overlay;
             }
             Action::Tick => {
                 self.zen.tick();

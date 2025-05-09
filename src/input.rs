@@ -23,20 +23,40 @@ impl InputHandler {
 
     pub fn handle_event(&self, event: Event) -> Option<Action> {
         if let Event::Key(KeyEvent { code, modifiers, .. }) = event {
+            use KeyCode::*;
+            use KeyModifiers::*;
+
             match (code, modifiers) {
-                (KeyCode::Char('q'), KeyModifiers::CONTROL) => Some(Action::Quit),
-                (KeyCode::Char('e'), KeyModifiers::CONTROL) => Some(Action::EnterEditNode),
-                (KeyCode::Char('m'), KeyModifiers::CONTROL) => Some(Action::ToggleMindmapLayout),
-                (KeyCode::Char('c'), KeyModifiers::CONTROL) => Some(Action::OpenContextMenu),
-                (KeyCode::Char('i'), KeyModifiers::CONTROL) => Some(Action::ToggleTriage),
-                (KeyCode::Char('z'), KeyModifiers::CONTROL) => Some(Action::ToggleZenMode),
-                (KeyCode::Char('/'), KeyModifiers::CONTROL) => Some(Action::ToggleShortcuts),
-                (KeyCode::Esc, _) => Some(Action::CancelEdit),
-                (KeyCode::Enter, _) => Some(Action::CommitEdit),
-                (KeyCode::Backspace, _) => Some(Action::PopEditChar),
-                (KeyCode::Right | KeyCode::Down, _) => Some(Action::NavigateNext),
-                (KeyCode::Left | KeyCode::Up, _) => Some(Action::NavigatePrev),
-                (KeyCode::Char(c), _) => Some(Action::PushEditChar(c)),
+                (Char('q'), CONTROL) => Some(Action::Quit),
+                (Char('e'), CONTROL) => Some(Action::EnterEditNode),
+                (Char('m'), CONTROL) => Some(Action::ToggleMindmapLayout),
+                (Char('c'), CONTROL) => Some(Action::OpenContextMenu),
+                (Char('i'), CONTROL) => Some(Action::ToggleTriage),
+                (Char('z'), CONTROL) => Some(Action::ToggleZenMode),
+                (Char('/'), CONTROL) => Some(Action::ToggleShortcuts),
+                (Char('l'), CONTROL) => Some(Action::ToggleLogViewer),
+                (Char('n'), CONTROL) => Some(Action::CreateSiblingNode),
+                (Tab, CONTROL)       => Some(Action::CreateChildNode),
+                (Char('d'), CONTROL | SHIFT) => Some(Action::DuplicateNode),
+                (Backspace, CONTROL) => Some(Action::DeleteNode),
+                (Char('t'), CONTROL) => Some(Action::ToggleTimelineView),
+                (Char('p'), CONTROL) => Some(Action::ToggleMarkdownPreview),
+                (Char('f'), CONTROL) => Some(Action::SearchNode),
+                (Char('='), CONTROL) => Some(Action::ExpandNode),
+                (Char('-'), CONTROL) => Some(Action::CollapseNode),
+                (Char('w'), CONTROL) => Some(Action::SwitchWorkspace),
+                (Char('t'), CONTROL | ALT) => Some(Action::ToggleTagFilterMenu),
+
+                (Up, CONTROL)    => Some(Action::NavigateParent),
+                (Down, CONTROL)  => Some(Action::NavigateChild),
+                (Left, CONTROL)  => Some(Action::NavigateLeft),
+                (Right, CONTROL) => Some(Action::NavigateRight),
+
+                (Esc, _) => Some(Action::CancelEdit),
+                (Enter, _) => Some(Action::CommitEdit),
+                (Backspace, _) => Some(Action::PopEditChar),
+                (Char(c), _) => Some(Action::PushEditChar(c)),
+
                 _ => None,
             }
         } else {

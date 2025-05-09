@@ -1,13 +1,16 @@
 use std::fs::{create_dir_all, OpenOptions};
-use std::io::Write;
 use simplelog::*;
 
 pub fn init_logger() {
-    let _ = create_dir_all("logs");
+    let log_dir = "logs";
+    let log_file = "logs/qa_runtime.log";
+
+    let _ = create_dir_all(log_dir);
+
     let file = OpenOptions::new()
         .create(true)
         .append(true)
-        .open("logs/qa_runtime.log")
+        .open(log_file)
         .unwrap();
 
     CombinedLogger::init(vec![

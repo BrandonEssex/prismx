@@ -8,7 +8,7 @@ pub enum Action {
     ToggleLogViewer,
     Tick,
 
-    // Mindmap actions
+    // Mindmap core
     EnterEditNode,
     OpenContextMenu,
     ToggleMindmapLayout,
@@ -18,4 +18,26 @@ pub enum Action {
     CommitEdit,
     NavigateNext,
     NavigatePrev,
+
+    // Node creation/manipulation
+    CreateSiblingNode,
+    CreateChildNode,
+    DuplicateNode,
+    DeleteNode,
+
+    // Navigation
+    NavigateParent,
+    NavigateChild,
+    NavigateLeft,
+    NavigateRight,
+
+    // View / Interaction
+    ToggleMarkdownPreview,
+    ToggleTimelineView,
+    ToggleTagFilterMenu,
+    CollapseNode,
+    ExpandNode,
+    TriggerTemplate(String),
+    SwitchWorkspace,
+    SearchNode,
 }
