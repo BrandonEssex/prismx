@@ -7,7 +7,7 @@ use crate::input::InputHandler;
 use crate::actions::Action;
 
 use crossterm::terminal;
-use ratatui::Terminal;
+use ratatui::{Terminal};
 use ratatui::backend::CrosstermBackend;
 use std::io::stdout;
 use std::path::Path;
@@ -23,7 +23,7 @@ pub fn run() -> Result<(), Box<dyn std::error::Error>> {
     let mut screen = Screen::new(config, spotlight);
 
     terminal::enable_raw_mode()?;
-    let mut stdout = stdout();
+    let stdout = stdout();
     let backend = CrosstermBackend::new(stdout);
     let mut terminal = Terminal::new(backend)?;
 
@@ -38,7 +38,7 @@ pub fn run() -> Result<(), Box<dyn std::error::Error>> {
 
     while state.is_running() {
         terminal.draw(|f| {
-            screen.draw(f, &mut state);
+            screen.draw::<CrosstermBackend<std::io::Stdout>>(f, &mut state);
         })?;
 
         let timeout = tick_rate

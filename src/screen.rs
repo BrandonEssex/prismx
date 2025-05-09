@@ -48,7 +48,7 @@ impl Screen {
             ActiveView::Dashboard => self.dashboard.render(f, area),
         }
 
-        render_shortcuts(f, area, self.shortcut_overlay);
+        render_shortcuts::<B>(f, area, self.shortcut_overlay);
     }
 
     pub fn handle_action(&mut self, action: Action) {
@@ -73,16 +73,3 @@ impl Screen {
             Action::Tick => {
                 self.zen.tick();
             }
-            _ => match self.active {
-                ActiveView::Mindmap => self.mindmap.handle_action(action),
-                ActiveView::Triage => match action {
-                    Action::NavigateNext => self.inbox.next(),
-                    Action::NavigatePrev => self.inbox.prev(),
-                    Action::OpenContextMenu => self.inbox.toggle_context(),
-                    _ => {}
-                },
-                _ => {}
-            },
-        }
-    }
-}
