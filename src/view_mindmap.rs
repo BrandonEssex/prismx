@@ -20,8 +20,9 @@ pub fn render_mindmap(f: &mut Frame<'_>, area: Rect, state: &MindmapState) {
 fn render_radial(f: &mut Frame<'_>, area: Rect, state: &MindmapState) {
     let center_x = area.width / 2;
     let center_y = area.height / 2;
-    let radius = (area.width.min(area.height) / 3).min(12);
+    let radius = (area.width.min(area.height) / 3).max(6);
 
+    let mut used = std::collections::HashSet::new();
     let mut labels = vec![];
 
     if let Some(root) = state.nodes.get(&state.root_id) {
@@ -37,6 +38,8 @@ fn render_radial(f: &mut Frame<'_>, area: Rect, state: &MindmapState) {
 
                 let x = center_x.saturating_add_signed(dx).saturating_sub(6);
                 let y = center_y.saturating_add_signed(dy);
+                if !used.insert((x, y)) { continue; }
+
                 labels.push((x, y, &child.label, state.selected == Some(child.id)));
             }
         }
