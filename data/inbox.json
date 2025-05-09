@@ -9,7 +9,7 @@
         "urgent"
       ],
       "priority": 1,
-      "created": "2025-05-09T02:12:14.080568Z"
+      "created": "2025-05-09T03:24:04.239367Z"
     },
     {
       "id": "a2",
@@ -19,9 +19,9 @@
         "review"
       ],
       "priority": 3,
-      "created": "2025-05-09T02:12:14.080568Z"
+      "created": "2025-05-09T03:24:04.239368Z"
     }
   ],
   "selected": 0,
-  "context_open": true
+  "context_open": false
 }

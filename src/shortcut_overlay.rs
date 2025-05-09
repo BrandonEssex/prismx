@@ -2,7 +2,7 @@ use ratatui::{
     layout::Rect,
     widgets::{Block, Borders, Paragraph},
     text::{Line, Span},
-    style::{Style, Modifier, Color},
+    style::{Style, Color},
     Frame,
 };
 
@@ -19,9 +19,9 @@ where
         "e - Edit Node",
         "m - Toggle Layout",
         "c - Context Menu",
-        "↑↓ - Navigate",
         "i - Open Inbox",
         "? - Show Help",
+        "z - Zen Mode",
     ];
 
     let lines: Vec<Line> = bindings

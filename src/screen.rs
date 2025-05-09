@@ -13,7 +13,6 @@ use ratatui::{backend::Backend, Frame};
 pub enum ActiveView {
     Mindmap,
     Triage,
-    Dashboard,
     Zen,
 }
 
@@ -45,7 +44,6 @@ impl Screen {
             ActiveView::Mindmap => render_mindmap(f, area, &self.mindmap),
             ActiveView::Triage => render_triage(f, area, &self.inbox, self.inbox.context_open),
             ActiveView::Zen => self.zen.render::<B>(f, area),
-            ActiveView::Dashboard => self.dashboard.render(f, area),
         }
 
         render_shortcuts::<B>(f, area, self.shortcut_overlay);

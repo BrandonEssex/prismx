@@ -33,7 +33,7 @@ impl Dashboard {
         }
     }
 
-    pub fn render(&self, f: &mut Frame<'_>, area: Rect) {
+    pub fn render(&self, f: &mut Frame<'_>, _area: Rect) {
         for slot in &self.slots {
             if !slot.enabled {
                 continue;
