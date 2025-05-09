@@ -1,0 +1,175 @@
+# PrismX Roadmap (v0.1.28 → v1.2.0+)
+
+---
+
+## PHASE 1: Foundation & Core Features
+
+### v0.1.28 — Mindmap & Workspace Enhancements
+
+* Double-click editing
+* Right-click menus
+* View switcher (radial/tree/timeline)
+
+### v0.1.29 — Triage & Inbox Redesign
+
+* Priority sorting
+* Tag assignments
+* Shard-to-kanban logic
+
+### v0.1.30 — Zen Mode & Breathing UI
+
+* Breathing visual overlay
+* Zen scratchpad autosave
+* Zen-on-startup option
+
+### v0.1.31 — Keybinding & Shortcut UX
+
+* Command overlay (Ctrl+?)
+* Multi-key support (e.g. Ctrl+K, T)
+* Keymap override config
+
+### v0.1.32 — Plugin Host Expansion
+
+* Capability manifest v2
+* Async hooks (on\_start, on\_tick)
+* TUI slot rendering
+
+### v0.1.33 — Dashboard Layout Engine
+
+* Widget grid config (dashboard\_config.json)
+* Slot render API
+* Dashboard themes
+
+### v0.1.34 — Smart Templating System
+
+* YAML/JSON task/project templates
+* Scheduled routine spawn
+* Template API for extensions
+
+### v0.1.35 — Encryption & Hidden Shards
+
+* Shard encryption
+* Toggle visibility
+* Unlock via CLI or biometric
+
+### v0.1.36 — RoutineForge Extension
+
+* Morning/weekly routine builder
+* Ad-hoc override days
+* Visual scheduler interface
+
+### v0.1.37 — Developer Diagnostics View
+
+* Plugin profiling
+* Capability audit
+* Memory usage monitor
+
+### v0.1.38 — Polish & Migration Engine
+
+* Config/data versioning
+* Lint cleanup
+* CI checks for JSON schema
+
+---
+
+## PHASE 2: Architecture & Power Layer
+
+### v0.2.0 — Unified Capability Router
+
+* Centralized PrismCapability enforcement
+* All system modules go through same gate
+
+### v0.2.1 — Offline-First Enforcement Mode
+
+* offline\_mode = true disables all network, AI, plugin IO
+* Secure sandbox fallback
+
+### v0.2.2 — Virtualized Shard Model
+
+* NodeGroup abstraction for Shard/Workspace/Project
+* Metadata support
+
+### v0.2.3 — Object Metadata & Smart Filters
+
+* Arbitrary "meta" fields per object
+* Used in plugin filters and search queries
+
+### v0.2.4 — Reactive Signal Bus
+
+* emit(Signal::...) pattern for system triggers
+* Extension & TUI event subscriptions
+
+### v0.2.5 — Embedded Scripting (Rhai)
+
+* Scripted extensions, workflows, macros
+* Reactive hooks: on\_save, on\_start
+
+### v0.2.6 — Dynamic Layout Profiles
+
+* Switchable dashboard/workspace TUI layouts
+* Time/context-sensitive view rules
+
+### v0.2.7 — Declarative UI Configs
+
+* keymaps.json, widgets.json, themes.json
+* Live-reload interface logic
+
+---
+
+## PHASE 3: Infrastructure-Scale Integrations
+
+### v1.0.0 — Public Stable Release
+
+* GitHub Actions CI/CD
+* Signed binaries
+* Public plugin showcase
+
+### v1.1.0 — Extension Registry
+
+* `prismx plugin install name`
+* Manifest + trust filter validation
+
+### v1.1.1 — Secure Plugin Sandboxing
+
+* Memory/time caps for each execution
+* Audit trail of access
+
+### v1.1.2 — Offline Docs Browser
+
+* Fuzzy searchable help overlay
+* Auto-index plugin docs + commands
+
+### v1.1.3 — Multi-Shard Overlay Mode
+
+* Render multiple shards simultaneously
+* Border-styled TUI overlay rendering
+
+### v1.1.4 — Biometric Shortcut Support
+
+* TouchID, FaceID, Yubikey unlocks
+* Trigger plugin or shard access events
+
+### v1.1.5 — Audit Logging System
+
+* Log user/plugin actions and errors
+* Stored as `.audit/*.jsonl`
+
+### v1.1.6 — Theming & Typography Engine
+
+* High contrast, font-size, padding controls
+* User-customizable `theme.json`
+
+### v1.1.7 — Deferred Execution Queue
+
+* "Run plugin later" or "after idle"
+* Background automation queues
+
+---
+
+## Beyond v1.2.x
+
+* Live Collaboration Engine
+* AI Bridge (modular opt-in with capabilities)
+* Git/USB Sync Engine
+* Graph Analytics Views
+* GUI Frontend Wrapper (optional)

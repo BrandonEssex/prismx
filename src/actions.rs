@@ -1,9 +1,18 @@
-// actions.rs
 #[derive(Debug, Clone)]
 pub enum Action {
     Quit,
     ToggleZenMode,
     OpenScratchpad,
     ToggleTriage,
-    // Extend with more actions as needed
+
+    // Mindmap actions
+    EnterEditNode,
+    OpenContextMenu,
+    ToggleMindmapLayout,
+    PushEditChar(char),
+    PopEditChar,
+    CancelEdit,
+    CommitEdit,
+    NavigateNext,
+    NavigatePrev,
 }
