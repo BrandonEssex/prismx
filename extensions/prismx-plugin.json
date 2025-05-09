@@ -1,0 +1,9 @@
+{
+  "name": "hello-widget",
+  "version": "1.0.0",
+  "capabilities": [
+    "render:dashboard",
+    "log:info"
+  ],
+  "entry": "plugin.wasm"
+}
