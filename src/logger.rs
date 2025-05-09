@@ -1,9 +1,24 @@
-use log::LevelFilter;
-use std::str::FromStr;
+use std::fs::{create_dir_all, OpenOptions};
+use std::io::Write;
+use simplelog::*;
 
-pub fn init_logger(config: &crate::config::Config) {
-    let level = LevelFilter::from_str(&config.level).unwrap_or(LevelFilter::Info);
-    env_logger::Builder::new()
-        .filter_level(level)
-        .init();
+pub fn init_logger() {
+    let log_dir = "logs";
+    let log_file = "logs/qa_runtime.log";
+
+    let _ = create_dir_all(log_dir);
+
+    let file = OpenOptions::new()
+        .create(true)
+        .append(true)
+        .open(log_file)
+        .unwrap();
+
+    CombinedLogger::init(vec![
+        TermLogger::new(LevelFilter::Info, Config::default(), TerminalMode::Mixed, ColorChoice::Auto),
+        WriteLogger::new(LevelFilter::Debug, Config::default(), file),
+    ])
+    .unwrap();
+
+    log::info!("Logger initialized");
 }

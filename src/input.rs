@@ -31,13 +31,11 @@ impl InputHandler {
                 (KeyCode::Char('i'), KeyModifiers::CONTROL) => Some(Action::ToggleTriage),
                 (KeyCode::Char('z'), KeyModifiers::CONTROL) => Some(Action::ToggleZenMode),
                 (KeyCode::Char('/'), KeyModifiers::CONTROL) => Some(Action::ToggleShortcuts),
-
                 (KeyCode::Esc, _) => Some(Action::CancelEdit),
                 (KeyCode::Enter, _) => Some(Action::CommitEdit),
                 (KeyCode::Backspace, _) => Some(Action::PopEditChar),
                 (KeyCode::Right | KeyCode::Down, _) => Some(Action::NavigateNext),
                 (KeyCode::Left | KeyCode::Up, _) => Some(Action::NavigatePrev),
-
                 (KeyCode::Char(c), _) => Some(Action::PushEditChar(c)),
                 _ => None,
             }

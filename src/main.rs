@@ -15,9 +15,13 @@ mod zen_mode;
 mod dashboard;
 mod dashboard_widgets;
 mod shortcut_overlay;
+mod logger;
 
 fn main() {
+    logger::init_logger();
+
     if let Err(e) = app::run() {
         eprintln!("Application error: {:?}", e);
+        log::error!("Fatal error: {:?}", e);
     }
 }
