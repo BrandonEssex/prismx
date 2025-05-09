@@ -67,7 +67,7 @@ impl MindmapState {
                 let parent_id = current.parent.or(Some(current_id));
                 if let Some(parent_id) = parent_id {
                     let id = Uuid::new_v4();
-                    let mut node = Node {
+                    let node = Node {
                         id,
                         label: "New Node".into(),
                         parent: Some(parent_id),
@@ -75,11 +75,11 @@ impl MindmapState {
                         tags: vec![],
                         meta: HashMap::new(),
                     };
-                    self.nodes.insert(id, node.clone());
+                    self.nodes.insert(id, node);
                     self.nodes.get_mut(&parent_id).unwrap().children.push(id);
                     self.selected = Some(id);
                     self.editing = Some(id);
-                    self.edit_buffer = String::new();
+                    self.edit_buffer.clear();
                     self.edit_started = false;
                 }
             }
@@ -101,7 +101,7 @@ impl MindmapState {
             self.nodes.get_mut(&current_id).unwrap().children.push(id);
             self.selected = Some(id);
             self.editing = Some(id);
-            self.edit_buffer = String::new();
+            self.edit_buffer.clear();
             self.edit_started = false;
         }
     }
@@ -109,7 +109,7 @@ impl MindmapState {
     pub fn delete_node(&mut self) {
         if let Some(current_id) = self.selected {
             if current_id == self.root_id {
-                return; // do not delete root
+                return;
             }
 
             if let Some(node) = self.nodes.remove(&current_id) {
@@ -125,16 +125,22 @@ impl MindmapState {
 
     pub fn duplicate_node(&mut self) {
         if let Some(current_id) = self.selected {
-            if let Some(node) = self.nodes.get(&current_id) {
+            let clone_opt = self.nodes.get(&current_id).cloned();
+
+            if let Some(node) = clone_opt {
                 let new_id = Uuid::new_v4();
                 let mut clone = node.clone();
                 clone.id = new_id;
                 clone.label.push_str(" Copy");
-                self.nodes.insert(new_id, clone.clone());
+                self.nodes.insert(new_id, clone);
+
                 if let Some(parent_id) = node.parent {
-                    self.nodes.get_mut(&parent_id).unwrap().children.push(new_id);
-                    self.selected = Some(new_id);
+                    if let Some(parent) = self.nodes.get_mut(&parent_id) {
+                        parent.children.push(new_id);
+                    }
                 }
+
+                self.selected = Some(new_id);
             }
         }
     }
