@@ -1,5 +1,4 @@
 use serde::Deserialize;
-use std::fs;
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct Config {
@@ -23,7 +22,7 @@ pub struct ExtensionHostConfig {
 }
 
 pub fn load_config() -> Result<Config, Box<dyn std::error::Error>> {
-    let contents = fs::read_to_string("config.toml")?;
-    let config: Config = toml::from_str(&contents)?;
+    let config_text = std::fs::read_to_string("config.toml")?;
+    let config = toml::from_str(&config_text)?;
     Ok(config)
 }

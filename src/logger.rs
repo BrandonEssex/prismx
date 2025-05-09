@@ -1,23 +1,20 @@
-use std::fs::{create_dir_all, OpenOptions};
 use simplelog::*;
+use std::fs::{create_dir_all, OpenOptions};
 
 pub fn init_logger() {
-    let log_dir = "logs";
-    let log_file = "logs/qa_runtime.log";
-
-    let _ = create_dir_all(log_dir);
+    let _ = create_dir_all("logs");
 
     let file = OpenOptions::new()
         .create(true)
         .append(true)
-        .open(log_file)
-        .unwrap();
+        .open("logs/qa_runtime.log")
+        .expect("Failed to create log file");
 
     CombinedLogger::init(vec![
         TermLogger::new(LevelFilter::Info, Config::default(), TerminalMode::Mixed, ColorChoice::Auto),
         WriteLogger::new(LevelFilter::Debug, Config::default(), file),
     ])
-    .unwrap();
+    .expect("Failed to initialize logger");
 
-    log::info!("Logger initialized");
+    log::info!("Logger initialized.");
 }

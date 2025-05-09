@@ -1,12 +1,8 @@
-#[derive(Debug, Clone)]
+#[derive(Default)]
 pub struct SpotlightModule;
 
 impl SpotlightModule {
     pub fn new() -> Self {
-        SpotlightModule
-    }
-
-    pub fn run(&self) {
-        log::info!("Spotlight module activated.");
+        Self
     }
 }
