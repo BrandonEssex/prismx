@@ -5,6 +5,7 @@ pub enum Action {
     OpenScratchpad,
     ToggleTriage,
     ToggleShortcuts,
+    ToggleLogViewer,
     Tick,
 
     // Mindmap actions
