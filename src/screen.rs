@@ -16,7 +16,7 @@ impl Screen {
         Ok(())
     }
 
-    pub fn draw<'a>(&mut self, f: &mut Frame<'a>, _state: &mut AppState) {
-        // Placeholder for draw logic
+    pub fn draw(&mut self, _f: &mut Frame, _state: &mut AppState) {
+        // Placeholder for actual rendering
     }
 }

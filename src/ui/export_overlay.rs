@@ -1,30 +1,16 @@
-use ratatui::{
-    layout::Rect,
-    style::{Color, Style},
-    text::{Line, Span},
-    widgets::{Block, Borders, Paragraph},
-    Frame,
-};
-
+use ratatui::text::{Span};
+use ratatui::style::{Style, Color};
 use crate::state::ExportSummary;
 
-pub fn render_export_overlay(f: &mut Frame<'_>, area: Rect, export: &ExportSummary) {
-    let block = Block::default().title("Export Summary").borders(Borders::ALL);
-    let lines = vec![
-        Line::from(vec![
-            Span::raw("Format: "),
-            Span::styled(&export.format, Style::default().fg(Color::Cyan)),
-        ]),
-        Line::from(vec![
-            Span::raw("Tags Included: "),
-            Span::styled(export.tags.join(", "), Style::default().fg(Color::Magenta)),
-        ]),
-        Line::from(vec![
-            Span::raw("Trust Level: "),
-            Span::styled(&export.trust_summary, Style::default().fg(Color::Yellow)),
-        ]),
-    ];
-
-    let para = Paragraph::new(lines).block(block);
-    f.render_widget(para, area);
+pub fn render_export_overlay(export: &ExportSummary) -> Vec<Span> {
+    vec![
+        Span::styled(
+            format!("Exported {} nodes", export.node_count),
+            Style::default().fg(Color::Green),
+        ),
+        Span::styled(
+            format!("Exported at: {}", export.export_time),
+            Style::default().fg(Color::Cyan),
+        ),
+    ]
 }
