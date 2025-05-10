@@ -2,7 +2,6 @@
 // Filename: /src/view_mindmap.rs
 
 use ratatui::{
-    backend::Backend,
     layout::Rect,
     style::{Color, Style},
     text::{Line, Span},
@@ -12,7 +11,7 @@ use ratatui::{
 
 use crate::mindmap_state::{MindmapState, Node};
 
-pub fn render_mindmap<B: Backend>(f: &mut Frame<B>, area: Rect, state: &MindmapState) {
+pub fn render_mindmap(f: &mut Frame<'_>, area: Rect, state: &MindmapState) {
     let block = Block::default().title("Mindmap").borders(Borders::ALL);
     let mut lines = vec![];
 

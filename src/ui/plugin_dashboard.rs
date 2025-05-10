@@ -1,17 +1,17 @@
+// FINAL FULL FILE DELIVERY
+// Filename: /src/ui/plugin_dashboard.rs
+
 use ratatui::{
-    Frame,
     layout::Rect,
     widgets::{Block, Borders, Paragraph},
     text::{Span, Line},
     style::{Style, Color},
+    Frame,
 };
-use crate::state::PluginStatus;
 
-pub fn render_plugin_dashboard<B: ratatui::backend::Backend>(
-    f: &mut Frame<B>,
-    area: Rect,
-    plugins: &[PluginStatus],
-) {
+use crate::plugin::status::PluginStatus;
+
+pub fn render_plugin_dashboard(f: &mut Frame<'_>, area: Rect, plugins: &[PluginStatus]) {
     let block = Block::default().title("Plugin Status").borders(Borders::ALL);
 
     let lines: Vec<Line> = plugins
