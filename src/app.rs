@@ -7,13 +7,9 @@ use crossterm::{
 use ratatui::backend::CrosstermBackend;
 use ratatui::Terminal;
 
-mod config;
-mod logger;
-mod screen;
-
-use config::load_config;
-use logger::init_logger;
-use screen::Screen;
+use crate::config::load_config;
+use crate::logger::init_logger;
+use crate::screen::Screen;
 
 pub fn run() -> Result<(), Box<dyn std::error::Error>> {
     let config = load_config()?;
