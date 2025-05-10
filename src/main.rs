@@ -1,31 +1,29 @@
-mod actions;
-mod app;
 mod config;
+mod state;
+mod app;
+mod input;
+mod screen;
+mod actions;
+mod export;
+mod tag;
+mod plugin;
+mod zen_mode;
 mod dashboard;
 mod dashboard_widgets;
-mod error_handling;
-mod extension_host;
-mod export;
-mod input;
-mod logger;
-mod mindmap_state;
-mod plugin;
-mod screen;
-mod scratchpad;
 mod shortcut_overlay;
-mod spotlight;
-mod state;
-mod storage;
-mod tag;
-mod ui;
-mod util;
-mod log_viewer;
 mod view_mindmap;
 mod view_triage;
-mod zen_mode;
+mod logger;
+mod storage;
+mod scratchpad;
+mod ui;
+mod error_handling;
 
-fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let config = config::load_config()?;
-    logger::init_logger(&config)?;
-    app::run(config)
+fn main() {
+    let config = config::load_config();
+    logger::init_logger(&config);
+
+    if let Err(e) = app::run() {
+        eprintln!("Application error: {:?}", e);
+    }
 }
