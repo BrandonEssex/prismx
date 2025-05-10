@@ -1,41 +1,30 @@
+// FINAL FULL FILE DELIVERY
+// Filename: /src/shortcut_overlay.rs
+
 use ratatui::{
     layout::Rect,
-    widgets::{Block, Borders, Paragraph},
+    widgets::{Block, Borders, Paragraph, Wrap},
     text::{Line, Span},
     style::{Style, Color},
     Frame,
 };
 
-pub fn render_shortcuts<B>(frame: &mut Frame<'_>, area: Rect, visible: bool)
-where
-    B: ratatui::backend::Backend,
-{
+pub fn render_shortcuts(frame: &mut Frame<'_>, area: Rect, visible: bool) {
     if !visible {
         return;
     }
 
-    let bindings = vec![
-        "Ctrl+Q - Quit",
-        "Ctrl+E - Edit Node",
-        "Ctrl+N - New Sibling Node",
-        "Ctrl+Tab - New Child Node",
-        "Ctrl+D - Duplicate Node",
-        "Ctrl+Backspace - Delete Node",
-        "Ctrl+M - Toggle Layout",
-        "Ctrl+Z - Zen Mode",
-        "Ctrl+/ - Show Shortcuts",
-        "Ctrl+L - View Logs",
+    let shortcuts = vec![
+        Line::from(Span::styled("Ctrl+E → Export Overlay", Style::default().fg(Color::Green))),
+        Line::from(Span::styled("Ctrl+Z → Zen Mode", Style::default().fg(Color::Cyan))),
+        Line::from(Span::styled("Ctrl+L → Log Viewer", Style::default().fg(Color::Yellow))),
+        Line::from(Span::styled("Ctrl+/ → Show Shortcuts", Style::default().fg(Color::Magenta))),
     ];
 
-    let lines: Vec<Line> = bindings
-        .iter()
-        .map(|b| Line::from(Span::styled(*b, Style::default().fg(Color::Cyan))))
-        .collect();
-
     let block = Block::default().title("Shortcuts").borders(Borders::ALL);
-    let para = Paragraph::new(lines).block(block);
-    let width = 38;
-    let height = bindings.len() as u16 + 2;
+    let para = Paragraph::new(shortcuts)
+        .block(block)
+        .wrap(Wrap { trim: true });
 
-    frame.render_widget(para, Rect::new(area.width - width - 1, area.y + 1, width, height));
+    frame.render_widget(para, area);
 }
