@@ -1,7 +1,3 @@
-// FINAL FULL FILE DELIVERY
-// Filename: /src/mindmap_state.rs
-// File Delivery Progress: 7/∞ FINAL FILES delivered
-
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
@@ -11,15 +7,6 @@ pub enum NodeType {
     Task,
     Idea,
     Custom(String),
-}
-
-#[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct Comment {
-    pub id: Uuid,
-    pub author: String,
-    pub timestamp: String,
-    pub content: String,
-    pub replies: Vec<Comment>,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -36,7 +23,6 @@ pub struct Node {
     pub linked_ids: Vec<Uuid>,
     pub locked: bool,
     pub encrypted_payload: Option<String>,
-    pub comments: Vec<Comment>,
 }
 
 impl Node {
@@ -55,7 +41,6 @@ impl Node {
             linked_ids: vec![],
             locked: false,
             encrypted_payload: None,
-            comments: vec![],
         }
     }
 
@@ -77,3 +62,10 @@ impl MindmapState {
         Self { root, focused_node_id }
     }
 }
+
+impl Default for MindmapState {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+

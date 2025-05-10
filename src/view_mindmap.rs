@@ -1,5 +1,5 @@
 use ratatui::widgets::{Block, Borders, Paragraph};
-use ratatui::text::Span;
+use ratatui::text::{Span, Line, Text};
 use ratatui::layout::Rect;
 use ratatui::style::{Style, Modifier};
 use ratatui::Frame;
@@ -10,7 +10,8 @@ use crate::state::AppState;
 pub fn render_mindmap(f: &mut Frame, area: Rect, state: &AppState) {
     let root = &state.mindmap.root;
     let lines = render_node_recursive(root, 0);
-    let paragraph = Paragraph::new(lines)
+    let text = Text::from(Line::from(lines));
+    let paragraph = Paragraph::new(text)
         .block(Block::default().title("Mindmap").borders(Borders::ALL));
     f.render_widget(paragraph, area);
 }
