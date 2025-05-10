@@ -1,6 +1,3 @@
-// FINAL FULL FILE DELIVERY
-// Filename: /src/shortcut_overlay.rs
-
 use ratatui::{
     layout::Rect,
     widgets::{Block, Borders, Paragraph, Wrap},

@@ -1,6 +1,3 @@
-// FINAL FULL FILE DELIVERY
-// Filename: /src/screen.rs
-
 use ratatui::Frame;
 use crate::actions::Action;
 use crate::dashboard::Dashboard;

@@ -1,6 +1,3 @@
-// FINAL FULL FILE DELIVERY
-// Filename: /src/view_mindmap.rs
-
 use ratatui::{
     layout::Rect,
     style::{Color, Style},

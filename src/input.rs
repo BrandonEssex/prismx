@@ -1,46 +1,52 @@
-// FINAL FULL FILE DELIVERY
-// Filename: /src/input.rs
-
 use crossterm::event::{Event, KeyCode::*, KeyEvent, KeyModifiers as KM};
 use crate::actions::Action;
 
 pub struct InputHandler;
 
 impl InputHandler {
+    pub fn poll_event(&self) -> std::io::Result<Option<Event>> {
+        if crossterm::event::poll(std::time::Duration::from_millis(250))? {
+            Ok(Some(crossterm::event::read()?))
+        } else {
+            Ok(None)
+        }
+    }
+
     pub fn handle_event(&self, event: Event) -> Option<Action> {
-        if let Event::Key(key_event) = event {
-            match (key_event.code, key_event.modifiers) {
-                (Char('q'), KM::CONTROL) => Some(Action::Quit),
-                (Char('e'), KM::CONTROL) => Some(Action::EnterEditNode),
-                (Char('z'), KM::CONTROL) => Some(Action::ToggleZenMode),
-                (Char('/'), KM::CONTROL) => Some(Action::ToggleShortcuts),
-                (Char('l'), KM::CONTROL) => Some(Action::ToggleLogViewer),
-                (Char('i'), KM::CONTROL) => Some(Action::ToggleTriage),
-                (Char('n'), KM::CONTROL) => Some(Action::CreateSiblingNode),
-                (Tab, KM::CONTROL)       => Some(Action::CreateChildNode),
-                (Char('d'), KM::CONTROL) => Some(Action::DuplicateNode),
-                (Backspace, KM::CONTROL) => Some(Action::DeleteNode),
-                (Char('t'), KM::CONTROL) => Some(Action::ToggleTimelineView),
-                (Char('p'), KM::CONTROL) => Some(Action::ToggleMarkdownPreview),
-                (Char('f'), KM::CONTROL) => Some(Action::SearchNode),
-                (Char('='), KM::CONTROL) => Some(Action::ExpandNode),
-                (Char('-'), KM::CONTROL) => Some(Action::CollapseNode),
-                (Char('w'), KM::CONTROL) => Some(Action::SwitchWorkspace),
-                (Down, KM::CONTROL)      => Some(Action::NavigateNext),
-                (Up, KM::CONTROL)        => Some(Action::NavigatePrev),
+        if let Event::Key(KeyEvent { code, modifiers }) = event {
+            use KM::*;
+            match (code, modifiers) {
+                (Char('q'), CONTROL) => Some(Action::Quit),
+                (Char('e'), CONTROL) => Some(Action::EnterEditNode),
+                (Char('m'), CONTROL) => Some(Action::ToggleMindmapLayout),
+                (Char('c'), CONTROL) => Some(Action::OpenContextMenu),
+                (Char('i'), CONTROL) => Some(Action::ToggleTriage),
+                (Char('z'), CONTROL) => Some(Action::ToggleZenMode),
+                (Char('/'), CONTROL) => Some(Action::ToggleShortcuts),
+                (Char('l'), CONTROL) => Some(Action::ToggleLogViewer),
+                (Char('n'), CONTROL) => Some(Action::CreateSiblingNode),
+                (Tab, CONTROL)       => Some(Action::CreateChildNode),
+                (Char('d'), CONTROL | SHIFT) => Some(Action::DuplicateNode),
+                (Backspace, CONTROL) => Some(Action::DeleteNode),
+                (Char('t'), CONTROL) => Some(Action::ToggleTimelineView),
+                (Char('p'), CONTROL) => Some(Action::ToggleMarkdownPreview),
+                (Char('f'), CONTROL) => Some(Action::SearchNode),
+                (Char('='), CONTROL) => Some(Action::ExpandNode),
+                (Char('-'), CONTROL) => Some(Action::CollapseNode),
+                (Char('w'), CONTROL) => Some(Action::SwitchWorkspace),
+                (Char('t'), CONTROL | ALT) => Some(Action::ToggleTagFilterMenu),
+                (Up, CONTROL)    => Some(Action::NavigateParent),
+                (Down, CONTROL)  => Some(Action::NavigateChild),
+                (Left, CONTROL)  => Some(Action::NavigateLeft),
+                (Right, CONTROL) => Some(Action::NavigateRight),
+                (Backspace, _) => Some(Action::PopEditChar),
+                (Enter, _) => Some(Action::CommitEdit),
+                (Esc, _) => Some(Action::CancelEdit),
+                (Char(c), _) => Some(Action::PushEditChar(c)),
                 _ => None,
             }
         } else {
             None
-        }
-    }
-
-    pub fn poll_event(&self) -> std::io::Result<Option<Event>> {
-        use crossterm::event;
-        if event::poll(std::time::Duration::from_millis(250))? {
-            Ok(Some(event::read()?))
-        } else {
-            Ok(None)
         }
     }
 }

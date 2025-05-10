@@ -1,6 +1,3 @@
-// FINAL FULL FILE DELIVERY
-// Filename: /src/app.rs
-
 use crate::config::load_config;
 use crate::screen::Screen;
 use crate::state::AppState;
@@ -16,13 +13,15 @@ pub fn run() -> Result<(), Box<dyn std::error::Error>> {
     let config = load_config()?;
     let spotlight = SpotlightModule::new();
     let mut state = AppState::new();
-    let mut screen = Screen::new(config, spotlight);
+    let mut screen = Screen::new(config.clone(), spotlight);
     let input = InputHandler;
 
     enable_raw_mode()?;
     let backend = CrosstermBackend::new(stdout());
     let mut terminal = Terminal::new(backend)?;
     terminal.clear()?;
+
+    logger::init_logger(&config);
 
     loop {
         terminal.draw(|f| {

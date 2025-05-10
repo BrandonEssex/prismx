@@ -1,10 +1,6 @@
-// FINAL FULL FILE DELIVERY
-// Filename: /src/logger.rs
-
-use std::{fs::OpenOptions, io::Write};
+use std::{fs::OpenOptions, fs};
 use simplelog::{WriteLogger, Config as LogConfig, LevelFilter};
 use crate::config::Config;
-use std::fs;
 
 pub fn init_logger(config: &Config) {
     let _ = fs::create_dir_all("logs");
