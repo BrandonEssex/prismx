@@ -1,0 +1,39 @@
+name: Patch Uploader to QA
+
+on:
+  push:
+    paths:
+      - 'incoming-patches/**'
+
+jobs:
+  apply-patch:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: ⬇️ Checkout repository
+      uses: actions/checkout@v3
+
+    - name: 🧪 Validate shell scripts
+      run: |
+        find incoming-patches/ -name "*.sh" -exec bash -n {} \;
+
+    - name: ⬇️ Checkout QA branch
+      run: |
+        git fetch origin
+        git checkout qa
+        git config user.name "prismx-bot"
+        git config user.email "bot@prismx.org"
+
+    - name: 📦 Copy patches into QA
+      run: |
+        cp -r incoming-patches/* ./
+
+    - name: ✅ Commit patches to QA
+      run: |
+        git add .
+        git commit -m "chore(patch): apply uploaded patch files from incoming-patches/"
+        git push origin qa
+
+    - name: ✅ Success message
+      run: echo "🎉 Patch successfully validated and committed to qa."
+
