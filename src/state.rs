@@ -2,6 +2,7 @@ use crate::mindmap_state::MindmapState;
 use crate::storage::inbox_storage::InboxState;
 use crate::tag::TagEntry;
 use crate::config::Config;
+use crate::scratchpad::Scratchpad;
 use serde::{Serialize, Deserialize};
 
 #[derive(Debug, Default, Serialize, Deserialize)]
@@ -14,7 +15,7 @@ pub struct ExportSummary {
 #[derive(Debug, Default)]
 pub struct AppState {
     pub config: Config,
-    pub scratchpad: crate::scratchpad::Scratchpad,
+    pub scratchpad: Scratchpad,
     pub inbox: InboxState,
     pub mindmap: MindmapState,
     pub tag_glossary: Vec<TagEntry>,
@@ -26,7 +27,7 @@ impl AppState {
     pub fn new() -> Self {
         Self {
             config: Config::default(),
-            scratchpad: crate::scratchpad::Scratchpad::default(),
+            scratchpad: Scratchpad::default(),
             inbox: InboxState::default(),
             mindmap: MindmapState::new(),
             tag_glossary: vec![],
