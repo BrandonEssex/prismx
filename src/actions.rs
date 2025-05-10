@@ -14,4 +14,5 @@ pub enum Action {
     ListBookmarks,
     SummarizeNode,
     SuggestLinks,
+    TogglePrismPanel,
 }

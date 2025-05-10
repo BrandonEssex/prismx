@@ -1,16 +1,17 @@
-// FINAL FULL FILE DELIVERY
-// Filename: /src/storage/inbox_storage.rs
+use serde::{Deserialize, Serialize};
+use crate::state::AppState;
 
-use serde::{Serialize, Deserialize};
-
-#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct InboxState {
-    pub tasks: Vec<String>,
+    pub tasks: Vec<String>, // adjust this to real task type
     pub context_open: bool,
 }
 
 impl InboxState {
-    pub fn toggle_context(&mut self) {
-        self.context_open = !self.context_open;
+    pub fn new() -> Self {
+        Self {
+            tasks: Vec::new(),
+            context_open: false,
+        }
     }
 }
