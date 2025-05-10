@@ -1,11 +1,3 @@
-// FINAL FULL FILE DELIVERY
-// Filename: /src/app.rs
-// File Delivery Progress: 2/2 QA PATCHED FILES delivered
-
-mod config;
-mod logger;
-mod screen;
-
 use std::io::stdout;
 
 use crossterm::{
