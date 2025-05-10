@@ -1,10 +1,10 @@
 // FINAL FULL FILE DELIVERY
 // Filename: /src/state.rs
-// File Delivery Progress: 6/∞ FINAL FILES delivered
+// File Delivery Progress: 2/2 FINAL FILES delivered
 
 use crate::mindmap_state::MindmapState;
 use serde::{Deserialize, Serialize};
-use std::collections::{HashMap, HashSet};
+use std::collections::{HashSet};
 use uuid::Uuid;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -25,6 +25,7 @@ pub struct AppState {
     pub cursor_position: usize,
     pub layout_profile: String,
     pub activity_log: Vec<ActivityEvent>,
+    pub show_prism_panel: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -41,4 +42,4 @@ pub enum ActivityType {
     Focused,
     Commented,
     Bookmarked,
-}  
+}

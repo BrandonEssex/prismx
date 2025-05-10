@@ -18,4 +18,6 @@ pub enum Action {
     ToggleHelp,
     Redraw,
     Custom(String),
+    LockFocusedNode,
+    UnlockFocusedNode,
 }
