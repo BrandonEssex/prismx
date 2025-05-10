@@ -30,7 +30,7 @@ impl ZenModeState {
         }
     }
 
-    pub fn render<B: Backend>(&self, f: &mut Frame<'_>, area: Rect) {
+    pub fn render(&self, f: &mut Frame<'_>, area: Rect) {
         let block = Block::default()
             .title("Zen Mode")
             .borders(Borders::ALL)
