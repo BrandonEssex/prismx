@@ -1,7 +1,3 @@
-// FINAL FULL FILE DELIVERY
-// Filename: /src/config.rs
-// File Delivery Progress: 4/∞ FINAL FILES delivered
-
 use std::fs;
 use std::path::Path;
 use serde::{Deserialize, Serialize};

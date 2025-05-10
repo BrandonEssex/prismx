@@ -1,28 +1,11 @@
-// FINAL FULL FILE DELIVERY
-// Filename: /src/mod.rs
-// File Delivery Progress: 14/∞ FINAL FILES delivered
-
 pub mod app;
-pub mod action;
 pub mod config;
-pub mod error_handling;
-pub mod input;
 pub mod logger;
 pub mod screen;
 pub mod state;
-pub mod storage;
-pub mod tag;
-pub mod timer;
-pub mod ui;
-pub mod util;
-pub mod view_dashboard;
-pub mod view_log;
-pub mod view_mindmap;
-pub mod zen_mode;
+pub mod mindmap_state;
+pub mod input;
+pub mod plugin;
 pub mod export;
 pub mod command_bar;
-pub mod dashboard_widgets;
-pub mod scratchpad;
-pub mod log_viewer;
-pub mod mindmap_state;
-pub mod plugin;
+pub mod ui;

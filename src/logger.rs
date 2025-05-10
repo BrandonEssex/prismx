@@ -1,7 +1,3 @@
-// FINAL FULL FILE DELIVERY
-// Filename: /src/logger.rs
-// File Delivery Progress: 5/∞ FINAL FILES delivered
-
 use crate::config::Config;
 use std::fs::OpenOptions;
 use std::io::Write;

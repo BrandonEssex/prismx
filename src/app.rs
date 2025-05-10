@@ -1,8 +1,4 @@
-// FINAL FULL FILE DELIVERY
-// Filename: /src/app.rs
-// File Delivery Progress: 2/∞ FINAL FILES delivered
-
-use std::io::{stdout, Write};
+use std::io::stdout;
 
 use crossterm::{
     execute,

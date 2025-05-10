@@ -1,7 +1,3 @@
-// FINAL FULL FILE DELIVERY
-// Filename: /src/screen.rs
-// File Delivery Progress: 3/∞ FINAL FILES delivered
-
 use ratatui::{Frame, Terminal};
 use ratatui::backend::Backend;
 use crate::state::AppState;
@@ -22,6 +18,6 @@ impl Screen {
     }
 
     pub fn draw<'a>(&mut self, f: &mut Frame<'a>, _state: &mut AppState) {
-        // Placeholder: actual layout and drawing logic implemented here.
+        // Replace with rendering logic as needed.
     }
 }
