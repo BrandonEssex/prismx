@@ -1,0 +1,6 @@
+{
+  "name": "hello-plugin",
+  "version": "1.0.0",
+  "entry": "plugin.wasm",
+  "capabilities": ["log:info", "render:dashboard"]
+}
