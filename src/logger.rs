@@ -1,20 +1,22 @@
-use simplelog::*;
-use std::fs::{create_dir_all, OpenOptions};
+// FINAL FULL FILE DELIVERY
+// Filename: /src/logger.rs
 
-pub fn init_logger() {
-    let _ = create_dir_all("logs");
+use std::{fs::OpenOptions, io::Write};
+use simplelog::{WriteLogger, Config as LogConfig, LevelFilter};
+use crate::config::Config;
+use std::fs;
 
+pub fn init_logger(config: &Config) {
+    let _ = fs::create_dir_all("logs");
+
+    let log_path = "logs/runtime.log";
     let file = OpenOptions::new()
         .create(true)
+        .write(true)
         .append(true)
-        .open("logs/qa_runtime.log")
-        .expect("Failed to create log file");
+        .open(log_path)
+        .expect("Failed to open log file");
 
-    CombinedLogger::init(vec![
-        TermLogger::new(LevelFilter::Info, Config::default(), TerminalMode::Mixed, ColorChoice::Auto),
-        WriteLogger::new(LevelFilter::Debug, Config::default(), file),
-    ])
-    .expect("Failed to initialize logger");
-
-    log::info!("Logger initialized.");
+    WriteLogger::init(LevelFilter::Info, LogConfig::default(), file)
+        .expect("Failed to initialize file logger");
 }

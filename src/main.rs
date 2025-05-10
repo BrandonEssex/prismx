@@ -24,7 +24,8 @@ mod storage;
 mod dashboard_widgets;
 
 fn main() {
-    logger::init_logger();
+    let config = config::load_config().expect("Failed to load config");
+    logger::init_logger(&config);
     if let Err(e) = app::run() {
         eprintln!("Error: {}", e);
     }
