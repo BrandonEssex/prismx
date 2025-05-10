@@ -1,24 +1,13 @@
-use std::io::stdout;
+use std::io::{stdout};
+use crossterm::terminal::{enable_raw_mode, disable_raw_mode};
+use tui::backend::CrosstermBackend;
+use tui::Terminal;
 
-use crossterm::{
-    execute,
-    terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
-};
-use ratatui::backend::CrosstermBackend;
-use ratatui::Terminal;
-
-use crate::config::load_config;
-use crate::logger::init_logger;
 use crate::screen::Screen;
 
-pub fn run() -> Result<(), Box<dyn std::error::Error>> {
-    let config = load_config()?;
-    init_logger(&config)?;
-
+pub fn launch() -> Result<(), Box<dyn std::error::Error>> {
     enable_raw_mode()?;
-    let mut stdout = stdout();
-    execute!(stdout, EnterAlternateScreen)?;
-
+    let stdout = stdout();
     let backend = CrosstermBackend::new(stdout);
     let mut terminal = Terminal::new(backend)?;
 
@@ -26,7 +15,5 @@ pub fn run() -> Result<(), Box<dyn std::error::Error>> {
     screen.run(&mut terminal)?;
 
     disable_raw_mode()?;
-    execute!(terminal.backend_mut(), LeaveAlternateScreen)?;
-
     Ok(())
 }
