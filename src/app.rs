@@ -1,48 +1,43 @@
-use crate::config::load_config;
-use crate::screen::Screen;
-use crate::input::InputHandler;
-use crate::state::AppState;
-use crate::spotlight::SpotlightModule;
-use crate::actions::Action;
-use crate::logger;
+use crate::{
+    config::Config,
+    input::{InputHandler, KM},
+    screen::Screen,
+    state::AppState,
+};
+use crossterm::{
+    event::{self, Event},
+    terminal::{disable_raw_mode, enable_raw_mode},
+};
+use ratatui::backend::CrosstermBackend;
+use ratatui::Terminal;
+use std::io::{stdout, Write};
 
-pub fn run() -> Result<(), Box<dyn std::error::Error>> {
-    let config = load_config()?;
-    logger::init_logger(&config);
-
-    let mut state = AppState::new();
-    let spotlight = SpotlightModule::new();
+pub fn run(config: Config) -> Result<(), Box<dyn std::error::Error>> {
+    let mut state = AppState::new(config.clone());
+    let spotlight = crate::spotlight::SpotlightModule::new();
     let mut screen = Screen::new(config.clone(), spotlight);
 
-    crossterm::terminal::enable_raw_mode()?;
-    let mut stdout = std::io::stdout();
-    let backend = ratatui::backend::CrosstermBackend::new(&mut stdout);
-    let mut terminal = ratatui::Terminal::new(backend)?;
+    enable_raw_mode()?;
+    let mut stdout = stdout();
+    let backend = CrosstermBackend::new(&mut stdout);
+    let mut terminal = Terminal::new(backend)?;
 
     let input = InputHandler;
 
-    loop {
+    while state.is_running() {
         terminal.draw(|f| {
             screen.draw(f, &mut state);
         })?;
 
-        if let Some(event) = input.poll_event()? {
-            if let Some(action) = input.handle_event(event) {
-                match action {
-                    Action::Quit => {
-                        state.quit();
-                        break;
-                    }
-                    _ => screen.handle_action(action, &mut state),
+        if event::poll(std::time::Duration::from_millis(250))? {
+            if let Event::Key(key) = event::read()? {
+                if let Some(action) = input.handle_event(key) {
+                    screen.handle_action(action, &mut state);
                 }
             }
         }
-
-        if !state.is_running() {
-            break;
-        }
     }
 
-    crossterm::terminal::disable_raw_mode()?;
+    disable_raw_mode()?;
     Ok(())
 }

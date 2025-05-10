@@ -1,18 +1,20 @@
-use std::{fs::OpenOptions, fs};
-use simplelog::{WriteLogger, Config as LogConfig, LevelFilter};
 use crate::config::Config;
+use chrono::Local;
+use std::{
+    fs::{create_dir_all, OpenOptions},
+    io::Write,
+};
 
-pub fn init_logger(config: &Config) {
-    let _ = fs::create_dir_all("logs");
-
-    let log_path = "logs/runtime.log";
-    let file = OpenOptions::new()
+pub fn init_logger(_config: &Config) -> Result<(), Box<dyn std::error::Error>> {
+    create_dir_all("logs")?;
+    let log_path = "logs/qa_runtime.log";
+    let mut file = OpenOptions::new()
         .create(true)
-        .write(true)
         .append(true)
-        .open(log_path)
-        .expect("Failed to open log file");
+        .open(log_path)?;
 
-    WriteLogger::init(LevelFilter::Info, LogConfig::default(), file)
-        .expect("Failed to initialize file logger");
+    let now = Local::now();
+    writeln!(file, "{} [INFO] Logger initialized.", now.format("%Y-%m-%d %H:%M:%S"))?;
+
+    Ok(())
 }
