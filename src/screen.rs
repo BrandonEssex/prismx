@@ -1,14 +1,5 @@
-use crate::{
-    actions::Action,
-    state::AppState,
-    view_mindmap::render_mindmap,
-};
-
-use ratatui::{
-    backend::Backend,
-    layout::Rect,
-    terminal::Frame,
-};
+use ratatui::{Frame, Terminal};
+use crate::state::AppState;
 
 pub struct Screen;
 
@@ -17,23 +8,14 @@ impl Screen {
         Screen
     }
 
-    pub fn draw<B: Backend>(&mut self, f: &mut Frame<B>, state: &mut AppState) {
-        let area = f.size();
-        render_mindmap(f, area, &state.mindmap);
+    pub fn run<B>(&mut self, _terminal: &mut Terminal<B>) -> Result<(), Box<dyn std::error::Error>>
+    where
+        B: ratatui::backend::Backend,
+    {
+        Ok(())
     }
 
-    pub fn handle_action(&mut self, action: Action, state: &mut AppState) {
-        match action {
-            Action::EnterEditNode => state.mindmap.start_edit(),
-            Action::PushEditChar(c) => state.mindmap.push_edit_char(c),
-            Action::PopEditChar => state.mindmap.pop_edit_char(),
-            Action::CommitEdit => state.mindmap.commit_edit(),
-            Action::CancelEdit => state.mindmap.cancel_edit(),
-            Action::CreateSiblingNode => state.mindmap.create_sibling(),
-            Action::CreateChildNode => state.mindmap.create_child(),
-            Action::NavigateNext => state.mindmap.select_next(),
-            Action::NavigatePrev => state.mindmap.select_prev(),
-            _ => {}
-        }
+    pub fn draw<'a>(&mut self, f: &mut Frame<'a>, _state: &mut AppState) {
+        // Rendering logic goes here
     }
 }

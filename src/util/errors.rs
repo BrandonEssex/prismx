@@ -1,13 +1,20 @@
-use thiserror::Error;
+use std::fmt;
 
-#[derive(Debug, Error)]
+#[derive(Debug)]
 pub enum PrismXUtilError {
-    #[error("Invalid input: {0}")]
-    InvalidInput(String),
-
-    #[error("IO error: {0}")]
-    IoError(#[from] std::io::Error),
-
-    #[error("Parse error: {0}")]
-    ParseError(String),
+    InvalidFormat,
+    MissingField(String),
+    IOError(std::io::Error),
 }
+
+impl fmt::Display for PrismXUtilError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            PrismXUtilError::InvalidFormat => write!(f, "Invalid format"),
+            PrismXUtilError::MissingField(field) => write!(f, "Missing field: {}", field),
+            PrismXUtilError::IOError(e) => write!(f, "IO error: {}", e),
+        }
+    }
+}
+
+impl std::error::Error for PrismXUtilError {}

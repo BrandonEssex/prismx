@@ -1,38 +1,33 @@
-use crate::{
-    input::{InputHandler},
-    screen::Screen,
-    config::load_config,
-    state::AppState,
-};
-use crossterm::terminal;
 use std::io::{stdout, Write};
 
+use crossterm::{
+    execute,
+    terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
+};
+use ratatui::backend::CrosstermBackend;
+use ratatui::Terminal;
+
+use crate::screen::Screen;
+use crate::config::load_config;
+use crate::logger;
+
 pub fn run() -> Result<(), Box<dyn std::error::Error>> {
-    let config = load_config();
-    logger::init_logger(&config);
+    let config = load_config()?;
+    logger::init_logger(&config)?;
 
-    terminal::enable_raw_mode()?;
+    enable_raw_mode()?;
     let mut stdout = stdout();
-    let backend = ratatui::backend::CrosstermBackend::new(&mut stdout);
-    let mut terminal = ratatui::Terminal::new(backend)?;
+    execute!(stdout, EnterAlternateScreen)?;
 
-    let mut screen = Screen::new(config.clone());
-    let mut state = AppState::new();
+    let backend = CrosstermBackend::new(stdout);
+    let mut terminal = Terminal::new(backend)?;
 
-    let input = InputHandler;
+    let mut screen = Screen::new();
 
-    while state.running {
-        terminal.draw(|f| {
-            screen.draw(f, &mut state);
-        })?;
+    screen.run(&mut terminal)?;
 
-        if let Some(event) = input.poll_event()? {
-            if let Some(action) = input.handle_event(event) {
-                screen.handle_action(action, &mut state);
-            }
-        }
-    }
+    disable_raw_mode()?;
+    execute!(terminal.backend_mut(), LeaveAlternateScreen)?;
 
-    terminal::disable_raw_mode()?;
     Ok(())
 }

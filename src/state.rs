@@ -1,34 +1,13 @@
 use crate::mindmap_state::MindmapState;
-use crate::tag::TagEntry;
+use serde::{Deserialize, Serialize};
 
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct ExportSummary {
-    pub format: String,
-    pub tags: Vec<String>,
-    pub trust_summary: String,
+    pub node_count: usize,
+    pub export_time: String,
 }
 
-#[derive(Debug)]
+#[derive(Default)]
 pub struct AppState {
-    pub running: bool,
     pub mindmap: MindmapState,
-    pub tag_glossary: Vec<TagEntry>,
-}
-
-impl AppState {
-    pub fn new() -> Self {
-        Self {
-            running: true,
-            mindmap: MindmapState::default(),
-            tag_glossary: vec![],
-        }
-    }
-
-    pub fn quit(&mut self) {
-        self.running = false;
-    }
-
-    pub fn is_running(&self) -> bool {
-        self.running
-    }
 }
