@@ -15,4 +15,7 @@ pub enum Action {
     SummarizeNode,
     SuggestLinks,
     TogglePrismPanel,
+    ToggleHelp,
+    Redraw,
+    Custom(String),
 }
