@@ -1,4 +1,7 @@
-// FINAL FULL FILE DELIVERY
-// Filename: /src/tag/mod.rs
+use serde::{Serialize, Deserialize};
 
-pub mod trust;
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TagEntry {
+    pub name: String,
+    pub trust: Option<String>,
+}

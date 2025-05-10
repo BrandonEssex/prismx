@@ -2,8 +2,9 @@ use crate::mindmap_state::MindmapState;
 use crate::storage::inbox_storage::InboxState;
 use crate::tag::TagEntry;
 use crate::config::Config;
+use serde::{Serialize, Deserialize};
 
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Serialize, Deserialize)]
 pub struct ExportSummary {
     pub format: String,
     pub tags: Vec<String>,
