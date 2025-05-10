@@ -18,12 +18,14 @@ mod state;
 mod storage;
 mod tag;
 mod ui;
+mod util;
+mod log_viewer;
 mod view_mindmap;
 mod view_triage;
 mod zen_mode;
 
-fn main() {
-    if let Err(e) = app::run() {
-        eprintln!("Application error: {:?}", e);
-    }
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let config = config::load_config()?;
+    logger::init_logger(&config)?;
+    app::run(config)
 }
