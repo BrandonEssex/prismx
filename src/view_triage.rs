@@ -6,7 +6,7 @@ use ratatui::Frame;
 
 use crate::storage::inbox_storage::InboxState;
 
-pub fn render_triage<B>(f: &mut Frame<B>, area: Rect, inbox: &InboxState) {
+pub fn render_triage(f: &mut Frame<'_>, area: Rect, inbox: &InboxState) {
     let lines: Vec<Line> = inbox.tasks.iter()
         .map(|task| Line::from(Span::styled(task.clone(), Style::default().fg(Color::White))))
         .collect();

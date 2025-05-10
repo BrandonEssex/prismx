@@ -1,7 +1,7 @@
 use std::io::{stdout};
 use crossterm::terminal::{enable_raw_mode, disable_raw_mode};
-use tui::backend::CrosstermBackend;
-use tui::Terminal;
+use ratatui::backend::CrosstermBackend;
+use ratatui::Terminal;
 
 use crate::screen::Screen;
 

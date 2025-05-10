@@ -7,9 +7,8 @@ pub struct SearchResult {
     pub score: i64,
 }
 
-#[derive(Debug)]
 pub struct SpotlightEngine {
-    matcher: SkimMatcherV2,
+    pub matcher: SkimMatcherV2,
 }
 
 impl SpotlightEngine {
