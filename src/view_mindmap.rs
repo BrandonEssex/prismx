@@ -32,17 +32,23 @@ fn render_node(
     let selected = state.selected == Some(node.id);
     let editing = state.editing == Some(node.id);
 
-    let mut styled = Style::default().fg(Color::White);
+    let mut style = Style::default().fg(Color::White);
     if selected {
-        styled = styled.fg(Color::LightGreen);
+        style = style.fg(Color::LightGreen);
     }
     if editing {
-        styled = styled.bg(Color::Blue);
+        style = style.bg(Color::Blue);
     }
 
+    let label = if editing {
+        format!("✏ {}", state.edit_buffer)
+    } else {
+        node.label.clone()
+    };
+
     lines.push(Line::from(Span::styled(
-        format!("{}{}", prefix, node.label),
-        styled,
+        format!("{}{}", prefix, label),
+        style,
     )));
 
     for child_id in &node.children {
