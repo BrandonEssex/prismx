@@ -2,23 +2,23 @@
 // Filename: /src/dashboard_widgets.rs
 
 use ratatui::{
-    backend::Backend,
     layout::Rect,
     widgets::{Block, Borders, Paragraph},
-    text::{Span, Line},
+    text::{Line, Span},
     style::{Style, Color},
     Frame,
 };
 
 use chrono::Local;
 
-pub fn render_clock_widget<B: Backend>(f: &mut Frame<'_>, area: Rect) {
+pub fn render_clock_widget(f: &mut Frame<'_>, area: Rect) {
     let now = Local::now().format("%Y-%m-%d %H:%M:%S").to_string();
+    let block = Block::default().title("Clock").borders(Borders::ALL);
     let para = Paragraph::new(vec![Line::from(Span::styled(
         now,
-        Style::default().fg(Color::Yellow),
+        Style::default().fg(Color::LightYellow),
     ))])
-    .block(Block::default().title("Clock").borders(Borders::ALL));
+    .block(block);
 
     f.render_widget(para, area);
 }

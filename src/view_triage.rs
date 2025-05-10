@@ -2,7 +2,6 @@
 // Filename: /src/view_triage.rs
 
 use ratatui::{
-    backend::Backend,
     layout::Rect,
     style::{Color, Style},
     text::{Line, Span},
@@ -12,7 +11,7 @@ use ratatui::{
 
 use crate::storage::inbox_storage::InboxState;
 
-pub fn render_triage<B: Backend>(
+pub fn render_triage(
     f: &mut Frame<'_>,
     area: Rect,
     state: &InboxState,

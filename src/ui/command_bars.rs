@@ -4,12 +4,12 @@
 use ratatui::{
     layout::Rect,
     widgets::{Block, Borders, Paragraph},
-    text::{Span, Line},
+    text::{Line, Span},
     style::{Style, Modifier, Color},
     Frame,
 };
 
-pub fn render_command_bar<B: ratatui::backend::Backend>(
+pub fn render_command_bar(
     f: &mut Frame<'_>,
     area: Rect,
     prompt: &str,
