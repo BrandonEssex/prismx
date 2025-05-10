@@ -1,32 +1,29 @@
-// FINAL FULL FILE DELIVERY
-// Filename: /src/main.rs
-
+mod actions;
 mod app;
 mod config;
-mod screen;
-mod input;
-mod state;
-mod actions;
-mod logger;
+mod dashboard;
+mod dashboard_widgets;
+mod error_handling;
+mod extension_host;
 mod export;
-mod spotlight;
+mod input;
+mod logger;
+mod mindmap_state;
 mod plugin;
+mod screen;
+mod scratchpad;
+mod shortcut_overlay;
+mod spotlight;
+mod state;
+mod storage;
 mod tag;
 mod ui;
-mod zen_mode;
-mod dashboard;
 mod view_mindmap;
 mod view_triage;
-mod mindmap_state;
-mod log_viewer;
-mod shortcut_overlay;
-mod storage;
-mod dashboard_widgets;
+mod zen_mode;
 
 fn main() {
-    let config = config::load_config().expect("Failed to load config");
-    logger::init_logger(&config);
     if let Err(e) = app::run() {
-        eprintln!("Error: {}", e);
+        eprintln!("Application error: {:?}", e);
     }
 }

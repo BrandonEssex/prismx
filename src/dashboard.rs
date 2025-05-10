@@ -1,11 +1,6 @@
-use crate::dashboard_widgets::render_clock_widget;
-use ratatui::{Frame, layout::Rect};
+use ratatui::layout::Rect;
 
-pub struct Dashboard {
-    pub slots: Vec<WidgetSlot>,
-}
-
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct WidgetSlot {
     pub id: String,
     pub x: u16,
@@ -16,35 +11,19 @@ pub struct WidgetSlot {
     pub enabled: bool,
 }
 
+#[derive(Debug, Default)]
+pub struct Dashboard {
+    pub slots: Vec<WidgetSlot>,
+}
+
 impl Dashboard {
     pub fn new() -> Self {
-        Self {
-            slots: vec![
-                WidgetSlot {
-                    id: "clock".into(),
-                    x: 0,
-                    y: 0,
-                    width: 20,
-                    height: 3,
-                    widget_type: "clock".into(),
-                    enabled: true,
-                },
-            ],
+        Dashboard {
+            slots: vec![],
         }
     }
 
-    pub fn render(&self, f: &mut Frame<'_>, _area: Rect) {
-        for slot in &self.slots {
-            if !slot.enabled {
-                continue;
-            }
-
-            let rect = Rect::new(slot.x, slot.y, slot.width, slot.height);
-
-            match slot.widget_type.as_str() {
-                "clock" => render_clock_widget(f, rect),
-                _ => {}
-            }
-        }
+    pub fn render(&self, _f: &mut ratatui::Frame<'_>, _area: Rect) {
+        // Placeholder for rendering dashboard widgets
     }
 }
