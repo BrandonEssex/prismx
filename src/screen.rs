@@ -1,5 +1,7 @@
-use ratatui::{Frame, Terminal};
+use ratatui::Terminal;
+use ratatui::Frame;
 use ratatui::backend::Backend;
+
 use crate::state::AppState;
 
 pub struct Screen;
@@ -9,15 +11,12 @@ impl Screen {
         Screen
     }
 
-    pub fn run<B>(&mut self, terminal: &mut Terminal<B>) -> Result<(), Box<dyn std::error::Error>>
-    where
-        B: Backend,
-    {
+    pub fn run<B: Backend>(&mut self, terminal: &mut Terminal<B>) -> Result<(), Box<dyn std::error::Error>> {
         terminal.draw(|f| self.draw(f, &mut AppState::default()))?;
         Ok(())
     }
 
     pub fn draw<'a>(&mut self, f: &mut Frame<'a>, _state: &mut AppState) {
-        // Replace with rendering logic as needed.
+        // TODO: Actual drawing logic will go here
     }
 }
