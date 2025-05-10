@@ -1,14 +1,6 @@
-// FINAL FULL FILE DELIVERY
-// Filename: /src/screen.rs
-
-use ratatui::{
-    backend::Backend,
-    Frame,
-};
-
+use ratatui::Frame;
 use crate::actions::Action;
 use crate::dashboard::Dashboard;
-use crate::input;
 use crate::log_viewer::render_log_viewer;
 use crate::mindmap_state::MindmapState;
 use crate::shortcut_overlay::render_shortcuts;

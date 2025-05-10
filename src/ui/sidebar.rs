@@ -1,17 +1,12 @@
 use ratatui::{
-    Frame,
     layout::Rect,
     widgets::{Block, Borders, Paragraph},
     text::{Line, Span},
     style::{Style, Color},
+    Frame,
 };
 
-pub fn render_sidebar<B: ratatui::backend::Backend>(
-    f: &mut Frame<B>,
-    area: Rect,
-    title: &str,
-    content: &[String],
-) {
+pub fn render_sidebar(f: &mut Frame<'_>, area: Rect, title: &str, content: &[String]) {
     let block = Block::default().title(title).borders(Borders::ALL);
     let lines: Vec<Line> = content
         .iter()

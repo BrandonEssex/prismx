@@ -1,25 +1,32 @@
 use ratatui::{
-    Frame,
     layout::Rect,
-    widgets::{Block, Borders, Paragraph},
-    text::{Span, Line},
-    style::{Style, Color},
+    widgets::{Block, Borders, Paragraph, List, ListItem},
+    text::{Line, Span},
+    style::{Style, Color, Modifier},
+    Frame,
 };
+use crate::state::AppState;
 
-pub fn render_status_bar<B: ratatui::backend::Backend>(
-    f: &mut Frame<B>,
-    area: Rect,
-    status: &str,
-    plugin_health: &str,
-) {
-    let line = Line::from(vec![
-        Span::styled(status, Style::default().fg(Color::White)),
-        Span::raw("  "),
-        Span::styled(plugin_health, Style::default().fg(Color::Yellow)),
-    ]);
+pub fn render_tag_glossary(f: &mut Frame<'_>, area: Rect, app_state: &AppState) {
+    let block = Block::default().title("Tag Glossary").borders(Borders::ALL);
+    let tags = &app_state.tag_glossary;
 
-    let para = Paragraph::new(line)
-        .block(Block::default().title("Status").borders(Borders::ALL));
+    let items: Vec<ListItem> = tags
+        .iter()
+        .map(|tag| {
+            let meta = format!("[{}] ({})", tag.role, tag.source);
+            let line = Line::from(vec![
+                Span::styled(&tag.name, Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD)),
+                Span::raw(" "),
+                Span::styled(meta, Style::default().fg(Color::Gray)),
+            ]);
+            ListItem::new(line)
+        })
+        .collect();
 
-    f.render_widget(para, area);
+    let list = List::new(items)
+        .block(block)
+        .highlight_style(Style::default().fg(Color::LightCyan).add_modifier(Modifier::ITALIC));
+
+    f.render_widget(list, area);
 }

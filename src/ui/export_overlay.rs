@@ -7,11 +7,7 @@ use ratatui::{
 };
 use crate::state::ExportSummary;
 
-pub fn render_export_overlay<B: ratatui::backend::Backend>(
-    f: &mut Frame<B>,
-    area: Rect,
-    export: &ExportSummary,
-) {
+pub fn render_export_overlay(f: &mut Frame<'_>, area: Rect, export: &ExportSummary) {
     let block = Block::default().title("Export Summary").borders(Borders::ALL);
     let lines = vec![
         Line::from(vec![

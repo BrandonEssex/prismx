@@ -22,7 +22,7 @@ pub fn run() -> Result<(), Box<dyn std::error::Error>> {
 
     loop {
         terminal.draw(|f| {
-            screen.draw::<CrosstermBackend<_>>(f, &mut state);
+            screen.draw(f, &mut state);
         })?;
 
         if let Some(event) = input.poll_event()? {

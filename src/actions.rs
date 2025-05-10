@@ -1,6 +1,3 @@
-// FINAL FULL FILE DELIVERY
-// Filename: /src/actions.rs
-
 #[derive(Debug, Clone)]
 pub enum Action {
     Quit,
