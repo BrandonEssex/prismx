@@ -1,9 +1,9 @@
 [package]
 name = "prismx"
-version = "2.0.0-dev7"
+version = "2.0.0-beta"
 edition = "2021"
 authors = ["BrandonEssex"]
-description = "Modular TUI productivity hub with secure plugin sandbox, offline support, and dashboard routines"
+description = "Modular, offline-first planning system centered on a dynamic mindmap interface. "
 
 [dependencies]
 anyhow = "1.0"
