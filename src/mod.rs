@@ -1,3 +1,6 @@
+// FINAL FULL FILE DELIVERY
+// Filename: /src/mod.rs
+
 pub mod app;
 pub mod config;
 pub mod screen;
@@ -17,3 +20,5 @@ pub mod view_triage;
 pub mod mindmap_state;
 pub mod log_viewer;
 pub mod shortcut_overlay;
+pub mod storage;
+pub mod dashboard_widgets;

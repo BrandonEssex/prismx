@@ -1,3 +1,6 @@
+// FINAL FULL FILE DELIVERY
+// Filename: /src/main.rs
+
 mod app;
 mod config;
 mod screen;
@@ -17,6 +20,8 @@ mod view_triage;
 mod mindmap_state;
 mod log_viewer;
 mod shortcut_overlay;
+mod storage;
+mod dashboard_widgets;
 
 fn main() {
     logger::init_logger();
