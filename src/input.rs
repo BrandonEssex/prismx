@@ -7,6 +7,7 @@ pub fn map_key_event(event: KeyEvent) -> Option<Action> {
         (KeyCode::Char('n'), KeyModifiers::CONTROL) => Some(Action::CreateSiblingNode),
         (KeyCode::Char('z'), KeyModifiers::CONTROL) => Some(Action::ToggleZenMode),
         (KeyCode::Tab, KeyModifiers::CONTROL) => Some(Action::CreateChildNode),
+        (KeyCode::Char('i'), KeyModifiers::CONTROL) => Some(Action::TogglePrismPanel),
         _ => None,
     }
 }

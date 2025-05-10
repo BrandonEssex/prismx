@@ -1,7 +1,9 @@
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum Mode {
-    Normal,
-    Triage,
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum UIMode {
+    Mindmap,
+    Dashboard,
     Zen,
-    Spotlight,
+    LogViewer,
+    Inbox,
+    Export,
 }

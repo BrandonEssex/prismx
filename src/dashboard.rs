@@ -1,29 +1,13 @@
+use ratatui::widgets::{Block, Borders, Paragraph};
 use ratatui::layout::Rect;
+use ratatui::text::Text;
+use ratatui::style::{Style, Color};
+use ratatui::Frame;
 
-#[derive(Debug, Clone, Default)]
-pub struct WidgetSlot {
-    pub id: String,
-    pub x: u16,
-    pub y: u16,
-    pub width: u16,
-    pub height: u16,
-    pub widget_type: String,
-    pub enabled: bool,
-}
-
-#[derive(Debug, Default)]
-pub struct Dashboard {
-    pub slots: Vec<WidgetSlot>,
-}
-
-impl Dashboard {
-    pub fn new() -> Self {
-        Dashboard {
-            slots: vec![],
-        }
-    }
-
-    pub fn render(&self, _f: &mut ratatui::Frame<'_>, _area: Rect) {
-        // Placeholder for rendering dashboard widgets
-    }
+pub fn render_dashboard<B>(f: &mut Frame, area: Rect) {
+    let content = Text::from("Dashboard content coming soon.");
+    let widget = Paragraph::new(content)
+        .block(Block::default().title("Dashboard").borders(Borders::ALL))
+        .style(Style::default().fg(Color::White));
+    f.render_widget(widget, area);
 }

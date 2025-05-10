@@ -1,43 +1,18 @@
-// FINAL FULL FILE DELIVERY
-// Filename: /src/view_triage.rs
-
-use ratatui::{
-    layout::Rect,
-    style::{Color, Style},
-    text::{Line, Span},
-    widgets::{Block, Borders, Paragraph},
-    Frame,
-};
+use ratatui::widgets::{Block, Borders, Paragraph};
+use ratatui::layout::Rect;
+use ratatui::text::{Span, Text};
+use ratatui::style::{Style, Color};
+use ratatui::Frame;
 
 use crate::storage::inbox_storage::InboxState;
 
-pub fn render_triage(
-    f: &mut Frame<'_>,
-    area: Rect,
-    state: &InboxState,
-    context_open: bool,
-) {
-    let block = Block::default()
-        .title("Inbox / Triage")
-        .borders(Borders::ALL)
-        .border_style(Style::default().fg(Color::Cyan));
+pub fn render_triage<B>(f: &mut Frame, area: Rect, inbox: &InboxState) {
+    let lines: Vec<Span> = inbox.tasks.iter()
+        .map(|task| Span::styled(task.clone(), Style::default().fg(Color::White)))
+        .collect();
 
-    let mut lines = vec![];
-    for (i, task) in state.tasks.iter().enumerate() {
-        let prefix = if context_open { format!("#{} > ", i + 1) } else { format!("- ") };
-        lines.push(Line::from(Span::styled(
-            format!("{}{}", prefix, task),
-            Style::default().fg(Color::White),
-        )));
-    }
+    let paragraph = Paragraph::new(Text::from(lines))
+        .block(Block::default().title("Inbox Triage").borders(Borders::ALL));
 
-    if lines.is_empty() {
-        lines.push(Line::from(Span::styled(
-            "No tasks available.",
-            Style::default().fg(Color::DarkGray),
-        )));
-    }
-
-    let para = Paragraph::new(lines).block(block);
-    f.render_widget(para, area);
+    f.render_widget(paragraph, area);
 }

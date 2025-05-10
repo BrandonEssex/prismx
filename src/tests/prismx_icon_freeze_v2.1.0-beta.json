@@ -1,0 +1,17 @@
+{
+  "timestamp": "2025-05-10T18:00:00Z",
+  "active_profile": "zen",
+  "beam_state": {
+    "top_left":    { "color": "green",  "pulse": true,  "priority": 200 },
+    "top_right":   { "color": "blue",   "pulse": false, "priority": 180 },
+    "bottom_left": { "color": "lavender","pulse": true, "priority": 160 },
+    "bottom_right":{ "color": "cyan",   "pulse": false, "priority": 120 }
+  },
+  "shard_icons": ["pomodoro", "notes", "inbox"],
+  "profile_queue": ["zen", "focus", "urgent_alert"],
+  "stealth_enabled": false,
+  "scheduler": {
+    "next_profile": "focus",
+    "interval_sec": 300
+  }
+}

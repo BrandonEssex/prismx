@@ -1,19 +1,17 @@
-use crate::util::logger::LoggingConfig;
-use log::info;
-use std::{fs, path::Path};
+use notify::{Watcher, RecursiveMode, watcher};
+use std::sync::mpsc::channel;
+use std::time::Duration;
 
-pub fn watch_config_changes(config_path: &Path) -> Option<LoggingConfig> {
-    if let Ok(content) = fs::read_to_string(config_path) {
-        let parsed: Result<LoggingConfig, _> = toml::from_str(&content);
-        if let Ok(config) = parsed {
-            info!("Loaded config from file.");
-            return Some(config);
-        } else {
-            eprintln!("Failed to parse config file.");
+pub fn watch_config_changes(path: &str) {
+    let (tx, rx) = channel();
+    let mut watcher = watcher(tx, Duration::from_secs(2)).expect("Failed to create watcher");
+
+    watcher.watch(path, RecursiveMode::NonRecursive).expect("Failed to watch config");
+
+    std::thread::spawn(move || {
+        for event in rx {
+            println!("Config change detected: {:?}", event);
+            // Future: reload settings on change
         }
-    } else {
-        eprintln!("Failed to read config file.");
-    }
-
-    None
+    });
 }

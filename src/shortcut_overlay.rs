@@ -1,27 +1,18 @@
-use ratatui::{
-    layout::Rect,
-    widgets::{Block, Borders, Paragraph, Wrap},
-    text::{Line, Span},
-    style::{Style, Color},
-    Frame,
-};
+use ratatui::widgets::{Block, Borders, Paragraph};
+use ratatui::layout::Rect;
+use ratatui::text::{Span, Text, Line};
+use ratatui::style::{Style, Color};
+use ratatui::Frame;
 
-pub fn render_shortcuts(frame: &mut Frame<'_>, area: Rect, visible: bool) {
-    if !visible {
-        return;
-    }
-
-    let shortcuts = vec![
-        Line::from(Span::styled("Ctrl+E → Export Overlay", Style::default().fg(Color::Green))),
-        Line::from(Span::styled("Ctrl+Z → Zen Mode", Style::default().fg(Color::Cyan))),
-        Line::from(Span::styled("Ctrl+L → Log Viewer", Style::default().fg(Color::Yellow))),
-        Line::from(Span::styled("Ctrl+/ → Show Shortcuts", Style::default().fg(Color::Magenta))),
+pub fn render_shortcuts<B>(f: &mut Frame, area: Rect) {
+    let lines = vec![
+        Line::from(vec![Span::styled("Ctrl+Q", Style::default().fg(Color::Yellow)), Span::raw("  - Quit")]),
+        Line::from(vec![Span::styled("Ctrl+I", Style::default().fg(Color::Cyan)), Span::raw("  - PrismX Panel")]),
+        Line::from(vec![Span::styled("Ctrl+N", Style::default().fg(Color::Green)), Span::raw("  - New Node")]),
     ];
 
-    let block = Block::default().title("Shortcuts").borders(Borders::ALL);
-    let para = Paragraph::new(shortcuts)
-        .block(block)
-        .wrap(Wrap { trim: true });
+    let paragraph = Paragraph::new(Text::from(lines))
+        .block(Block::default().title("Shortcuts").borders(Borders::ALL));
 
-    frame.render_widget(para, area);
+    f.render_widget(paragraph, area);
 }

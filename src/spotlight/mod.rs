@@ -1,8 +1,8 @@
-#[derive(Default)]
-pub struct SpotlightModule;
-
-impl SpotlightModule {
-    pub fn new() -> Self {
-        Self
-    }
-}
+pub mod actions;
+pub mod debug;
+pub mod engine;
+pub mod favorites;
+pub mod plugin;
+pub mod state;
+pub mod tests;
+pub mod ui;

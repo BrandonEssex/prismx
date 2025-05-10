@@ -1,26 +1,14 @@
-// FINAL FULL FILE DELIVERY
-// Filename: /src/ui/command_bar.rs
+use crate::action::Action;
 
-use ratatui::{
-    layout::Rect,
-    widgets::{Block, Borders, Paragraph},
-    text::{Line, Span},
-    style::{Style, Modifier, Color},
-    Frame,
-};
-
-pub fn render_command_bar(
-    f: &mut Frame<'_>,
-    area: Rect,
-    prompt: &str,
-    query: &str,
-) {
-    let title = format!("Command: {prompt}");
-    let para = Paragraph::new(Line::from(Span::styled(
-        query,
-        Style::default().fg(Color::White).add_modifier(Modifier::BOLD),
-    )))
-    .block(Block::default().title(title).borders(Borders::ALL));
-
-    f.render_widget(para, area);
+pub fn get_command_action_map() -> Vec<(&'static str, Action)> {
+    vec![
+        ("quit", Action::Quit),
+        ("toggle zen", Action::ToggleZenMode),
+        ("edit node", Action::EnterEditNode),
+        ("expand node", Action::ExpandNode),
+        ("collapse node", Action::CollapseNode),
+        ("lock node", Action::LockFocusedNode),
+        ("unlock node", Action::UnlockFocusedNode),
+        ("toggle panel", Action::TogglePrismPanel),
+    ]
 }
