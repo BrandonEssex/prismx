@@ -1,6 +1,6 @@
 [package]
 name = "prismx"
-version = "2.0.0-beta"
+version = "1.0.0-beta"
 edition = "2021"
 authors = ["BrandonEssex"]
 description = "Modular, offline-first planning system centered on a dynamic mindmap interface. "
