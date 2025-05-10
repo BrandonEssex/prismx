@@ -1,3 +1,7 @@
+// FINAL FULL FILE DELIVERY
+// Filename: /src/app.rs
+// File Delivery Progress: FINAL BUILD PATCH
+
 use std::io::stdout;
 
 use crossterm::{
