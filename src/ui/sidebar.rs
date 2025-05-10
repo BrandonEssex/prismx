@@ -1,17 +1,43 @@
-use ratatui::{
-    layout::Rect,
-    widgets::{Block, Borders, Paragraph},
-    text::{Line, Span},
-    style::{Style, Color},
-    Frame,
-};
+// FINAL FULL FILE DELIVERY
+// Filename: /src/ui/sidebar.rs
+// File Delivery Progress: 10/∞ FINAL FILES delivered
 
-pub fn render_sidebar(f: &mut Frame<'_>, area: Rect, title: &str, content: &[String]) {
-    let block = Block::default().title(title).borders(Borders::ALL);
-    let lines: Vec<Line> = content
-        .iter()
-        .map(|line| Line::from(Span::styled(line, Style::default().fg(Color::LightCyan))))
-        .collect();
-    let para = Paragraph::new(lines).block(block);
-    f.render_widget(para, area);
+use ratatui::{Frame};
+use ratatui::layout::Rect;
+use crate::state::AppState;
+
+pub trait SidebarPanel {
+    fn title(&self) -> &'static str;
+    fn render<B: ratatui::backend::Backend>(&self, f: &mut Frame<B>, area: Rect, app_state: &AppState);
+}
+
+pub struct MetaPanel;
+impl SidebarPanel for MetaPanel {
+    fn title(&self) -> &'static str {
+        "Meta"
+    }
+    fn render<B: ratatui::backend::Backend>(&self, f: &mut Frame<B>, area: Rect, _state: &AppState) {
+        let block = ratatui::widgets::Block::default().title("Metadata").borders(ratatui::widgets::Borders::ALL);
+        f.render_widget(block, area);
+    }
+}
+
+pub struct OutlinePanel;
+impl SidebarPanel for OutlinePanel {
+    fn title(&self) -> &'static str {
+        "Outline"
+    }
+    fn render<B: ratatui::backend::Backend>(&self, f: &mut Frame<B>, area: Rect, _state: &AppState) {
+        let block = ratatui::widgets::Block::default().title("Outline").borders(ratatui::widgets::Borders::ALL);
+        f.render_widget(block, area);
+    }
+}
+
+pub fn render_sidebar<B: ratatui::backend::Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
+    let panels: Vec<Box<dyn SidebarPanel>> = vec![
+        Box::new(MetaPanel),
+        Box::new(OutlinePanel),
+    ];
+    let index = state.active_sidebar_tab % panels.len();
+    panels[index].render(f, area, state);
 }

@@ -1,59 +1,41 @@
-use ratatui::{
-    layout::Rect,
-    style::{Color, Style},
-    text::{Line, Span},
-    widgets::{Block, Borders, Paragraph},
-    Frame,
-};
+// FINAL FULL FILE DELIVERY
+// Filename: /src/ui/view_mindmap.rs
+// File Delivery Progress: 9/∞ FINAL FILES delivered
 
-use crate::mindmap_state::{MindmapState, Node};
+use ratatui::widgets::{Block, Borders, Paragraph};
+use ratatui::text::{Span, Spans};
+use ratatui::layout::Rect;
+use ratatui::style::{Style, Modifier};
+use ratatui::Frame;
 
-pub fn render_mindmap(f: &mut Frame<'_>, area: Rect, state: &MindmapState) {
-    let block = Block::default().title("Mindmap").borders(Borders::ALL);
-    let mut lines = vec![];
+use crate::mindmap_state::{Node, NodeType};
+use crate::state::AppState;
 
-    if let Some(root_id) = state.root_id {
-        if let Some(root_node) = state.nodes.get(&root_id) {
-            render_node(&mut lines, root_node, state, 0);
-        }
-    }
-
-    let para = Paragraph::new(lines).block(block);
-    f.render_widget(para, area);
+pub fn render_mindmap<B: ratatui::backend::Backend>(
+    f: &mut Frame<B>,
+    area: Rect,
+    state: &AppState,
+) {
+    let root = &state.mindmap.root;
+    let lines = render_node_recursive(root, 0);
+    let paragraph = Paragraph::new(lines)
+        .block(Block::default().title("Mindmap").borders(Borders::ALL));
+    f.render_widget(paragraph, area);
 }
 
-fn render_node(
-    lines: &mut Vec<Line<'_>>,
-    node: &Node,
-    state: &MindmapState,
-    indent: usize,
-) {
-    let prefix = "  ".repeat(indent);
-    let selected = state.selected == Some(node.id);
-    let editing = state.editing == Some(node.id);
-
-    let mut style = Style::default().fg(Color::White);
-    if selected {
-        style = style.fg(Color::LightGreen);
-    }
-    if editing {
-        style = style.bg(Color::Blue);
-    }
-
-    let label = if editing {
-        format!("✏ {}", state.edit_buffer)
-    } else {
-        node.label.clone()
+fn render_node_recursive<'a>(node: &'a Node, indent: usize) -> Vec<Spans<'a>> {
+    let mut lines = vec![];
+    let indent_str = "  ".repeat(indent);
+    let icon = match node.node_type {
+        NodeType::Note => "📄",
+        NodeType::Task => "☑",
+        NodeType::Idea => "💡",
+        NodeType::Custom(_) => "🔸",
     };
-
-    lines.push(Line::from(Span::styled(
-        format!("{}{}", prefix, label),
-        style,
-    )));
-
-    for child_id in &node.children {
-        if let Some(child) = state.nodes.get(child_id) {
-            render_node(lines, child, state, indent + 1);
-        }
+    let label = format!("{}{} {}", indent_str, icon, node.label);
+    lines.push(Spans::from(Span::styled(label, Style::default().add_modifier(Modifier::BOLD))));
+    for child in &node.children {
+        lines.extend(render_node_recursive(child, indent + 1));
     }
+    lines
 }

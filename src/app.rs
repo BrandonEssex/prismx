@@ -1,3 +1,7 @@
+// FINAL FULL FILE DELIVERY
+// Filename: /src/app.rs
+// File Delivery Progress: 2/∞ FINAL FILES delivered
+
 use std::io::{stdout, Write};
 
 use crossterm::{
@@ -7,9 +11,9 @@ use crossterm::{
 use ratatui::backend::CrosstermBackend;
 use ratatui::Terminal;
 
-use crate::screen::Screen;
 use crate::config::load_config;
 use crate::logger;
+use crate::screen::Screen;
 
 pub fn run() -> Result<(), Box<dyn std::error::Error>> {
     let config = load_config()?;
@@ -23,7 +27,6 @@ pub fn run() -> Result<(), Box<dyn std::error::Error>> {
     let mut terminal = Terminal::new(backend)?;
 
     let mut screen = Screen::new();
-
     screen.run(&mut terminal)?;
 
     disable_raw_mode()?;

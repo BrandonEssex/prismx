@@ -1,100 +1,126 @@
-# PrismX — Modular Terminal Productivity System
+# PrismX
 
-## Version: v2.0.0-dev5
-
----
-
-### Overview
-PrismX is a modular, offline-first, plugin-capable terminal productivity framework tailored for infrastructure engineers, developers, and research-heavy workflows. It features a structured knowledge graph (mindmap), reminders, a tag-driven metadata system, plugin sandboxing, and a responsive TUI.
+**Version:** `v1.0.0-beta`  
+**Mode:** Terminal-based mindmap and project navigation system for engineers, thinkers, and builders.
 
 ---
 
-## Core Capabilities
+## Overview
 
-- **Mindmap Overlay**: Visual workspace for nodes, tasks, and knowledge structures
-- **Tagging Engine**: Inline, auto-tag, plugin-suggested metadata with trust layers
-- **Reminder System**: Time-triggered signals for nodes, escalations, digest
-- **Export Engine**: JSON, Markdown, GraphML, PDF, tag-based filtering, manifest
-- **Plugin Sandbox**: Hooks, replays, trust boundaries, audit logs
-- **Glossary Manager**: Role-tagged terms, aliasing, schema enforcement
-- **Triage Inbox**: Task board with tag-based filtering and project breakdown
-- **Audit System**: Node edit history, tag trust mutation, export integrity chain
-- **TUI Layouts**: Sidebar, tag overlays, command bar, log viewer, plugin dashboard
+PrismX is a modular, offline-first planning system centered on a dynamic mindmap interface. It includes:
 
----
-
-## Plugin Hooks (rhai-powered)
-- `on_node_create`
-- `on_tag_applied`
-- `on_reminder_due`
-- `on_export_start`
-- `on_workspace_switch`
-
-Plugins are sandboxed and profiled. Crashes are logged but do not propagate.
+- Tree-based node editor (GemX-inspired)
+- Secure, encrypted workspaces with Vault support
+- Dynamic sidebar system with plugin extensions
+- Zettelkasten-style link tracing (MindTrace)
+- Comments, bookmarks, breadcrumbs, tags, and shards
+- Timeline heatmaps and activity logs
+- Command Palette and custom keymap control
+- Multiple workspaces, templates, and autosave
 
 ---
 
-## File Structure
-```
-prismx/
+## Installation
+
+```bash
+git clone https://github.com/YourRepo/prismx
+cd prismx
+cargo build --release
+./target/release/prismx
+Dependencies:
+
+Rust 1.74+
+Terminal with UTF-8 + TUI support (Alacritty, Kitty, Wezterm recommended)
+Usage
+
+Enter → Add child node
+Tab → Add sibling
+Ctrl+X → Save edit
+/ → Open Command Palette
+Ctrl+B → Bookmark node
+Ctrl+. → Toggle sidebar
+Ctrl+Alt+1...9 → Load layout profile
+Ctrl+W → Switch workspace
+Ctrl+R → Reload plugins
+Ctrl+/ → Toggle comments
+Ctrl+L → Lock/unlock node
+>export template my_template → Save current workspace as reusable config
+Plugin System
+
+Plugins can:
+
+Inject sidebar panels
+Register their own shortcuts
+Read/write app state
+Hook into layouts, comments, and link logic
+Each plugin must define plugin.toml and be enabled in config/plugins.toml.
+
+Workspaces & Templates
+
+Each workspace is fully isolated:
+
+Mindmap
+Vault state
+Plugin config
+Sidebar layout
+Focus + scroll state
+Use CmdPalette:
+
+>create workspace design_2025
+>switch workspace main
+>export template sprint_kit
+Encryption
+
+Enable in config/prismx.toml:
+
+[encryption]
+enabled = true
+key_file = "config/secret.key"
+You can also define:
+
+Vault password
+Node locking
+Per-node encryption with autosave
+AI Assistant
+
+If enabled (via plugin), AI features include:
+
+>summarize node
+>suggest links
+>ask AI <question>
+Plugins can implement AiAssistant trait.
+
+File Structure
+
 ├── src/
 │   ├── app.rs
-│   ├── state.rs
 │   ├── screen.rs
 │   ├── config.rs
-│   ├── logger.rs
-│   ├── plugin/
-│   ├── tag/
-│   ├── ui/
-│   ├── export/
-│   └── zen_mode.rs
-├── config.toml
-├── README.md
-├── logs/
-├── audit/
-├── exports/
-└── glossary/
-```
+│   ├── ...
+├── plugins/
+│   ├── mindtrace/
+│   └── ...
+├── config/
+│   ├── prismx.toml
+│   ├── plugins.toml
+│   └── layouts.toml
+├── workspaces/
+│   └── main/
+└── templates/
+Recommended Terminal
 
----
+Wezterm or Alacritty with font supporting box-drawing and block symbols
+Monospaced font with ligature support for comment rendering (e.g., Fira Code)
+Authors & License
 
-## CLI Tools
-- `prismx export-diff`
-- `prismx replay-audit`
-- `prismx check-tags`
-- `prismx reminder-digest`
-- `prismx validate-tag-presets`
+Originally inspired by void-rs.
+Maintained by @BrandonEssex.
+Licensed under MIT.
 
----
+Contribute
 
-## Key Bindings
-- `Ctrl+E` → Export Overlay
-- `Ctrl+Z` → Toggle Zen Mode
-- `Ctrl+L` → Toggle Log Viewer
-- `Ctrl+/` → Show Shortcuts
-- `Ctrl+G` → Open Tag Glossary
+Want to build a plugin or UI mode?
 
----
-
-## TUI Modules
-- `tag_glossary.rs` — trust overlay, inline schema edit
-- `plugin_dashboard.rs` — live hook rendering, error signal
-- `export_overlay.rs` — trust summary, manifest preview
-- `sidebar.rs`, `status_bar.rs`, `command_bar.rs`
-
----
-
-## Changelog Summary (v0.1.33 → v2.0.0-dev5)
-- Fully modular plugin interface with replay and sandbox log
-- Node system transitioned to UUID-backed graph
-- Tagging engine refactored to support trust-based rendering
-- Export engine linked to glossary, manifest, trust, preset
-- All TUI components modularized and theme-ready
-- Stable Audit Log / CLI Export Tools
-
----
-
-## Status: ✅ QA-Ready | Tag: `v2.0.0-dev5`
-
-For plugin authors, see `/plugin/` and `/plugin/sandbox/replay.rs`.
-For glossary schema, see `/tag/trust.rs`.
+See /examples/ for plugin stubs
+Open an issue or send a PR
+Fork and define your own TUI layout!

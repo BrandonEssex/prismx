@@ -1,3 +1,7 @@
+// FINAL FULL FILE DELIVERY
+// Filename: /src/mod.rs
+// File Delivery Progress: 14/∞ FINAL FILES delivered
+
 pub mod app;
 pub mod action;
 pub mod config;
@@ -21,3 +25,4 @@ pub mod dashboard_widgets;
 pub mod scratchpad;
 pub mod log_viewer;
 pub mod mindmap_state;
+pub mod plugin;
