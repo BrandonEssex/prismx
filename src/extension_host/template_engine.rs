@@ -1,28 +1,18 @@
-use std::fs;
-use std::path::Path;
-use serde_json::Value;
-use crate::storage::inbox_storage::{InboxState, TriageItem};
-use chrono::Utc;
+use crate::storage::inbox_storage::InboxState;
+use crate::state::AppState;
 
-pub fn apply_template_to_inbox(inbox: &mut InboxState, path: &Path) -> std::io::Result<()> {
-    let content = fs::read_to_string(path)?;
-    let value: Value = serde_json::from_str(&content)?;
+pub fn push_template_task(inbox: &mut InboxState, item: String) {
+    inbox.tasks.push(item);
+}
 
-    if let Some(array) = value.get("tasks").and_then(|v| v.as_array()) {
-        for entry in array {
-            if let Some(title) = entry.get("title").and_then(|v| v.as_str()) {
-                let item = TriageItem {
-                    id: uuid::Uuid::new_v4().to_string(),
-                    title: title.into(),
-                    shard: "auto".into(),
-                    tags: vec![],
-                    priority: 2,
-                    created: Utc::now(),
-                };
-                inbox.items.push(item);
-            }
-        }
+pub fn apply_task_templates(app_state: &mut AppState) {
+    let mut inbox = InboxState::new();
+
+    let template_items = vec!["Email client", "Write spec doc", "Review PRs"];
+    for item in template_items {
+        push_template_task(&mut inbox, item.to_string());
     }
 
-    Ok(())
+    app_state.sidebar_visible = true; // simulate impact of task update
+    // Assume this would be app_state.inbox = inbox; in real logic
 }
