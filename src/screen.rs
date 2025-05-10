@@ -17,6 +17,6 @@ impl Screen {
     }
 
     pub fn draw<'a>(&mut self, f: &mut Frame<'a>, _state: &mut AppState) {
-        // TODO: Actual drawing logic will go here
+        // Placeholder for draw logic
     }
 }
