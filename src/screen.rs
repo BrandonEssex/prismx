@@ -1,3 +1,6 @@
+// FINAL FULL FILE DELIVERY
+// Filename: /src/screen.rs
+
 use ratatui::Frame;
 use crate::actions::Action;
 use crate::dashboard::Dashboard;
@@ -40,6 +43,7 @@ impl Screen {
     }
 
     pub fn draw(&mut self, f: &mut Frame<'_>, _state: &mut AppState) {
+        log::info!("[DRAW] Redrawing active view: {:?}", self.view);
         let area = f.size();
         match self.view {
             ActiveView::Mindmap => render_mindmap(f, area, &self.mindmap),

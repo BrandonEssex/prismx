@@ -1,3 +1,6 @@
+// FINAL FULL FILE DELIVERY
+// Filename: /src/app.rs
+
 use crate::config::load_config;
 use crate::screen::Screen;
 use crate::state::AppState;
@@ -19,6 +22,7 @@ pub fn run() -> Result<(), Box<dyn std::error::Error>> {
     enable_raw_mode()?;
     let backend = CrosstermBackend::new(stdout());
     let mut terminal = Terminal::new(backend)?;
+    terminal.clear()?;
 
     loop {
         terminal.draw(|f| {
