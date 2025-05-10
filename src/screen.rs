@@ -14,6 +14,7 @@ use crate::view_triage::render_triage;
 use crate::zen_mode::ZenModeState;
 use crate::storage::inbox_storage::InboxState;
 
+#[derive(Debug)]
 pub enum ActiveView {
     Mindmap,
     Triage,
