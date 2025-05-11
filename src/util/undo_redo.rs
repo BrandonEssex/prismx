@@ -1,36 +1,23 @@
-#[derive(Debug, Clone)]
-pub struct History<T> {
-    pub past: Vec<T>,
-    pub present: T,
-    pub future: Vec<T>,
+#[derive(Debug)]
+pub enum NodeAction {
+    AddNode,
+    DeleteNode,
+    EditNode(String),
 }
 
-impl<T: Clone> History<T> {
-    pub fn new(initial: T) -> Self {
-        Self {
-            past: Vec::new(),
-            present: initial,
-            future: Vec::new(),
+#[derive(Debug)]
+pub struct ActionStack {
+    pub history: Vec<NodeAction>,
+}
+
+impl ActionStack {
+    pub fn new() -> Self {
+        ActionStack {
+            history: Vec::new(),
         }
     }
 
-    pub fn undo(&mut self) {
-        if let Some(previous) = self.past.pop() {
-            self.future.push(self.present.clone());
-            self.present = previous;
-        }
-    }
-
-    pub fn redo(&mut self) {
-        if let Some(next) = self.future.pop() {
-            self.past.push(self.present.clone());
-            self.present = next;
-        }
-    }
-
-    pub fn push(&mut self, new_state: T) {
-        self.past.push(self.present.clone());
-        self.present = new_state;
-        self.future.clear();
+    pub fn push(&mut self, action: NodeAction) {
+        self.history.push(action);
     }
 }
