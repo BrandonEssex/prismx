@@ -6,7 +6,7 @@ pub fn debug_spotlight_state(state: &SpotlightState) -> Vec<Line<'static>> {
     vec![
         Line::from(vec![
             Span::styled("Query: ", Style::default().fg(Color::Yellow)),
-            Span::raw(&state.query),
+            Span::raw(state.query.clone()),
         ]),
         Line::from(vec![
             Span::styled("Matches: ", Style::default().fg(Color::Green)),
