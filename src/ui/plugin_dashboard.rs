@@ -1,6 +1,5 @@
 use ratatui::{
-    backend::Backend,
-    layout::{Rect, Layout, Direction, Constraint},
+    layout::{Constraint, Direction, Layout, Rect},
     widgets::{Block, Borders, Paragraph},
     text::{Span, Line},
     Frame,
@@ -9,20 +8,20 @@ use ratatui::{
 use crate::plugin::registry::PluginRegistry;
 
 pub fn render_plugin_dashboard(f: &mut Frame<'_>, area: Rect) {
-    let plugin_names: Vec<String> = PluginRegistry::list_plugin_names();
+    let plugin_names = PluginRegistry::list_plugin_names();
 
-    let chunks = Layout::default()
+    let layout = Layout::default()
         .direction(Direction::Vertical)
-        .constraints(vec![Constraint::Length(1); plugin_names.len()])
+        .constraints(vec![Constraint::Length(3); plugin_names.len()])
         .split(area);
 
     for (i, name) in plugin_names.iter().enumerate() {
-        let title = format!("Plugin: {}", name);
-        let block = Paragraph::new(Line::from(vec![
+        let line = Line::from(vec![
             Span::raw("Status: "),
             Span::raw("Active"),
-        ]))
-        .block(Block::default().title(title).borders(Borders::ALL));
-        f.render_widget(block, chunks[i]);
+        ]);
+        let block = Paragraph::new(line)
+            .block(Block::default().title(format!("Plugin: {}", name)).borders(Borders::ALL));
+        f.render_widget(block, layout[i]);
     }
 }
