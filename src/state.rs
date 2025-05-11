@@ -3,17 +3,19 @@ use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 use std::collections::HashSet;
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
 pub enum View {
+    #[default]
+    Mindmap,
     Help,
     Inbox,
-    Mindmap,
     Dashboard,
     HelpOverlay,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
 pub enum SidebarView {
+    #[default]
     None,
     Meta,
     Outline,

@@ -7,7 +7,7 @@ use ratatui::{
 
 use crate::state::SidebarView;
 
-pub fn render_sidebar<B: Backend>(f: &mut Frame<B>, area: Rect, view: &SidebarView) {
+pub fn render_sidebar(f: &mut Frame<'_>, area: Rect, view: &SidebarView) {
     let title = match view {
         SidebarView::Meta => "Metadata",
         SidebarView::Outline => "Outline",
