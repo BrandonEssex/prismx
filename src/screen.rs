@@ -2,7 +2,7 @@ use ratatui::Terminal;
 use ratatui::backend::Backend;
 use ratatui::widgets::{Block, Borders, Paragraph};
 use ratatui::layout::{Layout, Constraint, Direction, Rect};
-use crossterm::event::{read, Event, KeyCode, KeyEventKind};
+use crossterm::event::{read, Event, KeyCode};
 
 use crate::state::{AppState, View, SidebarView};
 use crate::input::{map_key, Action};
@@ -95,23 +95,57 @@ impl Screen {
                         KeyCode::Esc => {
                             self.state.in_command_mode = false;
                             self.state.command_input.clear();
+                            self.state.command_index = None;
                         }
                         KeyCode::Enter => {
-                            match self.state.command_input.trim() {
+                            let cmd = self.state.command_input.trim().to_string();
+                            match cmd.as_str() {
                                 "mindmap" => self.state.view = View::Mindmap,
                                 "inbox" => self.state.view = View::Inbox,
                                 "dashboard" => self.state.view = View::Dashboard,
                                 "help" => self.state.view = View::HelpOverlay,
                                 _ => {}
                             }
+                            if !cmd.is_empty() {
+                                self.state.command_history.push(cmd);
+                            }
                             self.state.command_input.clear();
+                            self.state.command_index = None;
                             self.state.in_command_mode = false;
                         }
                         KeyCode::Char(c) => {
                             self.state.command_input.push(c);
+                            self.state.command_index = None;
                         }
                         KeyCode::Backspace => {
                             self.state.command_input.pop();
+                            self.state.command_index = None;
+                        }
+                        KeyCode::Up => {
+                            if self.state.command_history.is_empty() {
+                                continue;
+                            }
+
+                            let idx = match self.state.command_index {
+                                Some(i) if i > 0 => i - 1,
+                                None => self.state.command_history.len().saturating_sub(1),
+                                _ => 0,
+                            };
+
+                            self.state.command_index = Some(idx);
+                            self.state.command_input = self.state.command_history[idx].clone();
+                        }
+                        KeyCode::Down => {
+                            if let Some(idx) = self.state.command_index {
+                                let next_idx = idx + 1;
+                                if next_idx < self.state.command_history.len() {
+                                    self.state.command_index = Some(next_idx);
+                                    self.state.command_input = self.state.command_history[next_idx].clone();
+                                } else {
+                                    self.state.command_input.clear();
+                                    self.state.command_index = None;
+                                }
+                            }
                         }
                         _ => {}
                     }

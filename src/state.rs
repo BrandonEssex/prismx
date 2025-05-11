@@ -37,6 +37,8 @@ pub struct AppState {
     pub show_help: bool,
     pub in_command_mode: bool,
     pub command_input: String,
+    pub command_history: Vec<String>,
+    pub command_index: Option<usize>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
