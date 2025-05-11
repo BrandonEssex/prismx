@@ -1,6 +1,6 @@
 use notify::{RecommendedWatcher, RecursiveMode, Watcher, Config};
 use std::sync::mpsc::channel;
-use std::time::Duration;
+use std::path::Path;
 
 pub fn watch_config_changes(path: &str) {
     let (tx, rx) = channel();
@@ -8,7 +8,7 @@ pub fn watch_config_changes(path: &str) {
         Watcher::new(tx, Config::default()).expect("Failed to create watcher");
 
     watcher
-        .watch(path, RecursiveMode::NonRecursive)
+        .watch(Path::new(path), RecursiveMode::NonRecursive)
         .expect("Failed to watch config");
 
     std::thread::spawn(move || {
