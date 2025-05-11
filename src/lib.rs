@@ -5,7 +5,7 @@ pub mod config;
 pub mod dashboard;
 pub mod dashboard_widgets;
 pub mod error_handling;
-pub mod export; // Only mod.rs retained
+pub mod export;
 pub mod extension_host;
 pub mod input;
 pub mod inbox;
@@ -31,7 +31,7 @@ pub mod timer;
 pub mod tui;
 pub mod ui;
 pub mod unlock;
-pub mod util; // Only mod.rs retained
+pub mod util;
 pub mod view_export;
 pub mod view_mindmap;
 pub mod view_triage;

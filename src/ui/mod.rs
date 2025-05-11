@@ -6,3 +6,4 @@ pub mod plugin_dashboard;
 pub mod sidebar;
 pub mod status_bar;
 pub mod tag_glossary;
+pub mod status_icon;

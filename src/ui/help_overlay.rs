@@ -2,34 +2,35 @@ use ratatui::{
     backend::Backend,
     layout::Rect,
     widgets::{Block, Borders, Paragraph},
-    text::{Span, Spans, Text},
+    text::{Line, Span, Text},
+    style::{Color, Stylize},
     Frame,
 };
 
-pub fn render_help_overlay<B: Backend>(f: &mut Frame<B>, area: Rect) {
+pub fn render_help_overlay(f: &mut Frame<'_>, area: Rect) {
     let lines = vec![
-        Spans::from(vec![
-            Span::styled("q", ratatui::style::Style::default().bold()),
+        Line::from(vec![
+            Span::styled("q", Style::default().bold()),
             Span::raw("   Quit application"),
         ]),
-        Spans::from(vec![
-            Span::styled("h", ratatui::style::Style::default().bold()),
+        Line::from(vec![
+            Span::styled("h", Style::default().bold()),
             Span::raw("   Toggle help panel"),
         ]),
-        Spans::from(vec![
-            Span::styled("i", ratatui::style::Style::default().bold()),
+        Line::from(vec![
+            Span::styled("i", Style::default().bold()),
             Span::raw("   Open inbox"),
         ]),
-        Spans::from(vec![
-            Span::styled("m", ratatui::style::Style::default().bold()),
+        Line::from(vec![
+            Span::styled("m", Style::default().bold()),
             Span::raw("   Open mindmap"),
         ]),
-        Spans::from(vec![
-            Span::styled("Tab", ratatui::style::Style::default().bold()),
+        Line::from(vec![
+            Span::styled("Tab", Style::default().bold()),
             Span::raw(" Cycle sidebar views"),
         ]),
-        Spans::from(vec![
-            Span::styled("Esc", ratatui::style::Style::default().bold()),
+        Line::from(vec![
+            Span::styled("Esc", Style::default().bold()),
             Span::raw(" Hide sidebar"),
         ]),
     ];
