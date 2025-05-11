@@ -3,7 +3,7 @@ use crossterm::terminal::{enable_raw_mode, disable_raw_mode};
 use ratatui::backend::CrosstermBackend;
 use ratatui::Terminal;
 
-use crate::screen::Screen; // <- this is the correct path
+use crate::screen::Screen;
 
 pub fn launch() -> Result<(), Box<dyn std::error::Error>> {
     enable_raw_mode()?;
