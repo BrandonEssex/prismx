@@ -1,18 +1,28 @@
-use ratatui::widgets::{Block, Borders, Paragraph};
-use ratatui::layout::Rect;
-use ratatui::text::Text;
-use ratatui::style::{Style, Color};
-use ratatui::Frame;
+use ratatui::{
+    backend::Backend,
+    layout::{Rect, Layout, Direction, Constraint},
+    widgets::{Block, Borders, Paragraph},
+    text::{Span, Line},
+    Frame,
+};
 
-use crate::plugin::status::PluginStatus;
+use crate::plugin::registry::PluginRegistry;
 
-pub fn render_plugin_dashboard(f: &mut Frame, area: Rect, statuses: &[PluginStatus]) {
-    let lines: Vec<String> = statuses.iter().map(|status| format!("{:?}", status)).collect();
-    let content = Text::from(lines.join("\n"));
+pub fn render_plugin_dashboard(f: &mut Frame<'_>, area: Rect) {
+    let plugin_names: Vec<String> = PluginRegistry::list_plugin_names();
 
-    let paragraph = Paragraph::new(content)
-        .block(Block::default().title("Plugin Status").borders(Borders::ALL))
-        .style(Style::default().fg(Color::Cyan));
+    let chunks = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints(vec![Constraint::Length(1); plugin_names.len()])
+        .split(area);
 
-    f.render_widget(paragraph, area);
+    for (i, name) in plugin_names.iter().enumerate() {
+        let title = format!("Plugin: {}", name);
+        let block = Paragraph::new(Line::from(vec![
+            Span::raw("Status: "),
+            Span::raw("Active"),
+        ]))
+        .block(Block::default().title(title).borders(Borders::ALL));
+        f.render_widget(block, chunks[i]);
+    }
 }
