@@ -6,6 +6,8 @@ pub enum Action {
     ToggleHelp,
     OpenInbox,
     OpenMindmap,
+    NextSidebarTab,
+    HideSidebar,
 }
 
 pub fn map_key(key: KeyCode) -> Option<Action> {
@@ -14,6 +16,8 @@ pub fn map_key(key: KeyCode) -> Option<Action> {
         KeyCode::Char('h') => Some(Action::ToggleHelp),
         KeyCode::Char('i') => Some(Action::OpenInbox),
         KeyCode::Char('m') => Some(Action::OpenMindmap),
+        KeyCode::Tab => Some(Action::NextSidebarTab),
+        KeyCode::Esc => Some(Action::HideSidebar),
         _ => None,
     }
 }

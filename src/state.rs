@@ -3,11 +3,21 @@ use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 use std::collections::HashSet;
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub enum View {
     Help,
     Inbox,
     Mindmap,
+    Dashboard,
+    HelpOverlay,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub enum SidebarView {
+    None,
+    Meta,
+    Outline,
+    Tags,
 }
 
 #[derive(Default)]
@@ -23,7 +33,10 @@ pub struct AppState {
     pub layout_profile: String,
     pub activity_log: Vec<ActivityEvent>,
     pub view: View,
+    pub sidebar_view: SidebarView,
     pub show_help: bool,
+    pub in_command_mode: bool,
+    pub command_input: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

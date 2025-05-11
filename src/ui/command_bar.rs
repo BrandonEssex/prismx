@@ -1,14 +1,14 @@
-use crate::action::Action;
+use ratatui::{
+    backend::Backend,
+    layout::Rect,
+    widgets::{Block, Borders, Paragraph},
+    text::Text,
+    Frame,
+};
 
-pub fn get_command_action_map() -> Vec<(&'static str, Action)> {
-    vec![
-        ("quit", Action::Quit),
-        ("toggle zen", Action::ToggleZenMode),
-        ("edit node", Action::EnterEditNode),
-        ("expand node", Action::ExpandNode),
-        ("collapse node", Action::CollapseNode),
-        ("lock node", Action::LockFocusedNode),
-        ("unlock node", Action::UnlockFocusedNode),
-        ("toggle panel", Action::TogglePrismPanel),
-    ]
+pub fn render_command_bar<B: Backend>(f: &mut Frame<B>, area: Rect, input: &str) {
+    let block = Paragraph::new(Text::from(format!("> {}", input)))
+        .block(Block::default().title("Launcher").borders(Borders::ALL));
+
+    f.render_widget(block, area);
 }
