@@ -1,26 +1,24 @@
-use ratatui::{Frame};
-use ratatui::layout::Rect;
-use crate::state::AppState;
-use ratatui::widgets::{Block, Borders};
+use ratatui::{
+    backend::Backend,
+    layout::Rect,
+    widgets::{Block, Borders, Paragraph},
+    Frame,
+};
 
-pub enum SidebarPanelKind {
-    Meta,
-    Outline,
-}
+use crate::state::SidebarView;
 
-pub fn render_sidebar(f: &mut Frame, area: Rect, state: &AppState) {
-    match get_active_panel(state) {
-        SidebarPanelKind::Meta => {
-            let block = Block::default().title("Metadata").borders(Borders::ALL);
-            f.render_widget(block, area);
-        }
-        SidebarPanelKind::Outline => {
-            let block = Block::default().title("Outline").borders(Borders::ALL);
-            f.render_widget(block, area);
-        }
-    }
-}
+pub fn render_sidebar<B: Backend>(f: &mut Frame<B>, area: Rect, view: &SidebarView) {
+    let title = match view {
+        SidebarView::Meta => "Metadata",
+        SidebarView::Outline => "Outline",
+        SidebarView::Tags => "Tags",
+        SidebarView::None => return,
+    };
 
-fn get_active_panel(_state: &AppState) -> SidebarPanelKind {
-    SidebarPanelKind::Meta
+    let content = format!("Sidebar View: {title}");
+
+    let block = Paragraph::new(content)
+        .block(Block::default().title(title).borders(Borders::ALL));
+
+    f.render_widget(block, area);
 }
