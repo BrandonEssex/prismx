@@ -1,13 +1,19 @@
-use crate::action::Action;
-use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
+use crossterm::event::KeyCode;
 
-pub fn map_key_event(event: KeyEvent) -> Option<Action> {
-    match (event.code, event.modifiers) {
-        (KeyCode::Char('q'), KeyModifiers::CONTROL) => Some(Action::Quit),
-        (KeyCode::Char('n'), KeyModifiers::CONTROL) => Some(Action::CreateSiblingNode),
-        (KeyCode::Char('z'), KeyModifiers::CONTROL) => Some(Action::ToggleZenMode),
-        (KeyCode::Tab, KeyModifiers::CONTROL) => Some(Action::CreateChildNode),
-        (KeyCode::Char('i'), KeyModifiers::CONTROL) => Some(Action::TogglePrismPanel),
+#[derive(Debug, Clone, Copy)]
+pub enum Action {
+    Quit,
+    ToggleHelp,
+    OpenInbox,
+    OpenMindmap,
+}
+
+pub fn map_key(key: KeyCode) -> Option<Action> {
+    match key {
+        KeyCode::Char('q') => Some(Action::Quit),
+        KeyCode::Char('h') => Some(Action::ToggleHelp),
+        KeyCode::Char('i') => Some(Action::OpenInbox),
+        KeyCode::Char('m') => Some(Action::OpenMindmap),
         _ => None,
     }
 }

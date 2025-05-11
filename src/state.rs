@@ -1,16 +1,13 @@
-// FINAL FULL FILE DELIVERY
-// Filename: /src/state.rs
-// File Delivery Progress: 2/2 FINAL FILES delivered
-
 use crate::mindmap_state::MindmapState;
 use serde::{Deserialize, Serialize};
-use std::collections::{HashSet};
 use uuid::Uuid;
+use std::collections::HashSet;
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct ExportSummary {
-    pub node_count: usize,
-    pub export_time: String,
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum View {
+    Help,
+    Inbox,
+    Mindmap,
 }
 
 #[derive(Default)]
@@ -25,7 +22,8 @@ pub struct AppState {
     pub cursor_position: usize,
     pub layout_profile: String,
     pub activity_log: Vec<ActivityEvent>,
-    pub show_prism_panel: bool,
+    pub view: View,
+    pub show_help: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
