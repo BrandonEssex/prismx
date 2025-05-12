@@ -3,10 +3,14 @@
 use crate::action::Action;
 use crate::input::map_input_to_action;
 use crate::state::{AppState, SidebarView, View};
+use crate::node_tree::NodeTree;
 use ratatui::backend::Backend;
 use ratatui::Terminal;
+use ratatui::Frame;
+use ratatui::layout::Rect;
+use std::io;
 
-use crossterm::event::{DisableMouseCapture, EnableMouseCapture, Event as CEvent};
+use crossterm::event::{self, DisableMouseCapture, EnableMouseCapture, Event as CEvent};
 use crossterm::execute;
 use crossterm::terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen};
 
@@ -25,8 +29,13 @@ impl<B: Backend> Screen<B> {
         }
     }
 
-    pub fn draw(&mut self) -> std::io::Result<()> {
-        self.terminal.draw(|f| draw(f, &self.state))?;
+    pub fn draw(&mut self) -> io::Result<()> {
+        self.terminal.draw(|f| draw(f, &self.state, &NodeTree::default()))?;
+        Ok(())
+    }
+
+    pub fn draw_with_tree(&mut self, tree: &NodeTree) -> io::Result<()> {
+        self.terminal.draw(|f| draw(f, &self.state, tree))?;
         Ok(())
     }
 
@@ -59,28 +68,25 @@ impl<B: Backend> Screen<B> {
             Action::ToggleMindmap => self.state.view = View::Mindmap,
             Action::OpenExport => self.state.view = View::Export,
             Action::Redraw => {},
-            Action::Custom(ref name) if name == "OpenCommand" => {
-                // Future: command bar activation hook
-            }
             Action::Custom(_) => {},
         }
     }
 
-    pub fn enter_alt_screen() -> std::io::Result<()> {
+    pub fn enter_alt_screen() -> io::Result<()> {
         enable_raw_mode()?;
-        let mut stdout = std::io::stdout();
+        let mut stdout = io::stdout();
         execute!(stdout, EnterAlternateScreen, EnableMouseCapture)?;
         Ok(())
     }
 
-    pub fn exit_alt_screen() -> std::io::Result<()> {
+    pub fn exit_alt_screen() -> io::Result<()> {
         disable_raw_mode()?;
-        let mut stdout = std::io::stdout();
+        let mut stdout = io::stdout();
         execute!(stdout, LeaveAlternateScreen, DisableMouseCapture)?;
         Ok(())
     }
 
-    pub fn clear_screen(&mut self) -> std::io::Result<()> {
+    pub fn clear_screen(&mut self) -> io::Result<()> {
         self.terminal.clear()
     }
 }
