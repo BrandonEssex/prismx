@@ -6,7 +6,7 @@ use std::sync::mpsc::{channel, Receiver, Sender};
 use std::time::Duration;
 
 pub fn watch_config<P: AsRef<Path>>(path: P) -> Result<()> {
-    let (tx, rx): (Sender<Result<Event>>, Receiver<Result<Event>>) = channel();
+    let (_tx, _rx): (Sender<Result<Event>>, Receiver<Result<Event>>) = channel();
 
     let mut watcher = RecommendedWatcher::new(
         move |res: Result<Event>| {
