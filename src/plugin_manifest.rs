@@ -17,3 +17,9 @@ pub struct Capabilities {
     pub can_modify_state: bool,
     pub can_access_files: bool,
 }
+
+pub fn load_manifest<P: AsRef<std::path::Path>>(path: P) -> Option<PluginManifest> {
+    std::fs::read_to_string(path)
+        .ok()
+        .and_then(|data| toml::from_str(&data).ok())
+}
