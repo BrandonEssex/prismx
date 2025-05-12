@@ -1,4 +1,4 @@
-// src/zen_mode.rs
+// src/ui/zen_mode.rs
 
 use ratatui::layout::{Alignment, Constraint, Direction, Layout, Rect};
 use ratatui::style::{Modifier, Style};
