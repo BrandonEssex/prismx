@@ -2,7 +2,15 @@
 
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use crate::plugin_manifest::{PluginManifest, PluginInfo};
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PluginInfo {
+    pub name: String,
+    pub version: String,
+    pub description: Option<String>,
+    pub enabled: bool,
+    pub capabilities: Vec<String>,
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct PluginRegistry {
