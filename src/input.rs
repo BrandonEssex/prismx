@@ -1,4 +1,4 @@
-// PATCHED: src/input.rs
+// PATCHED: src/input.rs — Rebind command bar toggle to Ctrl+Period, restore Ctrl+E
 
 use crossterm::event::{Event, KeyCode, KeyEvent, KeyModifiers};
 use crate::action::Action;
@@ -13,7 +13,7 @@ pub fn map_input_to_action(event: Event) -> Option<Action> {
             (KeyCode::Char('l'), KeyModifiers::CONTROL) => Some(Action::ToggleLogView),
             (KeyCode::Char('m'), KeyModifiers::CONTROL) => Some(Action::ToggleMindmap),
             (KeyCode::Char('e'), KeyModifiers::CONTROL) => Some(Action::OpenExport),
-            (KeyCode::Char(' '), KeyModifiers::ALT) => Some(Action::ToggleCommandBar),
+            (KeyCode::Char('.'), KeyModifiers::CONTROL) => Some(Action::ToggleCommandBar),
             (KeyCode::Esc, KeyModifiers::NONE) => Some(Action::Escape),
             _ => {
                 if let KeyCode::Char(c) = code {

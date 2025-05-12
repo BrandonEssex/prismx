@@ -1,4 +1,4 @@
-// PATCHED: src/ui/mindmap.rs — Restores mindmap rendering with child nodes
+// PATCHED: src/ui/mindmap.rs — fallback node injection for empty trees
 
 use ratatui::layout::Rect;
 use ratatui::widgets::{Block, Borders, Paragraph};
@@ -14,19 +14,20 @@ pub fn render_mindmap(frame: &mut Frame<'_>, area: Rect, tree: &NodeTree) {
 
     let mut lines = Vec::new();
 
-    for root_id in &tree.root_ids {
-        if let Some(root) = tree.get_node(root_id) {
-            lines.push(Line::from(format!("• {}", root.title)));
-            for child_id in &root.children {
-                if let Some(child) = tree.get_node(child_id) {
-                    lines.push(Line::from(format!("  └─ {}", child.title)));
+    if tree.root_ids.is_empty() {
+        lines.push(Line::from("→ No nodes in tree."));
+        lines.push(Line::from("→ Press Ctrl+N to add a node."));
+    } else {
+        for root_id in &tree.root_ids {
+            if let Some(root) = tree.get_node(root_id) {
+                lines.push(Line::from(format!("• {}", root.title)));
+                for child_id in &root.children {
+                    if let Some(child) = tree.get_node(child_id) {
+                        lines.push(Line::from(format!("  └─ {}", child.title)));
+                    }
                 }
             }
         }
-    }
-
-    if lines.is_empty() {
-        lines.push(Line::from("No nodes to display"));
     }
 
     let paragraph = Paragraph::new(lines).block(block);

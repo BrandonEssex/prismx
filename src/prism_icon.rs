@@ -1,31 +1,23 @@
-// PATCHED: src/prism_icon.rs
+// PATCHED: src/prism_icon.rs — ASCII-style PrismX icon with context
 
 use ratatui::layout::Rect;
 use ratatui::style::{Color, Modifier, Style};
-use ratatui::text::{Line, Span};
-use ratatui::widgets::{Block, Borders, Paragraph};
+use ratatui::text::{Span, Line};
+use ratatui::widgets::{Paragraph};
 use ratatui::Frame;
 
 pub fn render_prism_icon(frame: &mut Frame<'_>, area: Rect, context: &str) {
-    let symbol = match context {
-        "Zen" => "⨉ Zen",
-        "Log" => "⨉ Log",
-        "Mindmap" => "⨉ Map",
-        "Export" => "⨉ Out",
-        _ => "⨉ PrismX",
-    };
+    let content = format!("╳ PrismX [{}]", context);
 
     let styled = Span::styled(
-        symbol,
+        content,
         Style::default()
-            .fg(Color::White)
+            .fg(Color::Cyan)
             .bg(Color::Black)
             .add_modifier(Modifier::BOLD),
     );
 
-    let paragraph = Paragraph::new(Line::from(styled))
-        .block(Block::default().borders(Borders::ALL).title("●"))
-        .style(Style::default().bg(Color::Black));
+    let paragraph = Paragraph::new(Line::from(styled)).style(Style::default().bg(Color::Black));
 
     frame.render_widget(paragraph, area);
 }
