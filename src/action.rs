@@ -13,5 +13,7 @@ pub enum Action {
     OpenExport,
     ToggleCommandBar,
     Escape,
+    InputChar(char),
+    InputBackspace,
     Custom(String),
 }

@@ -1,4 +1,4 @@
-// src/screen.rs (patched)
+// src/screen.rs
 
 use crate::action::Action;
 use crate::input::map_input_to_action;
@@ -68,7 +68,13 @@ impl<B: Backend> Screen<B> {
                 }
             }
             Action::ToggleCommandBar => {
-                // Command bar activation placeholder
+                // Placeholder: future command input focus toggle
+            }
+            Action::InputChar(c) => {
+                self.state.command_buffer.push(c);
+            }
+            Action::InputBackspace => {
+                self.state.command_buffer.pop();
             }
             Action::Redraw => {}
             Action::Custom(_) => {}

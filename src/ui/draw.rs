@@ -42,21 +42,14 @@ pub fn draw(frame: &mut ratatui::Frame<'_>, app_state: &AppState, tree: &NodeTre
         _ => {}
     }
 
-    render_command_bar(frame, layout[1], ""); // bottom row always visible
+    render_command_bar(frame, layout[1], &app_state.command_buffer);
 
-    // Always render PrismX icon on top
+    // Render PrismX icon *after all widgets*
     let icon_area = Rect {
-        x: size.width.saturating_sub(8),
+        x: size.width.saturating_sub(7),
         y: 0,
-        width: 7,
+        width: 6,
         height: 1,
     };
-    render_prism_icon(frame, icon_area, "default");
-}
-
-fn render_sidebar(frame: &mut ratatui::Frame<'_>, area: Rect, sidebar: &SidebarView) {
-    match sidebar {
-        SidebarView::Help => render_help_overlay(frame, area, *sidebar),
-        _ => {}
-    }
+    render_prism_icon(frame, icon_area, app_state.view.to_string().as_str());
 }

@@ -15,7 +15,15 @@ pub fn map_input_to_action(event: Event) -> Option<Action> {
             (KeyCode::Char('e'), KeyModifiers::CONTROL) => Some(Action::OpenExport),
             (KeyCode::Enter, KeyModifiers::CONTROL) => Some(Action::ToggleCommandBar),
             (KeyCode::Esc, KeyModifiers::NONE) => Some(Action::Escape),
-            _ => None,
+            _ => {
+                if let KeyCode::Char(c) = code {
+                    Some(Action::InputChar(c))
+                } else if code == KeyCode::Backspace {
+                    Some(Action::InputBackspace)
+                } else {
+                    None
+                }
+            }
         }
     } else {
         None
