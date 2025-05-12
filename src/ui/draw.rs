@@ -8,10 +8,19 @@ use crate::ui::zen_mode::render_zen_mode;
 use crate::ui::log_viewer::render_log_viewer;
 use crate::ui::mindmap::render_mindmap;
 use crate::ui::command_bar::render_command_bar;
+use crate::prism_icon::render_prism_icon;
 use crate::node_tree::NodeTree;
 
 pub fn draw(frame: &mut ratatui::Frame<'_>, app_state: &AppState, tree: &NodeTree) {
     let size = frame.size();
+
+    let layout = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints([
+            Constraint::Min(1),            // Main content
+            Constraint::Length(3),         // Command bar
+        ])
+        .split(size);
 
     let chunks = Layout::default()
         .direction(Direction::Horizontal)
@@ -19,7 +28,7 @@ pub fn draw(frame: &mut ratatui::Frame<'_>, app_state: &AppState, tree: &NodeTre
             Constraint::Length(if matches!(app_state.sidebar, SidebarView::Hidden) { 0 } else { 30 }),
             Constraint::Min(1),
         ])
-        .split(size);
+        .split(layout[0]);
 
     if app_state.sidebar != SidebarView::Hidden {
         render_sidebar(frame, chunks[0], &app_state.sidebar);
@@ -33,7 +42,16 @@ pub fn draw(frame: &mut ratatui::Frame<'_>, app_state: &AppState, tree: &NodeTre
         _ => {}
     }
 
-    render_command_bar(frame, chunks[1], ""); // Placeholder
+    render_command_bar(frame, layout[1], "");
+
+    // PrismX icon in top-right corner
+    let icon_area = Rect {
+        x: size.width.saturating_sub(8),
+        y: 0,
+        width: 7,
+        height: 1,
+    };
+    render_prism_icon(frame, icon_area, "default");
 }
 
 fn render_sidebar(frame: &mut ratatui::Frame<'_>, area: Rect, sidebar: &SidebarView) {

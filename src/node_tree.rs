@@ -34,16 +34,30 @@ impl NodeTree {
 
     pub fn with_mock_data() -> Self {
         let mut tree = NodeTree::default();
-        let root = Node {
-            id: Uuid::new_v4(),
+
+        let root_id = Uuid::new_v4();
+        let child_id = Uuid::new_v4();
+
+        tree.add_node(Node {
+            id: root_id,
             title: "Root Node".into(),
-            content: "This is a mock root.".into(),
+            content: "Root content".into(),
             parent: None,
+            children: vec![child_id],
+            shard: None,
+            tags: vec![],
+        });
+
+        tree.add_node(Node {
+            id: child_id,
+            title: "Child Node".into(),
+            content: "Child content".into(),
+            parent: Some(root_id),
             children: vec![],
             shard: None,
             tags: vec![],
-        };
-        tree.add_node(root);
+        });
+
         tree
     }
 }

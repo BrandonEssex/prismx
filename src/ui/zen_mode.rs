@@ -1,22 +1,35 @@
 // src/ui/zen_mode.rs
 
 use ratatui::layout::{Alignment, Constraint, Direction, Layout, Rect};
-use ratatui::style::{Modifier, Style};
+use ratatui::style::{Color, Modifier, Style};
 use ratatui::text::{Line, Span};
 use ratatui::widgets::{Block, Borders, Paragraph};
 use ratatui::Frame;
 
 pub fn render_zen_mode(frame: &mut Frame<'_>, area: Rect) {
-    let block = Block::default().title("Zen Mode").borders(Borders::ALL);
+    let block = Block::default()
+        .title("Zen Mode")
+        .borders(Borders::ALL)
+        .border_style(Style::default().fg(Color::Green));
 
     let lines = vec![
-        Line::from(Span::styled("Stay focused.", Style::default().add_modifier(Modifier::BOLD))),
-        Line::from("You are in Zen Mode. Press Esc to exit."),
+        Line::from(Span::styled(
+            "Stay focused.",
+            Style::default()
+                .fg(Color::Green)
+                .bg(Color::Black)
+                .add_modifier(Modifier::BOLD),
+        )),
+        Line::from(Span::styled(
+            "You are in Zen Mode. Press Esc to exit.",
+            Style::default().fg(Color::Green),
+        )),
     ];
 
     let paragraph = Paragraph::new(lines)
         .block(block)
-        .alignment(Alignment::Center);
+        .alignment(Alignment::Center)
+        .style(Style::default().bg(Color::Black));
 
     let layout = Layout::default()
         .direction(Direction::Vertical)
