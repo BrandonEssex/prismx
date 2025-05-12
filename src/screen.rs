@@ -1,4 +1,4 @@
-// src/screen.rs
+// FINAL PATCHED: src/screen.rs — Command bar toggle and Mindmap view logic
 
 use crate::action::Action;
 use crate::input::map_input_to_action;
@@ -63,6 +63,8 @@ impl<B: Backend> Screen<B> {
             Action::Escape => {
                 if self.state.view == View::Zen {
                     self.state.view = View::Dashboard;
+                } else if self.state.command_bar_active {
+                    self.state.command_bar_active = false;
                 } else {
                     self.state.sidebar = SidebarView::Hidden;
                 }

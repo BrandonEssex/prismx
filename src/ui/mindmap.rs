@@ -1,8 +1,8 @@
-// PATCHED: src/ui/mindmap.rs
+// PATCHED: src/ui/mindmap.rs — Restores mindmap rendering with child nodes
 
 use ratatui::layout::Rect;
 use ratatui::widgets::{Block, Borders, Paragraph};
-use ratatui::text::{Line};
+use ratatui::text::Line;
 use ratatui::Frame;
 
 use crate::node_tree::NodeTree;
@@ -26,7 +26,7 @@ pub fn render_mindmap(frame: &mut Frame<'_>, area: Rect, tree: &NodeTree) {
     }
 
     if lines.is_empty() {
-        lines.push(Line::from("No nodes found"));
+        lines.push(Line::from("No nodes to display"));
     }
 
     let paragraph = Paragraph::new(lines).block(block);
