@@ -2,7 +2,7 @@
 
 use ratatui::layout::{Constraint, Direction, Layout, Rect};
 use ratatui::widgets::{Block, Borders, Paragraph};
-use ratatui::text::{Span, Spans};
+use ratatui::text::{Line, Span};
 use ratatui::style::Style;
 use ratatui::Frame;
 
@@ -12,14 +12,12 @@ pub fn render_dashboard(frame: &mut Frame<'_>, area: Rect) {
         .title("PrismX Dashboard");
 
     let content = vec![
-        Spans::from(vec![Span::raw("• View: Project Summary")]),
-        Spans::from(vec![Span::raw("• Status: All systems go")]),
-        Spans::from(vec![Span::raw("• Plugins: Loaded & Active")]),
+        Line::from("• View: Project Summary"),
+        Line::from("• Status: All systems go"),
+        Line::from("• Plugins: Loaded & Active"),
     ];
 
-    let paragraph = Paragraph::new(content)
-        .block(block)
-        .style(Style::default());
+    let paragraph = Paragraph::new(content).block(block).style(Style::default());
 
     let layout = Layout::default()
         .direction(Direction::Vertical)

@@ -2,7 +2,7 @@
 
 use ratatui::layout::{Constraint, Direction, Layout, Rect};
 use ratatui::widgets::{Block, Borders, Paragraph};
-use ratatui::text::{Spans, Span};
+use ratatui::text::{Line, Span};
 use ratatui::style::Style;
 use ratatui::Frame;
 
@@ -11,11 +11,11 @@ pub fn render_sidebar_panel(frame: &mut Frame<'_>, area: Rect, title: &str, cont
         .title(title)
         .borders(Borders::ALL);
 
-    let spans: Vec<Spans> = content.iter()
-        .map(|line| Spans::from(Span::raw(*line)))
+    let lines: Vec<Line> = content.iter()
+        .map(|line| Line::from(Span::raw(*line)))
         .collect();
 
-    let paragraph = Paragraph::new(spans)
+    let paragraph = Paragraph::new(lines)
         .block(block)
         .style(Style::default());
 

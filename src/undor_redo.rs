@@ -23,20 +23,16 @@ impl ActionStack {
     }
 
     pub fn undo(&mut self) -> Option<NodeAction> {
-        if let Some(action) = self.undo_stack.pop_back() {
+        self.undo_stack.pop_back().map(|action| {
             self.redo_stack.push_back(action.clone());
-            Some(action)
-        } else {
-            None
-        }
+            action
+        })
     }
 
     pub fn redo(&mut self) -> Option<NodeAction> {
-        if let Some(action) = self.redo_stack.pop_back() {
+        self.redo_stack.pop_back().map(|action| {
             self.undo_stack.push_back(action.clone());
-            Some(action)
-        } else {
-            None
-        }
+            action
+        })
     }
 }

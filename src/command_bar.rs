@@ -2,16 +2,14 @@
 
 use ratatui::layout::{Constraint, Direction, Layout, Rect};
 use ratatui::widgets::{Block, Borders, Paragraph};
-use ratatui::text::{Spans, Span};
+use ratatui::text::{Line, Span};
 use ratatui::style::Style;
 use ratatui::Frame;
 
 pub fn render_command_bar(frame: &mut Frame<'_>, area: Rect, command: &str) {
-    let block = Block::default()
-        .title("Command")
-        .borders(Borders::ALL);
+    let block = Block::default().title("Command").borders(Borders::ALL);
 
-    let paragraph = Paragraph::new(Spans::from(Span::raw(command)))
+    let paragraph = Paragraph::new(vec![Line::from(Span::raw(command))])
         .block(block)
         .style(Style::default());
 
