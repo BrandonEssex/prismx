@@ -1,6 +1,8 @@
 // src/app.rs
 
 use crate::screen::Screen;
+use crate::state::AppState;
+use crate::node_tree::NodeTree;
 use crossterm::event::{self, Event as CEvent, KeyCode};
 use ratatui::backend::CrosstermBackend;
 use ratatui::Terminal;
@@ -10,15 +12,17 @@ use std::time::{Duration, Instant};
 pub fn run() -> io::Result<()> {
     Screen::<CrosstermBackend<std::io::Stdout>>::enter_alt_screen()?;
 
-    let backend = CrosstermBackend::new(stdout());
-    let terminal = Terminal::new(backend)?;
+    let stdout = stdout();
+    let backend = CrosstermBackend::new(stdout);
+    let mut terminal = Terminal::new(backend)?;
 
     let mut screen = Screen::new(terminal);
     let mut last_tick = Instant::now();
     let tick_rate = Duration::from_millis(250);
+    let tree = NodeTree::default();
 
     loop {
-        screen.draw()?;
+        screen.draw_with_tree(&tree)?;
 
         let timeout = tick_rate
             .checked_sub(last_tick.elapsed())
@@ -35,7 +39,6 @@ pub fn run() -> io::Result<()> {
 
         if last_tick.elapsed() >= tick_rate {
             last_tick = Instant::now();
-            // Add tick-based updates here if needed
         }
     }
 
