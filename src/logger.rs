@@ -1,17 +1,20 @@
-use crate::config::Config;
+// src/logger.rs
+
 use std::fs::OpenOptions;
 use std::io::Write;
-use std::time::SystemTime;
+use std::path::Path;
 
-pub fn init_logger(_config: &Config) -> Result<(), Box<dyn std::error::Error>> {
-    let log_path = "logs/prismx.log";
+use crate::util::{ensure_directory_exists, timestamp};
 
+pub fn init_logger(log_dir: &str) -> std::io::Result<()> {
+    ensure_directory_exists(log_dir)?;
+
+    let log_file = format!("{}/runtime_{}.log", log_dir, timestamp());
     let mut file = OpenOptions::new()
         .create(true)
         .append(true)
-        .open(log_path)?;
+        .open(&log_file)?;
 
-    let now = SystemTime::now();
-    writeln!(file, "=== PrismX Session Start @ {:?} ===", now)?;
+    writeln!(file, "Logger initialized at {}", timestamp())?;
     Ok(())
 }

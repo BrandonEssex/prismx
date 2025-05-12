@@ -1,193 +1,88 @@
-use ratatui::Terminal;
+// src/screen.rs
+
+use crate::action::Action;
+use crate::input::map_input_to_action;
+use crate::state::{AppState, SidebarView, View};
 use ratatui::backend::Backend;
-use ratatui::widgets::{Block, Borders, Paragraph};
-use ratatui::layout::{Layout, Constraint, Direction, Rect};
-use crossterm::event::{read, Event, KeyCode};
+use ratatui::Terminal;
+use ratatui::Frame;
+use ratatui::layout::Rect;
+use std::io;
 
-use crate::state::{AppState, View, SidebarView};
-use crate::input::{map_key, Action};
-use crate::ui::sidebar::render_sidebar;
-use crate::ui::help_overlay::render_help_overlay;
-use crate::ui::command_bar::render_command_bar;
+use crossterm::event::{self, DisableMouseCapture, EnableMouseCapture, Event as CEvent};
+use crossterm::execute;
+use crossterm::terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen};
 
-pub struct Screen {
-    state: AppState,
+use crate::ui::draw::draw;
+
+pub struct Screen<B: Backend> {
+    terminal: Terminal<B>,
+    pub state: AppState,
 }
 
-impl Screen {
-    pub fn new() -> Self {
+impl<B: Backend> Screen<B> {
+    pub fn new(terminal: Terminal<B>) -> Self {
         Self {
+            terminal,
             state: AppState::default(),
         }
     }
 
-    pub fn run<B: Backend>(&mut self, terminal: &mut Terminal<B>) -> Result<(), Box<dyn std::error::Error>> {
-        loop {
-            terminal.draw(|f| {
-                let vertical_chunks = Layout::default()
-                    .direction(Direction::Vertical)
-                    .constraints(
-                        if self.state.in_command_mode {
-                            vec![Constraint::Min(0), Constraint::Length(3)]
-                        } else {
-                            vec![Constraint::Percentage(100)]
-                        }
-                    )
-                    .split(f.size());
-
-                let main_area = vertical_chunks[0];
-                let command_area = if self.state.in_command_mode {
-                    Some(vertical_chunks[1])
-                } else {
-                    None
-                };
-
-                let chunks = Layout::default()
-                    .direction(Direction::Horizontal)
-                    .constraints(
-                        if self.state.sidebar_view != SidebarView::None {
-                            vec![Constraint::Percentage(70), Constraint::Percentage(30)]
-                        } else {
-                            vec![Constraint::Percentage(100)]
-                        }
-                    )
-                    .split(main_area);
-
-                let main_chunk = chunks[0];
-                let sidebar_chunk = if self.state.sidebar_view != SidebarView::None {
-                    Some(chunks[1])
-                } else {
-                    None
-                };
-
-                match self.state.view {
-                    View::HelpOverlay => {
-                        render_help_overlay(f, main_chunk);
-                    }
-                    _ => {
-                        let content = match self.state.view {
-                            View::Help => "Help View\nPress 'q' to quit.",
-                            View::Inbox => "Inbox View\nPress 'h' for help.",
-                            View::Mindmap => "Mindmap View\nPress 'h' for help.",
-                            View::Dashboard => "Dashboard Panel",
-                            _ => "PrismX Running...",
-                        };
-
-                        let block = Paragraph::new(content)
-                            .block(Block::default().title("PrismX").borders(Borders::ALL));
-
-                        f.render_widget(block, main_chunk);
-                    }
-                }
-
-                if let Some(side_area) = sidebar_chunk {
-                    render_sidebar(f, side_area, &self.state.sidebar_view);
-                }
-
-                if let Some(cmd_area) = command_area {
-                    render_command_bar(f, cmd_area, &self.state.command_input);
-                }
-            })?;
-
-            if let Event::Key(key) = read()? {
-                if self.state.in_command_mode {
-                    match key.code {
-                        KeyCode::Esc => {
-                            self.state.in_command_mode = false;
-                            self.state.command_input.clear();
-                            self.state.command_index = None;
-                        }
-                        KeyCode::Enter => {
-                            let cmd = self.state.command_input.trim().to_string();
-                            match cmd.as_str() {
-                                "mindmap" => self.state.view = View::Mindmap,
-                                "inbox" => self.state.view = View::Inbox,
-                                "dashboard" => self.state.view = View::Dashboard,
-                                "help" => self.state.view = View::HelpOverlay,
-                                _ => {}
-                            }
-                            if !cmd.is_empty() {
-                                self.state.command_history.push(cmd);
-                            }
-                            self.state.command_input.clear();
-                            self.state.command_index = None;
-                            self.state.in_command_mode = false;
-                        }
-                        KeyCode::Char(c) => {
-                            self.state.command_input.push(c);
-                            self.state.command_index = None;
-                        }
-                        KeyCode::Backspace => {
-                            self.state.command_input.pop();
-                            self.state.command_index = None;
-                        }
-                        KeyCode::Up => {
-                            if self.state.command_history.is_empty() {
-                                continue;
-                            }
-
-                            let idx = match self.state.command_index {
-                                Some(i) if i > 0 => i - 1,
-                                None => self.state.command_history.len().saturating_sub(1),
-                                _ => 0,
-                            };
-
-                            self.state.command_index = Some(idx);
-                            self.state.command_input = self.state.command_history[idx].clone();
-                        }
-                        KeyCode::Down => {
-                            if let Some(idx) = self.state.command_index {
-                                let next_idx = idx + 1;
-                                if next_idx < self.state.command_history.len() {
-                                    self.state.command_index = Some(next_idx);
-                                    self.state.command_input = self.state.command_history[next_idx].clone();
-                                } else {
-                                    self.state.command_input.clear();
-                                    self.state.command_index = None;
-                                }
-                            }
-                        }
-                        _ => {}
-                    }
-                } else {
-                    if let Some(action) = map_key(key.code) {
-                        match action {
-                            Action::Quit => break,
-                            Action::ToggleHelp => {
-                                self.state.view = if self.state.view == View::Help {
-                                    View::Mindmap
-                                } else {
-                                    View::Help
-                                };
-                            }
-                            Action::OpenInbox => self.state.view = View::Inbox,
-                            Action::OpenMindmap => self.state.view = View::Mindmap,
-                            Action::NextSidebarTab => {
-                                self.state.sidebar_view = match self.state.sidebar_view {
-                                    SidebarView::Meta => SidebarView::Outline,
-                                    SidebarView::Outline => SidebarView::Tags,
-                                    SidebarView::Tags => SidebarView::None,
-                                    SidebarView::None => SidebarView::Meta,
-                                }
-                            }
-                            Action::HideSidebar => {
-                                self.state.sidebar_view = SidebarView::None;
-                            }
-                        }
-                    }
-
-                    if key.code == KeyCode::Char('?') {
-                        self.state.view = View::HelpOverlay;
-                    }
-
-                    if key.code == KeyCode::Char('/') {
-                        self.state.in_command_mode = true;
-                        self.state.command_input.clear();
-                    }
-                }
-            }
-        }
-
+    pub fn draw(&mut self) -> io::Result<()> {
+        self.terminal.draw(|f| draw(f, &self.state))?;
         Ok(())
+    }
+
+    pub fn handle_event(&mut self, event: CEvent) {
+        if let Some(action) = map_input_to_action(event) {
+            self.handle_action(action);
+        }
+    }
+
+    pub fn handle_action(&mut self, action: Action) {
+        match action {
+            Action::Quit => {
+                // handled by main loop
+            }
+            Action::ToggleHelp => {
+                self.state.sidebar = if self.state.sidebar == SidebarView::Help {
+                    SidebarView::Hidden
+                } else {
+                    SidebarView::Help
+                };
+            }
+            Action::ToggleSidebar => {
+                self.state.sidebar = if self.state.sidebar == SidebarView::Hidden {
+                    SidebarView::Help // default to Help view if toggled open
+                } else {
+                    SidebarView::Hidden
+                };
+            }
+            Action::ToggleZenMode => self.state.view = View::Zen,
+            Action::ToggleDashboard => self.state.view = View::Dashboard,
+            Action::ToggleLogView => self.state.view = View::Log,
+            Action::ToggleMindmap => self.state.view = View::Mindmap,
+            Action::OpenExport => self.state.view = View::Export,
+            Action::Redraw => { /* no-op */ }
+            Action::Custom(_) => { /* plugin hook point */ }
+        }
+    }
+
+    pub fn enter_alt_screen() -> io::Result<()> {
+        enable_raw_mode()?;
+        let mut stdout = io::stdout();
+        execute!(stdout, EnterAlternateScreen, EnableMouseCapture)?;
+        Ok(())
+    }
+
+    pub fn exit_alt_screen() -> io::Result<()> {
+        disable_raw_mode()?;
+        let mut stdout = io::stdout();
+        execute!(stdout, LeaveAlternateScreen, DisableMouseCapture)?;
+        Ok(())
+    }
+
+    pub fn clear_screen(&mut self) -> io::Result<()> {
+        self.terminal.clear()
     }
 }

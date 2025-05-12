@@ -1,24 +1,21 @@
+use crate::state::{AppState, SidebarView};
 use ratatui::{
-    backend::Backend,
-    layout::Rect,
+    layout::{Constraint, Direction, Layout, Rect},
+    style::{Color, Style},
     widgets::{Block, Borders, Paragraph},
     Frame,
 };
 
-use crate::state::SidebarView;
-
 pub fn render_sidebar(f: &mut Frame<'_>, area: Rect, view: &SidebarView) {
-    let title = match view {
-        SidebarView::Meta => "Metadata",
-        SidebarView::Outline => "Outline",
-        SidebarView::Tags => "Tags",
-        SidebarView::None => return,
-    };
+    let block = Block::default()
+        .borders(Borders::ALL)
+        .style(Style::default().fg(Color::White))
+        .title(match view {
+            SidebarView::Meta => "Metadata",
+            SidebarView::Outline => "Outline",
+            SidebarView::Triage => "Triage",
+        });
 
-    let content = format!("Sidebar View: {title}");
-
-    let block = Paragraph::new(content)
-        .block(Block::default().title(title).borders(Borders::ALL));
-
-    f.render_widget(block, area);
+    let paragraph = Paragraph::new("").block(block);
+    f.render_widget(paragraph, area);
 }

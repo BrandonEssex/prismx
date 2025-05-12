@@ -1,13 +1,30 @@
+// src/dashboard.rs
+
+use ratatui::layout::{Constraint, Direction, Layout, Rect};
 use ratatui::widgets::{Block, Borders, Paragraph};
-use ratatui::layout::Rect;
-use ratatui::text::Text;
-use ratatui::style::{Style, Color};
+use ratatui::text::{Span, Spans};
+use ratatui::style::Style;
 use ratatui::Frame;
 
-pub fn render_dashboard<B>(f: &mut Frame, area: Rect) {
-    let content = Text::from("Dashboard content coming soon.");
-    let widget = Paragraph::new(content)
-        .block(Block::default().title("Dashboard").borders(Borders::ALL))
-        .style(Style::default().fg(Color::White));
-    f.render_widget(widget, area);
+pub fn render_dashboard(frame: &mut Frame<'_>, area: Rect) {
+    let block = Block::default()
+        .borders(Borders::ALL)
+        .title("PrismX Dashboard");
+
+    let content = vec![
+        Spans::from(vec![Span::raw("• View: Project Summary")]),
+        Spans::from(vec![Span::raw("• Status: All systems go")]),
+        Spans::from(vec![Span::raw("• Plugins: Loaded & Active")]),
+    ];
+
+    let paragraph = Paragraph::new(content)
+        .block(block)
+        .style(Style::default());
+
+    let layout = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints([Constraint::Min(1)].as_ref())
+        .split(area);
+
+    frame.render_widget(paragraph, layout[0]);
 }

@@ -1,7 +1,32 @@
-use crate::state::AppState;
+// src/sandbox.rs
 
-pub fn enter_sandbox_mode(state: &mut AppState) {
-    // Simulate entering a limited/safe runtime space
-    println!("Entering sandbox mode...");
-    state.layout_profile = "sandbox".to_string();
+use std::collections::HashSet;
+
+#[derive(Debug, Default)]
+pub struct CapabilitySandbox {
+    granted: HashSet<String>,
+}
+
+impl CapabilitySandbox {
+    pub fn new() -> Self {
+        Self {
+            granted: HashSet::new(),
+        }
+    }
+
+    pub fn allow(&mut self, capability: &str) {
+        self.granted.insert(capability.to_string());
+    }
+
+    pub fn revoke(&mut self, capability: &str) {
+        self.granted.remove(capability);
+    }
+
+    pub fn is_allowed(&self, capability: &str) -> bool {
+        self.granted.contains(capability)
+    }
+
+    pub fn all(&self) -> Vec<String> {
+        self.granted.iter().cloned().collect()
+    }
 }

@@ -1,17 +1,29 @@
-use ratatui::{Frame};
-use ratatui::layout::Rect;
-use crate::state::AppState;
-use ratatui::widgets::{Block, Borders};
+// src/ui/zen_mode.rs
 
-pub struct ZenModeState;
+use ratatui::layout::{Alignment, Constraint, Direction, Layout, Rect};
+use ratatui::style::{Modifier, Style};
+use ratatui::text::{Span, Spans};
+use ratatui::widgets::{Block, Borders, Paragraph};
+use ratatui::Frame;
 
-impl ZenModeState {
-    pub fn new() -> Self {
-        ZenModeState
-    }
+pub fn render_zen_mode(frame: &mut Frame<'_>, area: Rect) {
+    let block = Block::default()
+        .title("Zen Mode")
+        .borders(Borders::ALL);
 
-    pub fn render(&mut self, f: &mut Frame, area: Rect, _state: &AppState) {
-        let block = Block::default().title("Zen Mode").borders(Borders::ALL);
-        f.render_widget(block, area);
-    }
+    let lines = vec![
+        Spans::from(Span::styled("Stay focused.", Style::default().add_modifier(Modifier::BOLD))),
+        Spans::from("You are in Zen Mode. Press Esc to exit."),
+    ];
+
+    let paragraph = Paragraph::new(lines)
+        .block(block)
+        .alignment(Alignment::Center);
+
+    let layout = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints([Constraint::Min(1)].as_ref())
+        .split(area);
+
+    frame.render_widget(paragraph, layout[0]);
 }

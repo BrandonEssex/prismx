@@ -3,14 +3,16 @@ use ratatui::{
     layout::Rect,
     style::{Color, Style},
     widgets::{Block, Borders, Paragraph},
-    text::Span,
     Frame,
 };
 
 pub fn render_status_icon(f: &mut Frame<'_>, area: Rect) {
-    let content = Span::styled("X", Style::default().fg(Color::Green));
-    let block = Paragraph::new(content)
-        .block(Block::default().title("PrismX Icon").borders(Borders::ALL));
+    let block = Block::default()
+        .borders(Borders::ALL)
+        .style(Style::default().fg(Color::LightBlue))
+        .title("X");
 
-    f.render_widget(block, area);
+    let widget = Paragraph::new("").block(block);
+
+    f.render_widget(widget, area);
 }

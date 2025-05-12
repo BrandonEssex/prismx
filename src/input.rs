@@ -1,23 +1,22 @@
-use crossterm::event::KeyCode;
+// src/input.rs
 
-#[derive(Debug, Clone, Copy)]
-pub enum Action {
-    Quit,
-    ToggleHelp,
-    OpenInbox,
-    OpenMindmap,
-    NextSidebarTab,
-    HideSidebar,
-}
+use crossterm::event::{Event, KeyCode, KeyEvent, KeyModifiers};
+use crate::action::Action;
 
-pub fn map_key(key: KeyCode) -> Option<Action> {
-    match key {
-        KeyCode::Char('q') => Some(Action::Quit),
-        KeyCode::Char('h') => Some(Action::ToggleHelp),
-        KeyCode::Char('i') => Some(Action::OpenInbox),
-        KeyCode::Char('m') => Some(Action::OpenMindmap),
-        KeyCode::Tab => Some(Action::NextSidebarTab),
-        KeyCode::Esc => Some(Action::HideSidebar),
-        _ => None,
+pub fn map_input_to_action(event: Event) -> Option<Action> {
+    if let Event::Key(KeyEvent { code, modifiers }) = event {
+        match (code, modifiers) {
+            (KeyCode::Char('q'), KeyModifiers::NONE) => Some(Action::Quit),
+            (KeyCode::Char('h'), KeyModifiers::CONTROL) => Some(Action::ToggleHelp),
+            (KeyCode::Char('z'), KeyModifiers::CONTROL) => Some(Action::ToggleZenMode),
+            (KeyCode::Char('d'), KeyModifiers::CONTROL) => Some(Action::ToggleDashboard),
+            (KeyCode::Char('l'), KeyModifiers::CONTROL) => Some(Action::ToggleLogView),
+            (KeyCode::Char('m'), KeyModifiers::CONTROL) => Some(Action::ToggleMindmap),
+            (KeyCode::Char('e'), KeyModifiers::CONTROL) => Some(Action::OpenExport),
+            (KeyCode::Tab, KeyModifiers::NONE) => Some(Action::ToggleSidebar),
+            _ => None,
+        }
+    } else {
+        None
     }
 }

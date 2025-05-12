@@ -1,23 +1,15 @@
-#[derive(Clone, Debug)]
+// src/action.rs
+
+#[derive(Debug, Clone)]
 pub enum Action {
     Quit,
-    CreateSiblingNode,
-    CreateChildNode,
-    ToggleZenMode,
-    EnterEditNode,
-    ExpandNode,
-    CollapseNode,
-    DuplicateNode,
-    DeleteNode,
-    ToggleSidebar,
-    ToggleCommentPanel,
-    ListBookmarks,
-    SummarizeNode,
-    SuggestLinks,
-    TogglePrismPanel,
-    ToggleHelp,
     Redraw,
+    ToggleHelp,
+    ToggleSidebar,
+    ToggleZenMode,
+    ToggleLogView,
+    ToggleDashboard,
+    ToggleMindmap,
+    OpenExport,
     Custom(String),
-    LockFocusedNode,
-    UnlockFocusedNode,
 }

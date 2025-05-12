@@ -1,27 +1,37 @@
 use ratatui::{
+    backend::Backend,
     layout::{Constraint, Direction, Layout, Rect},
+    style::{Color, Style},
+    text::{Span, Spans},
     widgets::{Block, Borders, Paragraph},
-    text::{Span, Line},
     Frame,
 };
 
 use crate::plugin::registry::PluginRegistry;
 
-pub fn render_plugin_dashboard(f: &mut Frame<'_>, area: Rect) {
-    let plugin_names = PluginRegistry::list_plugin_names();
+pub fn render_plugin_dashboard<B: Backend>(f: &mut Frame<B>, area: Rect, registry: &PluginRegistry) {
+    let slots = registry.all();
 
-    let layout = Layout::default()
-        .direction(Direction::Vertical)
-        .constraints(vec![Constraint::Length(3); plugin_names.len()])
-        .split(area);
+    let lines: Vec<Spans> = slots
+        .iter()
+        .map(|slot| {
+            Spans::from(vec![
+                Span::styled(
+                    format!("{} ", slot.id),
+                    Style::default().fg(Color::Green),
+                ),
+                Span::raw(format!(
+                    "- {} ({})",
+                    slot.display_name,
+                    if slot.active { "Active" } else { "Inactive" }
+                )),
+            ])
+        })
+        .collect();
 
-    for (i, name) in plugin_names.iter().enumerate() {
-        let line = Line::from(vec![
-            Span::raw("Status: "),
-            Span::raw("Active"),
-        ]);
-        let block = Paragraph::new(line)
-            .block(Block::default().title(format!("Plugin: {}", name)).borders(Borders::ALL));
-        f.render_widget(block, layout[i]);
-    }
+    let paragraph = Paragraph::new(lines)
+        .block(Block::default().title("Plugin Dashboard").borders(Borders::ALL))
+        .style(Style::default().fg(Color::White));
+
+    f.render_widget(paragraph, area);
 }

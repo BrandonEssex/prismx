@@ -1,41 +1,33 @@
-use ratatui::{
-    layout::Rect,
-    widgets::{Block, Borders, Paragraph},
-    text::{Line, Span, Text},
-    style::{Style, Stylize},
-    Frame,
-};
+// src/ui/help_overlay.rs
 
-pub fn render_help_overlay(f: &mut Frame<'_>, area: Rect) {
-    let lines = vec![
-        Line::from(vec![
-            Span::styled("q", Style::default().bold()),
-            Span::raw("   Quit application"),
-        ]),
-        Line::from(vec![
-            Span::styled("h", Style::default().bold()),
-            Span::raw("   Toggle help panel"),
-        ]),
-        Line::from(vec![
-            Span::styled("i", Style::default().bold()),
-            Span::raw("   Open inbox"),
-        ]),
-        Line::from(vec![
-            Span::styled("m", Style::default().bold()),
-            Span::raw("   Open mindmap"),
-        ]),
-        Line::from(vec![
-            Span::styled("Tab", Style::default().bold()),
-            Span::raw(" Cycle sidebar views"),
-        ]),
-        Line::from(vec![
-            Span::styled("Esc", Style::default().bold()),
-            Span::raw(" Hide sidebar"),
-        ]),
+use ratatui::layout::{Constraint, Direction, Layout, Rect};
+use ratatui::style::{Modifier, Style};
+use ratatui::text::{Span, Spans};
+use ratatui::widgets::{Block, Borders, Paragraph};
+use ratatui::Frame;
+use crate::state::SidebarView;
+
+pub fn render_help_overlay(frame: &mut Frame<'_>, area: Rect, current: SidebarView) {
+    let block = Block::default()
+        .borders(Borders::ALL)
+        .title("Keyboard Shortcuts");
+
+    let help_items = vec![
+        Spans::from(vec![Span::raw("q: Quit")]),
+        Spans::from(vec![Span::raw("Tab: Cycle Sidebar")]),
+        Spans::from(vec![Span::raw("Ctrl+S: Save")]),
+        Spans::from(vec![Span::raw("Ctrl+N: New Node")]),
+        Spans::from(vec![Span::raw("Esc: Close Sidebar")]),
     ];
 
-    let block = Paragraph::new(Text::from(lines))
-        .block(Block::default().title("Keyboard Shortcuts").borders(Borders::ALL));
+    let help = Paragraph::new(help_items)
+        .block(block)
+        .style(Style::default().add_modifier(Modifier::ITALIC));
 
-    f.render_widget(block, area);
+    let chunks = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints([Constraint::Min(1)].as_ref())
+        .split(area);
+
+    frame.render_widget(help, chunks[0]);
 }

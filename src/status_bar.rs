@@ -1,12 +1,24 @@
-use ratatui::text::Span;
-use ratatui::style::{Style, Color};
-use crate::state::AppState;
+// src/status_bar.rs
 
-pub fn render_status_bar(state: &AppState) -> Span<'static> {
-    let status = if let Some(focused) = state.focused_node {
-        format!("Focused: {} | Sidebar: {}", focused, state.sidebar_visible)
-    } else {
-        "No node focused".to_string()
-    };
-    Span::styled(status, Style::default().fg(Color::Yellow))
+use ratatui::layout::Rect;
+use ratatui::style::{Color, Modifier, Style};
+use ratatui::text::{Span, Spans};
+use ratatui::widgets::{Block, Borders, Paragraph};
+use ratatui::Frame;
+
+pub fn render_status_bar(frame: &mut Frame<'_>, area: Rect, status: &str) {
+    let block = Block::default()
+        .borders(Borders::ALL)
+        .title("Status");
+
+    let spans = Spans::from(vec![
+        Span::styled("● ", Style::default().fg(Color::Green)),
+        Span::raw(status),
+    ]);
+
+    let paragraph = Paragraph::new(spans)
+        .block(block)
+        .style(Style::default().add_modifier(Modifier::ITALIC));
+
+    frame.render_widget(paragraph, area);
 }
