@@ -11,5 +11,7 @@ pub enum Action {
     ToggleDashboard,
     ToggleMindmap,
     OpenExport,
+    ToggleCommandBar,
+    Escape,
     Custom(String),
 }

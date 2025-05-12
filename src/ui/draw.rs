@@ -42,9 +42,9 @@ pub fn draw(frame: &mut ratatui::Frame<'_>, app_state: &AppState, tree: &NodeTre
         _ => {}
     }
 
-    render_command_bar(frame, layout[1], "");
+    render_command_bar(frame, layout[1], ""); // bottom row always visible
 
-    // PrismX icon in top-right corner
+    // Always render PrismX icon on top
     let icon_area = Rect {
         x: size.width.saturating_sub(8),
         y: 0,
