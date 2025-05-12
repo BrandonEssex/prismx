@@ -1,4 +1,4 @@
-// src/screen.rs
+// src/screen.rs (patched)
 
 use crate::action::Action;
 use crate::input::map_input_to_action;
@@ -60,6 +60,16 @@ impl<B: Backend> Screen<B> {
             Action::ToggleLogView => self.state.view = View::Log,
             Action::ToggleMindmap => self.state.view = View::Mindmap,
             Action::OpenExport => self.state.view = View::Export,
+            Action::Escape => {
+                if self.state.view == View::Zen {
+                    self.state.view = View::Dashboard;
+                } else {
+                    self.state.sidebar = SidebarView::Hidden;
+                }
+            }
+            Action::ToggleCommandBar => {
+                // Command bar activation placeholder
+            }
             Action::Redraw => {}
             Action::Custom(_) => {}
         }
@@ -81,42 +91,5 @@ impl<B: Backend> Screen<B> {
 
     pub fn clear_screen(&mut self) -> io::Result<()> {
         self.terminal.clear()
-    }
-
-    pub fn handle_action(&mut self, action: Action) {
-        match action {
-            Action::Quit => {}
-            Action::ToggleHelp => {
-                self.state.sidebar = if self.state.sidebar == SidebarView::Help {
-                    SidebarView::Hidden
-                } else {
-                    SidebarView::Help
-                };
-            }
-            Action::ToggleSidebar => {
-                self.state.sidebar = if self.state.sidebar == SidebarView::Hidden {
-                    SidebarView::Help
-                } else {
-                    SidebarView::Hidden
-                };
-            }
-            Action::ToggleZenMode => self.state.view = View::Zen,
-            Action::ToggleDashboard => self.state.view = View::Dashboard,
-            Action::ToggleLogView => self.state.view = View::Log,
-            Action::ToggleMindmap => self.state.view = View::Mindmap,
-            Action::OpenExport => self.state.view = View::Export,
-            Action::Escape => {
-                if self.state.view == View::Zen {
-                    self.state.view = View::Dashboard;
-                } else {
-                    self.state.sidebar = SidebarView::Hidden;
-                }
-            }
-            Action::ToggleCommandBar => {
-                // future: open command buffer
-            }
-            Action::Redraw => {}
-            Action::Custom(_) => {}
-        }
     }
 }
