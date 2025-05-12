@@ -68,13 +68,17 @@ impl<B: Backend> Screen<B> {
                 }
             }
             Action::ToggleCommandBar => {
-                // Placeholder: future command input focus toggle
+                self.state.command_bar_active = !self.state.command_bar_active;
             }
             Action::InputChar(c) => {
-                self.state.command_buffer.push(c);
+                if self.state.command_bar_active {
+                    self.state.command_buffer.push(c);
+                }
             }
             Action::InputBackspace => {
-                self.state.command_buffer.pop();
+                if self.state.command_bar_active {
+                    self.state.command_buffer.pop();
+                }
             }
             Action::Redraw => {}
             Action::Custom(_) => {}

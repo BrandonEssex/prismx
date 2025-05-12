@@ -1,4 +1,4 @@
-// src/ui/mindmap.rs
+// PATCHED: src/ui/mindmap.rs
 
 use ratatui::layout::Rect;
 use ratatui::widgets::{Block, Borders, Paragraph};
@@ -23,6 +23,10 @@ pub fn render_mindmap(frame: &mut Frame<'_>, area: Rect, tree: &NodeTree) {
                 }
             }
         }
+    }
+
+    if lines.is_empty() {
+        lines.push(Line::from("No nodes found"));
     }
 
     let paragraph = Paragraph::new(lines).block(block);

@@ -1,4 +1,4 @@
-// src/ui/draw.rs
+// PATCHED: src/ui/draw.rs
 
 use ratatui::layout::{Constraint, Direction, Layout, Rect};
 use crate::state::{AppState, View, SidebarView};
@@ -18,8 +18,8 @@ pub fn draw(frame: &mut ratatui::Frame<'_>, app_state: &AppState, tree: &NodeTre
     let layout = Layout::default()
         .direction(Direction::Vertical)
         .constraints([
-            Constraint::Min(1),            // Main content
-            Constraint::Length(3),         // Command bar
+            Constraint::Min(1),
+            Constraint::Length(3),
         ])
         .split(size);
 
@@ -43,13 +43,15 @@ pub fn draw(frame: &mut ratatui::Frame<'_>, app_state: &AppState, tree: &NodeTre
         _ => {}
     }
 
-    render_command_bar(frame, layout[1], &app_state.command_buffer);
+    if app_state.command_bar_active {
+        render_command_bar(frame, layout[1], &app_state.command_buffer);
+    }
 
-    // Always render PrismX icon last (top-right corner)
+    // PrismX Icon (persistent overlay)
     let icon_area = Rect {
-        x: size.width.saturating_sub(7),
+        x: size.width.saturating_sub(10),
         y: 0,
-        width: 6,
+        width: 9,
         height: 1,
     };
     render_prism_icon(frame, icon_area, app_state.view.to_string().as_str());
@@ -64,7 +66,7 @@ fn render_sidebar(frame: &mut ratatui::Frame<'_>, area: Rect, sidebar: &SidebarV
             "Ctrl+Z: Zen",
             "Ctrl+L: Log",
             "Ctrl+M: Mindmap",
-            "Ctrl+Enter: Command",
+            "Ctrl+Enter: Cmd",
         ],
         _ => vec![],
     };

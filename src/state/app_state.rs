@@ -1,4 +1,4 @@
-// src/state/app_state.rs
+// PATCHED: src/state/app_state.rs
 
 use crate::plugin::registry::PluginRegistry;
 use serde::{Deserialize, Serialize};
@@ -15,6 +15,7 @@ pub struct AppState {
     pub focused_node: Option<Uuid>,
     pub metadata: HashMap<String, String>,
     pub command_buffer: String,
+    pub command_bar_active: bool, // NEW: toggles visibility
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
