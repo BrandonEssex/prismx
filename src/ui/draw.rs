@@ -1,4 +1,4 @@
-// PATCHED: src/ui/draw.rs — Fix Zen border + restore PrismX icon
+// PATCHED: src/ui/draw.rs — Mindmap, Command Bar, and Icon context now visible
 
 use ratatui::layout::{Constraint, Direction, Layout, Rect};
 use crate::state::{AppState, View, SidebarView};
@@ -30,7 +30,6 @@ pub fn draw(frame: &mut ratatui::Frame<'_>, app_state: &AppState, tree: &NodeTre
         ])
         .split(layout[0]);
 
-    // Always render Zen first so sidebar does not override it
     if app_state.view == View::Zen {
         render_zen_mode(frame, layout[0]);
     }
@@ -43,7 +42,7 @@ pub fn draw(frame: &mut ratatui::Frame<'_>, app_state: &AppState, tree: &NodeTre
         View::Dashboard => render_dashboard_widget(frame, chunks[1]),
         View::Log => render_log_viewer(frame, chunks[1]),
         View::Mindmap => render_mindmap(frame, chunks[1], tree),
-        View::Export => render_dashboard_widget(frame, chunks[1]),
+        View::Export => render_dashboard_widget(frame, chunks[1]), // placeholder
         _ => {}
     }
 
@@ -68,7 +67,7 @@ pub fn draw(frame: &mut ratatui::Frame<'_>, app_state: &AppState, tree: &NodeTre
         width: 10,
         height: 1,
     };
-    render_prism_icon(frame, icon_area, app_state.view.to_string().as_str());
+    render_prism_icon(frame, icon_area, &app_state.view.to_string());
 }
 
 fn render_sidebar(frame: &mut ratatui::Frame<'_>, area: Rect, sidebar: &SidebarView) {

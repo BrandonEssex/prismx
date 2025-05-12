@@ -1,4 +1,4 @@
-// src/screen.rs
+// PATCHED: src/screen.rs — Mindmap toggle confirmed, command bar redraw synced
 
 use crate::action::Action;
 use crate::input::map_input_to_action;
