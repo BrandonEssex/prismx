@@ -3,7 +3,7 @@
 use crate::node::Node;
 use std::collections::VecDeque;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)] // <- PATCHED HERE
 pub enum NodeAction {
     Add(Node),
     Remove(Node),
@@ -24,7 +24,7 @@ impl ActionStack {
 
     pub fn undo(&mut self) -> Option<NodeAction> {
         if let Some(action) = self.undo_stack.pop_back() {
-            self.redo_stack.push_back(action.clone());
+            self.redo_stack.push_back(action.clone()); // now valid
             Some(action)
         } else {
             None
@@ -33,7 +33,7 @@ impl ActionStack {
 
     pub fn redo(&mut self) -> Option<NodeAction> {
         if let Some(action) = self.redo_stack.pop_back() {
-            self.undo_stack.push_back(action.clone());
+            self.undo_stack.push_back(action.clone()); // now valid
             Some(action)
         } else {
             None
