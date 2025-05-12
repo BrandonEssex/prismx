@@ -1,9 +1,10 @@
 // src/state/app_state.rs
 
-use crate::plugin::PluginRegistry;
+use crate::plugin::registry::PluginRegistry;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use uuid::Uuid;
+use std::fmt;
 
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct AppState {
@@ -13,7 +14,7 @@ pub struct AppState {
     pub plugin_registry: PluginRegistry,
     pub focused_node: Option<Uuid>,
     pub metadata: HashMap<String, String>,
-    pub command_buffer: String, // <- New field for typed command input
+    pub command_buffer: String,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -28,6 +29,12 @@ pub enum View {
 impl Default for View {
     fn default() -> Self {
         View::Dashboard
+    }
+}
+
+impl fmt::Display for View {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{:?}", self)
     }
 }
 

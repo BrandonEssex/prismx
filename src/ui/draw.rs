@@ -10,6 +10,7 @@ use crate::ui::mindmap::render_mindmap;
 use crate::ui::command_bar::render_command_bar;
 use crate::prism_icon::render_prism_icon;
 use crate::node_tree::NodeTree;
+use crate::ui::sidebar::render_sidebar_panel;
 
 pub fn draw(frame: &mut ratatui::Frame<'_>, app_state: &AppState, tree: &NodeTree) {
     let size = frame.size();
@@ -44,7 +45,7 @@ pub fn draw(frame: &mut ratatui::Frame<'_>, app_state: &AppState, tree: &NodeTre
 
     render_command_bar(frame, layout[1], &app_state.command_buffer);
 
-    // Render PrismX icon *after all widgets*
+    // Always render PrismX icon last (top-right corner)
     let icon_area = Rect {
         x: size.width.saturating_sub(7),
         y: 0,
@@ -52,4 +53,22 @@ pub fn draw(frame: &mut ratatui::Frame<'_>, app_state: &AppState, tree: &NodeTre
         height: 1,
     };
     render_prism_icon(frame, icon_area, app_state.view.to_string().as_str());
+}
+
+fn render_sidebar(frame: &mut ratatui::Frame<'_>, area: Rect, sidebar: &SidebarView) {
+    let help_lines = match sidebar {
+        SidebarView::Help => vec![
+            "Ctrl+Q: Quit",
+            "Ctrl+H: Help",
+            "Ctrl+D: Dashboard",
+            "Ctrl+Z: Zen",
+            "Ctrl+L: Log",
+            "Ctrl+M: Mindmap",
+            "Ctrl+Enter: Command",
+        ],
+        _ => vec![],
+    };
+
+    let title = format!("{:?}", sidebar);
+    render_sidebar_panel(frame, area, &title, &help_lines);
 }
