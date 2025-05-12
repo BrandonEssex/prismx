@@ -16,3 +16,9 @@ pub struct PluginInfo {
     pub enabled: bool,
     pub capabilities: Vec<String>,
 }
+
+impl PluginRegistry {
+    pub fn all(&self) -> Vec<&String> {
+        self.registered_plugins.keys().collect()
+    }
+}

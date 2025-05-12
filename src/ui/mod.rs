@@ -1,9 +1,10 @@
-pub mod command_bar;
+// src/ui/mod.rs
+
+pub mod dashboard_widgets;
 pub mod draw;
-pub mod export_overlay;
 pub mod help_overlay;
+pub mod log_viewer;
 pub mod plugin_dashboard;
 pub mod sidebar;
 pub mod status_bar;
-pub mod tag_glossary;
-pub mod status_icon;
+pub mod zen_mode;

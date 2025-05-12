@@ -1,12 +1,16 @@
-pub mod config_watcher;
-pub mod errors;
-pub mod logger;
-pub mod undo_redo;
+// src/util/mod.rs
 
-pub fn truncate_string(s: &str, max_len: usize) -> String {
-    if s.len() > max_len {
-        format!("{}...", &s[..max_len.saturating_sub(3)])
-    } else {
-        s.to_string()
+use std::fs;
+use std::path::Path;
+
+pub fn ensure_directory_exists<P: AsRef<Path>>(path: P) -> std::io::Result<()> {
+    if !path.as_ref().exists() {
+        fs::create_dir_all(path)?;
     }
+    Ok(())
+}
+
+pub fn timestamp() -> String {
+    use chrono::Local;
+    Local::now().format("%Y-%m-%d_%H-%M-%S").to_string()
 }

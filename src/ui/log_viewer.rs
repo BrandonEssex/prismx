@@ -1,9 +1,9 @@
 // src/ui/log_viewer.rs
 
 use ratatui::layout::{Constraint, Direction, Layout, Rect};
-use ratatui::style::{Style};
+use ratatui::style::Style;
+use ratatui::text::{Line, Span};
 use ratatui::widgets::{Block, Borders, Paragraph};
-use ratatui::text::{Spans, Span};
 use ratatui::Frame;
 
 pub fn render_log_viewer(frame: &mut Frame<'_>, area: Rect) {
@@ -12,14 +12,12 @@ pub fn render_log_viewer(frame: &mut Frame<'_>, area: Rect) {
         .borders(Borders::ALL);
 
     let log_lines = vec![
-        Spans::from(vec![Span::raw("2025-05-11 12:00:00 - System started")]),
-        Spans::from(vec![Span::raw("2025-05-11 12:00:01 - Plugin loaded: scratchpad")]),
-        Spans::from(vec![Span::raw("2025-05-11 12:00:02 - Active view: Dashboard")]),
+        Line::from(Span::raw("2025-05-11 12:00:00 - System started")),
+        Line::from(Span::raw("2025-05-11 12:00:01 - Plugin loaded: scratchpad")),
+        Line::from(Span::raw("2025-05-11 12:00:02 - Active view: Dashboard")),
     ];
 
-    let paragraph = Paragraph::new(log_lines)
-        .block(block)
-        .style(Style::default());
+    let paragraph = Paragraph::new(log_lines).block(block).style(Style::default());
 
     let layout = Layout::default()
         .direction(Direction::Vertical)
