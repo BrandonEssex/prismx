@@ -13,6 +13,7 @@ pub struct AppState {
     pub plugin_registry: PluginRegistry,
     pub focused_node: Option<Uuid>,
     pub metadata: HashMap<String, String>,
+    pub command_buffer: String,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]

@@ -53,18 +53,24 @@ impl<B: Backend> Screen<B> {
             }
             Action::ToggleSidebar => {
                 self.state.sidebar = if self.state.sidebar == SidebarView::Hidden {
-                    SidebarView::Help // default to Help view if toggled open
+                    SidebarView::Help
                 } else {
                     SidebarView::Hidden
                 };
             }
-            Action::ToggleZenMode => self.state.view = View::Zen,
+            Action::ToggleZenMode => {
+                self.state.view = if self.state.view == View::Zen {
+                    View::Dashboard
+                } else {
+                    View::Zen
+                };
+            }
             Action::ToggleDashboard => self.state.view = View::Dashboard,
             Action::ToggleLogView => self.state.view = View::Log,
             Action::ToggleMindmap => self.state.view = View::Mindmap,
             Action::OpenExport => self.state.view = View::Export,
-            Action::Redraw => { /* no-op */ }
-            Action::Custom(_) => { /* plugin hook point */ }
+            Action::Redraw => {}
+            Action::Custom(_) => {}
         }
     }
 
