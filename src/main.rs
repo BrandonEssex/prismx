@@ -1,12 +1,12 @@
 // src/main.rs
 
-mod action;
-mod app;
-mod input;
-mod screen;
-mod state;
-mod ui;
-mod plugin;
+use prismx::action;
+use prismx::app;
+use prismx::input;
+use prismx::screen;
+use prismx::state;
+use prismx::ui;
+use prismx::plugin;
 
 fn main() {
     if let Err(e) = app::run() {
