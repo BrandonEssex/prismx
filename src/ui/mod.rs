@@ -8,3 +8,5 @@ pub mod plugin_dashboard;
 pub mod sidebar;
 pub mod status_bar;
 pub mod zen_mode;
+pub mod command_bar;
+pub mod mindmap;

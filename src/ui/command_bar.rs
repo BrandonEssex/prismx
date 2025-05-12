@@ -1,4 +1,4 @@
-// src/command_bar.rs
+// src/ui/command_bar.rs
 
 use ratatui::layout::{Constraint, Direction, Layout, Rect};
 use ratatui::widgets::{Block, Borders, Paragraph};

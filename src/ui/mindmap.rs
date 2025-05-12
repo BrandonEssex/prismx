@@ -6,19 +6,16 @@ use ratatui::text::{Line, Span};
 use ratatui::Frame;
 
 use crate::node_tree::NodeTree;
-use crate::node::Node;
 
-pub fn render_mindmap(frame: &mut Frame<'_>, area: Rect) {
+pub fn render_mindmap(frame: &mut Frame<'_>, area: Rect, tree: &NodeTree) {
     let block = Block::default()
         .title("Mindmap")
         .borders(Borders::ALL);
 
-    let lines = vec![
-        Line::from(Span::raw("Mindmap view placeholder")),
-        Line::from(Span::raw("Rendering nodes will be added soon.")),
-    ];
+    let lines: Vec<Line> = tree.root_ids.iter().filter_map(|id| {
+        tree.get_node(id).map(|node| Line::from(format!("• {}", node.title)))
+    }).collect();
 
     let paragraph = Paragraph::new(lines).block(block);
-
     frame.render_widget(paragraph, area);
 }
