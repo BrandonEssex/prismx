@@ -1,6 +1,6 @@
 // src/state/app_state.rs
 
-use crate::plugin::PluginRegistry;
+use crate::plugin::registry::PluginRegistry;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use uuid::Uuid;

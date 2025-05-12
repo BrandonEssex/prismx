@@ -3,7 +3,7 @@
 use crate::node::Node;
 use std::collections::VecDeque;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum NodeAction {
     Add(Node),
     Remove(Node),

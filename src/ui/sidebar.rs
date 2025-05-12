@@ -1,21 +1,34 @@
-use crate::state::{AppState, SidebarView};
-use ratatui::{
-    layout::{Constraint, Direction, Layout, Rect},
-    style::{Color, Style},
-    widgets::{Block, Borders, Paragraph},
-    Frame,
-};
+// src/ui/sidebar.rs
 
-pub fn render_sidebar(f: &mut Frame<'_>, area: Rect, view: &SidebarView) {
-    let block = Block::default()
-        .borders(Borders::ALL)
-        .style(Style::default().fg(Color::White))
-        .title(match view {
-            SidebarView::Meta => "Metadata",
-            SidebarView::Outline => "Outline",
-            SidebarView::Triage => "Triage",
-        });
+use crate::state::SidebarView;
+use ratatui::layout::{Constraint, Direction, Layout, Rect};
+use ratatui::widgets::{Block, Borders, Paragraph};
+use ratatui::text::{Line, Span};
+use ratatui::style::Style;
+use ratatui::Frame;
 
-    let paragraph = Paragraph::new("").block(block);
-    f.render_widget(paragraph, area);
+pub fn render_sidebar_panel(frame: &mut Frame<'_>, area: Rect, sidebar: &SidebarView) {
+    let (title, lines) = match sidebar {
+        SidebarView::Help => (
+            "Help",
+            vec![
+                Line::from("q - Quit"),
+                Line::from("Tab - Next Section"),
+                Line::from("Ctrl+Z - Zen Mode"),
+            ],
+        ),
+        SidebarView::Plugins => ("Plugins", vec![Line::from("Plugin list here.")]),
+        SidebarView::Triage => ("Triage", vec![Line::from("Incoming items...")]),
+        SidebarView::Scratchpad => ("Scratchpad", vec![Line::from("Notes...")]),
+        SidebarView::Config => ("Config", vec![Line::from("Settings...")]),
+        SidebarView::Hidden => ("", vec![]),
+    };
+
+    let block = Block::default().title(title).borders(Borders::ALL);
+
+    let paragraph = Paragraph::new(lines)
+        .block(block)
+        .style(Style::default());
+
+    frame.render_widget(paragraph, area);
 }
