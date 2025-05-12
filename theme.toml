@@ -1,0 +1,10 @@
+[theme]
+background = "Black"
+foreground = "White"
+accent     = "Cyan"
+warning    = "Red"
+
+[layout]
+status_bar = "bottom"
+plugin_panel = "right"
+dashboard_center = "grid"

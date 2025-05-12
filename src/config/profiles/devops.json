@@ -1,0 +1,10 @@
+{
+  "enabled": ["gping", "ripgrep", "whois"],
+  "keymap": "devops",
+  "theme": "dark",
+  "panels": {
+    "gping": "top-right",
+    "ripgrep": "bottom",
+    "whois": "sidebar"
+  }
+}

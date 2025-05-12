@@ -1,0 +1,13 @@
+{
+  "enabled": ["glow", "gping", "ripgrep", "grex", "whois"],
+  "disabled": [],
+  "pinned": {
+    "dashboard_tabs": ["glow", "grex"],
+    "node_actions": {
+      "gping": ["host"],
+      "whois": ["domain"],
+      "grex": ["pattern"],
+      "ripgrep": ["text"]
+    }
+  }
+}
