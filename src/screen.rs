@@ -5,11 +5,8 @@ use crate::input::map_input_to_action;
 use crate::state::{AppState, SidebarView, View};
 use ratatui::backend::Backend;
 use ratatui::Terminal;
-use ratatui::Frame;
-use ratatui::layout::Rect;
-use std::io;
 
-use crossterm::event::{self, DisableMouseCapture, EnableMouseCapture, Event as CEvent};
+use crossterm::event::{DisableMouseCapture, EnableMouseCapture, Event as CEvent};
 use crossterm::execute;
 use crossterm::terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen};
 
@@ -28,7 +25,7 @@ impl<B: Backend> Screen<B> {
         }
     }
 
-    pub fn draw(&mut self) -> io::Result<()> {
+    pub fn draw(&mut self) -> std::io::Result<()> {
         self.terminal.draw(|f| draw(f, &self.state))?;
         Ok(())
     }
@@ -66,21 +63,21 @@ impl<B: Backend> Screen<B> {
         }
     }
 
-    pub fn enter_alt_screen() -> io::Result<()> {
+    pub fn enter_alt_screen() -> std::io::Result<()> {
         enable_raw_mode()?;
-        let mut stdout = io::stdout();
+        let mut stdout = std::io::stdout();
         execute!(stdout, EnterAlternateScreen, EnableMouseCapture)?;
         Ok(())
     }
 
-    pub fn exit_alt_screen() -> io::Result<()> {
+    pub fn exit_alt_screen() -> std::io::Result<()> {
         disable_raw_mode()?;
-        let mut stdout = io::stdout();
+        let mut stdout = std::io::stdout();
         execute!(stdout, LeaveAlternateScreen, DisableMouseCapture)?;
         Ok(())
     }
 
-    pub fn clear_screen(&mut self) -> io::Result<()> {
+    pub fn clear_screen(&mut self) -> std::io::Result<()> {
         self.terminal.clear()
     }
 }

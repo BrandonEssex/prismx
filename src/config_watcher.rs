@@ -1,25 +1,26 @@
 // src/config_watcher.rs
 
-use std::path::Path;
+use notify::{RecommendedWatcher, RecursiveMode, Watcher, Config, EventKind};
 use std::sync::mpsc::channel;
 use std::time::Duration;
-
-use notify::{watcher, DebouncedEvent, RecursiveMode, Watcher};
+use std::path::Path;
 
 pub fn watch_config<P: AsRef<Path>>(path: P) -> notify::Result<()> {
     let (tx, rx) = channel();
-    let mut watcher = watcher(tx, Duration::from_secs(2))?;
+
+    let mut watcher = RecommendedWatcher::new(tx, Config::default())?;
     watcher.watch(path.as_ref(), RecursiveMode::Recursive)?;
 
     std::thread::spawn(move || {
-        loop {
-            match rx.recv() {
-                Ok(DebouncedEvent::Write(path)) => {
-                    println!("Configuration changed: {:?}", path);
-                    // Future: Reload configuration
+        for res in rx {
+            match res {
+                Ok(event) => {
+                    if matches!(event.kind, EventKind::Modify(_)) {
+                        println!("Configuration modified: {:?}", event.paths);
+                        // Future: reload or re-apply config
+                    }
                 }
-                Ok(_) => {}
-                Err(e) => eprintln!("Watch error: {:?}", e),
+                Err(e) => eprintln!("watch error: {:?}", e),
             }
         }
     });

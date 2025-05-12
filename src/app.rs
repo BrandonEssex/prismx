@@ -1,7 +1,6 @@
 // src/app.rs
 
 use crate::screen::Screen;
-use crate::state::AppState;
 use crossterm::event::{self, Event as CEvent, KeyCode};
 use ratatui::backend::CrosstermBackend;
 use ratatui::Terminal;
@@ -11,9 +10,8 @@ use std::time::{Duration, Instant};
 pub fn run() -> io::Result<()> {
     Screen::<CrosstermBackend<std::io::Stdout>>::enter_alt_screen()?;
 
-    let stdout = stdout();
-    let backend = CrosstermBackend::new(stdout);
-    let mut terminal = Terminal::new(backend)?;
+    let backend = CrosstermBackend::new(stdout());
+    let terminal = Terminal::new(backend)?;
 
     let mut screen = Screen::new(terminal);
     let mut last_tick = Instant::now();
