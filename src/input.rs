@@ -12,6 +12,7 @@ pub fn map_input_to_action(event: Event) -> Option<Action> {
             (KeyCode::Char('d'), KeyModifiers::CONTROL) => Some(Action::ToggleDashboard),
             (KeyCode::Char('l'), KeyModifiers::CONTROL) => Some(Action::ToggleLogView),
             (KeyCode::Char('m'), KeyModifiers::CONTROL) => Some(Action::ToggleMindmap),
+            (KeyCode::Char('/'), KeyModifiers::CONTROL) => Some(Action::Custom("OpenCommand".into())),
             (KeyCode::Char('e'), KeyModifiers::CONTROL) => Some(Action::OpenExport),
             (KeyCode::Tab, KeyModifiers::NONE) => Some(Action::ToggleSidebar),
             _ => None,

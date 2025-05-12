@@ -1,7 +1,7 @@
 // src/ui/plugin_dashboard.rs
 
 use ratatui::layout::Rect;
-use ratatui::text::{Span, Line};
+use ratatui::text::{Line, Span};
 use ratatui::widgets::{Block, Borders, Paragraph};
 use ratatui::Frame;
 use crate::plugin::registry::PluginRegistry;

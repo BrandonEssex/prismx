@@ -59,6 +59,9 @@ impl<B: Backend> Screen<B> {
             Action::ToggleMindmap => self.state.view = View::Mindmap,
             Action::OpenExport => self.state.view = View::Export,
             Action::Redraw => {},
+            Action::Custom(ref name) if name == "OpenCommand" => {
+                // Future: command bar activation hook
+            }
             Action::Custom(_) => {},
         }
     }
