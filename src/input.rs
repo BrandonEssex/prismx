@@ -14,7 +14,6 @@ pub fn map_input_to_action(event: Event) -> Option<Action> {
             (KeyCode::Char('m'), KeyModifiers::CONTROL) => Some(Action::ToggleMindmap),
             (KeyCode::Char('e'), KeyModifiers::CONTROL) => Some(Action::OpenExport),
             (KeyCode::Tab, KeyModifiers::NONE) => Some(Action::ToggleSidebar),
-            (KeyCode::Esc, KeyModifiers::NONE) => Some(Action::ToggleZenMode),
             _ => None,
         }
     } else {

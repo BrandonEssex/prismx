@@ -8,11 +8,9 @@ pub mod comment;
 pub mod config_watcher;
 pub mod dashboard;
 pub mod export;
-pub mod ext;
 pub mod input;
 pub mod keymap;
 pub mod logger;
-// pub mod main; ← removed
 pub mod metadata;
 pub mod mindmap;
 pub mod node;

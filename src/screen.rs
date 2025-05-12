@@ -41,9 +41,7 @@ impl<B: Backend> Screen<B> {
 
     pub fn handle_action(&mut self, action: Action) {
         match action {
-            Action::Quit => {
-                // handled by main loop
-            }
+            Action::Quit => {},
             Action::ToggleHelp => {
                 self.state.sidebar = if self.state.sidebar == SidebarView::Help {
                     SidebarView::Hidden
@@ -58,19 +56,13 @@ impl<B: Backend> Screen<B> {
                     SidebarView::Hidden
                 };
             }
-            Action::ToggleZenMode => {
-                self.state.view = if self.state.view == View::Zen {
-                    View::Dashboard
-                } else {
-                    View::Zen
-                };
-            }
+            Action::ToggleZenMode => self.state.view = View::Zen,
             Action::ToggleDashboard => self.state.view = View::Dashboard,
             Action::ToggleLogView => self.state.view = View::Log,
             Action::ToggleMindmap => self.state.view = View::Mindmap,
             Action::OpenExport => self.state.view = View::Export,
-            Action::Redraw => {}
-            Action::Custom(_) => {}
+            Action::Redraw => {},
+            Action::Custom(_) => {},
         }
     }
 

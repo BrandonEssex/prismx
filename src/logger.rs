@@ -2,8 +2,6 @@
 
 use std::fs::OpenOptions;
 use std::io::Write;
-use std::path::Path;
-
 use crate::util::{ensure_directory_exists, timestamp};
 
 pub fn init_logger(log_dir: &str) -> std::io::Result<()> {

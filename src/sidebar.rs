@@ -11,7 +11,8 @@ pub fn render_sidebar_panel(frame: &mut Frame<'_>, area: Rect, title: &str, cont
         .title(title)
         .borders(Borders::ALL);
 
-    let lines: Vec<Line> = content.iter()
+    let lines: Vec<Line> = content
+        .iter()
         .map(|line| Line::from(Span::raw(*line)))
         .collect();
 
