@@ -6,8 +6,6 @@ use crate::state::{AppState, SidebarView, View};
 use crate::node_tree::NodeTree;
 use ratatui::backend::Backend;
 use ratatui::Terminal;
-use ratatui::Frame;
-use ratatui::layout::Rect;
 use std::io;
 
 use crossterm::event::{self, DisableMouseCapture, EnableMouseCapture, Event as CEvent};
@@ -29,11 +27,6 @@ impl<B: Backend> Screen<B> {
         }
     }
 
-    pub fn draw(&mut self) -> io::Result<()> {
-        self.terminal.draw(|f| draw(f, &self.state, &NodeTree::default()))?;
-        Ok(())
-    }
-
     pub fn draw_with_tree(&mut self, tree: &NodeTree) -> io::Result<()> {
         self.terminal.draw(|f| draw(f, &self.state, tree))?;
         Ok(())
@@ -47,7 +40,7 @@ impl<B: Backend> Screen<B> {
 
     pub fn handle_action(&mut self, action: Action) {
         match action {
-            Action::Quit => {},
+            Action::Quit => {}
             Action::ToggleHelp => {
                 self.state.sidebar = if self.state.sidebar == SidebarView::Help {
                     SidebarView::Hidden
@@ -67,8 +60,8 @@ impl<B: Backend> Screen<B> {
             Action::ToggleLogView => self.state.view = View::Log,
             Action::ToggleMindmap => self.state.view = View::Mindmap,
             Action::OpenExport => self.state.view = View::Export,
-            Action::Redraw => {},
-            Action::Custom(_) => {},
+            Action::Redraw => {}
+            Action::Custom(_) => {}
         }
     }
 

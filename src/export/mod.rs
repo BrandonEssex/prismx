@@ -25,9 +25,5 @@ pub fn write_export_summary<P: AsRef<Path>>(
     writeln!(file, "- Notes: {}", summary.notes)?;
     writeln!(file, "\n## Active View: {:?}", app_state.view)?;
     writeln!(file, "Sidebar: {:?}", app_state.sidebar)?;
-    if let Some(plugin) = &app_state.active_plugin {
-        writeln!(file, "Active Plugin: {}", plugin)?;
-    }
-    writeln!(file, "Focused Node: {:?}", app_state.focused_node)?;
     Ok(())
 }

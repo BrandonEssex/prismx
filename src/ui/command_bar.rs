@@ -15,10 +15,5 @@ pub fn render_command_bar(frame: &mut Frame<'_>, area: Rect, command: &str) {
         .block(block)
         .style(Style::default());
 
-    let layout = Layout::default()
-        .direction(Direction::Vertical)
-        .constraints([Constraint::Length(3)].as_ref())
-        .split(area);
-
-    frame.render_widget(paragraph, layout[0]);
+    frame.render_widget(paragraph, area);
 }

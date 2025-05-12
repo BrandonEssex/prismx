@@ -1,8 +1,8 @@
 // src/plugin_slot.rs
 
 use ratatui::layout::Rect;
-use ratatui::text::{Span, Line};
 use ratatui::widgets::{Block, Borders, Paragraph};
+use ratatui::text::{Line};
 use ratatui::Frame;
 
 pub fn render_plugin_slot(frame: &mut Frame<'_>, area: Rect, plugin_name: &str) {

@@ -31,4 +31,19 @@ impl NodeTree {
             .map(|n| n.children.iter().filter_map(|cid| self.nodes.get(cid)).collect())
             .unwrap_or_default()
     }
+
+    pub fn with_mock_data() -> Self {
+        let mut tree = NodeTree::default();
+        let root = Node {
+            id: Uuid::new_v4(),
+            title: "Root Node".into(),
+            content: "This is a mock root.".into(),
+            parent: None,
+            children: vec![],
+            shard: None,
+            tags: vec![],
+        };
+        tree.add_node(root);
+        tree
+    }
 }

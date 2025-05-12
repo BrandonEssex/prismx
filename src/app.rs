@@ -1,7 +1,6 @@
 // src/app.rs
 
 use crate::screen::Screen;
-use crate::state::AppState;
 use crate::node_tree::NodeTree;
 use crossterm::event::{self, Event as CEvent, KeyCode};
 use ratatui::backend::CrosstermBackend;
@@ -17,9 +16,9 @@ pub fn run() -> io::Result<()> {
     let mut terminal = Terminal::new(backend)?;
 
     let mut screen = Screen::new(terminal);
+    let tree = NodeTree::with_mock_data(); // Ensure visible mindmap nodes
     let mut last_tick = Instant::now();
     let tick_rate = Duration::from_millis(250);
-    let tree = NodeTree::default();
 
     loop {
         screen.draw_with_tree(&tree)?;
