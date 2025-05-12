@@ -4,6 +4,7 @@ use std::fs::File;
 use std::io::{self, Write};
 use std::path::Path;
 
+use crate::export::ExportSummary;
 use crate::state::AppState;
 
 #[derive(Debug)]

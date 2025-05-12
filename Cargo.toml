@@ -1,6 +1,6 @@
 [package]
 name = "prismx"
-version = "2.1.0-beta"
+version = "2.4.0-beta: RefractPack-v1.0.0"
 edition = "2021"
 authors = ["BrandonEssex"]
 description = "Modular, offline-first planning system centered on a dynamic mindmap interface. "
