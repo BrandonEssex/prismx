@@ -1,5 +1,4 @@
-```rust
-// PATCHED: src/ui/draw.rs — Spotlight-style command bar overlay
+// CLEANED: src/ui/draw.rs
 
 use ratatui::layout::{Constraint, Direction, Layout, Rect};
 use crate::state::{AppState, View, SidebarView};
@@ -19,7 +18,7 @@ pub fn draw(frame: &mut ratatui::Frame<'_>, app_state: &AppState, tree: &NodeTre
     let layout = Layout::default()
         .direction(Direction::Vertical)
         .constraints([
-            Constraint::Min(1), // Main content
+            Constraint::Min(1),
             Constraint::Length(1),
         ])
         .split(size);
@@ -41,11 +40,10 @@ pub fn draw(frame: &mut ratatui::Frame<'_>, app_state: &AppState, tree: &NodeTre
         View::Zen => render_zen_mode(frame, chunks[1]),
         View::Log => render_log_viewer(frame, chunks[1]),
         View::Mindmap => render_mindmap(frame, chunks[1], tree),
-        View::Export => render_dashboard_widget(frame, chunks[1]), // placeholder
+        View::Export => render_dashboard_widget(frame, chunks[1]), // Placeholder
     }
 
     if app_state.command_bar_active {
-        // Centered Spotlight-style overlay
         let w = size.width.min(60);
         let x = (size.width.saturating_sub(w)) / 2;
         let y = size.height / 2;
@@ -60,7 +58,6 @@ pub fn draw(frame: &mut ratatui::Frame<'_>, app_state: &AppState, tree: &NodeTre
         render_command_bar(frame, overlay, &app_state.command_buffer);
     }
 
-    // PrismX icon (no border block)
     let icon_area = Rect {
         x: size.width.saturating_sub(10),
         y: 0,
