@@ -54,6 +54,7 @@ impl<B: Backend> Screen<B> {
             Action::EditNode => self.app_state.node_tree.begin_editing_selected(),
             Action::CreateNode => self.app_state.node_tree.create_child_node(),
             Action::DeleteNode => self.app_state.node_tree.delete_selected(),
+            _ => {}
         }
     }
 }
