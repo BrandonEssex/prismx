@@ -1,35 +1,23 @@
-// PATCHED: src/ui/mindmap.rs — fallback node injection for empty trees
+// Author: Brandon Essex
+// Renders mindmap view
 
-use ratatui::layout::Rect;
-use ratatui::widgets::{Block, Borders, Paragraph};
-use ratatui::text::Line;
-use ratatui::Frame;
+use ratatui::{
+    backend::Backend,
+    layout::Rect,
+    widgets::{Block, Borders, Paragraph},
+    Frame,
+};
 
-use crate::node_tree::NodeTree;
+use crate::state::AppState;
 
-pub fn render_mindmap(frame: &mut Frame<'_>, area: Rect, tree: &NodeTree) {
+pub fn render_mindmap<B: Backend>(f: &mut Frame<B>, app: &AppState, area: Rect) {
+    let content = format!("Mindmap Placeholder\nNode Count: {}", app.node_tree.len());
+
     let block = Block::default()
         .title("Mindmap")
         .borders(Borders::ALL);
 
-    let mut lines = Vec::new();
+    let paragraph = Paragraph::new(content).block(block);
 
-    if tree.root_ids.is_empty() {
-        lines.push(Line::from("→ No nodes in tree."));
-        lines.push(Line::from("→ Press Ctrl+N to add a node."));
-    } else {
-        for root_id in &tree.root_ids {
-            if let Some(root) = tree.get_node(root_id) {
-                lines.push(Line::from(format!("• {}", root.title)));
-                for child_id in &root.children {
-                    if let Some(child) = tree.get_node(child_id) {
-                        lines.push(Line::from(format!("  └─ {}", child.title)));
-                    }
-                }
-            }
-        }
-    }
-
-    let paragraph = Paragraph::new(lines).block(block);
-    frame.render_widget(paragraph, area);
+    f.render_widget(paragraph, area);
 }

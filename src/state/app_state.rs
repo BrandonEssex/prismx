@@ -1,56 +1,48 @@
-// PATCHED: src/state/app_state.rs
+// Author: Brandon Essex
+// Core application state for PrismX/GemX
 
-use crate::plugin::registry::PluginRegistry;
-use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
-use uuid::Uuid;
-use std::fmt;
+use crate::state::{SidebarView, View};
+use crate::node_tree::NodeTree;
+use crate::plugin::PluginManager;
 
-#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct AppState {
-    pub view: View,
-    pub sidebar: SidebarView,
-    pub active_plugin: Option<String>,
-    pub plugin_registry: PluginRegistry,
-    pub focused_node: Option<Uuid>,
-    pub metadata: HashMap<String, String>,
-    pub command_buffer: String,
-    pub command_bar_active: bool, // NEW: toggles visibility
+    pub should_quit: bool,
+    pub current_view: View,
+    pub sidebar_view: SidebarView,
+    pub node_tree: NodeTree,
+    pub plugin_manager: PluginManager,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
-pub enum View {
-    Dashboard,
-    Zen,
-    Log,
-    Mindmap,
-    Export,
-}
-
-impl Default for View {
+impl Default for AppState {
     fn default() -> Self {
-        View::Dashboard
+        Self {
+            should_quit: false,
+            current_view: View::Mindmap,
+            sidebar_view: SidebarView::default(),
+            node_tree: NodeTree::default(),
+            plugin_manager: PluginManager::default(),
+        }
     }
 }
 
-impl fmt::Display for View {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{:?}", self)
-    }
-}
+impl AppState {
+    pub fn handle_input_event(&mut self) -> Result<(), std::io::Error> {
+        use crate::input::map_input_to_action;
+        use crate::action::Action;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
-pub enum SidebarView {
-    Hidden,
-    Help,
-    Triage,
-    Scratchpad,
-    Plugins,
-    Config,
-}
+        if let Some(action) = map_input_to_action()? {
+            match action {
+                Action::Quit => self.should_quit = true,
+                Action::ToggleSidebar => self.sidebar_view.toggle(),
+                Action::SwitchView(view) => self.current_view = view,
+                Action::PluginCommand(cmd) => self.plugin_manager.handle_command(cmd),
+                Action::EditNode => self.node_tree.begin_editing_selected(),
+                Action::CreateNode => self.node_tree.create_child_node(),
+                Action::DeleteNode => self.node_tree.delete_selected(),
+                _ => {}
+            }
+        }
 
-impl Default for SidebarView {
-    fn default() -> Self {
-        SidebarView::Hidden
+        Ok(())
     }
 }

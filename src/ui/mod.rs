@@ -1,12 +1,14 @@
-// src/ui/mod.rs
+// Author: Brandon Essex
+// UI module for PrismX / GemX
 
-pub mod dashboard_widgets;
-pub mod draw;
-pub mod help_overlay;
-pub mod log_viewer;
-pub mod plugin_dashboard;
-pub mod sidebar;
-pub mod status_bar;
-pub mod zen_mode;
-pub mod command_bar;
-pub mod mindmap;
+mod draw;
+mod sidebar;
+mod mindmap;
+mod dashboard;
+mod plugin_overlay;
+
+pub use draw::draw;
+pub use sidebar::render_sidebar;
+pub use mindmap::render_mindmap;
+pub use dashboard::render_dashboard;
+pub use plugin_overlay::render_plugin_overlay;

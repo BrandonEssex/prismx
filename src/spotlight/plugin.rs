@@ -1,10 +1,15 @@
-use std::sync::Arc;
+// Author: Brandon Essex
+// Core plugin management system
 
-pub trait Searchable: Send + Sync {
-    fn searchable_text(&self) -> String;
-    fn display_title(&self) -> String;
+#[derive(Default)]
+pub struct PluginManager {
+    pub loaded_plugins: Vec<String>, // For now, store names or IDs
 }
 
-pub trait SearchableSource: Send + Sync {
-    fn collect_items(&self) -> Vec<Arc<dyn Searchable>>;
+impl PluginManager {
+    pub fn handle_command(&mut self, command: String) {
+        // Placeholder logic
+        self.loaded_plugins.push(command);
+        println!("🧩 Plugin command executed: {}", command);
+    }
 }

@@ -1,29 +1,26 @@
-// src/ui/sidebar.rs
+// Author: Brandon Essex
+// Renders the sidebar (left panel)
 
-use ratatui::layout::{Constraint, Direction, Layout, Rect};
-use ratatui::widgets::{Block, Borders, Paragraph};
-use ratatui::text::{Line, Span};
-use ratatui::style::Style;
-use ratatui::Frame;
+use ratatui::{
+    backend::Backend,
+    layout::Rect,
+    style::{Style, Modifier},
+    widgets::{Block, Borders, List, ListItem},
+    Frame,
+};
 
-pub fn render_sidebar_panel(frame: &mut Frame<'_>, area: Rect, title: &str, content: &[&str]) {
-    let block = Block::default()
-        .title(title)
-        .borders(Borders::ALL);
+use crate::state::AppState;
 
-    let lines: Vec<Line> = content
-        .iter()
-        .map(|line| Line::from(Span::raw(*line)))
-        .collect();
+pub fn render_sidebar<B: Backend>(f: &mut Frame<B>, app: &AppState, area: Rect) {
+    let items = vec![
+        ListItem::new("Mindmap"),
+        ListItem::new("Dashboard"),
+        ListItem::new("Plugins"),
+    ];
 
-    let paragraph = Paragraph::new(lines)
-        .block(block)
-        .style(Style::default());
+    let list = List::new(items)
+        .block(Block::default().title("Views").borders(Borders::ALL))
+        .highlight_style(Style::default().add_modifier(Modifier::BOLD));
 
-    let layout = Layout::default()
-        .direction(Direction::Vertical)
-        .constraints([Constraint::Min(1)].as_ref())
-        .split(area);
-
-    frame.render_widget(paragraph, layout[0]);
+    f.render_widget(list, area);
 }

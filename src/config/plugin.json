@@ -1,13 +1,16 @@
 {
-  "enabled": ["glow", "gping", "ripgrep", "grex", "whois"],
-  "disabled": [],
-  "pinned": {
-    "dashboard_tabs": ["glow", "grex"],
-    "node_actions": {
-      "gping": ["host"],
-      "whois": ["domain"],
-      "grex": ["pattern"],
-      "ripgrep": ["text"]
+  "plugins": [
+    {
+      "name": "core.mindmap",
+      "enabled": true
+    },
+    {
+      "name": "core.dashboard",
+      "enabled": true
+    },
+    {
+      "name": "plugin.example",
+      "enabled": false
     }
-  }
+  ]
 }
