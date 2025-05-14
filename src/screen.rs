@@ -1,107 +1,59 @@
-// PATCHED: src/screen.rs — Mindmap toggle confirmed, command bar redraw synced
-
 use crate::action::Action;
 use crate::input::map_input_to_action;
-use crate::state::{AppState, SidebarView, View};
-use crate::node_tree::NodeTree;
+use crate::state::{AppState, View};
+use crate::ui::draw::draw;
+
+use crossterm::event::{self, Event as CEvent, KeyCode};
 use ratatui::backend::Backend;
 use ratatui::Terminal;
 use std::io;
-
-use crossterm::event::{self, DisableMouseCapture, EnableMouseCapture, Event as CEvent};
-use crossterm::execute;
-use crossterm::terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen};
-
-use crate::ui::draw::draw;
+use std::time::{Duration};
 
 pub struct Screen<B: Backend> {
-    terminal: Terminal<B>,
-    pub state: AppState,
+    pub terminal: Terminal<B>,
+    pub app_state: AppState,
 }
 
 impl<B: Backend> Screen<B> {
-    pub fn new(terminal: Terminal<B>) -> Self {
-        Self {
-            terminal,
-            state: AppState::default(),
-        }
+    pub fn new(terminal: Terminal<B>, app_state: AppState) -> Self {
+        Self { terminal, app_state }
     }
 
-    pub fn draw_with_tree(&mut self, tree: &NodeTree) -> io::Result<()> {
-        self.terminal.draw(|f| draw(f, &self.state, tree))?;
+    pub fn run(&mut self) -> io::Result<()> {
+        loop {
+            self.terminal.draw(|f| draw(f, &self.app_state))?;
+
+            if event::poll(Duration::from_millis(250))? {
+                if let CEvent::Key(key) = event::read()? {
+                    match key.code {
+                        KeyCode::Char('q') => {
+                            self.app_state.should_quit = true;
+                        }
+                        _ => {
+                            if let Some(action) = map_input_to_action()? {
+                                self.handle_action(action);
+                            }
+                        }
+                    }
+                }
+            }
+
+            if self.app_state.should_quit {
+                break;
+            }
+        }
         Ok(())
     }
 
-    pub fn handle_event(&mut self, event: CEvent) {
-        if let Some(action) = map_input_to_action(event) {
-            self.handle_action(action);
-        }
-    }
-
-    pub fn handle_action(&mut self, action: Action) {
+    fn handle_action(&mut self, action: Action) {
         match action {
-            Action::Quit => {}
-            Action::ToggleHelp => {
-                self.state.sidebar = if self.state.sidebar == SidebarView::Help {
-                    SidebarView::Hidden
-                } else {
-                    SidebarView::Help
-                };
-            }
-            Action::ToggleSidebar => {
-                self.state.sidebar = if self.state.sidebar == SidebarView::Hidden {
-                    SidebarView::Help
-                } else {
-                    SidebarView::Hidden
-                };
-            }
-            Action::ToggleZenMode => self.state.view = View::Zen,
-            Action::ToggleDashboard => self.state.view = View::Dashboard,
-            Action::ToggleLogView => self.state.view = View::Log,
-            Action::ToggleMindmap => self.state.view = View::Mindmap,
-            Action::OpenExport => self.state.view = View::Export,
-            Action::Escape => {
-                if self.state.command_bar_active {
-                    self.state.command_bar_active = false;
-                } else if self.state.view == View::Zen {
-                    self.state.view = View::Dashboard;
-                } else {
-                    self.state.sidebar = SidebarView::Hidden;
-                }
-            }
-            Action::ToggleCommandBar => {
-                self.state.command_bar_active = !self.state.command_bar_active;
-            }
-            Action::InputChar(c) => {
-                if self.state.command_bar_active {
-                    self.state.command_buffer.push(c);
-                }
-            }
-            Action::InputBackspace => {
-                if self.state.command_bar_active {
-                    self.state.command_buffer.pop();
-                }
-            }
-            Action::Redraw => {}
-            Action::Custom(_) => {}
+            Action::Quit => self.app_state.should_quit = true,
+            Action::ToggleSidebar => self.app_state.sidebar_view.toggle(),
+            Action::SwitchView(view) => self.app_state.current_view = view,
+            Action::PluginCommand(cmd) => self.app_state.plugin_manager.handle_command(cmd),
+            Action::EditNode => self.app_state.node_tree.begin_editing_selected(),
+            Action::CreateNode => self.app_state.node_tree.create_child_node(),
+            Action::DeleteNode => self.app_state.node_tree.delete_selected(),
         }
-    }
-
-    pub fn enter_alt_screen() -> io::Result<()> {
-        enable_raw_mode()?;
-        let mut stdout = io::stdout();
-        execute!(stdout, EnterAlternateScreen, EnableMouseCapture)?;
-        Ok(())
-    }
-
-    pub fn exit_alt_screen() -> io::Result<()> {
-        disable_raw_mode()?;
-        let mut stdout = io::stdout();
-        execute!(stdout, LeaveAlternateScreen, DisableMouseCapture)?;
-        Ok(())
-    }
-
-    pub fn clear_screen(&mut self) -> io::Result<()> {
-        self.terminal.clear()
     }
 }

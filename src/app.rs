@@ -1,46 +1,25 @@
-// src/app.rs
-
+// src/app.rs (clean launcher wrapper)
 use crate::screen::Screen;
-use crate::node_tree::NodeTree;
-use crossterm::event::{self, Event as CEvent, KeyCode};
-use ratatui::backend::CrosstermBackend;
+use crate::state::AppState;
+
+use crossterm::terminal::{enable_raw_mode, disable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen};
+use crossterm::execute;
 use ratatui::Terminal;
-use std::io::{self, stdout};
-use std::time::{Duration, Instant};
+use ratatui::backend::CrosstermBackend;
+use std::io;
 
-pub fn run() -> io::Result<()> {
-    Screen::<CrosstermBackend<std::io::Stdout>>::enter_alt_screen()?;
-
-    let stdout = stdout();
+pub fn launch() -> io::Result<()> {
+    enable_raw_mode()?;
+    let mut stdout = io::stdout();
+    execute!(stdout, EnterAlternateScreen)?;
     let backend = CrosstermBackend::new(stdout);
-    let mut terminal = Terminal::new(backend)?;
+    let terminal = Terminal::new(backend)?;
+    let app_state = AppState::default();
 
-    let mut screen = Screen::new(terminal);
-    let tree = NodeTree::with_mock_data(); // Ensure visible mindmap nodes
-    let mut last_tick = Instant::now();
-    let tick_rate = Duration::from_millis(250);
+    let mut screen = Screen::new(terminal, app_state);
+    let result = screen.run();
 
-    loop {
-        screen.draw_with_tree(&tree)?;
-
-        let timeout = tick_rate
-            .checked_sub(last_tick.elapsed())
-            .unwrap_or_else(|| Duration::from_secs(0));
-
-        if event::poll(timeout)? {
-            if let CEvent::Key(key) = event::read()? {
-                if key.code == KeyCode::Char('q') {
-                    break;
-                }
-                screen.handle_event(CEvent::Key(key));
-            }
-        }
-
-        if last_tick.elapsed() >= tick_rate {
-            last_tick = Instant::now();
-        }
-    }
-
-    Screen::<CrosstermBackend<std::io::Stdout>>::exit_alt_screen()?;
-    Ok(())
+    disable_raw_mode()?;
+    execute!(io::stdout(), LeaveAlternateScreen)?;
+    result
 }

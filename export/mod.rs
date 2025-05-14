@@ -1,30 +1,24 @@
-// src/export/mod.rs
-
+use crate::state::{AppState, View};
 use std::fs::File;
 use std::io::{self, Write};
-use std::path::Path;
 
-use crate::export::ExportSummary;
-use crate::state::AppState;
+pub fn export_state(app_state: &AppState) -> io::Result<()> {
+    let mut file = File::create("export_state.txt")?;
 
-#[derive(Debug)]
-pub struct ExportSummary {
-    pub total_nodes: usize,
-    pub total_plugins: usize,
-    pub notes: String,
-}
+    writeln!(file, "# PrismX Export")?;
+    writeln!(file, "\n## Current View: {:?}", app_state.current_view)?;
+    writeln!(file, "Sidebar Visible: {}", app_state.sidebar_view.visible)?;
+    writeln!(file, "Node Count: {}\n", app_state.node_tree.len())?;
 
-pub fn write_export_summary<P: AsRef<Path>>(
-    path: P,
-    summary: &ExportSummary,
-    app_state: &AppState,
-) -> io::Result<()> {
-    let mut file = File::create(path)?;
-    writeln!(file, "# Export Summary")?;
-    writeln!(file, "- Total Nodes: {}", summary.total_nodes)?;
-    writeln!(file, "- Total Plugins: {}", summary.total_plugins)?;
-    writeln!(file, "- Notes: {}", summary.notes)?;
-    writeln!(file, "\n## Active View: {:?}", app_state.view)?;
-    writeln!(file, "Sidebar: {:?}", app_state.sidebar)?;
+    for node in &app_state.node_tree.nodes {
+        writeln!(
+            file,
+            "- [{}] {}{}",
+            node.id,
+            node.label,
+            if node.editing { " (editing)" } else { "" }
+        )?;
+    }
+
     Ok(())
 }
