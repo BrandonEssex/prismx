@@ -1,8 +1,4 @@
-// Author: Brandon Essex
-// Renders the sidebar (left panel)
-
 use ratatui::{
-    backend::Backend,
     layout::Rect,
     style::{Style, Modifier},
     widgets::{Block, Borders, List, ListItem},
@@ -11,7 +7,7 @@ use ratatui::{
 
 use crate::state::AppState;
 
-pub fn render_sidebar<B: Backend>(f: &mut Frame<B>, app: &AppState, area: Rect) {
+pub fn render_sidebar(f: &mut Frame, _app: &AppState, area: Rect) {
     let items = vec![
         ListItem::new("Mindmap"),
         ListItem::new("Dashboard"),

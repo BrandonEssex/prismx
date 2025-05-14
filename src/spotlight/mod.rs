@@ -1,6 +1,6 @@
-// Author: Brandon Essex
-// Plugin module root
+// // Author: Brandon Essex
+// // Plugin module root
 
-mod plugin;
+// mod plugin;
 
-pub use plugin::PluginManager;
+// pub use plugin::PluginManager;
