@@ -1,3 +1,4 @@
+// Root: src/main.rs
 mod action;
 mod input;
 mod node_tree;

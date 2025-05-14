@@ -1,8 +1,4 @@
-// Author: Brandon Essex
-// Renders dashboard view
-
 use ratatui::{
-    backend::Backend,
     layout::Rect,
     widgets::{Block, Borders, Paragraph},
     Frame,
@@ -10,7 +6,7 @@ use ratatui::{
 
 use crate::state::AppState;
 
-pub fn render_dashboard<B: Backend>(f: &mut Frame<B>, _app: &AppState, area: Rect) {
+pub fn render_dashboard(f: &mut Frame, _app: &AppState, area: Rect) {
     let block = Block::default()
         .title("Dashboard")
         .borders(Borders::ALL);

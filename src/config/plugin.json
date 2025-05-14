@@ -1,16 +1,7 @@
 {
   "plugins": [
-    {
-      "name": "core.mindmap",
-      "enabled": true
-    },
-    {
-      "name": "core.dashboard",
-      "enabled": true
-    },
-    {
-      "name": "plugin.example",
-      "enabled": false
-    }
+    { "name": "core.mindmap", "enabled": true },
+    { "name": "core.dashboard", "enabled": true },
+    { "name": "plugin.example", "enabled": false }
   ]
 }

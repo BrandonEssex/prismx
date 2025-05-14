@@ -1,6 +1,3 @@
-// Author: Brandon Essex
-// Sidebar state and toggling logic
-
 #[derive(Debug, Default)]
 pub struct SidebarView {
     pub visible: bool,

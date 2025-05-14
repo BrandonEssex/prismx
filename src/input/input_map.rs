@@ -1,6 +1,3 @@
-// Author: Brandon Essex
-// Maps raw input events to internal actions
-
 use crossterm::event::{self, Event as CEvent, KeyCode, KeyEventKind};
 use crate::action::Action;
 use std::time::Duration;

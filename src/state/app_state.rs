@@ -36,10 +36,8 @@ impl AppState {
                 Action::EditNode => self.node_tree.begin_editing_selected(),
                 Action::CreateNode => self.node_tree.create_child_node(),
                 Action::DeleteNode => self.node_tree.delete_selected(),
-                _ => {}
             }
         }
-
         Ok(())
     }
 }

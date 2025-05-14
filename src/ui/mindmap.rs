@@ -1,8 +1,4 @@
-// Author: Brandon Essex
-// Renders mindmap view
-
 use ratatui::{
-    backend::Backend,
     layout::Rect,
     widgets::{Block, Borders, Paragraph},
     Frame,
@@ -10,7 +6,7 @@ use ratatui::{
 
 use crate::state::AppState;
 
-pub fn render_mindmap<B: Backend>(f: &mut Frame<B>, app: &AppState, area: Rect) {
+pub fn render_mindmap(f: &mut Frame, app: &AppState, area: Rect) {
     let content = format!("Mindmap Placeholder\nNode Count: {}", app.node_tree.len());
 
     let block = Block::default()

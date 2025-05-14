@@ -1,6 +1,3 @@
-// Author: Brandon Essex
-// Action definitions and commands
-
 #[derive(Debug)]
 pub enum Action {
     Quit,
@@ -10,5 +7,4 @@ pub enum Action {
     EditNode,
     CreateNode,
     DeleteNode,
-    // Extend with custom user-defined actions as needed
 }

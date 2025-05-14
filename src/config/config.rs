@@ -1,6 +1,3 @@
-// Author: Brandon Essex
-// Placeholder for PrismX config system
-
 use std::fs;
 
 pub fn load_config() -> Result<String, std::io::Error> {
