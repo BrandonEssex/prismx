@@ -36,4 +36,27 @@ impl AppState {
                 Action::EditNode => self.node_tree.begin_editing_selected(),
                 Action::CreateNode => self.node_tree.create_child_node(),
                 Action::DeleteNode => self.node_tree.delete_selected(),
-                Action::MoveUp =>
+                Action::MoveUp => self.move_selection(false),
+                Action::MoveDown => self.move_selection(true),
+                Action::InputChar(c) => self.node_tree.insert_char(c),
+                Action::InputBackspace => self.node_tree.backspace_char(),
+                Action::StopEditing => self.node_tree.stop_editing(),
+            }
+        }
+
+        Ok(())
+    }
+
+    pub fn move_selection(&mut self, down: bool) {
+        let len = self.node_tree.len();
+        if len == 0 {
+            return;
+        }
+
+        if down {
+            self.node_tree.selected_index = (self.node_tree.selected_index + 1).min(len - 1);
+        } else {
+            self.node_tree.selected_index = self.node_tree.selected_index.saturating_sub(1);
+        }
+    }
+}
