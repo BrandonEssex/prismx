@@ -1,7 +1,6 @@
 use ratatui::{
     layout::Rect,
     style::{Color, Modifier, Style},
-    text::{Span, Spans},
     widgets::{Block, Borders, List, ListItem, ListState},
     Frame,
 };
@@ -12,7 +11,7 @@ pub fn render_mindmap(f: &mut Frame, app: &AppState, area: Rect) {
     let items: Vec<ListItem> = app.node_tree.nodes.iter().map(|node| {
         let prefix = if node.editing { "[editing] " } else { "" };
         let line = format!("{}{}", prefix, node.label);
-        ListItem::new(Spans::from(Span::raw(line)))
+        ListItem::new(line)
     }).collect();
 
     let mut state = ListState::default();

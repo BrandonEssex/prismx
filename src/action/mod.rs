@@ -7,4 +7,9 @@ pub enum Action {
     EditNode,
     CreateNode,
     DeleteNode,
+    MoveUp,
+    MoveDown,
+    InputChar(char),
+    InputBackspace,
+    StopEditing,
 }

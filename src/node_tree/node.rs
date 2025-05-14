@@ -49,10 +49,33 @@ impl NodeTree {
         }
     }
 
+    pub fn stop_editing(&mut self) {
+        if let Some(node) = self.nodes.get_mut(self.selected_index) {
+            node.editing = false;
+        }
+    }
+
+    pub fn insert_char(&mut self, c: char) {
+        if let Some(node) = self.nodes.get_mut(self.selected_index) {
+            if node.editing {
+                node.label.push(c);
+            }
+        }
+    }
+
+    pub fn backspace_char(&mut self) {
+        if let Some(node) = self.nodes.get_mut(self.selected_index) {
+            if node.editing {
+                node.label.pop();
+            }
+        }
+    }
+
     pub fn create_child_node(&mut self) {
         let new_node = Node::new(self.next_id, "New Node");
         self.next_id += 1;
         self.nodes.push(new_node);
+        self.selected_index = self.nodes.len() - 1;
     }
 
     pub fn delete_selected(&mut self) {
