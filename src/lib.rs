@@ -29,3 +29,4 @@ pub mod theme;
 pub mod ui;
 pub mod undo_redo;
 pub mod util;
+pub mod storage;
