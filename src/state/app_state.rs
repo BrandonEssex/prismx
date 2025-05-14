@@ -1,6 +1,3 @@
-// Author: Brandon Essex
-// Core application state for PrismX/GemX
-
 use crate::state::{SidebarView, View};
 use crate::node_tree::NodeTree;
 use crate::plugin::PluginManager;
@@ -19,7 +16,7 @@ impl Default for AppState {
             should_quit: false,
             current_view: View::Mindmap,
             sidebar_view: SidebarView::default(),
-            node_tree: NodeTree::default(),
+            node_tree: NodeTree::with_mock_data(),
             plugin_manager: PluginManager::default(),
         }
     }

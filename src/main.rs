@@ -1,6 +1,3 @@
-// Author: Brandon Essex
-// Entry point for PrismX / GemX
-
 mod action;
 mod input;
 mod node_tree;
@@ -41,10 +38,7 @@ fn main() -> Result<(), io::Error> {
     Ok(())
 }
 
-fn run_app<B: ratatui::backend::Backend>(
-    terminal: &mut Terminal<B>,
-    app_state: &mut AppState,
-) -> io::Result<()> {
+fn run_app(terminal: &mut Terminal<impl ratatui::backend::Backend>, app_state: &mut AppState) -> io::Result<()> {
     loop {
         terminal.draw(|f| draw(f, app_state))?;
         if app_state.should_quit {

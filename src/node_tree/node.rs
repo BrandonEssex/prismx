@@ -1,6 +1,3 @@
-// Author: Brandon Essex
-// Mindmap node and tree structure
-
 #[derive(Clone)]
 pub struct Node {
     pub id: usize,
@@ -38,6 +35,10 @@ impl Default for NodeTree {
 }
 
 impl NodeTree {
+    pub fn with_mock_data() -> Self {
+        Self::default()
+    }
+
     pub fn len(&self) -> usize {
         self.nodes.len()
     }

@@ -1,153 +1,165 @@
 # PrismX: Modular Offline Planning System
+![version](https://img.shields.io/badge/version-v2.6.0--QA--final-blue)
 
-![version](https://img.shields.io/badge/version-v1.0.0--rc--final-blue)
+Version: v2.6.0-beta1-QA
+Branch: QA
+Author: Brandon Essex
+License: MIT
+Status: Quality Assurance – Integration Pending
 
-PrismX is a high-performance, modular, offline-first planning environment built around an intelligent mindmap interface. Designed for engineers, creators, and focused teams, it merges structured planning, dynamic tagging, plugin extensibility, and real-time visual state feedback.
+⚡ Overview
 
----
+PrismX is a modular, offline-first, keyboard-centric productivity OS built for developers, system operators, and technical thinkers. It fuses a dynamic mindmap interface, programmable plugin runtime, and a highly-configurable terminal UI into one fast, extensible workspace.
 
-## Features
+PrismX is not a note-taker. It’s a command center for structured thought.
+🚀 Key Features
 
-### Core Modules
+🧠 1. Mindmap Core (GemX Engine)
+Tree-based node editing, rendered live in the terminal
+Inline editing with instant keyboard commands
+Hierarchical node structures: Tasks, notes, bookmarks, plans
+Node typing: #task, #idea, #ref, etc.
+Instant node creation via:
+Enter → Create sibling
+Tab → Create child
+Ctrl+N → Create free-floating node
+Upcoming:
+Drag-and-drop via keyboard or mouse
+MindTrace Zettelkasten plugin (smart backlinks)
+🧭 2. Shard System
+Lightweight project containers
+Each shard has isolated state, layout, plugin context
+Switchable via hotkeys or CLI command (planned)
+Shard export/import (WIP)
+🧰 3. Plugin System
+Runtime plugin loader with manifest declarations
+Sandboxed permission model
+Plugin hooks include:
+UI slots
+Keybindings
+Metadata overlays
+State access
+Example plugin: focus-beacon, node-stats, logtail
+💎 4. RefractPack v1.2.0
+A default plugin suite included with PrismX:
 
-* **Mindmap-Centric Planning**: Everything is a node. Projects, tasks, ideas, todos.
-* **Inbox/Triage View**: Rapid-capture task dumping, with review workflow.
-* **Scratchpad / Zen Mode**: Clean interface for writing, outlining, or decompressing.
-* **Shortcut-Driven Navigation**: All features controllable via keyboard.
+Plugin  Description
+Clock Realtime terminal clock widget
+Shortcut Map  Displays all active hotkeys (? to open)
+Log Viewer  Tail system logs in-app
+Plugin Dash View and manage installed plugins
+Focus Beacon  Dynamic Prism-X symbol with context glow
+Tag Glossary  Shows tag cloud and tag-based jump targets
+Debug Overlay WIP - System performance & state info
+🛠 5. Command Bar & CLI System
+: prefixed command input
+Upcoming:
+Plugin-registered commands
+Autocomplete
+Context-aware macros
+🎯 6. Zen Mode
+Fullscreen minimalist view of current node or branch
+Ideal for writing, reading, or planning
+Escape to return
+Green border for focus confirmation (QA Patch Fixed)
+🧩 7. Tag & Node Typing Engine
+Attach #tags to any node
+Node Types planned for task, note, comment, reference
+Glossary Plugin: Displays tag usage, frequency, links
+Upcoming: Smart Auto-Tagging via Node AI Hooks
+🧱 8. Layout + UI Slots
+Configurable dashboard layout system
+Slot-based plugin areas:
+Sidebar
+Footer
+Zen Panel
+Command Bar
+Theme-aware coloring and borders
+Upcoming: Grid snapping + widget resizing
+🧾 9. Storage & Export System
+JSON-backed database (human-readable)
+Auto-backup to /data/backup
+Export options:
+JSON full shard
+Markdown node tree
+Tag Index (Glossary)
+Planned:
+PDF, HTML, and CSV export plugins
+⌨️ 10. Keymap System
+Customizable and declarative via config/keymap.json:
 
-### Intelligent Icon System
+Action  Default Key
+New Node  Ctrl+N
+Sibling Node  Enter
+Child Node  Tab
+Move Focus  Ctrl+H/J/K/L
+Edit Node Ctrl+E
+Zen Mode  : then zen
+Shortcuts ?
+Upcoming: Vim/Emacs layers, Mouse Mode, Gamepad input (experimental)
 
-* Prism-based icon rendered in TUI corner
-* Beam directions reflect subsystem state:
+🧪 QA Status (v2.6.0-beta1)
 
-  * Green = Zen Mode
-  * Blue = Work Context
-  * Red = Urgent Tasks
-  * Lavender = Notes
-* Animated pulse, sweep, flash based on priority or plugin signals
-* Hover and click feedback (if supported by terminal)
+Component Status  Notes
+Mindmap Display ✅ Stable  Default layout rendering patched
+Zen Mode  ✅ Fixed Border rendering and green state restored
+Plugin Loader ✅ Stable  New plugins registered via manifest
+Prism Icon System ⚠️ Partial  Color change triggers only in some views
+Command Bar ⚠️ Pending  Still hidden by default on toggle
+Layout Sync ✅ Stable  No visual shifts on dashboard refresh
+Shortcut Overlay  ✅ Stable  Fully working with ? hotkey
+📁 Project Structure
 
-### Drop Intelligence
+/src
+ ├─ main.rs              # App entry point
+ ├─ state/               # App state, UI state, node state
+ ├─ node_tree/           # Mindmap structure + traversal
+ ├─ plugin/              # Plugin registry, sandbox, manifest
+ ├─ config/              # Themes, keymaps, runtime flags
+ ├─ export/              # Export formats (md, json, etc)
+ ├─ triage/              # Inbox scratchpad + capture logic
+ ├─ dashboard_widgets.rs # RefractPack components
+📌 Roadmap (Confirmed Milestones)
 
-* Drag-and-drop file/URL capture
-* Contextual tag + subsystem routing
-* Beam reactions on drop
-* Plugin intercept hooks (`MindTrace`, `Inbox`, `Vault`, etc.)
+Version Highlights
+v2.6.0  Plugin Store (manifest validator, local registry)
+v2.7.0  Export API (PDF/HTML/CSV), Node Intelligence Layer (MindTrace)
+v2.8.0  Multi-user collaboration (shared shards), User presence overlay
+v2.9.0  Embedded scripting (Rhai), Custom node actions, AI inspector hooks
+v3.0.0  PrismX OS Mode – task scripting DSL, system-wide command bus
+🧠 Power User Notes
 
-### Plugin System
+Every node = a thought, task, tag, or plan
+Tag combinations define contexts and filters
+Shards are like isolated universes – you can import/export them
+Plugins define behavior: want task automation? Build a plugin.
+All state is transparent, versioned, and portable
+“Minimal by default, extensible when needed” is the design mantra
+🔧 Example Plugin Manifest
 
-* WASM runtime with sandboxed plugin execution
-* Live plugin beam hooks
-* Plugin dashboard panel
-* Drop schema declaration (accepted MIME, priority)
+{
+  "id": "focus-beacon",
+  "name": "Dynamic Prism Icon",
+  "entry": "focus_beacon.rs",
+  "permissions": [
+    "state.read",
+    "ui.render.status_bar",
+    "event.listen"
+  ]
+}
+🤝 Contributing
 
----
+Fork → PR → QA Test
+Use cargo fmt, cargo clippy, and descriptive commits
+QA patches must pass startup.sh + plugin validation
+👤 Author & Aesthetic
 
-## Installation
+Brandon Essex
+Offline-first. Modular. Beautiful by accident, fast by design.
 
-### Dependencies
+📦 Coming Soon
 
-* Rust (>= 1.70.0)
-* Unix-like environment (Linux, macOS, WSL)
-* Terminal with mouse + color support (Kitty recommended)
-
-### Build
-
-```bash
-git clone https://github.com/BrandonEssex/prismx
-cd prismx.core
-cargo build --release
-./target/release/prismx
-```
-
-### Optional
-
-```bash
-./startup.sh  # cleans, builds, launches with log
-```
-
----
-
-## Usage
-
-### Keyboard Shortcuts
-
-| Key            | Action                  |
-| -------------- | ----------------------- |
-| `Ctrl+N`       | New node (root/sibling) |
-| `Enter`        | New child node          |
-| `Tab`          | Enter editing mode      |
-| `Ctrl+Q`       | Quit                    |
-| `Ctrl+I`       | Toggle PrismX Panel     |
-| `Ctrl+Shift+X` | Snapshot icon profile   |
-| `Ctrl+Shift+S` | Toggle stealth mode     |
-
-### CmdPalette (`:` prefix)
-
-* `>toggle zen`
-* `>bind beam top_left to calendar`
-* `>edit prismx icon`
-* `>start icon carousel`
-* `>rollback icon profile`
-
----
-
-## Configuration
-
-### `settings.toml` Example:
-
-```toml
-[prismx_icon]
-enabled = true
-position = "top_right"
-default_mode_color = "blue"
-show_expand_panel = true
-
-[prismx_icon.color_modes]
-zen = "green"
-work = "blue"
-personal = "lavender"
-urgent = "red"
-
-[prismx_icon.animation]
-pomodoro_active = "pulse:green"
-task_due = "flash:orange"
-
-[[prismx_icon.shard_array]]
-plugin = "pomodoro"
-color = "green"
-position = "right"
-
-[[prismx_icon.shard_array]]
-plugin = "notes"
-color = "lavender"
-position = "top"
-```
-
----
-
-## Roadmap (v2.x)
-
-* [x] Icon system w/ animation + hooks
-* [x] Plugin visual routing
-* [x] Drop intelligence
-* [x] Live profile editing & replay
-* [ ] TUI beam inspector UI
-* [ ] Icon state replay archive + telemetry
-* [ ] Remote plugin extension interface
-
----
-
-## License
-
-MIT License
-
----
-
-## Maintainer
-
-**Brandon Essex** — [github.com/BrandonEssex](https://github.com/BrandonEssex)
-
----
-
-*PrismX is designed for terminal power-users. It is fast, keyboard-first, configurable, and offline by default.*
+Plugin Storefront (plugin.store/)
+AI CLI Assistant (pxa)
+PrismX Community Presets (themes/, layouts/, nodesets/)
+Zettelkasten MindTrace Engine
