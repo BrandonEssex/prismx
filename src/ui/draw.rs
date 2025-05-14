@@ -13,7 +13,7 @@ use crate::ui::{
 
 pub fn draw(f: &mut Frame, app: &AppState) {
     let chunks = Layout::default()
-        .direction(Direction::Horizontal)
+        .direction(ratatui::layout::Direction::Horizontal)
         .constraints([Constraint::Length(30), Constraint::Min(1)].as_ref())
         .split(f.size());
 
@@ -24,28 +24,4 @@ pub fn draw(f: &mut Frame, app: &AppState) {
         View::Dashboard => render_dashboard(f, app, chunks[1]),
         View::Plugin => render_plugin_overlay(f, app, chunks[1]),
     }
-}
-
-// src/ui/sidebar.rs
-use ratatui::{
-    layout::Rect,
-    style::{Style, Modifier},
-    widgets::{Block, Borders, List, ListItem},
-    Frame,
-};
-
-use crate::state::AppState;
-
-pub fn render_sidebar(f: &mut Frame, _app: &AppState, area: Rect) {
-    let items = vec![
-        ListItem::new("Mindmap"),
-        ListItem::new("Dashboard"),
-        ListItem::new("Plugins"),
-    ];
-
-    let list = List::new(items)
-        .block(Block::default().title("Views").borders(Borders::ALL))
-        .highlight_style(Style::default().add_modifier(Modifier::BOLD));
-
-    f.render_widget(list, area);
 }
