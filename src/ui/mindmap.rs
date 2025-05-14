@@ -1,19 +1,31 @@
 use ratatui::{
     layout::Rect,
-    widgets::{Block, Borders, Paragraph},
+    style::{Color, Modifier, Style},
+    text::{Span, Spans},
+    widgets::{Block, Borders, List, ListItem, ListState},
     Frame,
 };
 
 use crate::state::AppState;
 
 pub fn render_mindmap(f: &mut Frame, app: &AppState, area: Rect) {
-    let content = format!("Mindmap Placeholder\nNode Count: {}", app.node_tree.len());
+    let items: Vec<ListItem> = app.node_tree.nodes.iter().map(|node| {
+        let prefix = if node.editing { "[editing] " } else { "" };
+        let line = format!("{}{}", prefix, node.label);
+        ListItem::new(Spans::from(Span::raw(line)))
+    }).collect();
 
-    let block = Block::default()
-        .title("Mindmap")
-        .borders(Borders::ALL);
+    let mut state = ListState::default();
+    state.select(Some(app.node_tree.selected_index));
 
-    let paragraph = Paragraph::new(content).block(block);
+    let list = List::new(items)
+        .block(Block::default().title("Mindmap").borders(Borders::ALL))
+        .highlight_style(
+            Style::default()
+                .fg(Color::Yellow)
+                .bg(Color::Blue)
+                .add_modifier(Modifier::BOLD),
+        );
 
-    f.render_widget(paragraph, area);
+    f.render_stateful_widget(list, area, &mut state);
 }
