@@ -1,9 +1,8 @@
 use crate::dashboard_widgets::{render_clock_widget, render_shortcuts};
-use ratatui::backend::Backend;
 use ratatui::layout::{Layout, Constraint, Direction};
 use ratatui::Frame;
 
-pub fn render_dashboard<B: Backend>(f: &mut Frame<B>) {
+pub fn render_dashboard(f: &mut Frame) {
     let layout = Layout::default()
         .direction(Direction::Vertical)
         .margin(1)

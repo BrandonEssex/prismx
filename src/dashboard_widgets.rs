@@ -1,5 +1,4 @@
 use ratatui::{
-    backend::Backend,
     layout::Rect,
     style::{Style, Color},
     text::{Line, Span},
@@ -8,7 +7,7 @@ use ratatui::{
 };
 use chrono::Local;
 
-pub fn render_clock_widget<B: Backend>(f: &mut Frame<B>, area: Rect) {
+pub fn render_clock_widget(f: &mut Frame, area: Rect) {
     let now = Local::now().format("%H:%M:%S").to_string();
     let text = Paragraph::new(Line::from(vec![
         Span::styled("Time: ", Style::default().fg(Color::Gray)),
@@ -19,7 +18,7 @@ pub fn render_clock_widget<B: Backend>(f: &mut Frame<B>, area: Rect) {
     f.render_widget(text, area);
 }
 
-pub fn render_shortcuts<B: Backend>(f: &mut Frame<B>, area: Rect) {
+pub fn render_shortcuts(f: &mut Frame, area: Rect) {
     let shortcuts = Paragraph::new(Line::from(vec![
         Span::styled("Ctrl+N", Style::default().fg(Color::Green)),
         Span::raw(" - New Node  "),

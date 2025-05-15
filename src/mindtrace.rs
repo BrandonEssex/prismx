@@ -1,6 +1,7 @@
 use std::collections::HashMap;
+use serde::Serialize;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize)]
 pub struct TraceNode {
     pub id: String,
     pub content: String,
