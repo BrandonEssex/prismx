@@ -1,35 +1,35 @@
-use std::collections::HashMap;
-use serde::Serialize;
+use ratatui::{
+    layout::{Rect, Layout, Constraint, Direction},
+    style::{Color, Style},
+    text::{Line, Span},
+    widgets::{Block, Borders, Paragraph},
+    Frame,
+};
 
-#[derive(Debug, Clone, Serialize)]
-pub struct TraceNode {
-    pub id: String,
-    pub content: String,
-    pub children: Vec<String>,
+pub struct MindmapState {
+    pub current_input: String,
+    pub cursor_visible: bool,
 }
 
-#[derive(Default)]
-pub struct MindTrace {
-    pub nodes: HashMap<String, TraceNode>,
-}
-
-impl MindTrace {
+impl MindmapState {
     pub fn new() -> Self {
-        Self { nodes: HashMap::new() }
-    }
-
-    pub fn add_node(&mut self, id: &str, content: &str) {
-        let node = TraceNode {
-            id: id.to_string(),
-            content: content.to_string(),
-            children: Vec::new(),
-        };
-        self.nodes.insert(id.to_string(), node);
-    }
-
-    pub fn link_nodes(&mut self, parent_id: &str, child_id: &str) {
-        if let Some(parent) = self.nodes.get_mut(parent_id) {
-            parent.children.push(child_id.to_string());
+        Self {
+            current_input: String::new(),
+            cursor_visible: true,
         }
     }
+}
+
+pub fn render_mindmap(f: &mut Frame, area: Rect, state: &MindmapState) {
+    let layout = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints([Constraint::Min(3)])
+        .split(area);
+
+    let content = format!("> {}", state.current_input);
+    let paragraph = Paragraph::new(Line::from(content))
+        .style(Style::default().fg(Color::White))
+        .block(Block::default().title("Mindmap").borders(Borders::ALL));
+
+    f.render_widget(paragraph, layout[0]);
 }

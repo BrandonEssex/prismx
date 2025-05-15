@@ -8,12 +8,9 @@ pub enum Command {
     OpenSettings,
     OpenSpotlight,
     OpenDashboard,
-    // CopyNode,         // ⏳ Planned
-    // PasteNode,        // ⏳ Planned
-    // BookmarkNode,     // ⏳ Planned
-    // ToggleZenMode,    // ⏳ Planned
-    // ToggleShortcuts,  // ⏳ Planned
-    // ToggleOutline,    // ⏳ Planned
+    OpenMindmap,
+    OpenZenMode,
+    // CopyNode, PasteNode, BookmarkNode, etc. ⏳
 }
 
 pub fn get_command(event: KeyEvent) -> Option<Command> {
@@ -24,11 +21,8 @@ pub fn get_command(event: KeyEvent) -> Option<Command> {
         (KeyCode::Char('.'), KeyModifiers::CONTROL) => Some(Command::OpenSettings),
         (KeyCode::Char(' '), KeyModifiers::ALT) => Some(Command::OpenSpotlight),
         (KeyCode::Char('d'), KeyModifiers::CONTROL) => Some(Command::OpenDashboard),
-        // (KeyCode::Char('c'), KeyModifiers::CONTROL) => Some(Command::CopyNode),         // ⏳
-        // (KeyCode::Char('v'), KeyModifiers::CONTROL) => Some(Command::PasteNode),        // ⏳
-        // (KeyCode::Char('b'), KeyModifiers::CONTROL) => Some(Command::BookmarkNode),     // ⏳
-        // (KeyCode::Char('z'), KeyModifiers::CONTROL) => Some(Command::ToggleZenMode),    // ⏳
-        // (KeyCode::Char('s'), KeyModifiers::CONTROL) => Some(Command::ToggleShortcuts),  // ⏳
+        (KeyCode::Char('m'), KeyModifiers::CONTROL) => Some(Command::OpenMindmap),
+        (KeyCode::Char('z'), KeyModifiers::CONTROL) => Some(Command::OpenZenMode),
         _ => None,
     }
 }

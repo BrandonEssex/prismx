@@ -8,6 +8,7 @@ pub mod export_engine;
 pub mod ui;
 pub mod keymap;
 pub mod dashboard_toggle;
+pub mod icon;
 
 use ui::run_ui;
 
