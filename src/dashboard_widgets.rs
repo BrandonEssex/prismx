@@ -14,20 +14,20 @@ pub fn render_clock_widget(f: &mut Frame, area: Rect) {
         Span::raw(now),
     ]))
     .block(Block::default().borders(Borders::ALL).title("Clock"));
-
     f.render_widget(text, area);
 }
 
 pub fn render_shortcuts(f: &mut Frame, area: Rect) {
     let shortcuts = Paragraph::new(Line::from(vec![
         Span::styled("Ctrl+N", Style::default().fg(Color::Green)),
-        Span::raw(" - New Node  "),
+        Span::raw(" New  "),
         Span::styled("Ctrl+X", Style::default().fg(Color::Green)),
-        Span::raw(" - Cut Node  "),
-        Span::styled("Ctrl+W", Style::default().fg(Color::Green)),
-        Span::raw(" - Close App"),
+        Span::raw(" Cut  "),
+        Span::styled("Ctrl+V", Style::default().fg(Color::Green)),
+        Span::raw(" Paste  "),
+        Span::styled("Ctrl+Z", Style::default().fg(Color::Green)),
+        Span::raw(" Zen  "),
     ]))
     .block(Block::default().borders(Borders::ALL).title("Shortcuts"));
-
     f.render_widget(shortcuts, area);
 }

@@ -10,6 +10,7 @@ use ratatui::{
 pub struct MindmapState {
     pub input: String,
     pub selected_id: String,
+    pub cursor_position: usize,
 }
 
 impl MindmapState {
@@ -17,6 +18,7 @@ impl MindmapState {
         Self {
             input: String::new(),
             selected_id: "root".to_string(),
+            cursor_position: 0,
         }
     }
 }
@@ -27,12 +29,17 @@ pub fn render_mindmap(f: &mut Frame, area: Rect, trace: &MindTrace, state: &Mind
         .constraints([Constraint::Length(3), Constraint::Min(1)])
         .split(area);
 
-    // Input box
-    let input = Paragraph::new(Line::from(format!("> {}", state.input)))
+    let (left, right) = state.input.split_at(state.cursor_position);
+    let input_line = Line::from(vec![
+        Span::raw(left),
+        Span::styled("▍", Style::default().fg(Color::Yellow)),
+        Span::raw(right),
+    ]);
+
+    let input = Paragraph::new(input_line)
         .block(Block::default().borders(Borders::ALL).title("New Node"));
     f.render_widget(input, layout[0]);
 
-    // Node tree
     let mut lines = vec![Line::from("Mindmap:")];
     build_lines_recursive(&mut lines, trace, &trace.root_id, 0);
 
