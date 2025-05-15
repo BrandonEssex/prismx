@@ -1,0 +1,9 @@
+[platform]
+name = "Launch Platform Alpha"
+location = "Mauna Kea"
+elevation_meters = 13403
+status = "operational"
+
+[deployment]
+max_payload_kg = 25000
+support_orbit_types = ["LEO", "SSO", "GTO"]

@@ -1,0 +1,9 @@
+{
+  "name": "ExamplePlugin",
+  "version": "0.1.0",
+  "description": "A sample plugin for PrismX.",
+  "entry": "plugin/example/main.rs",
+  "author": "Plugin Developer",
+  "commands": ["run", "check", "export"],
+  "enabled": false
+}

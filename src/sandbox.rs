@@ -1,32 +1,20 @@
-// src/sandbox.rs
+use std::collections::HashMap;
 
-use std::collections::HashSet;
-
-#[derive(Debug, Default)]
-pub struct CapabilitySandbox {
-    granted: HashSet<String>,
+#[derive(Default)]
+pub struct Sandbox {
+    pub environment: HashMap<String, String>,
 }
 
-impl CapabilitySandbox {
+impl Sandbox {
     pub fn new() -> Self {
-        Self {
-            granted: HashSet::new(),
-        }
+        Self { environment: HashMap::new() }
     }
 
-    pub fn allow(&mut self, capability: &str) {
-        self.granted.insert(capability.to_string());
+    pub fn set(&mut self, key: &str, value: &str) {
+        self.environment.insert(key.to_string(), value.to_string());
     }
 
-    pub fn revoke(&mut self, capability: &str) {
-        self.granted.remove(capability);
-    }
-
-    pub fn is_allowed(&self, capability: &str) -> bool {
-        self.granted.contains(capability)
-    }
-
-    pub fn all(&self) -> Vec<String> {
-        self.granted.iter().cloned().collect()
+    pub fn get(&self, key: &str) -> Option<&String> {
+        self.environment.get(key)
     }
 }

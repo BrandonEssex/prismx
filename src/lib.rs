@@ -1,32 +1,14 @@
-// src/lib.rs
-
-pub mod action;
-pub mod app;
-pub mod audit;
 pub mod dashboard;
-pub mod export;
-pub mod input;
-pub mod keymap;
-pub mod logger;
-pub mod metadata;
-pub mod node;
-pub mod node_tree;
+pub mod dashboard_widgets;
+pub mod mindmap;
+pub mod mindtrace;
 pub mod plugin;
-pub mod plugin_loader;
-pub mod plugin_manifest;
-pub mod plugin_slot;
-pub mod prism_icon;
 pub mod sandbox;
-pub mod scratchpad;
-pub mod screen;
-pub mod settings;
-pub mod sidebar;
-pub mod spotlight;
-pub mod state;
-pub mod status_bar;
-pub mod tag;
-pub mod theme;
+pub mod export_engine;
 pub mod ui;
-pub mod undo_redo;
-pub mod util;
-pub mod storage;
+
+use ui::run_ui;
+
+pub fn run() -> Result<(), Box<dyn std::error::Error>> {
+    run_ui()
+}

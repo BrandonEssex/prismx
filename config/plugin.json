@@ -1,0 +1,9 @@
+{
+  "plugins": [
+    {
+      "name": "GemDrop",
+      "path": "plugin/GemDrop/gemdrop.toml",
+      "enabled": true
+    }
+  ]
+}

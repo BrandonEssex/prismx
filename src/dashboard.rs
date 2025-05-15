@@ -1,28 +1,15 @@
-// src/dashboard.rs
-
-use ratatui::layout::{Constraint, Direction, Layout, Rect};
-use ratatui::widgets::{Block, Borders, Paragraph};
-use ratatui::text::{Line, Span};
-use ratatui::style::Style;
+use crate::dashboard_widgets::{render_clock_widget, render_shortcuts};
+use ratatui::backend::Backend;
+use ratatui::layout::{Layout, Constraint, Direction};
 use ratatui::Frame;
 
-pub fn render_dashboard(frame: &mut Frame<'_>, area: Rect) {
-    let block = Block::default()
-        .borders(Borders::ALL)
-        .title("PrismX Dashboard");
-
-    let content = vec![
-        Line::from("• View: Project Summary"),
-        Line::from("• Status: All systems go"),
-        Line::from("• Plugins: Loaded & Active"),
-    ];
-
-    let paragraph = Paragraph::new(content).block(block).style(Style::default());
-
+pub fn render_dashboard<B: Backend>(f: &mut Frame<B>) {
     let layout = Layout::default()
         .direction(Direction::Vertical)
-        .constraints([Constraint::Min(1)].as_ref())
-        .split(area);
+        .margin(1)
+        .constraints([Constraint::Length(3), Constraint::Min(0)].as_ref())
+        .split(f.size());
 
-    frame.render_widget(paragraph, layout[0]);
+    render_clock_widget(f, layout[0]);
+    render_shortcuts(f, layout[1]);
 }

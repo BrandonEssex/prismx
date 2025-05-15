@@ -1,9 +1,0 @@
-{
-  "q": "Quit",
-  "e": "EnterEditNode",
-  "m": "ToggleMindmapLayout",
-  "c": "OpenContextMenu",
-  "i": "ToggleTriage",
-  "?": "ToggleShortcuts",
-  "z": "ToggleZenMode"
-}

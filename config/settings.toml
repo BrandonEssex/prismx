@@ -1,0 +1,9 @@
+[ui]
+theme = "dark"
+show_clock = true
+enable_shortcuts = true
+
+[keybindings]
+open_settings = "Ctrl+."
+open_spotlight = "Alt+Space"
+quit = "q"
