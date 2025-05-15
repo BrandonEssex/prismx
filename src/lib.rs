@@ -6,6 +6,8 @@ pub mod plugin;
 pub mod sandbox;
 pub mod export_engine;
 pub mod ui;
+pub mod keymap;
+pub mod dashboard_toggle;
 
 use ui::run_ui;
 
