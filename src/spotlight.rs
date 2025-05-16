@@ -1,8 +1,8 @@
-static mut CURRENT_THEME: &str = "dark";
-
-pub fn toggle_theme() {
-    unsafe {
-        CURRENT_THEME = if CURRENT_THEME == "dark" { "light" } else { "dark" };
-        println!("[THEME] Switched to: {}", CURRENT_THEME);
-    }
+/// Launches the PrismX command bar (Spotlight)
+pub fn launch_spotlight() {
+    println!("[SPOTLIGHT] Command bar launched.");
+    println!("Try commands like:");
+    println!("  /theme dark");
+    println!("  /plugin disable gemx");
+    println!("  /journal");
 }
