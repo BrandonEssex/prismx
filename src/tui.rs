@@ -21,7 +21,7 @@ pub fn launch_ui() -> Result<(), Box<dyn std::error::Error>> {
         terminal.draw(|f| render_ui(f, zen_mode))?;
 
         if event::poll(std::time::Duration::from_millis(100))? {
-            if let Event::Key(KeyEvent { code, modifiers }) = event::read()? {
+            if let Event::Key(KeyEvent { code, modifiers, .. }) = event::read()? {
                 match (code, modifiers) {
                     (KeyCode::Char('q'), KeyModifiers::CONTROL) => break,
                     (KeyCode::Char('z'), KeyModifiers::CONTROL) => {
