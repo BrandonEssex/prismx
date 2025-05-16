@@ -4,4 +4,4 @@ warning_start_days = 3
 notify = true
 
 [exceptions]
-allowlist = ["core.diagnostics", "plugin.gemdrop"]
+allowlist = ["plugin.gemx", "plugin.dashboard"]

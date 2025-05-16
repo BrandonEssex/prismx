@@ -18,7 +18,6 @@ pub enum Action {
 
 pub fn default_keymap() -> HashMap<&'static str, Action> {
     use Action::*;
-
     HashMap::from([
         ("C-q", Quit),
         ("C-z", ToggleZen),
@@ -34,4 +33,12 @@ pub fn default_keymap() -> HashMap<&'static str, Action> {
         ("C-w", EditNode),
         ("C-s", SaveSnapshot),
     ])
+}
+
+pub fn show_overlay() {
+    let map = default_keymap();
+    println!("[KEYMAP OVERLAY]");
+    for (binding, action) in map {
+        println!("  {:<10} => {:?}", binding, action);
+    }
 }

@@ -7,3 +7,5 @@ pub mod federation;
 pub mod snapshot;
 pub mod retire;
 pub mod keymap;
+pub mod spotlight;
+pub mod theme;

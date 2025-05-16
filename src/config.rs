@@ -19,7 +19,7 @@ pub fn load_locked_registry() -> Result<PluginRegistry, Box<dyn std::error::Erro
     let data = fs::read_to_string("config/plugin.json")?;
     let registry: PluginRegistry = serde_json::from_str(&data)?;
     if !registry.locked {
-        return Err("Registry is not locked".into());
+        return Err("Plugin registry must be locked".into());
     }
     Ok(registry)
 }

@@ -1,0 +1,5 @@
+{
+  "plugin": "mindtrace",
+  "lineage": ["root", "init_seed", "dev_commit:a22e", "merge:final"],
+  "verified": true
+}

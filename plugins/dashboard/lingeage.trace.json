@@ -1,0 +1,5 @@
+{
+  "plugin": "dashboard",
+  "lineage": ["root", "init_seed", "dev_commit:92aa", "merge:final"],
+  "verified": true
+}

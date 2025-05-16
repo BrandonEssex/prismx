@@ -2,16 +2,22 @@
   "locked": true,
   "plugins": [
     {
-      "id": "mindmaps",
-      "version": "3.0.0",
+      "id": "gemx",
+      "version": "3.1.0",
       "trusted": true,
-      "trust_chain": ["root", "init_seed", "dev_commit:78f1", "merge:91d3"]
+      "trust_chain": ["root", "init_seed", "dev_commit:78f1", "merge:final"]
     },
     {
-      "id": "gemdrop",
-      "version": "1.2.0",
+      "id": "dashboard",
+      "version": "1.0.0",
       "trusted": true,
-      "trust_chain": ["root", "init_seed", "dev_commit:782c", "fork:gemline", "merge:fe44"]
+      "trust_chain": ["root", "init_seed", "dev_commit:92aa", "merge:final"]
+    },
+    {
+      "id": "mindtrace",
+      "version": "1.0.0",
+      "trusted": true,
+      "trust_chain": ["root", "init_seed", "dev_commit:a22e", "merge:final"]
     }
   ]
 }

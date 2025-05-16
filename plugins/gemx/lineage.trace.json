@@ -1,0 +1,5 @@
+{
+  "plugin": "gemx",
+  "lineage": ["root", "init_seed", "dev_commit:78f1", "merge:final"],
+  "verified": true
+}

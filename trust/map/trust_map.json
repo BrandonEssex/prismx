@@ -1,12 +1,14 @@
 {
   "nodes": [
-    { "id": "root", "score": 100, "type": "system" },
-    { "id": "mindmaps", "score": 98, "type": "plugin" },
-    { "id": "gemdrop", "score": 96, "type": "plugin" }
+    { "id": "root", "score": 100 },
+    { "id": "gemx", "score": 98 },
+    { "id": "dashboard", "score": 97 },
+    { "id": "mindtrace", "score": 97 }
   ],
   "links": [
-    { "source": "root", "target": "mindmaps" },
-    { "source": "root", "target": "gemdrop" }
+    { "source": "root", "target": "gemx" },
+    { "source": "root", "target": "dashboard" },
+    { "source": "root", "target": "mindtrace" }
   ],
-  "updated": "2025-05-15T22:00:00Z"
+  "updated": "2025-05-16T22:01:00Z"
 }

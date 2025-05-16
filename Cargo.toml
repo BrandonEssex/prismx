@@ -1,6 +1,6 @@
 [package]
 name = "prismx"
-version = "10.0.0"
+version = "10.1.0"
 edition = "2021"
 authors = ["Brandon Essex"]
 description = "PrismX: Offline-first planning engine with trust, federation, and plugin runtime."
