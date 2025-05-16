@@ -1,35 +1,37 @@
-use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
+use std::collections::HashMap;
 
-#[derive(Debug, PartialEq, Eq, Hash)]
-pub enum Command {
+#[derive(Debug)]
+pub enum Action {
     Quit,
-    NewNode,
-    CutNode,
-    CopyNode,
-    PasteNode,
+    ToggleZen,
     OpenSettings,
     OpenSpotlight,
-    OpenDashboard,
-    OpenMindmap,
-    OpenZenMode,
-    ExportMindTrace,
-    ToggleShortcuts,
+    CreateNode,
+    MoveFocusUp,
+    MoveFocusDown,
+    MoveFocusLeft,
+    MoveFocusRight,
+    DeleteNode,
+    EditNode,
+    SaveSnapshot,
 }
 
-pub fn get_command(event: KeyEvent) -> Option<Command> {
-    match (event.code, event.modifiers) {
-        (KeyCode::Char('q'), _) => Some(Command::Quit),
-        (KeyCode::Char('n'), KeyModifiers::CONTROL) => Some(Command::NewNode),
-        (KeyCode::Char('x'), KeyModifiers::CONTROL) => Some(Command::CutNode),
-        (KeyCode::Char('c'), KeyModifiers::CONTROL) => Some(Command::CopyNode),
-        (KeyCode::Char('v'), KeyModifiers::CONTROL) => Some(Command::PasteNode),
-        (KeyCode::Char('.'), KeyModifiers::CONTROL) => Some(Command::OpenSettings),
-        (KeyCode::Char(' '), KeyModifiers::ALT) => Some(Command::OpenSpotlight),
-        (KeyCode::Char('d'), KeyModifiers::CONTROL) => Some(Command::OpenDashboard),
-        (KeyCode::Char('m'), KeyModifiers::CONTROL) => Some(Command::OpenMindmap),
-        (KeyCode::Char('z'), KeyModifiers::CONTROL) => Some(Command::OpenZenMode),
-        (KeyCode::Char('e'), KeyModifiers::CONTROL) => Some(Command::ExportMindTrace),
-        (KeyCode::Char('s'), KeyModifiers::CONTROL) => Some(Command::ToggleShortcuts),
-        _ => None,
-    }
+pub fn default_keymap() -> HashMap<&'static str, Action> {
+    use Action::*;
+
+    HashMap::from([
+        ("C-q", Quit),
+        ("C-z", ToggleZen),
+        ("C-.", OpenSettings),
+        ("M-Space", OpenSpotlight),
+        ("Enter", CreateNode),
+        ("C-n", CreateNode),
+        ("C-k", MoveFocusUp),
+        ("C-j", MoveFocusDown),
+        ("C-h", MoveFocusLeft),
+        ("C-l", MoveFocusRight),
+        ("C-x", DeleteNode),
+        ("C-w", EditNode),
+        ("C-s", SaveSnapshot),
+    ])
 }

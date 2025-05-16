@@ -1,0 +1,13 @@
+target/
+*AMG*
+*archive
+*.log
+*.bak*
+*.tmp*
+*.lock*
+.DS_Store
+Cargo.lock
+scripts/*
+tests/*
+*tests*
+incoming/*

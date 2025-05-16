@@ -1,0 +1,7 @@
+[retirement]
+lockout_threshold_days = 5
+warning_start_days = 3
+notify = true
+
+[exceptions]
+allowlist = ["core.diagnostics", "plugin.gemdrop"]

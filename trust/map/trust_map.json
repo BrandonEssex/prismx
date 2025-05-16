@@ -1,0 +1,12 @@
+{
+  "nodes": [
+    { "id": "root", "score": 100, "type": "system" },
+    { "id": "mindmaps", "score": 98, "type": "plugin" },
+    { "id": "gemdrop", "score": 96, "type": "plugin" }
+  ],
+  "links": [
+    { "source": "root", "target": "mindmaps" },
+    { "source": "root", "target": "gemdrop" }
+  ],
+  "updated": "2025-05-15T22:00:00Z"
+}

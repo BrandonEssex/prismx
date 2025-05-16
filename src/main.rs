@@ -1,8 +1,3 @@
-use prismx::run;
-
-fn main() {
-    if let Err(e) = run() {
-        eprintln!("Error: {}", e);
-        std::process::exit(1);
-    }
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    prismx::bootstrap::start()
 }

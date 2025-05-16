@@ -1,9 +1,17 @@
 {
+  "locked": true,
   "plugins": [
     {
-      "name": "GemDrop",
-      "path": "plugin/GemDrop/gemdrop.toml",
-      "enabled": true
+      "id": "mindmaps",
+      "version": "3.0.0",
+      "trusted": true,
+      "trust_chain": ["root", "init_seed", "dev_commit:78f1", "merge:91d3"]
+    },
+    {
+      "id": "gemdrop",
+      "version": "1.2.0",
+      "trusted": true,
+      "trust_chain": ["root", "init_seed", "dev_commit:782c", "fork:gemline", "merge:fe44"]
     }
   ]
 }

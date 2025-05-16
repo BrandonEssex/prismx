@@ -1,19 +1,13 @@
 [package]
 name = "prismx"
-version = "3.0.0"
+version = "10.0.0"
 edition = "2021"
 authors = ["Brandon Essex"]
-description = "Offline-first engineering TUI with mindmap core and modular plugin system."
+description = "PrismX: Offline-first planning engine with trust, federation, and plugin runtime."
 
 [dependencies]
-ratatui = "0.26"
-crossterm = "0.27"
-chrono = "0.4"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
-
-[features]
-default = ["mindmap", "dashboard", "plugin"]
-dashboard = []
-mindmap = []
-plugin = []
+toml = "0.7"
+crossterm = "0.27"
+ratatui = "0.23"

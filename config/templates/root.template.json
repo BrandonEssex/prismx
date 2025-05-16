@@ -1,0 +1,12 @@
+{
+  "id": "root.template",
+  "name": "Universal Baseline",
+  "version": "1.0.0",
+  "origin": "init_seed",
+  "lineage_hash": "872c4a...bc1",
+  "fields": {
+    "title": "string",
+    "description": "string",
+    "tags": "array"
+  }
+}

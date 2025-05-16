@@ -1,0 +1,11 @@
+{
+  "timestamp": "2025-05-15T22:00:00Z",
+  "shard": "global",
+  "compliance_score": 98.6,
+  "delta_summary": {
+    "plugin_trust_drift": 0,
+    "lineage_integrity": 100,
+    "template_score": 97,
+    "override_resolution": 100
+  }
+}
