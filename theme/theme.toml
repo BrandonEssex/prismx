@@ -10,3 +10,9 @@ keymap.bg = "black"
 
 clipboard.fg = "magenta"
 clipboard.bg = "black"
+
+dashboard.fg = "green"
+dashboard.bg = "black"
+
+zen.fg = "white"
+zen.bg = "black"

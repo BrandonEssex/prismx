@@ -34,15 +34,3 @@ pub fn default_keymap() -> HashMap<&'static str, Action> {
         ("C-s", SaveSnapshot),
     ])
 }
-
-pub fn show_overlay() {
-    let keymap = default_keymap();
-
-    println!("┌─────────────────────┐");
-    println!("│  KEYMAP SHORTCUTS   │");
-    println!("├─────────────────────┤");
-    for (key, action) in keymap {
-        println!("│ {:<12} → {:<12} │", key, format!("{:?}", action));
-    }
-    println!("└─────────────────────┘");
-}

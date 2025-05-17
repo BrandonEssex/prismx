@@ -4,7 +4,6 @@ use ratatui::{
     widgets::{Block, Borders, Paragraph},
     text::Line,
 };
-
 use crate::theme::get_style;
 use crate::gemx::nodes::MindmapNode;
 
@@ -29,8 +28,7 @@ pub fn render_spotlight<B: ratatui::backend::Backend>(f: &mut Frame<B>, area: Re
         .borders(Borders::ALL)
         .style(get_style("spotlight"));
 
-    let paragraph = Paragraph::new(vec![Line::from(format!("> {}", input))])
-        .block(block);
+    let paragraph = Paragraph::new(vec![Line::from(format!("> {}", input))]).block(block);
     f.render_widget(paragraph, area);
 }
 
@@ -42,6 +40,7 @@ pub fn render_keymap_overlay<B: ratatui::backend::Backend>(f: &mut Frame<B>, are
         Line::from("Ctrl+O → Spotlight"),
         Line::from("Ctrl+T → Theme Toggle"),
     ];
+
     let block = Block::default()
         .title("Keymap")
         .borders(Borders::ALL)
@@ -57,8 +56,7 @@ pub fn render_clipboard<B: ratatui::backend::Backend>(f: &mut Frame<B>, area: Re
         .borders(Borders::ALL)
         .style(get_style("clipboard"));
 
-    let paragraph = Paragraph::new(vec![Line::from(last_copied)])
-        .block(block);
+    let paragraph = Paragraph::new(vec![Line::from(last_copied)]).block(block);
     f.render_widget(paragraph, area);
 }
 
@@ -89,5 +87,6 @@ pub fn render_zen_journal<B: ratatui::backend::Backend>(f: &mut Frame<B>, area: 
         Line::from("Press Ctrl+D to save and exit."),
     ])
     .block(block);
+
     f.render_widget(paragraph, area);
 }

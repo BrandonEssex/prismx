@@ -5,15 +5,10 @@ use std::path::Path;
 pub fn load() {
     let path = Path::new("snapshots/mindmap.json");
 
-    // Ensure directory exists
     if let Some(parent) = path.parent() {
-        if let Err(e) = fs::create_dir_all(parent) {
-            eprintln!("[GEMX] Failed to create snapshots directory: {}", e);
-            return;
-        }
+        fs::create_dir_all(parent).ok();
     }
 
-    // Load or initialize mindmap
     match fs::read_to_string(&path) {
         Ok(data) => {
             if let Ok(root) = serde_json::from_str::<MindmapNode>(&data) {
