@@ -1,5 +1,12 @@
 [theme]
-background = "black"
-primary = "cyan"
-highlight = "yellow"
-text = "white"
+mindmap.fg = "cyan"
+mindmap.bg = "black"
+
+spotlight.fg = "white"
+spotlight.bg = "blue"
+
+keymap.fg = "yellow"
+keymap.bg = "black"
+
+clipboard.fg = "magenta"
+clipboard.bg = "black"

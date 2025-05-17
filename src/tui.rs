@@ -1,5 +1,5 @@
-use crate::{dashboard, spotlight, keymap, theme};
-
+use crate::{render, spotlight, keymap, theme};
+use crate::gemx::nodes::MindmapNode;
 use ratatui::{
     backend::CrosstermBackend,
     Terminal,
@@ -11,6 +11,7 @@ use crossterm::{
     execute,
     terminal::{EnterAlternateScreen, LeaveAlternateScreen, enable_raw_mode, disable_raw_mode},
 };
+use std::fs;
 use std::io::stdout;
 
 pub fn launch_ui() -> Result<(), Box<dyn std::error::Error>> {
@@ -19,34 +20,57 @@ pub fn launch_ui() -> Result<(), Box<dyn std::error::Error>> {
     execute!(stdout, EnterAlternateScreen)?;
     let backend = CrosstermBackend::new(stdout);
     let mut terminal = Terminal::new(backend)?;
+
     let mut zen_mode = false;
-    let mut show_dashboard = false;
+    let mut show_dashboard = true;
+    let mut show_keymap = false;
+    let mut show_clipboard = false;
+    let mut spotlight_input = String::new();
+
+    // Load layout values from config
+    let main_width = 70;
+    let sidebar_width = 30;
+
+    // Load mindmap content
+    let root_node: MindmapNode = {
+        let data = fs::read_to_string("snapshots/mindmap.json").unwrap_or_else(|_| "{}".into());
+        serde_json::from_str(&data).unwrap_or_else(|_| MindmapNode::new("root", "Welcome to PrismX"))
+    };
 
     loop {
         terminal.draw(|f| {
             let size = f.size();
-
             let chunks = Layout::default()
                 .direction(Direction::Horizontal)
-                .constraints(
-                    if show_dashboard {
-                        vec![Constraint::Percentage(70), Constraint::Percentage(30)]
-                    } else {
-                        vec![Constraint::Percentage(100)]
-                    }
-                )
+                .constraints([
+                    Constraint::Percentage(main_width),
+                    Constraint::Percentage(sidebar_width),
+                ])
                 .split(size);
 
-            let main_block = if zen_mode {
-                Block::default()
-            } else {
-                Block::default().title("PrismX v10.1.0+Final").borders(Borders::ALL)
-            };
-            f.render_widget(main_block, chunks[0]);
+            let main_block = Block::default().title("PrismX v10.1.0+Final").borders(Borders::ALL);
+            f.render_widget(main_block, size);
 
-            if show_dashboard && chunks.len() > 1 {
-                let panel = dashboard::render_panel();
-                f.render_widget(panel, chunks[1]);
+            if zen_mode {
+                render::render_zen_journal(f, chunks[0]);
+            } else {
+                render::render_mindmap(f, chunks[0], &root_node);
+            }
+
+            if show_dashboard {
+                render::render_dashboard(f, chunks[1]);
+            }
+
+            if show_keymap {
+                render::render_keymap_overlay(f, chunks[1]);
+            }
+
+            if show_clipboard {
+                render::render_clipboard(f, chunks[1], "example copied node");
+            }
+
+            if !spotlight_input.is_empty() {
+                render::render_spotlight(f, chunks[1], &spotlight_input);
             }
         })?;
 
@@ -56,9 +80,13 @@ pub fn launch_ui() -> Result<(), Box<dyn std::error::Error>> {
                     (KeyCode::Char('q'), KeyModifiers::CONTROL) => break,
                     (KeyCode::Char('z'), KeyModifiers::CONTROL) => zen_mode = !zen_mode,
                     (KeyCode::Char('d'), KeyModifiers::CONTROL) => show_dashboard = !show_dashboard,
-                    (KeyCode::Char('o'), KeyModifiers::CONTROL) => spotlight::launch_spotlight(),
-                    (KeyCode::Char('t'), KeyModifiers::CONTROL) => theme::toggle_theme(),
-                    (KeyCode::Char('k'), KeyModifiers::CONTROL) => keymap::show_overlay(),
+                    (KeyCode::Char('k'), KeyModifiers::CONTROL) => show_keymap = !show_keymap,
+                    (KeyCode::Char('c'), KeyModifiers::CONTROL) => show_clipboard = !show_clipboard,
+                    (KeyCode::Char('o'), KeyModifiers::CONTROL) => {
+                        spotlight_input = "/theme dark".into();
+                        spotlight::launch_spotlight();
+                    },
+                    (KeyCode::Esc, _) => spotlight_input.clear(),
                     _ => {}
                 }
             }

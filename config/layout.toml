@@ -1,0 +1,8 @@
+[layout]
+main = 70  # percent width
+sidebar = 30  # percent width
+
+[keybindings]
+resize_increase = "Ctrl+Right"
+resize_decrease = "Ctrl+Left"
+move_focus = "Ctrl+Tab"
