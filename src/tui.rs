@@ -1,5 +1,4 @@
-use crate::{spotlight, keymap, theme};
-use crate::dashboard::render_panel;
+use crate::{dashboard, spotlight, keymap, theme};
 
 use ratatui::{
     backend::CrosstermBackend,
@@ -13,10 +12,6 @@ use crossterm::{
     terminal::{EnterAlternateScreen, LeaveAlternateScreen, enable_raw_mode, disable_raw_mode},
 };
 use std::io::stdout;
-
-
-// Forward-declare dashboard module if it's now inline or above main.rs
-use dashboard::render_panel;
 
 pub fn launch_ui() -> Result<(), Box<dyn std::error::Error>> {
     enable_raw_mode()?;
@@ -50,7 +45,7 @@ pub fn launch_ui() -> Result<(), Box<dyn std::error::Error>> {
             f.render_widget(main_block, chunks[0]);
 
             if show_dashboard && chunks.len() > 1 {
-                let panel = render_panel();
+                let panel = dashboard::render_panel();
                 f.render_widget(panel, chunks[1]);
             }
         })?;
