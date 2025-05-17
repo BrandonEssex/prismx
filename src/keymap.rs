@@ -1,8 +1,4 @@
 use std::collections::HashMap;
-use ratatui::{
-    widgets::{Block, Borders, Paragraph},
-    text::{Span, Spans},
-};
 
 #[derive(Debug)]
 pub enum Action {
