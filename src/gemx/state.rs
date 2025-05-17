@@ -5,24 +5,30 @@ use std::path::Path;
 pub fn load() {
     let path = Path::new("snapshots/mindmap.json");
 
-    // Create snapshots directory if missing
+    // Ensure directory exists
     if let Some(parent) = path.parent() {
-        fs::create_dir_all(parent).ok();
+        if let Err(e) = fs::create_dir_all(parent) {
+            eprintln!("[GEMX] Failed to create snapshots directory: {}", e);
+            return;
+        }
     }
 
-    // Load or initialize empty mindmap
+    // Load or initialize mindmap
     match fs::read_to_string(&path) {
         Ok(data) => {
-            if let Ok(root): Result<MindmapNode, _> = serde_json::from_str(&data) {
+            if let Ok(root) = serde_json::from_str::<MindmapNode>(&data) {
                 println!("[GEMX] Loaded mindmap: {}", root.title);
             } else {
-                println!("[GEMX] Invalid mindmap format.");
+                eprintln!("[GEMX] Invalid mindmap format.");
             }
         }
         Err(_) => {
             println!("[GEMX] No mindmap found. Creating default.");
             let root = MindmapNode::new("root", "Welcome to PrismX");
-            let _ = fs::write(&path, serde_json::to_string_pretty(&root).unwrap());
+            let json = serde_json::to_string_pretty(&root).unwrap();
+            if let Err(e) = fs::write(&path, json) {
+                eprintln!("[GEMX] Failed to write default mindmap: {}", e);
+            }
         }
     }
 }
