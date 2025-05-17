@@ -3,9 +3,9 @@ pub fn copy_node(text: &str) {
 }
 
 pub fn paste_node() {
-    println!("[CLIPBOARD] Paste command received.");
+    println!("[CLIPBOARD] Pasted: <not implemented>");
 }
 
 pub fn switch_workspace(name: &str) {
-    println!("[WORKSPACE] Switched to workspace: {}", name);
+    println!("[WORKSPACE] Switched to: {}", name);
 }

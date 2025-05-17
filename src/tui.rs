@@ -25,14 +25,18 @@ pub fn launch_ui() -> Result<(), Box<dyn std::error::Error>> {
     loop {
         terminal.draw(|f| {
             let size = f.size();
-            let chunks = if show_dashboard {
-                Layout::default()
-                    .direction(Direction::Horizontal)
-                    .constraints([Constraint::Percentage(70), Constraint::Percentage(30)])
-                    .split(size)
-            } else {
-                vec![size]
-            };
+
+            // Unified layout to satisfy type check for both branches
+            let chunks = Layout::default()
+                .direction(Direction::Horizontal)
+                .constraints(
+                    if show_dashboard {
+                        vec![Constraint::Percentage(70), Constraint::Percentage(30)]
+                    } else {
+                        vec![Constraint::Percentage(100)]
+                    }
+                )
+                .split(size);
 
             let main_block = if zen_mode {
                 Block::default()

@@ -6,19 +6,19 @@ pub fn launch_spotlight() {
     println!("  /plugin disable mindtrace");
     println!("  /journal");
 
-    use_command("/theme dark");
+    let commands: HashMap<&str, Box<dyn Fn()>> = HashMap::from([
+        ("/theme dark", Box::new(|| println!("Theme changed to dark"))),
+        ("/plugin disable mindtrace", Box::new(|| println!("mindtrace plugin disabled"))),
+        ("/journal", Box::new(|| crate::zen::start_journal().unwrap())),
+        ("/copy", Box::new(|| crate::clipboard::copy_node("example node"))),
+        ("/workspace switch main", Box::new(|| crate::clipboard::switch_workspace("main"))),
+    ]);
+
+    use_command("/theme dark", &commands);
 }
 
-pub fn use_command(input: &str) {
-    let mut commands = HashMap::new();
-
-    commands.insert("/theme dark", || println!("Theme changed to dark"));
-    commands.insert("/plugin disable mindtrace", || println!("mindtrace plugin disabled"));
-    commands.insert("/journal", || crate::zen::start_journal().unwrap());
-    commands.insert("/copy", || crate::clipboard::copy_node("example node"));
-    commands.insert("/workspace switch main", || crate::clipboard::switch_workspace("main"));
-
-    match commands.get(input.trim()) {
+pub fn use_command(input: &str, map: &HashMap<&str, Box<dyn Fn()>>) {
+    match map.get(input.trim()) {
         Some(action) => action(),
         None => println!("Unknown command: {}", input),
     }
