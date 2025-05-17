@@ -1,4 +1,5 @@
 use crate::{spotlight, keymap, theme};
+use crate::dashboard::render_panel;
 use ratatui::{
     backend::CrosstermBackend,
     Terminal,
@@ -13,7 +14,6 @@ use crossterm::{
 use std::io::stdout;
 
 // Forward-declare dashboard module if it's now inline or above main.rs
-mod dashboard;
 use dashboard::render_panel;
 
 pub fn launch_ui() -> Result<(), Box<dyn std::error::Error>> {
