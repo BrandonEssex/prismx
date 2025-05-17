@@ -30,8 +30,8 @@ pub fn get_style(target: &str) -> Style {
 }
 
 fn color_from_map(map: &HashMap<String, String>, key: &str) -> Option<Style> {
-    let fg = map.get(&format!("{}.fg", key)).and_then(parse_color);
-    let bg = map.get(&format!("{}.bg", key)).and_then(parse_color);
+    let fg = map.get(&format!("{}.fg", key)).and_then(|s| parse_color(s));
+    let bg = map.get(&format!("{}.bg", key)).and_then(|s| parse_color(s));
     Some(Style::default().fg(fg?).bg(bg?))
 }
 

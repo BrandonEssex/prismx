@@ -1,8 +1,12 @@
 [layout]
-main = 70  # percent width
-sidebar = 30  # percent width
+main = 70
+sidebar = 30
 
 [keybindings]
-resize_increase = "Ctrl+Right"
-resize_decrease = "Ctrl+Left"
-move_focus = "Ctrl+Tab"
+resize_main_increase = "Ctrl+Right"
+resize_main_decrease = "Ctrl+Left"
+toggle_dashboard = "Ctrl+D"
+toggle_keymap = "Ctrl+K"
+toggle_clipboard = "Ctrl+C"
+toggle_spotlight = "Ctrl+O"
+toggle_zen = "Ctrl+Z"

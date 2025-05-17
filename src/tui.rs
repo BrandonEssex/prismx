@@ -27,11 +27,6 @@ pub fn launch_ui() -> Result<(), Box<dyn std::error::Error>> {
     let mut show_clipboard = false;
     let mut spotlight_input = String::new();
 
-    // Load layout values from config
-    let main_width = 70;
-    let sidebar_width = 30;
-
-    // Load mindmap content
     let root_node: MindmapNode = {
         let data = fs::read_to_string("snapshots/mindmap.json").unwrap_or_else(|_| "{}".into());
         serde_json::from_str(&data).unwrap_or_else(|_| MindmapNode::new("root", "Welcome to PrismX"))
@@ -42,10 +37,7 @@ pub fn launch_ui() -> Result<(), Box<dyn std::error::Error>> {
             let size = f.size();
             let chunks = Layout::default()
                 .direction(Direction::Horizontal)
-                .constraints([
-                    Constraint::Percentage(main_width),
-                    Constraint::Percentage(sidebar_width),
-                ])
+                .constraints(vec![Constraint::Percentage(70), Constraint::Percentage(30)])
                 .split(size);
 
             let main_block = Block::default().title("PrismX v10.1.0+Final").borders(Borders::ALL);
@@ -60,15 +52,12 @@ pub fn launch_ui() -> Result<(), Box<dyn std::error::Error>> {
             if show_dashboard {
                 render::render_dashboard(f, chunks[1]);
             }
-
             if show_keymap {
                 render::render_keymap_overlay(f, chunks[1]);
             }
-
             if show_clipboard {
                 render::render_clipboard(f, chunks[1], "example copied node");
             }
-
             if !spotlight_input.is_empty() {
                 render::render_spotlight(f, chunks[1], &spotlight_input);
             }

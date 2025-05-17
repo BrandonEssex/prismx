@@ -5,8 +5,6 @@ pub fn launch_spotlight() {
     println!("  /theme dark");
     println!("  /plugin disable mindtrace");
     println!("  /journal");
-    println!("  /copy");
-    println!("  /workspace switch main");
 
     let mut commands: HashMap<&str, Box<dyn Fn()>> = HashMap::new();
 

@@ -12,3 +12,5 @@ pub mod theme;
 pub mod zen;
 pub mod clipboard;
 pub mod dashboard;
+pub mod render;
+pub mod gemx;
