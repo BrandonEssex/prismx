@@ -1,4 +1,8 @@
 use std::collections::HashMap;
+use ratatui::{
+    widgets::{Block, Borders, Paragraph},
+    text::{Span, Spans},
+};
 
 #[derive(Debug)]
 pub enum Action {
@@ -36,9 +40,13 @@ pub fn default_keymap() -> HashMap<&'static str, Action> {
 }
 
 pub fn show_overlay() {
-    let map = default_keymap();
-    println!("[KEYMAP OVERLAY]");
-    for (binding, action) in map {
-        println!("  {:<10} => {:?}", binding, action);
+    let keymap = default_keymap();
+
+    println!("┌─────────────────────┐");
+    println!("│  KEYMAP SHORTCUTS   │");
+    println!("├─────────────────────┤");
+    for (key, action) in keymap {
+        println!("│ {:<12} → {:<12} │", key, format!("{:?}", action));
     }
+    println!("└─────────────────────┘");
 }

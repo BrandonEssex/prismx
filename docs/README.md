@@ -1,147 +1,194 @@
-# PrismX `v10.0.0`
-_Offline-First Cognitive Interface for Engineering, Planning, and Autonomous Extension_
-
-> Built for minds that think in trees.
+# PrismX `v10.1.0+Final`
+_Offline-First Cognitive Planning Terminal_  
+_Built for Minds That Think in Trees._
 
 ---
 
 ## 🌌 Overview
 
-**PrismX** is a modular, offline-first engineering command interface designed to unify planning, task management, intelligent plugins, and visual cognition. At its core, PrismX uses a tree-based **Mindmap Interface**, paired with a real-time **Dashboard**, extensible **Plugin System**, and persistent local **Shard/Tag Database**.
+**PrismX** is a modular, offline-first, terminal-native interface for organizing thought, managing tasks, launching AI-augmented plugins, and executing workflows with total local control.  
 
-**Project Aether** (introduced in `v10.0.0`) brings AI-assisted autonomy, federation override logging, and internal evolution modeling for future-proofed extensibility.
+Everything in PrismX is centered around its **Mindmap Core**, extended through **intelligent plugins**, **dashboard widgets**, and a **shard-based workspace model**.  
+
+Version `v10.1.0` introduces **Zen Journaling**, **plugin slot rendering**, **fully interactive shortcut maps**, and the **animated PrismX icon system**—with enhancements across all AI, TUI, and plugin systems.
 
 ---
 
 ## 🚀 Key Features
 
-| Feature | Description |
-|--------|-------------|
-| 🌳 **Mindmap Core** | Rapid tree-based thought capture with in-place editing, hierarchy, and shortcut navigation |
-| 🧠 **Smart Plugins** | Modular WASM-based extensions with trust scoring, sandboxing, and signal hooks |
-| 🛠 **Offline-First Mode** | Fully usable with no internet; syncs only when configured to do so |
-| 🗂 **Shard & Tag System** | JSON-based searchable database of nodes, tasks, and ideas |
-| 🔭 **Spotlight Launcher** | Instant fuzzy search and command execution from any screen |
-| 🎛 **Dashboard Widgets** | Realtime visual layout with live clocks, shard counts, plugin state, and alerts |
-| 🎨 **Zen Mode** | Distraction-free interface with adjustable visual context (Work, Personal, Focus) |
-| ⌨ **Keymap Overlays** | Universal keybindings with support for Ctrl, Alt, and custom maps |
-| ⚡ **AutoTag & AutoTest Agents** | AI agents monitor and tag new data, perform commit-level tests |
-| 🧬 **Trust & Override Logs** | All AI decisions and plugin actions are traceable and permissioned |
+| Feature                        | Description |
+|-------------------------------|-------------|
+| 🌳 Mindmap Core               | Real-time tree editing, task planning, in-place input |
+| 🔍 Spotlight Command Bar      | Global fuzzy search, command execution, plugin launcher |
+| 🗂 Shard/Tag System           | JSON-based offline node database with tags and filters |
+| 📊 Dashboard Widgets          | Visual UI elements for time, shards, plugins, shortcuts |
+| 🧘 Zen Mode                   | Distraction-free visual mode with journaling |
+| 🍌 Animated PrismX Icon       | Theme-aware animated visual in top-right corner |
+| 🔌 Plugin System              | WASM plugins with trust scoring, keybinds, UI slot support |
+| ⌨ Full Keymap Control         | Ctrl/Alt/VIM mode shortcuts with editable config |
+| 🧠 Project Aether Integration | AI overrides, AutoTag/Test agents, signal trust logs |
+| 📴 Offline-Only Enforcement   | Complete sandbox execution with no network dependency |
+| 🎨 RefractPack Personalization| Theme, layout, icon, and shortcut presets (optional) |
 
 ---
 
 ## 🖥 System Requirements
 
-- **OS**: Linux, macOS, Windows (x64 / ARM64)
-- **Terminal**: ANSI-compatible, UTF-8 required
-- **Storage**: Local file system access (uses JSON + snapshots)
-- **Dependencies**: Rust 1.76+ (for builds), WebAssembly runtime (optional)
+- **OS**: Linux/macOS/Windows (UTF-8 terminal)
+- **CPU**: x64 / ARM64
+- **Storage**: Local file access required
+- **Build**: Rust 1.76+, Cargo
+- **Optional**: WebAssembly Runtime (for plugins)
 
 ---
 
 ## 🔧 Installation
-
-### 🦀 Build from Source
 
 ```bash
 git clone https://github.com/your-org/prismx
 cd prismx
 cargo build --release
 ./target/release/prismx
-
-📦 Binary Release (Coming Soon)
-Pre-built packages will be available for:
-
-macOS (arm64, x64)
-Linux (deb, rpm)
-Windows (.exe)
+Prebuilt binaries coming soon for Linux (deb/rpm), macOS (arm64/x64), and Windows.
 ⚙️ Quick Start
 
-# Launch PrismX in terminal
-prismx
-
-# Open Mindmap
-Alt + M
-
-# Create a new node
-Enter or Ctrl + N
-
-# Search or execute command
-Alt + Spacebar
-
-# Toggle Zen Mode
-Ctrl + .
-
-# Exit
-Ctrl + Q
-🧱 Core Architecture
+prismx                        # launch main interface
+Alt + Spacebar                # open Spotlight command bar
+Enter / Tab / Ctrl+N         # create mindmap nodes
+Ctrl + .                     # toggle Zen Mode
+Ctrl + Q                     # quit
+🧱 Architecture
 
 src/
-├── tui/                  # Terminal UI (dashboard, mindmap, overlays)
-├── plugin/               # Plugin loader, sandboxing, trust scoring
-├── shard/                # Tree + Tag + Database system
-├── core/                 # Core traits, state, IO
-├── config/               # Keymaps, plugin manifests, themes
-├── export/               # External import/export tools
-└── ai/                   # Project Aether AI subsystems
-📦 Plugin System (v2)
+├── tui/                  # UI panels, widgets, dashboard
+├── shard/                # Mindmap + Tag + JSON database
+├── plugin/               # WASM engine, trust scoring, slots
+├── ai/                   # Project Aether agents & audit logs
+├── config/               # Keymaps, themes, plugin manifests
+├── export/               # File import/export interfaces
+└── core/                 # Runtime signals, hooks, events
+🎨 RefractPack (Themes + Personalization)
 
-Plugins declare their own:
+Included in v10.1.0:
 
-Capabilities (data access, keybinds, signals)
-Slot renderers (TUI widgets or overlays)
-Trust score requirements (AI enforcement)
-Configs and theming
-Runtime behavior (hooks, tasks, async polling)
-📄 Plugin Manifest Example:
+Custom icon modes (banana, beam, pulse)
+Toggleable animations
+Full color schemes via theme.toml
+Adjustable font size and style
+Keybinding presets (VIM or Modern)
+Example:
 
+[icon]
+mode = "banana"
+animation = true
+
+[font]
+family = "JetBrains Mono"
+size = 14
+🔌 Plugin System
+
+Plugins are declared via config/plugin.json and loaded from plugin/.
+
+Example Manifest
 {
   "name": "gemdrop",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "permissions": ["shard.read", "node.write", "ui.slot.render"],
   "keybinds": ["ctrl+g"],
-  "entry": "plugin/gemdrop.wasm"
+  "entry": "plugin/gemdrop.wasm",
+  "slot": "bottom-right"
 }
-See /config/plugin.json for plugin registry.
-🧠 Project Aether (Experimental AI)
+Plugin Features
+Keybind declarations
+Signal listeners (hooks)
+Dashboard widgets
+Visual slot renderers
+Trust scoring with override log
+All plugin interactions are sandboxed and logged in the trust map.
 
-Autonomous Task Planning
-AutoTag + AutoTest Agents
-Plugin Performance Sandbox
-AI Override Trail (Audit View)
-Federation Learning Modules
-Adaptive UI Synthesis
-All AI actions are logged, scored, and subject to override.
+🧘 Zen Journaling
 
-🗺 Roadmap
+New in v10.1.0, Zen Mode includes:
 
-Milestone Status    Notes
-v1.0.0    ✅ Done    Core CLI/TUI + Mindmap
-v2.0.0    ✅ Done    Full Plugin Framework
-v3.0.0    ✅ Done    Dashboard + Zen Mode
-v5.0.0    ✅ Done    RefractPack, Signal Bus
-v10.0.0   ✅ Now     Project Aether + Trust Logs
-v11+ 🔜 Dev     Federation Sync, AutoModeling
-🙌 Contributing
+Hidden UI for deep focus
+Typing zone with instant journaling
+Export with:
+Ctrl + E
+# or via CLI
+prismx --zen-export > journal.txt
+Zen Profile Icons:
 
-Fork the repo, create a branch
-Submit via pull request with [feature] or [fix] prefix
-All PRs must pass AutoTest and Trust Scoring
-🧪 Test Suite
-cargo test --all
-📚 Documentation Index
+Green → Focus
+Blue → Work
+Pink → Personal
+🔭 Spotlight & Command Box
+
+Fuzzy search and launcher:
+
+Alt + Spacebar
+Search examples:
+
+"node:inspect duct"
+"tag:@urgent"
+"run:gemdrop"
+📊 Dashboard Widgets
+
+Modular UI components show:
+
+Clock, day, and week
+Node count and completion stats
+Plugin activity
+Active shard name
+Keymap overlay help
+Widgets are configured in:
+
+config/dashboard.json
+📂 Shards & Tags
+
+Term  Description
+Shard A JSON save of a node tree (mindmap)
+Tag Metadata label (@urgent, #area, +draft)
+Node  A single idea, task, or note entry
+Use Spotlight to filter tags and jump between shards.
+
+⌨ Keyboard Shortcuts
+
+See: docs/cheatsheet.md
+
+Default mode: Ctrl-based
+VIM mode toggle available in keymap.rs
+🧠 Project Aether (AI Subsystems)
+
+Included in 10.1.0:
+
+Autonomous Task Planning (internal)
+AutoTest Agents (QA, CI-like behavior)
+AutoTag Agent (real-time tagging)
+Trust Scoring + Override Logs
+AI plugin isolation sandbox
+All AI events are logged and reversible.
+
+🛠 Contribution Guidelines
+
+Fork, branch, and PR to dev
+All PRs must:
+Pass cargo test
+Declare keymaps in keymap.rs
+Register plugins in plugin.json
+Update documentation if needed
+📚 Documentation
 
 End User Manual
-Developer Integration
-Plugin API
-Keybinding Cheatsheet
-AI Override Trail
+Developer Guide
+Plugin API Reference
+Keyboard Cheat Sheet
+AI Override Log
 🧙 Credits
 
-Built by humans, extended by AI.
-PrismX is a project of the Public Infrastructure Consortium.
+Developed by the Public Infrastructure Consortium.
+Extended by Project Aether AI under supervised autonomy.
 
 🛡 License
 
-MIT License. Use freely, fork responsibly.
-See LICENSE file for full terms.
+MIT License. Use freely. Fork responsibly.
+See LICENSE.

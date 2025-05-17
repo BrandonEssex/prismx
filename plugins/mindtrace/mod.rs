@@ -1,6 +1,6 @@
 pub mod memory;
 
 pub fn init() {
-    println!("[MINDTRACE] Memory engine loaded.");
+    println!("[MINDTRACE] AI memory system initialized.");
     memory::load_memory();
 }
