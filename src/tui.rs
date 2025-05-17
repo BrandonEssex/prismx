@@ -1,4 +1,4 @@
-use crate::{spotlight, keymap, theme};
+use crate::{dashboard, spotlight, keymap, theme};
 use ratatui::{
     backend::CrosstermBackend,
     Terminal,
