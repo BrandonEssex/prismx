@@ -1,0 +1,5 @@
+{
+  "plugin": "routineforge",
+  "lineage": ["root", "init_seed", "dev_commit:ff45", "merge:final"],
+  "verified": true
+}

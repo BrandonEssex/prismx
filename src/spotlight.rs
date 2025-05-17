@@ -1,39 +1,30 @@
 use std::collections::HashMap;
 
-pub fn launch_spotlight() {
-    println!("[SPOTLIGHT] Command bar active. Try:");
-    println!("  /theme dark");
-    println!("  /plugin disable mindtrace");
-    println!("  /journal");
-
+pub fn use_command(input: &str) {
     let mut commands: HashMap<&str, Box<dyn Fn()>> = HashMap::new();
 
     commands.insert("/theme dark", Box::new(|| {
-        println!("Theme changed to dark");
+        println!("[SPOTLIGHT] Theme set to dark");
     }));
 
     commands.insert("/plugin disable mindtrace", Box::new(|| {
-        println!("mindtrace plugin disabled");
+        println!("[SPOTLIGHT] mindtrace plugin disabled");
     }));
 
     commands.insert("/journal", Box::new(|| {
         crate::zen::start_journal().unwrap();
     }));
 
+    commands.insert("/triage", Box::new(|| {
+        println!("[SPOTLIGHT] Triage opened.");
+    }));
+
     commands.insert("/copy", Box::new(|| {
-        crate::clipboard::copy_node("example node");
+        crate::clipboard::copy_node("example");
     }));
 
-    commands.insert("/workspace switch main", Box::new(|| {
-        crate::clipboard::switch_workspace("main");
-    }));
-
-    use_command("/theme dark", &commands);
-}
-
-pub fn use_command(input: &str, map: &HashMap<&str, Box<dyn Fn()>>) {
-    match map.get(input.trim()) {
+    match commands.get(input.trim()) {
         Some(action) => action(),
-        None => println!("Unknown command: {}", input),
+        None => println!("[SPOTLIGHT] Unknown command: {}", input),
     }
 }

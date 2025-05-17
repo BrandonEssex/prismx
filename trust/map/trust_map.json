@@ -3,12 +3,14 @@
     { "id": "root", "score": 100 },
     { "id": "gemx", "score": 98 },
     { "id": "dashboard", "score": 97 },
-    { "id": "mindtrace", "score": 97 }
+    { "id": "mindtrace", "score": 97 },
+    { "id": "routineforge", "score": 96 }
   ],
   "links": [
     { "source": "root", "target": "gemx" },
     { "source": "root", "target": "dashboard" },
-    { "source": "root", "target": "mindtrace" }
+    { "source": "root", "target": "mindtrace" },
+    { "source": "root", "target": "routineforge" }
   ],
-  "updated": "2025-05-16T22:01:00Z"
+  "updated": "2025-05-17T04:15:00Z"
 }

@@ -18,6 +18,12 @@
       "version": "1.0.0",
       "trusted": true,
       "trust_chain": ["root", "init_seed", "dev_commit:a22e", "merge:final"]
+    },
+    {
+      "id": "routineforge",
+      "version": "1.0.0",
+      "trusted": true,
+      "trust_chain": ["root", "init_seed", "dev_commit:ff45", "merge:final"]
     }
   ]
 }
