@@ -3,8 +3,7 @@ use ratatui::{
     backend::CrosstermBackend,
     Terminal,
     layout::{Layout, Constraint, Direction},
-    widgets::{Block, Borders, Paragraph},
-    text::{Span, Spans},
+    widgets::{Block, Borders},
 };
 use crossterm::{
     event::{self, Event, KeyCode, KeyModifiers, KeyEvent},
@@ -26,7 +25,6 @@ pub fn launch_ui() -> Result<(), Box<dyn std::error::Error>> {
         terminal.draw(|f| {
             let size = f.size();
 
-            // Unified layout to satisfy type check for both branches
             let chunks = Layout::default()
                 .direction(Direction::Horizontal)
                 .constraints(
