@@ -16,3 +16,6 @@ dashboard.bg = "black"
 
 zen.fg = "white"
 zen.bg = "black"
+
+status.fg = "cyan"
+status.bg = "black"

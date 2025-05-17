@@ -21,9 +21,7 @@ pub fn load() {
             println!("[GEMX] No mindmap found. Creating default.");
             let root = MindmapNode::new("root", "Welcome to PrismX");
             let json = serde_json::to_string_pretty(&root).unwrap();
-            if let Err(e) = fs::write(&path, json) {
-                eprintln!("[GEMX] Failed to write default mindmap: {}", e);
-            }
+            let _ = fs::write(&path, json);
         }
     }
 }

@@ -34,27 +34,37 @@ pub fn launch_ui() -> Result<(), Box<dyn std::error::Error>> {
     loop {
         terminal.draw(|f| {
             let size = f.size();
-            let chunks = Layout::default()
+
+            // Status line
+            render::render_status_bar(f, size);
+
+            let body_chunks = Layout::default()
                 .direction(Direction::Horizontal)
-                .constraints(vec![Constraint::Percentage(70), Constraint::Percentage(30)])
+                .constraints(
+                    if dashboard_on || triage_on {
+                        vec![Constraint::Percentage(70), Constraint::Percentage(30)]
+                    } else {
+                        vec![Constraint::Percentage(100)]
+                    }
+                )
                 .split(size);
 
             if zen_mode {
-                render::render_zen_journal(f, chunks[0]);
+                render::render_zen_journal(f, body_chunks[0]);
             } else {
-                render::render_mindmap(f, chunks[0], &root_node);
+                render::render_mindmap(f, body_chunks[0], &root_node);
             }
 
-            if dashboard_on {
-                render::render_dashboard(f, chunks[1]);
+            if dashboard_on && body_chunks.len() > 1 {
+                render::render_dashboard(f, body_chunks[1]);
             }
 
-            if triage_on {
-                routineforge::render_triage_panel(f, chunks[1]);
+            if triage_on && body_chunks.len() > 1 {
+                routineforge::render_triage_panel(f, body_chunks[1]);
             }
 
-            if !spotlight_buffer.is_empty() {
-                render::render_spotlight(f, chunks[1], &spotlight_buffer);
+            if spotlight_buffer.starts_with("/") {
+                render::render_spotlight(f, body_chunks[0], &spotlight_buffer);
             }
         })?;
 
@@ -68,14 +78,14 @@ pub fn launch_ui() -> Result<(), Box<dyn std::error::Error>> {
                     (KeyCode::Char('o'), KeyModifiers::CONTROL) => spotlight_buffer = String::from("/"),
                     (KeyCode::Char(c), _) if spotlight_buffer.starts_with("/") => {
                         spotlight_buffer.push(c);
-                    },
+                    }
                     (KeyCode::Backspace, _) => {
                         spotlight_buffer.pop();
-                    },
+                    }
                     (KeyCode::Enter, _) => {
                         spotlight::use_command(&spotlight_buffer);
                         spotlight_buffer.clear();
-                    },
+                    }
                     _ => {}
                 }
             }

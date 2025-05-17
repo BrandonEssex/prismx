@@ -28,7 +28,8 @@ pub fn render_spotlight<B: ratatui::backend::Backend>(f: &mut Frame<B>, area: Re
         .borders(Borders::ALL)
         .style(get_style("spotlight"));
 
-    let paragraph = Paragraph::new(vec![Line::from(format!("> {}", input))]).block(block);
+    let paragraph = Paragraph::new(vec![Line::from(format!("> {}", input))])
+        .block(block);
     f.render_widget(paragraph, area);
 }
 
@@ -87,6 +88,11 @@ pub fn render_zen_journal<B: ratatui::backend::Backend>(f: &mut Frame<B>, area: 
         Line::from("Press Ctrl+D to save and exit."),
     ])
     .block(block);
-
     f.render_widget(paragraph, area);
+}
+
+pub fn render_status_bar<B: ratatui::backend::Backend>(f: &mut Frame<B>, area: Rect) {
+    let line = Line::from("🔷 PrismX | [ZEN OFF] [DASHBOARD ON] [SPOTLIGHT READY]");
+    let bar = Paragraph::new(vec![line]).style(get_style("status"));
+    f.render_widget(bar, area);
 }
