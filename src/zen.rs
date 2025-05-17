@@ -1,5 +1,6 @@
-use std::fs::OpenOptions;
+use std::fs::{self, OpenOptions};
 use std::io::{self, Read, Write};
+use std::path::Path;
 use chrono::Utc;
 
 pub fn start_journal() -> Result<(), Box<dyn std::error::Error>> {
@@ -8,6 +9,9 @@ pub fn start_journal() -> Result<(), Box<dyn std::error::Error>> {
 
     let mut buffer = String::new();
     io::stdin().read_to_string(&mut buffer)?;
+
+    let log_dir = Path::new("logs");
+    fs::create_dir_all(log_dir)?; // ensure logs/ exists
 
     let filename = format!("logs/journal_{}.txt", Utc::now().format("%Y%m%d_%H%M%S"));
     let mut file = OpenOptions::new().create(true).write(true).open(&filename)?;
