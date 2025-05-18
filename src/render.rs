@@ -1,99 +1,118 @@
-use ratatui::{
-    Frame,
-    prelude::Rect,
-    widgets::{Block, Borders, Paragraph},
-    text::Line,
-};
-use crate::theme::get_style;
+use crate::{render, spotlight, routineforge, settings};
 use crate::gemx::nodes::MindmapNode;
+use ratatui::{
+    backend::CrosstermBackend,
+    Terminal,
+    layout::{Layout, Constraint, Direction},
+};
+use crossterm::{
+    event::{self, Event, KeyCode, KeyModifiers, KeyEvent},
+    execute,
+    terminal::{EnterAlternateScreen, LeaveAlternateScreen, enable_raw_mode, disable_raw_mode},
+};
+use std::fs;
+use std::io::stdout;
 
-pub fn render_mindmap<B: ratatui::backend::Backend>(f: &mut Frame<B>, area: Rect, node: &MindmapNode) {
-    let mut lines = vec![Line::from(format!("🧠 {}", node.title))];
-    for (i, child) in node.children.iter().enumerate() {
-        lines.push(Line::from(format!("  {}. {}", i + 1, child.title)));
+pub fn launch_ui() -> Result<(), Box<dyn std::error::Error>> {
+    enable_raw_mode()?;
+    let mut stdout = stdout();
+    execute!(stdout, EnterAlternateScreen)?;
+    let backend = CrosstermBackend::new(stdout);
+    let mut terminal = Terminal::new(backend)?;
+
+    let mut zen_mode = false;
+    let mut dashboard_on = true;
+    let mut triage_on = false;
+    let mut help_on = false;
+    let mut spotlight_buffer = String::new();
+    let mut main_percent = 70;
+
+    let root_node: MindmapNode = {
+        let data = fs::read_to_string("snapshots/mindmap.json").unwrap_or_else(|_| "{}".into());
+        serde_json::from_str(&data).unwrap_or_else(|_| MindmapNode::new("root", "Welcome to PrismX"))
+    };
+
+    loop {
+        terminal.draw(|f| {
+            let size = f.size();
+            render::render_status_bar(f, size);
+
+            let body_chunks = Layout::default()
+                .direction(Direction::Horizontal)
+                .constraints(
+                    if dashboard_on || triage_on {
+                        vec![Constraint::Percentage(main_percent), Constraint::Percentage(100 - main_percent)]
+                    } else {
+                        vec![Constraint::Percentage(100)]
+                    }
+                )
+                .split(size);
+
+            if zen_mode {
+                render::render_zen_journal(f, body_chunks[0]);
+            } else {
+                render::render_mindmap(f, body_chunks[0], &root_node);
+            }
+
+            if dashboard_on && body_chunks.len() > 1 {
+                render::render_dashboard(f, body_chunks[1]);
+            }
+
+            if triage_on && body_chunks.len() > 1 {
+                routineforge::render_triage_panel(f, body_chunks[1]);
+            }
+
+            if help_on {
+                render::render_keymap_overlay(f, body_chunks[0]);
+            }
+
+            if spotlight_buffer.starts_with("/") {
+                render::render_spotlight(f, body_chunks[0], &spotlight_buffer);
+            }
+        })?;
+
+        if event::poll(std::time::Duration::from_millis(100))? {
+            if let Event::Key(KeyEvent { code, modifiers, .. }) = event::read()? {
+                match (code, modifiers) {
+                    (KeyCode::Char('q'), KeyModifiers::CONTROL) => break,
+                    (KeyCode::Char('z'), KeyModifiers::CONTROL) => zen_mode = !zen_mode,
+                    (KeyCode::Char('d'), KeyModifiers::CONTROL) => dashboard_on = !dashboard_on,
+                    (KeyCode::Char('i'), KeyModifiers::CONTROL) => triage_on = !triage_on,
+                    (KeyCode::Char('k'), KeyModifiers::CONTROL) => help_on = !help_on,
+                    (KeyCode::Char(' '), KeyModifiers::ALT) => spotlight_buffer = String::from("/"),
+                    (KeyCode::Char(c), _) if spotlight_buffer.starts_with("/") => {
+                        spotlight_buffer.push(c);
+                    }
+                    (KeyCode::Backspace, _) => {
+                        spotlight_buffer.pop();
+                    }
+                    (KeyCode::Enter, _) => {
+                        spotlight::use_command(&spotlight_buffer);
+                        spotlight_buffer.clear();
+                    }
+                    (KeyCode::Esc, _) => {
+                        zen_mode = false;
+                        spotlight_buffer.clear();
+                        triage_on = false;
+                        help_on = false;
+                    }
+                    (KeyCode::Right, KeyModifiers::CONTROL) => {
+                        if main_percent < 90 {
+                            main_percent += 5;
+                        }
+                    }
+                    (KeyCode::Left, KeyModifiers::CONTROL) => {
+                        if main_percent > 10 {
+                            main_percent -= 5;
+                        }
+                    }
+                    _ => {}
+                }
+            }
+        }
     }
 
-    let block = Block::default()
-        .title("GemX Mindmap")
-        .borders(Borders::ALL)
-        .style(get_style("mindmap"));
-
-    let paragraph = Paragraph::new(lines).block(block);
-    f.render_widget(paragraph, area);
-}
-
-pub fn render_spotlight<B: ratatui::backend::Backend>(f: &mut Frame<B>, area: Rect, input: &str) {
-    let block = Block::default()
-        .title("Spotlight")
-        .borders(Borders::ALL)
-        .style(get_style("spotlight"));
-
-    let paragraph = Paragraph::new(vec![Line::from(format!("> {}", input))])
-        .block(block);
-    f.render_widget(paragraph, area);
-}
-
-pub fn render_keymap_overlay<B: ratatui::backend::Backend>(f: &mut Frame<B>, area: Rect) {
-    let lines = vec![
-        Line::from("Ctrl+Q → Quit"),
-        Line::from("Ctrl+Z → Zen"),
-        Line::from("Ctrl+D → Dashboard"),
-        Line::from("Alt+Space → Spotlight"),
-        Line::from("Ctrl+I → Triage"),
-        Line::from("Ctrl+K → Help"),
-    ];
-
-    let block = Block::default()
-        .title("Keymap")
-        .borders(Borders::ALL)
-        .style(get_style("keymap"));
-
-    let paragraph = Paragraph::new(lines).block(block);
-    f.render_widget(paragraph, area);
-}
-
-pub fn render_clipboard<B: ratatui::backend::Backend>(f: &mut Frame<B>, area: Rect, last_copied: &str) {
-    let block = Block::default()
-        .title("Clipboard")
-        .borders(Borders::ALL)
-        .style(get_style("clipboard"));
-
-    let paragraph = Paragraph::new(vec![Line::from(last_copied)]).block(block);
-    f.render_widget(paragraph, area);
-}
-
-pub fn render_dashboard<B: ratatui::backend::Backend>(f: &mut Frame<B>, area: Rect) {
-    let lines = vec![
-        Line::from("Trust Score: 100"),
-        Line::from("Plugins: gemx, dashboard, mindtrace"),
-        Line::from("Federation Drift: 0"),
-    ];
-
-    let block = Block::default()
-        .title("Dashboard")
-        .borders(Borders::ALL)
-        .style(get_style("dashboard"));
-
-    let paragraph = Paragraph::new(lines).block(block);
-    f.render_widget(paragraph, area);
-}
-
-pub fn render_zen_journal<B: ratatui::backend::Backend>(f: &mut Frame<B>, area: Rect) {
-    let block = Block::default()
-        .title("Zen Journal")
-        .borders(Borders::ALL)
-        .style(get_style("zen"));
-
-    let paragraph = Paragraph::new(vec![
-        Line::from("Type your journal..."),
-        Line::from("Press Esc to exit or Ctrl+D to save."),
-    ])
-    .block(block);
-    f.render_widget(paragraph, area);
-}
-
-pub fn render_status_bar<B: ratatui::backend::Backend>(f: &mut Frame<B>, area: Rect) {
-    let line = Line::from("🔷 PrismX | [ZEN OFF] [SPOTLIGHT READY] [TRIAGE: OFF] [CTRL+K = HELP]");
-    let bar = Paragraph::new(vec![line]).style(get_style("status"));
-    f.render_widget(bar, area);
+    disable_raw_mode()?;
+    execute!(terminal.backend_mut(), LeaveAlternateScreen)?;
+    Ok(())
 }

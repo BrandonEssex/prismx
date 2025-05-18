@@ -10,10 +10,10 @@ pub fn render_settings_panel<B: Backend>(f: &mut Frame<B>, area: Rect) {
     let lines = vec![
         Line::from("PrismX Settings"),
         Line::from("----------------"),
-        Line::from("Theme: loaded from theme.toml"),
-        Line::from("Layout: resizable, Ctrl+Arrow"),
-        Line::from("Toggle Keys: Dashboard, Triage, Spotlight"),
-        Line::from("Slash Commands: /theme, /plugin, /triage, /journal"),
+        Line::from("Theme: theme.toml"),
+        Line::from("Layout: Ctrl+Arrow resizable"),
+        Line::from("Panels: Toggle w/ Ctrl+D, I, K, Z"),
+        Line::from("Commands: /theme, /triage, /plugin, /journal"),
     ];
 
     let block = Block::default()

@@ -4,7 +4,6 @@ use ratatui::{
     backend::CrosstermBackend,
     Terminal,
     layout::{Layout, Constraint, Direction},
-    widgets::Block,
 };
 use crossterm::{
     event::{self, Event, KeyCode, KeyModifiers, KeyEvent},
