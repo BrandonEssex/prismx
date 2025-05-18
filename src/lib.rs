@@ -15,3 +15,4 @@ pub mod dashboard;
 pub mod render;
 pub mod gemx;
 pub mod routineforge;
+pub mod settings;

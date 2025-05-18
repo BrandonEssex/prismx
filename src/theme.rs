@@ -22,6 +22,9 @@ pub fn get_style(target: &str) -> Style {
             "spotlight" => color_from_map(theme, "spotlight").unwrap_or(default),
             "keymap" => color_from_map(theme, "keymap").unwrap_or(default),
             "clipboard" => color_from_map(theme, "clipboard").unwrap_or(default),
+            "dashboard" => color_from_map(theme, "dashboard").unwrap_or(default),
+            "zen" => color_from_map(theme, "zen").unwrap_or(default),
+            "status" => color_from_map(theme, "status").unwrap_or(default),
             _ => default,
         }
     } else {

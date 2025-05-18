@@ -1,4 +1,4 @@
-use crate::{render, spotlight, routineforge};
+use crate::{render, spotlight, routineforge, settings};
 use crate::gemx::nodes::MindmapNode;
 use ratatui::{
     backend::CrosstermBackend,
@@ -24,6 +24,7 @@ pub fn launch_ui() -> Result<(), Box<dyn std::error::Error>> {
     let mut zen_mode = false;
     let mut dashboard_on = true;
     let mut triage_on = false;
+    let mut help_on = false;
     let mut spotlight_buffer = String::new();
     let mut main_percent = 70;
 
@@ -35,8 +36,6 @@ pub fn launch_ui() -> Result<(), Box<dyn std::error::Error>> {
     loop {
         terminal.draw(|f| {
             let size = f.size();
-
-            // Status bar
             render::render_status_bar(f, size);
 
             let body_chunks = Layout::default()
@@ -50,7 +49,6 @@ pub fn launch_ui() -> Result<(), Box<dyn std::error::Error>> {
                 )
                 .split(size);
 
-            // Main Mindmap or Zen editor
             if zen_mode {
                 render::render_zen_journal(f, body_chunks[0]);
             } else {
@@ -65,12 +63,15 @@ pub fn launch_ui() -> Result<(), Box<dyn std::error::Error>> {
                 routineforge::render_triage_panel(f, body_chunks[1]);
             }
 
+            if help_on {
+                render::render_keymap_overlay(f, body_chunks[0]);
+            }
+
             if spotlight_buffer.starts_with("/") {
                 render::render_spotlight(f, body_chunks[0], &spotlight_buffer);
             }
         })?;
 
-        // Key input
         if event::poll(std::time::Duration::from_millis(100))? {
             if let Event::Key(KeyEvent { code, modifiers, .. }) = event::read()? {
                 match (code, modifiers) {
@@ -78,6 +79,7 @@ pub fn launch_ui() -> Result<(), Box<dyn std::error::Error>> {
                     (KeyCode::Char('z'), KeyModifiers::CONTROL) => zen_mode = !zen_mode,
                     (KeyCode::Char('d'), KeyModifiers::CONTROL) => dashboard_on = !dashboard_on,
                     (KeyCode::Char('i'), KeyModifiers::CONTROL) => triage_on = !triage_on,
+                    (KeyCode::Char('k'), KeyModifiers::CONTROL) => help_on = !help_on,
                     (KeyCode::Char(' '), KeyModifiers::ALT) => spotlight_buffer = String::from("/"),
                     (KeyCode::Char(c), _) if spotlight_buffer.starts_with("/") => {
                         spotlight_buffer.push(c);
@@ -86,13 +88,14 @@ pub fn launch_ui() -> Result<(), Box<dyn std::error::Error>> {
                         spotlight_buffer.pop();
                     }
                     (KeyCode::Enter, _) => {
-                        crate::spotlight::use_command(&spotlight_buffer);
+                        spotlight::use_command(&spotlight_buffer);
                         spotlight_buffer.clear();
                     }
                     (KeyCode::Esc, _) => {
                         zen_mode = false;
                         spotlight_buffer.clear();
                         triage_on = false;
+                        help_on = false;
                     }
                     (KeyCode::Right, KeyModifiers::CONTROL) => {
                         if main_percent < 90 {
