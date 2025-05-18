@@ -35,35 +35,42 @@ pub fn launch_ui() -> Result<(), Box<dyn std::error::Error>> {
     loop {
         terminal.draw(|f| {
             let size = f.size();
+
+            // Status bar
             render::render_status_bar(f, size);
 
-            let chunks = Layout::default()
+            let body_chunks = Layout::default()
                 .direction(Direction::Horizontal)
-                .constraints(vec![
-                    Constraint::Percentage(main_percent),
-                    Constraint::Percentage(100 - main_percent),
-                ])
+                .constraints(
+                    if dashboard_on || triage_on {
+                        vec![Constraint::Percentage(main_percent), Constraint::Percentage(100 - main_percent)]
+                    } else {
+                        vec![Constraint::Percentage(100)]
+                    }
+                )
                 .split(size);
 
+            // Main Mindmap or Zen editor
             if zen_mode {
-                render::render_zen_journal(f, chunks[0]);
+                render::render_zen_journal(f, body_chunks[0]);
             } else {
-                render::render_mindmap(f, chunks[0], &root_node);
+                render::render_mindmap(f, body_chunks[0], &root_node);
             }
 
-            if (dashboard_on || triage_on) && chunks.len() > 1 {
-                if dashboard_on {
-                    render::render_dashboard(f, chunks[1]);
-                } else if triage_on {
-                    routineforge::render_triage_panel(f, chunks[1]);
-                }
+            if dashboard_on && body_chunks.len() > 1 {
+                render::render_dashboard(f, body_chunks[1]);
+            }
+
+            if triage_on && body_chunks.len() > 1 {
+                routineforge::render_triage_panel(f, body_chunks[1]);
             }
 
             if spotlight_buffer.starts_with("/") {
-                render::render_spotlight(f, chunks[0], &spotlight_buffer);
+                render::render_spotlight(f, body_chunks[0], &spotlight_buffer);
             }
         })?;
 
+        // Key input
         if event::poll(std::time::Duration::from_millis(100))? {
             if let Event::Key(KeyEvent { code, modifiers, .. }) = event::read()? {
                 match (code, modifiers) {
@@ -71,7 +78,7 @@ pub fn launch_ui() -> Result<(), Box<dyn std::error::Error>> {
                     (KeyCode::Char('z'), KeyModifiers::CONTROL) => zen_mode = !zen_mode,
                     (KeyCode::Char('d'), KeyModifiers::CONTROL) => dashboard_on = !dashboard_on,
                     (KeyCode::Char('i'), KeyModifiers::CONTROL) => triage_on = !triage_on,
-                    (KeyCode::Char('o'), KeyModifiers::ALT) => spotlight_buffer = String::from("/"),
+                    (KeyCode::Char(' '), KeyModifiers::ALT) => spotlight_buffer = String::from("/"),
                     (KeyCode::Char(c), _) if spotlight_buffer.starts_with("/") => {
                         spotlight_buffer.push(c);
                     }
