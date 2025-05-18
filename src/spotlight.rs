@@ -16,7 +16,7 @@ pub fn use_command(input: &str) {
     }));
 
     commands.insert("/triage", Box::new(|| {
-        println!("[SPOTLIGHT] Triage opened.");
+        println!("[SPOTLIGHT] Triage toggled.");
     }));
 
     commands.insert("/copy", Box::new(|| {

@@ -8,9 +8,9 @@ use ratatui::{
 
 pub fn render_triage_panel<B: Backend>(f: &mut Frame<B>, area: Rect) {
     let tasks = vec![
-        Line::from("[ ] Write design draft"),
-        Line::from("[x] Fix plugin registry"),
-        Line::from("[ ] Review trust seals"),
+        Line::from("[ ] Design new node engine"),
+        Line::from("[x] Fix dashboard overflow"),
+        Line::from("[ ] Write slash command spec"),
     ];
 
     let block = Block::default()

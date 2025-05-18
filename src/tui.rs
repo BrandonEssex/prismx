@@ -25,6 +25,7 @@ pub fn launch_ui() -> Result<(), Box<dyn std::error::Error>> {
     let mut dashboard_on = true;
     let mut triage_on = false;
     let mut spotlight_buffer = String::new();
+    let mut main_percent = 70;
 
     let root_node: MindmapNode = {
         let data = fs::read_to_string("snapshots/mindmap.json").unwrap_or_else(|_| "{}".into());
@@ -34,37 +35,32 @@ pub fn launch_ui() -> Result<(), Box<dyn std::error::Error>> {
     loop {
         terminal.draw(|f| {
             let size = f.size();
-
-            // Status line
             render::render_status_bar(f, size);
 
-            let body_chunks = Layout::default()
+            let chunks = Layout::default()
                 .direction(Direction::Horizontal)
-                .constraints(
-                    if dashboard_on || triage_on {
-                        vec![Constraint::Percentage(70), Constraint::Percentage(30)]
-                    } else {
-                        vec![Constraint::Percentage(100)]
-                    }
-                )
+                .constraints(vec![
+                    Constraint::Percentage(main_percent),
+                    Constraint::Percentage(100 - main_percent),
+                ])
                 .split(size);
 
             if zen_mode {
-                render::render_zen_journal(f, body_chunks[0]);
+                render::render_zen_journal(f, chunks[0]);
             } else {
-                render::render_mindmap(f, body_chunks[0], &root_node);
+                render::render_mindmap(f, chunks[0], &root_node);
             }
 
-            if dashboard_on && body_chunks.len() > 1 {
-                render::render_dashboard(f, body_chunks[1]);
-            }
-
-            if triage_on && body_chunks.len() > 1 {
-                routineforge::render_triage_panel(f, body_chunks[1]);
+            if (dashboard_on || triage_on) && chunks.len() > 1 {
+                if dashboard_on {
+                    render::render_dashboard(f, chunks[1]);
+                } else if triage_on {
+                    routineforge::render_triage_panel(f, chunks[1]);
+                }
             }
 
             if spotlight_buffer.starts_with("/") {
-                render::render_spotlight(f, body_chunks[0], &spotlight_buffer);
+                render::render_spotlight(f, chunks[0], &spotlight_buffer);
             }
         })?;
 
@@ -75,7 +71,7 @@ pub fn launch_ui() -> Result<(), Box<dyn std::error::Error>> {
                     (KeyCode::Char('z'), KeyModifiers::CONTROL) => zen_mode = !zen_mode,
                     (KeyCode::Char('d'), KeyModifiers::CONTROL) => dashboard_on = !dashboard_on,
                     (KeyCode::Char('i'), KeyModifiers::CONTROL) => triage_on = !triage_on,
-                    (KeyCode::Char('o'), KeyModifiers::CONTROL) => spotlight_buffer = String::from("/"),
+                    (KeyCode::Char('o'), KeyModifiers::ALT) => spotlight_buffer = String::from("/"),
                     (KeyCode::Char(c), _) if spotlight_buffer.starts_with("/") => {
                         spotlight_buffer.push(c);
                     }
@@ -83,8 +79,23 @@ pub fn launch_ui() -> Result<(), Box<dyn std::error::Error>> {
                         spotlight_buffer.pop();
                     }
                     (KeyCode::Enter, _) => {
-                        spotlight::use_command(&spotlight_buffer);
+                        crate::spotlight::use_command(&spotlight_buffer);
                         spotlight_buffer.clear();
+                    }
+                    (KeyCode::Esc, _) => {
+                        zen_mode = false;
+                        spotlight_buffer.clear();
+                        triage_on = false;
+                    }
+                    (KeyCode::Right, KeyModifiers::CONTROL) => {
+                        if main_percent < 90 {
+                            main_percent += 5;
+                        }
+                    }
+                    (KeyCode::Left, KeyModifiers::CONTROL) => {
+                        if main_percent > 10 {
+                            main_percent -= 5;
+                        }
                     }
                     _ => {}
                 }

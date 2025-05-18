@@ -38,8 +38,8 @@ pub fn render_keymap_overlay<B: ratatui::backend::Backend>(f: &mut Frame<B>, are
         Line::from("Ctrl+Q → Quit"),
         Line::from("Ctrl+Z → Zen"),
         Line::from("Ctrl+D → Dashboard"),
-        Line::from("Ctrl+O → Spotlight"),
-        Line::from("Ctrl+T → Theme Toggle"),
+        Line::from("Alt+Space → Spotlight"),
+        Line::from("Ctrl+I → Triage"),
     ];
 
     let block = Block::default()
@@ -92,7 +92,7 @@ pub fn render_zen_journal<B: ratatui::backend::Backend>(f: &mut Frame<B>, area: 
 }
 
 pub fn render_status_bar<B: ratatui::backend::Backend>(f: &mut Frame<B>, area: Rect) {
-    let line = Line::from("🔷 PrismX | [ZEN OFF] [DASHBOARD ON] [SPOTLIGHT READY]");
+    let line = Line::from("🔷 PrismX | [ZEN OFF] [SPOTLIGHT READY] [TRIAGE: OFF]");
     let bar = Paragraph::new(vec![line]).style(get_style("status"));
     f.render_widget(bar, area);
 }
