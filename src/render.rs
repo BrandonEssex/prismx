@@ -39,8 +39,10 @@ pub fn render_mindmap<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState
         .title(if state.edit_mode { "Mindmap (Edit)" } else { "Mindmap" });
     f.render_widget(layout, area);
 
+    let offset_y = area.y + 1;
+
     for (i, (depth, node)) in state.flat_nodes.iter().enumerate() {
-        let y = area.y + i as u16;
+        let y = offset_y + i as u16;
         if y >= area.bottom() {
             break;
         }

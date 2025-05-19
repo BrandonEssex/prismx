@@ -31,7 +31,6 @@ pub fn draw<B: Backend>(terminal: &mut Terminal<B>, state: &AppState, last_key: 
             .constraints([Constraint::Min(1), Constraint::Length(3)])
             .split(layout_chunks[0]);
 
-        // Mode-based content
         match state.mode.as_str() {
             "zen" => render_zen_journal(f, vertical[0], state),
             "mindmap" => render_mindmap(f, vertical[0], state),
@@ -46,7 +45,6 @@ pub fn draw<B: Backend>(terminal: &mut Terminal<B>, state: &AppState, last_key: 
             }
         }
 
-        // Triage drawn above mode
         if state.show_triage {
             render_triage(f, vertical[0]);
         }
@@ -90,10 +88,8 @@ pub fn launch_ui() -> std::io::Result<()> {
                 last_key = format!("{:?} + {:?}", code, modifiers);
 
                 match code {
-                    // Quit
                     KeyCode::Char('q') if modifiers.contains(KeyModifiers::CONTROL) => break,
 
-                    // Mode switching
                     KeyCode::Char('m') if modifiers.contains(KeyModifiers::CONTROL) => {
                         state.mode = "mindmap".into();
                     }
@@ -110,11 +106,12 @@ pub fn launch_ui() -> std::io::Result<()> {
                         state.show_triage = !state.show_triage;
                     }
 
-                    // Spotlight: Alt+Space or Ctrl+.
-                    KeyCode::Char('\u{a0}') | KeyCode::Char(' ') => {
+                    // Alt+Space → Spotlight
+                    KeyCode::Char('\u{a0}') => {
                         state.show_spotlight = !state.show_spotlight;
                     }
 
+                    // Ctrl+. → Settings screen
                     KeyCode::Char('.') if modifiers.contains(KeyModifiers::CONTROL) => {
                         state.mode = "settings".into();
                     }
@@ -132,7 +129,7 @@ pub fn launch_ui() -> std::io::Result<()> {
                         state.execute_spotlight_command();
                     }
 
-                    // Esc
+                    // Escape
                     KeyCode::Esc => {
                         if state.edit_mode {
                             state.edit_mode = false;
@@ -144,7 +141,7 @@ pub fn launch_ui() -> std::io::Result<()> {
                         }
                     }
 
-                    // Mindmap Navigation
+                    // Navigation
                     KeyCode::Up if state.mode == "mindmap" && !state.show_spotlight => {
                         state.move_focus_up();
                     }
@@ -153,13 +150,13 @@ pub fn launch_ui() -> std::io::Result<()> {
                         state.move_focus_down();
                     }
 
-                    // Toggle Edit Mode
+                    // Toggle edit mode
                     KeyCode::Char('e') if modifiers.contains(KeyModifiers::CONTROL) && state.mode == "mindmap" => {
                         state.edit_mode = !state.edit_mode;
                         state.edit_ready = state.edit_mode;
                     }
 
-                    // Node editing
+                    // Edit input
                     KeyCode::Char(c) if state.mode == "mindmap" && state.edit_mode => {
                         let node = state.get_active_node();
                         let mut n = node.borrow_mut();
