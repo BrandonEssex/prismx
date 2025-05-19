@@ -129,3 +129,4 @@ pub fn render_spotlight<B: Backend>(f: &mut Frame<B>, area: Rect, input: &str) {
     f.render_widget(paragraph, spotlight_area);
 }
 
+
