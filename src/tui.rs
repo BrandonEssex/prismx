@@ -154,6 +154,40 @@ pub fn launch_ui() -> std::io::Result<()> {
                         state.move_focus_down();
                     }
 
+                    // Toggle edit/view mode
+                    KeyCode::Char('e') if modifiers.contains(KeyModifiers::CONTROL) => {
+                        if state.mode == "mindmap" {
+                            state.edit_mode = !state.edit_mode;
+                            if state.edit_mode {
+                                state.edit_buffer = state.mindmap_nodes[state.active_node].clone();
+                            }
+                        }
+                    }
+
+                    // Editing input
+                    KeyCode::Char(c) if state.mode == "mindmap" && state.edit_mode => {
+                        state.edit_buffer.push(c);
+                    }
+
+                    KeyCode::Backspace if state.mode == "mindmap" && state.edit_mode => {
+                        state.edit_buffer.pop();
+                    }
+
+                    KeyCode::Enter if state.mode == "mindmap" && state.edit_mode => {
+                        state.mindmap_nodes[state.active_node] = state.edit_buffer.clone();
+                        state.edit_mode = false;
+                        state.edit_buffer.clear();
+                    }
+
+                    // Tab → Add child
+                    KeyCode::Tab if state.mode == "mindmap" && state.edit_mode => {
+                        state.add_child_node();
+                    }
+
+                    // Ctrl+D → Delete node
+                    KeyCode::Char('d') if modifiers.contains(KeyModifiers::CONTROL) && state.mode == "mindmap" && state.edit_mode => {
+                        state.delete_node();
+                    }
 
                     _ => {}
                 }

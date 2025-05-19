@@ -29,28 +29,34 @@ pub fn render_zen_journal<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppS
 }
 
 pub fn render_mindmap<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
-    let nodes = &state.mindmap_nodes;
-    let layout = Block::default().borders(Borders::ALL).title("Mindmap");
+    let layout = Block::default().borders(Borders::ALL).title(if state.edit_mode { "Mindmap (Edit)" } else { "Mindmap" });
     f.render_widget(layout, area);
 
-    for (i, node) in nodes.iter().enumerate() {
+    for (i, node) in state.mindmap_nodes.iter().enumerate() {
         let y = area.y + i as u16;
         if y < area.bottom() {
             let text = if i == state.active_node {
-                format!("> {}", node)
+                if state.edit_mode {
+                    format!("> {}", state.edit_buffer)
+                } else {
+                    format!("> {}", node)
+                }
             } else {
                 format!("  {}", node)
             };
+
             let style = if i == state.active_node {
                 Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD | Modifier::UNDERLINED)
             } else {
                 Style::default().fg(Color::White)
             };
+
             let para = Paragraph::new(text).style(style);
             f.render_widget(para, Rect::new(area.x + 2, y, area.width - 4, 1));
         }
     }
 }
+
 
 
 pub fn render_keymap_overlay<B: Backend>(f: &mut Frame<B>, area: Rect) {
