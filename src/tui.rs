@@ -1,6 +1,6 @@
 use ratatui::Terminal;
 use ratatui::backend::{Backend, CrosstermBackend};
-use ratatui::layout::{Constraint, Direction, Layout};
+use ratatui::layout::{Constraint, Direction, Layout, Rect};
 use ratatui::widgets::Paragraph;
 
 use crossterm::{
@@ -17,40 +17,48 @@ pub fn draw<B: Backend>(terminal: &mut Terminal<B>, state: &AppState) -> std::io
     terminal.draw(|f| {
         let full = f.size();
 
-        let chunks = Layout::default()
-            .direction(Direction::Vertical)
-            .constraints([Constraint::Min(1), Constraint::Length(3)])
+        let zones = Layout::default()
+            .direction(Direction::Horizontal)
+            .constraints([Constraint::Min(50), Constraint::Length(30)].as_ref())
             .split(full);
 
+        let main = Layout::default()
+            .direction(Direction::Vertical)
+            .constraints([Constraint::Min(1), Constraint::Length(3)])
+            .split(zones[0]);
+
+        // Main mode rendering
         match state.mode.as_str() {
-            "zen" => render_zen_journal(f, chunks[0], state),
-            "mindmap" => render_mindmap(f, chunks[0], state),
+            "zen" => render_zen_journal(f, main[0], state),
+            "mindmap" => render_mindmap(f, main[0], state),
             _ => {
                 let fallback = Paragraph::new("Unknown mode");
-                f.render_widget(fallback, chunks[0]);
+                f.render_widget(fallback, main[0]);
             }
         }
 
-        if state.show_triage {
-            render_triage(f, chunks[0]);
+        // Right-hand overlays
+        if state.show_keymap {
+            render_keymap_overlay(f, zones[1]);
         }
 
-        if state.show_keymap {
-            render_keymap_overlay(f, chunks[0]);
+        // Overlay panels on top of main view
+        if state.show_triage {
+            render_triage(f, main[0]);
         }
 
         if state.show_spotlight {
-            render_spotlight(f, chunks[0], &state.spotlight_input);
+            render_spotlight(f, main[0], &state.spotlight_input);
         }
 
         let status_text = format!(
-            "Mode: {} | Triage: {} | Spotlight: {} | Keymap: {}",
+            "Mode: {} | Triage: {} | Spotlight: {} | Help: {}",
             state.mode,
             state.show_triage,
             state.show_spotlight,
             state.show_keymap
         );
-        render_status_bar(f, chunks[1], &status_text);
+        render_status_bar(f, main[1], &status_text);
     })?;
     Ok(())
 }
@@ -81,17 +89,21 @@ pub fn launch_ui() -> std::io::Result<()> {
                         state.mode = "zen".into();
                     }
 
-                    // Triage toggle (Ctrl+I often maps to Tab)
+                    // Triage (Ctrl+I = Tab)
                     KeyCode::Tab => {
                         state.show_triage = !state.show_triage;
                     }
 
+                    // Help (Ctrl+H)
                     KeyCode::Char('h') if key.modifiers.contains(KeyModifiers::CONTROL) => {
                         state.show_keymap = !state.show_keymap;
                     }
 
-                    // Spotlight toggle
+                    // Spotlight (Alt+Space or Ctrl+/)
                     KeyCode::Char('\u{a0}') | KeyCode::Char(' ') if key.modifiers.contains(KeyModifiers::ALT) => {
+                        state.show_spotlight = !state.show_spotlight;
+                    }
+                    KeyCode::Char('/') if key.modifiers.contains(KeyModifiers::CONTROL) => {
                         state.show_spotlight = !state.show_spotlight;
                     }
 
@@ -108,7 +120,7 @@ pub fn launch_ui() -> std::io::Result<()> {
                         state.execute_spotlight_command();
                     }
 
-                    // Escape closes all overlays and resets to mindmap mode
+                    // Escape resets
                     KeyCode::Esc => {
                         state.mode = "mindmap".into();
                         state.show_keymap = false;

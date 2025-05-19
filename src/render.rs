@@ -19,6 +19,7 @@ pub fn render_status_bar<B: Backend>(f: &mut Frame<B>, area: Rect, status: &str)
 }
 
 
+
 pub fn render_zen_journal<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
     let text = state.zen_buffer.join("\n");
     let widget = Paragraph::new(text)
