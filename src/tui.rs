@@ -34,11 +34,17 @@ pub fn draw<B: Backend>(terminal: &mut Terminal<B>, state: &AppState, last_key: 
         match state.mode.as_str() {
             "zen" => render_zen_journal(f, vertical[0], state),
             "mindmap" => render_mindmap(f, vertical[0], state),
+            "settings" => {
+                let fallback = Paragraph::new("Settings panel coming soon...")
+                    .block(Block::default().title("Settings").borders(Borders::ALL));
+                f.render_widget(fallback, vertical[0]);
+            }
             _ => {
                 let fallback = Paragraph::new("Unknown mode");
                 f.render_widget(fallback, vertical[0]);
             }
         }
+
 
         if state.show_triage {
             render_triage(f, vertical[0]);
@@ -100,13 +106,15 @@ pub fn launch_ui() -> std::io::Result<()> {
                     KeyCode::Char('h') if modifiers.contains(KeyModifiers::CONTROL) => {
                         state.show_keymap = !state.show_keymap;
                     }
-
-                    // Spotlight: Alt+Space or Ctrl+.
+                    
+                    // Alt+Space = Spotlight
                     KeyCode::Char('\u{a0}') | KeyCode::Char(' ') => {
                         state.show_spotlight = !state.show_spotlight;
                     }
+
+                    // Ctrl+. = Settings (placeholder)
                     KeyCode::Char('.') if modifiers.contains(KeyModifiers::CONTROL) => {
-                        state.show_spotlight = !state.show_spotlight;
+                        state.mode = "settings".into(); // Use fallback screen for now
                     }
 
                     // Spotlight input

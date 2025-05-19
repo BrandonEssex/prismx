@@ -110,7 +110,17 @@ impl AppState {
 
     pub fn update_active_label(&mut self, c: char) {
         let node = self.get_active_node();
-        node.borrow_mut().label.push(c);
+        let mut n = node.borrow_mut();
+        if self.edit_ready {
+            if n.label.starts_with("New ")
+                || n.label.starts_with("Node A")
+                || n.label.starts_with("Node B")
+            {
+                n.label.clear();
+            }
+            self.edit_ready = false;
+        }
+        n.label.push(c);
     }
 
     pub fn delete_last_char(&mut self) {
