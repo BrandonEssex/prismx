@@ -2,8 +2,8 @@ use ratatui::Terminal;
 use ratatui::backend::Backend;
 use ratatui::layout::{Constraint, Direction, Layout};
 
+use gemx::state::AppState;
 use crate::render::*;
-use crate::state::AppState;
 
 pub fn draw<B: Backend>(terminal: &mut Terminal<B>, state: &AppState) -> std::io::Result<()> {
     terminal.draw(|f| {
@@ -33,7 +33,19 @@ pub fn draw<B: Backend>(terminal: &mut Terminal<B>, state: &AppState) -> std::io
                 .direction(Direction::Vertical)
                 .constraints([Constraint::Min(1), Constraint::Length(10)])
                 .split(chunks[1])[1];
-            render_status_bar(f, area); // Temporary triage box
+            render_status_bar(f, area);
         }
-    })
+    })?;
+    Ok(())
+}
+
+pub fn launch_ui() -> std::io::Result<()> {
+    use ratatui::backend::CrosstermBackend;
+    use std::io::stdout;
+
+    let backend = CrosstermBackend::new(stdout());
+    let mut terminal = Terminal::new(backend)?;
+    let state = gemx::state::AppState::default();
+    draw(&mut terminal, &state)?;
+    Ok(())
 }

@@ -6,7 +6,7 @@ use ratatui::{
     Frame,
 };
 
-use crate::state::AppState;
+use gemx::state::AppState;
 
 pub fn render_status_bar<B: Backend>(f: &mut Frame<B>, area: Rect) {
     let block = Block::default()
@@ -26,7 +26,6 @@ pub fn render_mindmap<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState
     let nodes = &state.mindmap_nodes;
     let layout = Block::default().borders(Borders::ALL).title("Mindmap");
     f.render_widget(layout, area);
-    // Placeholder: Render simplified list
     for (i, node) in nodes.iter().enumerate() {
         let y = area.y + i as u16;
         if y < area.bottom() {
