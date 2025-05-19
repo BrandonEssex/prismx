@@ -118,20 +118,25 @@ impl AppState {
 
     pub fn add_sibling(&mut self) {
         if self.active_node == 0 {
-            return; // don't add sibling to root
+            return;
         }
 
-        let (parent_depth, _) = self.flat_nodes[self.active_node];
-        for (i, (depth, n)) in self.flat_nodes.iter().enumerate().rev() {
-            if *depth == parent_depth - 1 {
-                let mut parent = n.borrow_mut();
-                parent.children.push(Rc::new(RefCell::new(Node {
-                    label: "New Sibling".into(),
-                    children: vec![],
-                })));
-                self.reflatten();
+        let (target_depth, _) = self.flat_nodes[self.active_node];
+        let mut parent_to_update: Option<Rc<RefCell<Node>>> = None;
+
+        for (depth, node) in self.flat_nodes.iter().rev() {
+            if *depth == target_depth - 1 {
+                parent_to_update = Some(Rc::clone(node));
                 break;
             }
+        }
+
+        if let Some(parent) = parent_to_update {
+            parent.borrow_mut().children.push(Rc::new(RefCell::new(Node {
+                label: "New Sibling".into(),
+                children: vec![],
+            })));
+            self.reflatten();
         }
     }
 
