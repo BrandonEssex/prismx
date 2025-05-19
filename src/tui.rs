@@ -17,7 +17,6 @@ pub fn draw<B: Backend>(terminal: &mut Terminal<B>, state: &AppState, last_key: 
     terminal.draw(|f| {
         let full = f.size();
 
-        // Decide layout width
         let layout_chunks = if state.show_keymap {
             Layout::default()
                 .direction(Direction::Horizontal)
@@ -27,13 +26,11 @@ pub fn draw<B: Backend>(terminal: &mut Terminal<B>, state: &AppState, last_key: 
             std::rc::Rc::from(vec![full])
         };
 
-
         let vertical = Layout::default()
             .direction(Direction::Vertical)
             .constraints([Constraint::Min(1), Constraint::Length(3)])
             .split(layout_chunks[0]);
 
-        // Main panel
         match state.mode.as_str() {
             "zen" => render_zen_journal(f, vertical[0], state),
             "mindmap" => render_mindmap(f, vertical[0], state),
@@ -86,10 +83,8 @@ pub fn launch_ui() -> std::io::Result<()> {
                 last_key = format!("{:?} + {:?}", code, modifiers);
 
                 match code {
-                    // Quit
                     KeyCode::Char('q') if modifiers.contains(KeyModifiers::CONTROL) => break,
 
-                    // Mode switching
                     KeyCode::Char('m') if modifiers.contains(KeyModifiers::CONTROL) => {
                         state.mode = "mindmap".into();
                     }
@@ -98,21 +93,20 @@ pub fn launch_ui() -> std::io::Result<()> {
                         state.mode = "zen".into();
                     }
 
-                    // Triage (Tab == Ctrl+I)
                     KeyCode::Tab => {
                         state.show_triage = !state.show_triage;
                     }
 
-                    // Help
                     KeyCode::Char('h') if modifiers.contains(KeyModifiers::CONTROL) => {
                         state.show_keymap = !state.show_keymap;
                     }
 
-                    // Spotlight triggers
-                    KeyCode::Char('\u{a0}') | KeyCode::Char(' ') if modifiers.contains(KeyModifiers::ALT) => {
+                    // Spotlight: Alt+Space = Char('\u{a0}'), Ctrl+/ emits as Ctrl+7
+                    KeyCode::Char('\u{a0}') => {
                         state.show_spotlight = !state.show_spotlight;
                     }
-                    KeyCode::Char('/') if modifiers.contains(KeyModifiers::CONTROL) => {
+
+                    KeyCode::Char('7') if modifiers.contains(KeyModifiers::CONTROL) => {
                         state.show_spotlight = !state.show_spotlight;
                     }
 
@@ -120,19 +114,20 @@ pub fn launch_ui() -> std::io::Result<()> {
                     KeyCode::Char(c) if modifiers.is_empty() && state.show_spotlight => {
                         state.spotlight_input.push(c);
                     }
+
                     KeyCode::Backspace if state.show_spotlight => {
                         state.spotlight_input.pop();
                     }
+
                     KeyCode::Enter if state.show_spotlight => {
                         state.execute_spotlight_command();
                     }
 
-                    // Escape resets view
                     KeyCode::Esc => {
                         state.mode = "mindmap".into();
                         state.show_triage = false;
-                        state.show_spotlight = false;
                         state.show_keymap = false;
+                        state.show_spotlight = false;
                     }
 
                     // Zen input
@@ -141,9 +136,11 @@ pub fn launch_ui() -> std::io::Result<()> {
                             last.push(c);
                         }
                     }
+
                     KeyCode::Enter if state.mode == "zen" && !state.show_spotlight => {
                         state.zen_buffer.push(String::new());
                     }
+
                     KeyCode::Backspace if state.mode == "zen" && !state.show_spotlight => {
                         if let Some(last) = state.zen_buffer.last_mut() {
                             last.pop();
