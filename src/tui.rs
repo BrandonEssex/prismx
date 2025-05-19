@@ -14,34 +14,39 @@ use crate::render::*;
 
 pub fn draw<B: Backend>(terminal: &mut Terminal<B>, state: &AppState) -> std::io::Result<()> {
     terminal.draw(|f| {
+        let full = f.size();
+
+        // Layout split: Main area + status bar
         let chunks = Layout::default()
             .direction(Direction::Vertical)
-            .constraints([Constraint::Length(1), Constraint::Min(0)].as_ref())
-            .split(f.size());
+            .constraints([Constraint::Min(1), Constraint::Length(1)].as_ref())
+            .split(full);
 
-        render_status_bar(f, chunks[0]);
-
+        // View routing based on mode
         match state.mode.as_str() {
-            "zen" => render_zen_journal(f, chunks[1], state),
-            "mindmap" => render_mindmap(f, chunks[1], state),
-            _ => render_status_bar(f, chunks[1]),
+            "zen" => render_zen_journal(f, chunks[0], state),
+            "mindmap" => render_mindmap(f, chunks[0], state),
+            _ => {
+                let fallback = Paragraph::new("Unknown mode");
+                f.render_widget(fallback, chunks[0]);
+            }
         }
 
+        // Overlays
         if state.show_keymap {
-            render_keymap_overlay(f, chunks[1]);
+            render_keymap_overlay(f, chunks[0]);
         }
 
         if state.show_spotlight {
-            render_spotlight(f, chunks[1], &state.spotlight_input);
+            render_spotlight(f, chunks[0], &state.spotlight_input);
         }
 
         if state.show_triage {
-            let area = Layout::default()
-                .direction(Direction::Vertical)
-                .constraints([Constraint::Min(1), Constraint::Length(10)])
-                .split(chunks[1])[1];
-            render_triage(f, area);
+            render_triage(f, chunks[0]);
         }
+
+        // Always show status bar at bottom
+        render_status_bar(f, chunks[1]);
     })?;
     Ok(())
 }
@@ -60,10 +65,7 @@ pub fn launch_ui() -> std::io::Result<()> {
         if event::poll(std::time::Duration::from_millis(100))? {
             if let Event::Key(key) = event::read()? {
                 match (key.code, key.modifiers) {
-                    // Exit on Ctrl+Q
                     (KeyCode::Char('q'), KeyModifiers::CONTROL) => break,
-
-                    // Toggles
                     (KeyCode::Char('i'), KeyModifiers::CONTROL) => {
                         state.show_triage = !state.show_triage;
                     }
@@ -85,7 +87,7 @@ pub fn launch_ui() -> std::io::Result<()> {
                         state.execute_spotlight_command();
                     }
 
-                    // Zen mode input
+                    // Zen input
                     (KeyCode::Char(c), KeyModifiers::NONE) if state.mode == "zen" && !state.show_spotlight => {
                         if let Some(last) = state.zen_buffer.last_mut() {
                             last.push(c);
