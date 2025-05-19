@@ -1,7 +1,7 @@
 use ratatui::Terminal;
 use ratatui::backend::{Backend, CrosstermBackend};
 use ratatui::layout::{Constraint, Direction, Layout};
-use ratatui::widgets::Paragraph;
+use ratatui::widgets::{Paragraph, Block, Borders};
 
 use crossterm::{
     event::{self, DisableMouseCapture, EnableMouseCapture, Event, KeyCode, KeyEvent, KeyModifiers},
@@ -44,7 +44,6 @@ pub fn draw<B: Backend>(terminal: &mut Terminal<B>, state: &AppState, last_key: 
                 f.render_widget(fallback, vertical[0]);
             }
         }
-
 
         if state.show_triage {
             render_triage(f, vertical[0]);
@@ -106,15 +105,13 @@ pub fn launch_ui() -> std::io::Result<()> {
                     KeyCode::Char('h') if modifiers.contains(KeyModifiers::CONTROL) => {
                         state.show_keymap = !state.show_keymap;
                     }
-                    
-                    // Alt+Space = Spotlight
+
+                    // Spotlight: Alt+Space or Ctrl+.
                     KeyCode::Char('\u{a0}') | KeyCode::Char(' ') => {
                         state.show_spotlight = !state.show_spotlight;
                     }
-
-                    // Ctrl+. = Settings (placeholder)
                     KeyCode::Char('.') if modifiers.contains(KeyModifiers::CONTROL) => {
-                        state.mode = "settings".into(); // Use fallback screen for now
+                        state.mode = "settings".into();
                     }
 
                     // Spotlight input
@@ -134,9 +131,9 @@ pub fn launch_ui() -> std::io::Result<()> {
                             state.edit_mode = false;
                         } else {
                             state.mode = "mindmap".into();
+                            state.show_triage = false;
                             state.show_keymap = false;
                             state.show_spotlight = false;
-                            state.show_triage = false;
                         }
                     }
 
@@ -154,11 +151,14 @@ pub fn launch_ui() -> std::io::Result<()> {
                         state.edit_ready = state.edit_mode;
                     }
 
-                    // Editing node
+                    // Editing
                     KeyCode::Char(c) if state.mode == "mindmap" && state.edit_mode => {
                         let node = state.get_active_node();
                         let mut n = node.borrow_mut();
-                        if state.edit_ready && (n.label == "New Child" || n.label == "New Sibling") {
+                        if state.edit_ready && (
+                            n.label == "New Child" || n.label == "New Sibling" ||
+                            n.label == "Node A" || n.label == "Node B"
+                        ) {
                             n.label.clear();
                             state.edit_ready = false;
                         }
