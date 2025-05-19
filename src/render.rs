@@ -1,93 +1,52 @@
 use ratatui::{
-    Frame,
-    prelude::Rect,
+    backend::Backend,
+    layout::{Constraint, Direction, Layout, Rect},
+    style::{Color, Style},
     widgets::{Block, Borders, Paragraph},
-    text::Line,
+    Frame,
 };
-use crate::theme::get_style;
-use crate::gemx::nodes::MindmapNode;
 
-pub fn render_status_bar<B: ratatui::backend::Backend>(f: &mut Frame<B>, area: Rect) {
-    let line = Line::from("🔷 PrismX | [ZEN OFF] [SPOTLIGHT READY] [TRIAGE: OFF] [CTRL+K = HELP]");
-    let bar = Paragraph::new(vec![line]).style(get_style("status"));
-    f.render_widget(bar, area);
-}
+use crate::state::AppState;
 
-pub fn render_zen_journal<B: ratatui::backend::Backend>(f: &mut Frame<B>, area: Rect) {
+pub fn render_status_bar<B: Backend>(f: &mut Frame<B>, area: Rect) {
     let block = Block::default()
-        .title("Zen Journal")
         .borders(Borders::ALL)
-        .style(get_style("zen"));
-
-    let paragraph = Paragraph::new(vec![
-        Line::from("Type your journal..."),
-        Line::from("Press Esc to exit or Ctrl+D to save."),
-    ])
-    .block(block);
-    f.render_widget(paragraph, area);
+        .title("Status")
+        .style(Style::default().bg(Color::Black).fg(Color::White));
+    f.render_widget(block, area);
 }
 
-pub fn render_mindmap<B: ratatui::backend::Backend>(
-    f: &mut Frame<B>,
-    area: Rect,
-    node: &MindmapNode,
-) {
-    let mut lines = vec![Line::from(format!("🧠 {}", node.title))];
-    for (i, child) in node.children.iter().enumerate() {
-        lines.push(Line::from(format!("  {}. {}", i + 1, child.title)));
+pub fn render_zen_journal<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
+    let text = state.zen_buffer.join("\n");
+    let widget = Paragraph::new(text).block(Block::default().title("Zen").borders(Borders::ALL));
+    f.render_widget(widget, area);
+}
+
+pub fn render_mindmap<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
+    let nodes = &state.mindmap_nodes;
+    let layout = Block::default().borders(Borders::ALL).title("Mindmap");
+    f.render_widget(layout, area);
+    // Placeholder: Render simplified list
+    for (i, node) in nodes.iter().enumerate() {
+        let y = area.y + i as u16;
+        if y < area.bottom() {
+            let text = format!("• {}", node);
+            let para = Paragraph::new(text);
+            f.render_widget(para, Rect::new(area.x + 2, y, area.width - 4, 1));
+        }
     }
-
-    let block = Block::default()
-        .title("GemX Mindmap")
-        .borders(Borders::ALL)
-        .style(get_style("mindmap"));
-
-    let paragraph = Paragraph::new(lines).block(block);
-    f.render_widget(paragraph, area);
 }
 
-pub fn render_dashboard<B: ratatui::backend::Backend>(f: &mut Frame<B>, area: Rect) {
-    let lines = vec![
-        Line::from("Trust Score: 100"),
-        Line::from("Plugins: gemx, dashboard, mindtrace"),
-        Line::from("Federation Drift: 0"),
-    ];
-
-    let block = Block::default()
-        .title("Dashboard")
-        .borders(Borders::ALL)
-        .style(get_style("dashboard"));
-
-    let paragraph = Paragraph::new(lines).block(block);
-    f.render_widget(paragraph, area);
+pub fn render_keymap_overlay<B: Backend>(f: &mut Frame<B>, area: Rect) {
+    let block = Block::default().title("Keymap").borders(Borders::ALL);
+    f.render_widget(block, area);
+    let content = Paragraph::new("Ctrl+K = Help\nCtrl+I = Triage\nAlt+Space = Spotlight");
+    f.render_widget(content, Rect::new(area.x + 1, area.y + 1, area.width - 2, area.height - 2));
 }
 
-pub fn render_keymap_overlay<B: ratatui::backend::Backend>(f: &mut Frame<B>, area: Rect) {
-    let lines = vec![
-        Line::from("Ctrl+Q → Quit"),
-        Line::from("Ctrl+Z → Zen"),
-        Line::from("Ctrl+D → Dashboard"),
-        Line::from("Alt+Space → Spotlight"),
-        Line::from("Ctrl+I → Triage"),
-        Line::from("Ctrl+K → Help"),
-    ];
-
-    let block = Block::default()
-        .title("Keymap")
-        .borders(Borders::ALL)
-        .style(get_style("keymap"));
-
-    let paragraph = Paragraph::new(lines).block(block);
-    f.render_widget(paragraph, area);
-}
-
-pub fn render_spotlight<B: ratatui::backend::Backend>(f: &mut Frame<B>, area: Rect, input: &str) {
-    let block = Block::default()
-        .title("Spotlight")
-        .borders(Borders::ALL)
-        .style(get_style("spotlight"));
-
-    let paragraph = Paragraph::new(vec![Line::from(format!("> {}", input))])
-        .block(block);
-    f.render_widget(paragraph, area);
+pub fn render_spotlight<B: Backend>(f: &mut Frame<B>, area: Rect, input: &str) {
+    let block = Block::default().title("Spotlight").borders(Borders::ALL);
+    let paragraph = Paragraph::new(input.to_owned());
+    f.render_widget(block, area);
+    f.render_widget(paragraph, Rect::new(area.x + 2, area.y + 1, area.width - 4, 1));
 }

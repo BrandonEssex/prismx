@@ -1,30 +1,31 @@
 use std::collections::HashMap;
 
-pub fn use_command(input: &str) {
-    let mut commands: HashMap<&str, Box<dyn Fn()>> = HashMap::new();
+pub struct Spotlight {
+    pub input: String,
+    pub commands: HashMap<String, Box<dyn FnMut()>>,
+}
 
-    commands.insert("/theme dark", Box::new(|| {
-        println!("[SPOTLIGHT] Theme set to dark");
-    }));
+impl Spotlight {
+    pub fn new() -> Self {
+        Self {
+            input: String::new(),
+            commands: HashMap::new(),
+        }
+    }
 
-    commands.insert("/plugin disable mindtrace", Box::new(|| {
-        println!("[SPOTLIGHT] mindtrace plugin disabled");
-    }));
+    pub fn register_command<F>(&mut self, name: &str, handler: F)
+    where
+        F: FnMut() + 'static,
+    {
+        self.commands.insert(name.to_string(), Box::new(handler));
+    }
 
-    commands.insert("/journal", Box::new(|| {
-        crate::zen::start_journal().unwrap();
-    }));
-
-    commands.insert("/triage", Box::new(|| {
-        println!("[SPOTLIGHT] Triage toggled.");
-    }));
-
-    commands.insert("/copy", Box::new(|| {
-        crate::clipboard::copy_node("example");
-    }));
-
-    match commands.get(input.trim()) {
-        Some(action) => action(),
-        None => println!("[SPOTLIGHT] Unknown command: {}", input),
+    pub fn execute(&mut self) {
+        let trimmed = self.input.trim();
+        if let Some(cmd) = self.commands.get_mut(trimmed) {
+            cmd();
+        } else {
+            // Ignore unknown command (remove spam)
+        }
     }
 }

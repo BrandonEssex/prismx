@@ -1,118 +1,39 @@
-use crate::{render, spotlight, routineforge, settings};
-use crate::gemx::nodes::MindmapNode;
-use ratatui::{
-    backend::CrosstermBackend,
-    Terminal,
-    layout::{Layout, Constraint, Direction},
-};
-use crossterm::{
-    event::{self, Event, KeyCode, KeyModifiers, KeyEvent},
-    execute,
-    terminal::{EnterAlternateScreen, LeaveAlternateScreen, enable_raw_mode, disable_raw_mode},
-};
-use std::fs;
-use std::io::stdout;
+use ratatui::Terminal;
+use ratatui::backend::Backend;
+use ratatui::layout::{Constraint, Direction, Layout};
 
-pub fn launch_ui() -> Result<(), Box<dyn std::error::Error>> {
-    enable_raw_mode()?;
-    let mut stdout = stdout();
-    execute!(stdout, EnterAlternateScreen)?;
-    let backend = CrosstermBackend::new(stdout);
-    let mut terminal = Terminal::new(backend)?;
+use crate::render::*;
+use crate::state::AppState;
 
-    let mut zen_mode = false;
-    let mut dashboard_on = true;
-    let mut triage_on = false;
-    let mut help_on = false;
-    let mut spotlight_buffer = String::new();
-    let mut main_percent = 70;
+pub fn draw<B: Backend>(terminal: &mut Terminal<B>, state: &AppState) -> std::io::Result<()> {
+    terminal.draw(|f| {
+        let chunks = Layout::default()
+            .direction(Direction::Vertical)
+            .constraints([Constraint::Length(1), Constraint::Min(0)].as_ref())
+            .split(f.size());
 
-    let root_node: MindmapNode = {
-        let data = fs::read_to_string("snapshots/mindmap.json").unwrap_or_else(|_| "{}".into());
-        serde_json::from_str(&data).unwrap_or_else(|_| MindmapNode::new("root", "Welcome to PrismX"))
-    };
+        render_status_bar(f, chunks[0]);
 
-    loop {
-        terminal.draw(|f| {
-            let size = f.size();
-            render::render_status_bar(f, size);
-
-            let body_chunks = Layout::default()
-                .direction(Direction::Horizontal)
-                .constraints(
-                    if dashboard_on || triage_on {
-                        vec![Constraint::Percentage(main_percent), Constraint::Percentage(100 - main_percent)]
-                    } else {
-                        vec![Constraint::Percentage(100)]
-                    }
-                )
-                .split(size);
-
-            if zen_mode {
-                render::render_zen_journal(f, body_chunks[0]);
-            } else {
-                render::render_mindmap(f, body_chunks[0], &root_node);
-            }
-
-            if dashboard_on && body_chunks.len() > 1 {
-                render::render_dashboard(f, body_chunks[1]);
-            }
-
-            if triage_on && body_chunks.len() > 1 {
-                routineforge::render_triage_panel(f, body_chunks[1]);
-            }
-
-            if help_on {
-                render::render_keymap_overlay(f, body_chunks[0]);
-            }
-
-            if spotlight_buffer.starts_with("/") {
-                render::render_spotlight(f, body_chunks[0], &spotlight_buffer);
-            }
-        })?;
-
-        if event::poll(std::time::Duration::from_millis(100))? {
-            if let Event::Key(KeyEvent { code, modifiers, .. }) = event::read()? {
-                match (code, modifiers) {
-                    (KeyCode::Char('q'), KeyModifiers::CONTROL) => break,
-                    (KeyCode::Char('z'), KeyModifiers::CONTROL) => zen_mode = !zen_mode,
-                    (KeyCode::Char('d'), KeyModifiers::CONTROL) => dashboard_on = !dashboard_on,
-                    (KeyCode::Char('i'), KeyModifiers::CONTROL) => triage_on = !triage_on,
-                    (KeyCode::Char('k'), KeyModifiers::CONTROL) => help_on = !help_on,
-                    (KeyCode::Char(' '), KeyModifiers::ALT) => spotlight_buffer = String::from("/"),
-                    (KeyCode::Char(c), _) if spotlight_buffer.starts_with("/") => {
-                        spotlight_buffer.push(c);
-                    }
-                    (KeyCode::Backspace, _) => {
-                        spotlight_buffer.pop();
-                    }
-                    (KeyCode::Enter, _) => {
-                        spotlight::use_command(&spotlight_buffer);
-                        spotlight_buffer.clear();
-                    }
-                    (KeyCode::Esc, _) => {
-                        zen_mode = false;
-                        spotlight_buffer.clear();
-                        triage_on = false;
-                        help_on = false;
-                    }
-                    (KeyCode::Right, KeyModifiers::CONTROL) => {
-                        if main_percent < 90 {
-                            main_percent += 5;
-                        }
-                    }
-                    (KeyCode::Left, KeyModifiers::CONTROL) => {
-                        if main_percent > 10 {
-                            main_percent -= 5;
-                        }
-                    }
-                    _ => {}
-                }
-            }
+        match state.mode.as_str() {
+            "zen" => render_zen_journal(f, chunks[1], state),
+            "mindmap" => render_mindmap(f, chunks[1], state),
+            _ => render_status_bar(f, chunks[1]),
         }
-    }
 
-    disable_raw_mode()?;
-    execute!(terminal.backend_mut(), LeaveAlternateScreen)?;
-    Ok(())
+        if state.show_keymap {
+            render_keymap_overlay(f, chunks[1]);
+        }
+
+        if state.show_spotlight {
+            render_spotlight(f, chunks[1], &state.spotlight_input);
+        }
+
+        if state.show_triage {
+            let area = Layout::default()
+                .direction(Direction::Vertical)
+                .constraints([Constraint::Min(1), Constraint::Length(10)])
+                .split(chunks[1])[1];
+            render_status_bar(f, area); // Temporary triage box
+        }
+    })
 }
