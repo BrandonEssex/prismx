@@ -2,7 +2,7 @@ use ratatui::Terminal;
 use ratatui::backend::Backend;
 use ratatui::layout::{Constraint, Direction, Layout};
 
-use crate::state::AppState;
+use gemx::state::AppState;
 use crate::render::*;
 
 pub fn draw<B: Backend>(terminal: &mut Terminal<B>, state: &AppState) -> std::io::Result<()> {
@@ -45,7 +45,7 @@ pub fn launch_ui() -> std::io::Result<()> {
 
     let backend = CrosstermBackend::new(stdout());
     let mut terminal = Terminal::new(backend)?;
-    let state = crate::state::AppState::default();
+    let state = gemx::state::AppState::default();
     draw(&mut terminal, &state)?;
     Ok(())
 }
