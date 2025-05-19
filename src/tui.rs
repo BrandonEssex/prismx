@@ -99,4 +99,26 @@ pub fn launch_ui() -> std::io::Result<()> {
                         }
                     }
 
-                    (KeyCode::Enter, KeyModifiers::NONE) if state.mode == "zen" &&
+                    (KeyCode::Enter, KeyModifiers::NONE) if state.mode == "zen" && !state.show_spotlight => {
+                        state.zen_buffer.push(String::new());
+                    }
+
+                    (KeyCode::Backspace, KeyModifiers::NONE) if state.mode == "zen" && !state.show_spotlight => {
+                        if let Some(last) = state.zen_buffer.last_mut() {
+                            last.pop();
+                        }
+                    }
+
+                    _ => {}
+                }
+            }
+        }
+
+        draw(&mut terminal, &state)?;
+    }
+
+    disable_raw_mode()?;
+    execute!(terminal.backend_mut(), LeaveAlternateScreen, DisableMouseCapture)?;
+    terminal.show_cursor()?;
+    Ok(())
+}
