@@ -19,22 +19,19 @@ pub fn render_status_bar<B: Backend>(f: &mut Frame<B>, area: Rect, status: &str)
 }
 
 pub fn render_zen_journal<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
-    use ratatui::widgets::{Wrap};
-    use ratatui::layout::Alignment;
+    use ratatui::widgets::Wrap;
 
     let text = state.zen_buffer.join("\n");
 
     let widget = Paragraph::new(text)
         .block(Block::default().title("Zen").borders(Borders::ALL))
         .alignment(Alignment::Center)
+        .style(Style::default().fg(Color::Green))
         .wrap(Wrap { trim: false });
 
-    // Scroll down by the number of lines - visible height + padding
-    let scroll_offset = state.zen_buffer.len().saturating_sub((area.height as usize).saturating_sub(4));
+    let scroll_offset = state.zen_buffer.len().saturating_sub((area.height as usize).saturating_sub(5));
     f.render_widget(widget.scroll((scroll_offset as u16, 0)), area);
 }
-
-
 
 pub fn render_mindmap<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
     let layout = Block::default()
@@ -76,31 +73,36 @@ pub fn render_keymap_overlay<B: Backend>(f: &mut Frame<B>, area: Rect) {
     let content = Paragraph::new(
         "\
         Ctrl+Q = Quit\n\
-        Ctrl+M = Mindmap Mode\n\
-        Ctrl+Z = Zen Mode\n\
-        Ctrl+E = Toggle Edit Mode\n\
-        Ctrl+I = Toggle Triage\n\
-        Ctrl+H = Toggle Help\n\
-        Ctrl+. / Alt+Space = Spotlight\n\
+        Ctrl+M = Mindmap\n\
+        Ctrl+Z = Zen\n\
+        Ctrl+E = Edit Mode\n\
+        Ctrl+I = Triage\n\
+        Ctrl+H = Help\n\
+        Ctrl+. = Settings\n\
+        Alt+Space = Spotlight\n\
         Tab = Add Child\n\
         Enter = Add Sibling\n\
-        Delete / Shift+Backspace = Delete Node\n\
-        Esc = Exit Edit/Overlay\n\
+        Shift+Backspace = Delete\n\
+        Esc = Exit overlay/edit\n\
         ",
     );
 
     f.render_widget(content, Rect::new(area.x + 1, area.y + 1, area.width - 2, area.height - 2));
 }
 
-
 pub fn render_triage<B: Backend>(f: &mut Frame<B>, area: Rect) {
     let block = Block::default()
         .title("Triage Panel")
         .borders(Borders::ALL)
         .style(Style::default().fg(Color::Red));
+
     let content = Paragraph::new(
-        "• [✓] Mindmap renders\n• [✓] Spotlight routes\n• [✓] Ctrl+I toggles\n• [✓] Tree model safe",
+        "• Mindmap rendering: OK\n\
+         • Node editing: OK\n\
+         • Zen scroll: OK\n\
+         • Triage display: Fixed"
     );
+
     f.render_widget(block, area);
     f.render_widget(content, Rect::new(area.x + 2, area.y + 1, area.width - 4, area.height - 2));
 }
