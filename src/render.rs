@@ -51,20 +51,22 @@ pub fn render_keymap_overlay<B: Backend>(f: &mut Frame<B>, area: Rect) {
     f.render_widget(content, Rect::new(area.x + 1, area.y + 1, area.width - 2, area.height - 2));
 }
 
-pub fn render_spotlight<B: Backend>(f: &mut Frame<B>, area: Rect, input: &str) {
-    let block = Block::default().title("Spotlight").borders(Borders::ALL);
-    let paragraph = Paragraph::new(input.to_owned())
-        .style(Style::default().fg(Color::Cyan));
-    f.render_widget(block, area);
-    f.render_widget(paragraph, Rect::new(area.x + 2, area.y + 1, area.width - 4, 1));
-}
-
 pub fn render_triage<B: Backend>(f: &mut Frame<B>, area: Rect) {
     let block = Block::default()
         .title("Triage Panel")
         .borders(Borders::ALL)
         .style(Style::default().fg(Color::Red));
-    let content = Paragraph::new("• Mindmap rendering: OK\n• Spotlight routing: OK\n• Zen input: OK");
+    let content = Paragraph::new("• [!] Spotlight not rendering\n• [✓] Keymap toggle works\n• [!] Ctrl+I has no visible effect");
     f.render_widget(block, area);
     f.render_widget(content, Rect::new(area.x + 2, area.y + 1, area.width - 4, area.height - 2));
+}
+
+pub fn render_spotlight<B: Backend>(f: &mut Frame<B>, area: Rect, input: &str) {
+    let block = Block::default()
+        .title("Spotlight")
+        .borders(Borders::ALL)
+        .style(Style::default().fg(Color::Cyan));
+    let paragraph = Paragraph::new(format!("> {}", input));
+    f.render_widget(block, area);
+    f.render_widget(paragraph, Rect::new(area.x + 2, area.y + 1, area.width - 4, 1));
 }
