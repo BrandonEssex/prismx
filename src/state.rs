@@ -1,10 +1,15 @@
+pub struct Node {
+    pub label: String,
+    pub children: Vec<Node>,
+}
+
 pub struct AppState {
     pub mode: String,
     pub zen_buffer: Vec<String>,
-    pub mindmap_nodes: Vec<String>,
+    pub root: Node,
+    pub flat_nodes: Vec<(usize, String)>, // (depth, label)
     pub active_node: usize,
     pub edit_mode: bool,
-    pub edit_buffer: String,
     pub spotlight_input: String,
     pub show_spotlight: bool,
     pub show_triage: bool,
@@ -13,13 +18,23 @@ pub struct AppState {
 
 impl Default for AppState {
     fn default() -> Self {
+        let root = Node {
+            label: "Root".into(),
+            children: vec![
+                Node { label: "Node A".into(), children: vec![] },
+                Node { label: "Node B".into(), children: vec![] },
+            ],
+        };
+
+        let flat = flatten_nodes(&root);
+
         Self {
             mode: "mindmap".into(),
             zen_buffer: vec!["".into()],
-            mindmap_nodes: vec!["Root".into(), "Node A".into(), "Node B".into()],
+            root,
+            flat_nodes: flat,
             active_node: 0,
             edit_mode: false,
-            edit_buffer: String::new(),
             spotlight_input: String::new(),
             show_spotlight: false,
             show_triage: false,
@@ -28,51 +43,15 @@ impl Default for AppState {
     }
 }
 
-impl AppState {
-    pub fn execute_spotlight_command(&mut self) {
-        let cmd = self.spotlight_input.trim();
-        match cmd {
-            "/toggle triage" => self.show_triage = !self.show_triage,
-            "/toggle keymap" => self.show_keymap = !self.show_keymap,
-            "/toggle spotlight" => self.show_spotlight = !self.show_spotlight,
-            "/mode zen" => self.mode = "zen".into(),
-            "/mode mindmap" => self.mode = "mindmap".into(),
-            "/clear" => self.zen_buffer = vec![String::new()],
-            _ => {}
-        }
-        self.spotlight_input.clear();
-        self.show_spotlight = false;
-    }
-
-    pub fn move_focus_up(&mut self) {
-        if self.active_node > 0 {
-            self.active_node -= 1;
+pub fn flatten_nodes(node: &Node) -> Vec<(usize, String)> {
+    fn recurse(n: &Node, depth: usize, out: &mut Vec<(usize, String)>) {
+        out.push((depth, n.label.clone()));
+        for child in &n.children {
+            recurse(child, depth + 1, out);
         }
     }
 
-    pub fn move_focus_down(&mut self) {
-        if self.active_node + 1 < self.mindmap_nodes.len() {
-            self.active_node += 1;
-        }
-    }
-
-    pub fn add_sibling_node(&mut self) {
-        let label = String::from("New Sibling");
-        let insert_at = self.active_node + 1;
-        if insert_at <= self.mindmap_nodes.len() {
-            self.mindmap_nodes.insert(insert_at, label);
-        }
-    }
-
-    pub fn add_child_node(&mut self) {
-        let label = String::from("New Child");
-        self.mindmap_nodes.insert(self.active_node + 1, label);
-    }
-
-    pub fn delete_node(&mut self) {
-        if self.active_node > 0 && self.active_node < self.mindmap_nodes.len() {
-            self.mindmap_nodes.remove(self.active_node);
-            self.active_node = self.active_node.saturating_sub(1);
-        }
-    }
+    let mut result = Vec::new();
+    recurse(node, 0, &mut result);
+    result
 }

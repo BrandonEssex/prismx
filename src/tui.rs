@@ -188,6 +188,49 @@ pub fn launch_ui() -> std::io::Result<()> {
                     KeyCode::Char('d') if modifiers.contains(KeyModifiers::CONTROL) && state.mode == "mindmap" && state.edit_mode => {
                         state.delete_node();
                     }
+                    // Toggle Edit Mode
+                    KeyCode::Char('e') if modifiers.contains(KeyModifiers::CONTROL) && state.mode == "mindmap" => {
+                        state.edit_mode = !state.edit_mode;
+                    }
+
+                    // Arrow navigation always allowed
+                    KeyCode::Up if state.mode == "mindmap" && !state.show_spotlight => {
+                        state.move_focus_up();
+                    }
+                    KeyCode::Down if state.mode == "mindmap" && !state.show_spotlight => {
+                        state.move_focus_down();
+                    }
+
+                    // Direct editing (Shift supported)
+                    KeyCode::Char(c) if state.mode == "mindmap" && state.edit_mode => {
+                        if let Some(label) = state.mindmap_nodes.get_mut(state.active_node) {
+                            label.push(c);
+                        }
+                    }
+                    KeyCode::Backspace if state.mode == "mindmap" && state.edit_mode => {
+                        if let Some(label) = state.mindmap_nodes.get_mut(state.active_node) {
+                            label.pop();
+                        }
+                    }
+
+                    // Node actions in edit mode
+                    KeyCode::Enter if state.mode == "mindmap" && state.edit_mode => {
+                        state.add_sibling_node();
+                    }
+                    KeyCode::Tab if state.mode == "mindmap" && state.edit_mode => {
+                        state.add_child_node();
+                    }
+                    KeyCode::Delete | KeyCode::Backspace if modifiers.contains(KeyModifiers::SHIFT)
+                        && state.mode == "mindmap"
+                        && state.edit_mode =>
+                    {
+                        state.delete_node();
+                    }
+
+                    // Triage now only on Ctrl+I
+                    KeyCode::Char('i') if modifiers.contains(KeyModifiers::CONTROL) => {
+                        state.show_triage = !state.show_triage;
+                    }
 
                     _ => {}
                 }
