@@ -24,8 +24,9 @@ pub fn draw<B: Backend>(terminal: &mut Terminal<B>, state: &AppState, last_key: 
                 .constraints([Constraint::Min(50), Constraint::Length(30)].as_ref())
                 .split(full)
         } else {
-            vec![full]
+            std::rc::Rc::from(vec![full])
         };
+
 
         let vertical = Layout::default()
             .direction(Direction::Vertical)
