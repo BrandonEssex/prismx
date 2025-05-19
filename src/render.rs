@@ -8,13 +8,16 @@ use ratatui::{
 
 use crate::state::AppState;
 
-pub fn render_status_bar<B: Backend>(f: &mut Frame<B>, area: Rect) {
+pub fn render_status_bar<B: Backend>(f: &mut Frame<B>, area: Rect, status: &str) {
     let block = Block::default()
         .borders(Borders::ALL)
         .title("Status")
         .style(Style::default().bg(Color::Black).fg(Color::White));
+    let content = Paragraph::new(status);
     f.render_widget(block, area);
+    f.render_widget(content, Rect::new(area.x + 1, area.y + 1, area.width - 2, 1));
 }
+
 
 pub fn render_zen_journal<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
     let text = state.zen_buffer.join("\n");

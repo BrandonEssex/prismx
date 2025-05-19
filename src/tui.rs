@@ -43,7 +43,14 @@ pub fn draw<B: Backend>(terminal: &mut Terminal<B>, state: &AppState) -> std::io
             render_spotlight(f, chunks[0], &state.spotlight_input);
         }
 
-        render_status_bar(f, chunks[1]);
+        let status_text = format!(
+            "Mode: {} | Triage: {} | Spotlight: {} | Keymap: {}",
+            state.mode,
+            state.show_triage,
+            state.show_spotlight,
+            state.show_keymap
+        );
+        render_status_bar(f, chunks[1], &status_text);
     })?;
     Ok(())
 }
@@ -62,20 +69,28 @@ pub fn launch_ui() -> std::io::Result<()> {
         if event::poll(std::time::Duration::from_millis(100))? {
             if let Event::Key(key) = event::read()? {
                 match key.code {
-                    // Exit
+                    // Quit
                     KeyCode::Char('q') if key.modifiers.contains(KeyModifiers::CONTROL) => break,
 
-                    // Triage: Ctrl+I may appear as Tab
+                    // Mode switching
+                    KeyCode::Char('m') if key.modifiers.contains(KeyModifiers::CONTROL) => {
+                        state.mode = "mindmap".into();
+                    }
+
+                    KeyCode::Char('z') if key.modifiers.contains(KeyModifiers::CONTROL) => {
+                        state.mode = "zen".into();
+                    }
+
+                    // Triage toggle (Ctrl+I often maps to Tab)
                     KeyCode::Tab => {
                         state.show_triage = !state.show_triage;
                     }
 
-                    // Keymap toggle
-                    KeyCode::Char('k') if key.modifiers.contains(KeyModifiers::CONTROL) => {
+                    KeyCode::Char('h') if key.modifiers.contains(KeyModifiers::CONTROL) => {
                         state.show_keymap = !state.show_keymap;
                     }
 
-                    // Spotlight (Alt+Space, macOS workaround)
+                    // Spotlight toggle
                     KeyCode::Char('\u{a0}') | KeyCode::Char(' ') if key.modifiers.contains(KeyModifiers::ALT) => {
                         state.show_spotlight = !state.show_spotlight;
                     }
@@ -93,7 +108,15 @@ pub fn launch_ui() -> std::io::Result<()> {
                         state.execute_spotlight_command();
                     }
 
-                    // Zen typing
+                    // Escape closes all overlays and resets to mindmap mode
+                    KeyCode::Esc => {
+                        state.mode = "mindmap".into();
+                        state.show_keymap = false;
+                        state.show_spotlight = false;
+                        state.show_triage = false;
+                    }
+
+                    // Zen input
                     KeyCode::Char(c) if key.modifiers.is_empty() && state.mode == "zen" && !state.show_spotlight => {
                         if let Some(last) = state.zen_buffer.last_mut() {
                             last.push(c);
