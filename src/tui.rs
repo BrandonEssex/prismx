@@ -1,11 +1,18 @@
 use ratatui::Terminal;
-use ratatui::backend::Backend;
+use ratatui::backend::CrosstermBackend;
 use ratatui::layout::{Constraint, Direction, Layout};
 
+use crossterm::{
+    event::{self, DisableMouseCapture, EnableMouseCapture, Event, KeyCode, KeyModifiers},
+    execute,
+    terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
+};
+
+use std::io::{stdout, Write};
 use crate::state::AppState;
 use crate::render::*;
 
-pub fn draw<B: Backend>(terminal: &mut Terminal<B>, state: &AppState) -> std::io::Result<()> {
+pub fn draw<B: CrosstermBackend>(terminal: &mut Terminal<B>, state: &AppState) -> std::io::Result<()> {
     terminal.draw(|f| {
         let chunks = Layout::default()
             .direction(Direction::Vertical)
@@ -40,12 +47,53 @@ pub fn draw<B: Backend>(terminal: &mut Terminal<B>, state: &AppState) -> std::io
 }
 
 pub fn launch_ui() -> std::io::Result<()> {
-    use ratatui::backend::CrosstermBackend;
-    use std::io::stdout;
-
-    let backend = CrosstermBackend::new(stdout());
+    enable_raw_mode()?;
+    let mut stdout = stdout();
+    execute!(stdout, EnterAlternateScreen, EnableMouseCapture)?;
+    let backend = CrosstermBackend::new(stdout);
     let mut terminal = Terminal::new(backend)?;
-    let state = crate::state::AppState::default();
+
+    let mut state = crate::state::AppState::default();
     draw(&mut terminal, &state)?;
+
+    loop {
+        if event::poll(std::time::Duration::from_millis(100))? {
+            if let Event::Key(key) = event::read()? {
+                match (key.code, key.modifiers) {
+                    (KeyCode::Char('q'), KeyModifiers::CONTROL) => break,
+                    (KeyCode::Char('i'), KeyModifiers::CONTROL) => {
+                        state.show_triage = !state.show_triage;
+                    }
+                    (KeyCode::Char('k'), KeyModifiers::CONTROL) => {
+                        state.show_keymap = !state.show_keymap;
+                    }
+                    (KeyCode::Char(' '), KeyModifiers::ALT) => {
+                        state.show_spotlight = !state.show_spotlight;
+                    }
+                    // Typing in Zen Mode
+                    (KeyCode::Char(c), KeyModifiers::NONE) if state.mode == "zen" => {
+                        if let Some(last) = state.zen_buffer.last_mut() {
+                            last.push(c);
+                        }
+                    }
+                    (KeyCode::Enter, KeyModifiers::NONE) if state.mode == "zen" => {
+                        state.zen_buffer.push(String::new());
+                    }
+                    (KeyCode::Backspace, KeyModifiers::NONE) if state.mode == "zen" => {
+                        if let Some(last) = state.zen_buffer.last_mut() {
+                            last.pop();
+                        }
+                    }
+                    _ => {}
+                }
+            }
+        }
+
+        draw(&mut terminal, &state)?;
+    }
+
+    disable_raw_mode()?;
+    execute!(terminal.backend_mut(), LeaveAlternateScreen, DisableMouseCapture)?;
+    terminal.show_cursor()?;
     Ok(())
 }
