@@ -117,7 +117,7 @@ pub fn launch_ui() -> std::io::Result<()> {
                     }
 
                     // Spotlight input
-                    KeyCode::Char(c) if modifiers.is_empty() && state.show_spotlight => {
+                    KeyCode::Char(c) if state.show_spotlight => {
                         state.spotlight_input.push(c);
                     }
 
