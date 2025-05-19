@@ -6,7 +6,7 @@ use ratatui::{
     Frame,
 };
 
-use gemx::state::AppState;
+use crate::gemx::state::AppState;
 
 pub fn render_status_bar<B: Backend>(f: &mut Frame<B>, area: Rect) {
     let block = Block::default()
