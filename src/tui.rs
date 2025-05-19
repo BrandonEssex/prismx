@@ -90,6 +90,7 @@ pub fn launch_ui() -> std::io::Result<()> {
                 match code {
                     KeyCode::Char('q') if modifiers.contains(KeyModifiers::CONTROL) => break,
 
+                    // Restored Mindmap mode
                     KeyCode::Char('m') if modifiers.contains(KeyModifiers::CONTROL) => {
                         state.mode = "mindmap".into();
                     }
@@ -98,20 +99,19 @@ pub fn launch_ui() -> std::io::Result<()> {
                         state.mode = "zen".into();
                     }
 
-                    KeyCode::Char('h') if modifiers.contains(KeyModifiers::CONTROL) => {
-                        state.show_keymap = !state.show_keymap;
-                    }
-
+                    // ✅ FIXED Ctrl+I: Triage toggle only
                     KeyCode::Char('i') if modifiers.contains(KeyModifiers::CONTROL) => {
                         state.show_triage = !state.show_triage;
                     }
 
-                    // Alt+Space → Spotlight
+                    KeyCode::Char('h') if modifiers.contains(KeyModifiers::CONTROL) => {
+                        state.show_keymap = !state.show_keymap;
+                    }
+
                     KeyCode::Char('\u{a0}') => {
                         state.show_spotlight = !state.show_spotlight;
                     }
 
-                    // Ctrl+. → Settings screen
                     KeyCode::Char('.') if modifiers.contains(KeyModifiers::CONTROL) => {
                         state.mode = "settings".into();
                     }
@@ -129,7 +129,6 @@ pub fn launch_ui() -> std::io::Result<()> {
                         state.execute_spotlight_command();
                     }
 
-                    // Escape
                     KeyCode::Esc => {
                         if state.edit_mode {
                             state.edit_mode = false;
@@ -141,7 +140,7 @@ pub fn launch_ui() -> std::io::Result<()> {
                         }
                     }
 
-                    // Navigation
+                    // Mindmap nav
                     KeyCode::Up if state.mode == "mindmap" && !state.show_spotlight => {
                         state.move_focus_up();
                     }
@@ -150,13 +149,11 @@ pub fn launch_ui() -> std::io::Result<()> {
                         state.move_focus_down();
                     }
 
-                    // Toggle edit mode
                     KeyCode::Char('e') if modifiers.contains(KeyModifiers::CONTROL) && state.mode == "mindmap" => {
                         state.edit_mode = !state.edit_mode;
                         state.edit_ready = state.edit_mode;
                     }
 
-                    // Edit input
                     KeyCode::Char(c) if state.mode == "mindmap" && state.edit_mode => {
                         let node = state.get_active_node();
                         let mut n = node.borrow_mut();
@@ -190,7 +187,7 @@ pub fn launch_ui() -> std::io::Result<()> {
                         state.delete_node();
                     }
 
-                    // Zen input
+                    // Zen typing
                     KeyCode::Char(c) if state.mode == "zen" => {
                         if let Some(last) = state.zen_buffer.last_mut() {
                             last.push(c);
