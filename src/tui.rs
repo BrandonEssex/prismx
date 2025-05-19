@@ -146,6 +146,14 @@ pub fn launch_ui() -> std::io::Result<()> {
                             last.pop();
                         }
                     }
+                    KeyCode::Up if state.mode == "mindmap" && !state.show_spotlight => {
+                        state.move_focus_up();
+                    }
+
+                    KeyCode::Down if state.mode == "mindmap" && !state.show_spotlight => {
+                        state.move_focus_down();
+                    }
+
 
                     _ => {}
                 }

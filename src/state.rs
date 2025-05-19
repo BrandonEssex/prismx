@@ -2,6 +2,7 @@ pub struct AppState {
     pub mode: String,
     pub zen_buffer: Vec<String>,
     pub mindmap_nodes: Vec<String>,
+    pub active_node: usize,
     pub spotlight_input: String,
     pub show_spotlight: bool,
     pub show_triage: bool,
@@ -14,6 +15,7 @@ impl Default for AppState {
             mode: "mindmap".into(),
             zen_buffer: vec!["".into()],
             mindmap_nodes: vec!["Root".into(), "Node A".into(), "Node B".into()],
+            active_node: 0,
             spotlight_input: String::new(),
             show_spotlight: false,
             show_triage: false,
@@ -36,5 +38,17 @@ impl AppState {
         }
         self.spotlight_input.clear();
         self.show_spotlight = false;
+    }
+
+    pub fn move_focus_up(&mut self) {
+        if self.active_node > 0 {
+            self.active_node -= 1;
+        }
+    }
+
+    pub fn move_focus_down(&mut self) {
+        if self.active_node + 1 < self.mindmap_nodes.len() {
+            self.active_node += 1;
+        }
     }
 }

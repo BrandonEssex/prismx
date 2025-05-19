@@ -36,17 +36,22 @@ pub fn render_mindmap<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState
     for (i, node) in nodes.iter().enumerate() {
         let y = area.y + i as u16;
         if y < area.bottom() {
-            let text = format!("→ {}", node);
-            let style = if i == 0 {
-                Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD)
+            let text = if i == state.active_node {
+                format!("> {}", node)
             } else {
-                Style::default()
+                format!("  {}", node)
+            };
+            let style = if i == state.active_node {
+                Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD | Modifier::UNDERLINED)
+            } else {
+                Style::default().fg(Color::White)
             };
             let para = Paragraph::new(text).style(style);
             f.render_widget(para, Rect::new(area.x + 2, y, area.width - 4, 1));
         }
     }
 }
+
 
 pub fn render_keymap_overlay<B: Backend>(f: &mut Frame<B>, area: Rect) {
     let block = Block::default().title("Keymap").borders(Borders::ALL);
