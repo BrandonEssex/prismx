@@ -64,4 +64,7 @@ pub fn render_triage<B: Backend>(f: &mut Frame<B>, area: Rect) {
         .title("Triage Panel")
         .borders(Borders::ALL)
         .style(Style::default().fg(Color::Red));
-    let content = Paragraph::new("• Mindmap rendering: OK\n• Spotlight routing:
+    let content = Paragraph::new("• Mindmap rendering: OK\n• Spotlight routing: OK\n• Zen input: OK");
+    f.render_widget(block, area);
+    f.render_widget(content, Rect::new(area.x + 2, area.y + 1, area.width - 4, area.height - 2));
+}
