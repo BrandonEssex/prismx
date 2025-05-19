@@ -21,3 +21,20 @@ impl Default for AppState {
         }
     }
 }
+
+impl AppState {
+    pub fn execute_spotlight_command(&mut self) {
+        let cmd = self.spotlight_input.trim();
+        match cmd {
+            "/toggle triage" => self.show_triage = !self.show_triage,
+            "/toggle keymap" => self.show_keymap = !self.show_keymap,
+            "/toggle spotlight" => self.show_spotlight = !self.show_spotlight,
+            "/mode zen" => self.mode = "zen".into(),
+            "/mode mindmap" => self.mode = "mindmap".into(),
+            "/clear" => self.zen_buffer = vec![String::new()],
+            _ => {} // Ignore unknown commands for now
+        }
+        self.spotlight_input.clear();
+        self.show_spotlight = false;
+    }
+}

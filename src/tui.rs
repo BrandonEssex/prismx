@@ -53,7 +53,7 @@ pub fn launch_ui() -> std::io::Result<()> {
     let backend = CrosstermBackend::new(stdout);
     let mut terminal = Terminal::new(backend)?;
 
-    let mut state = crate::state::AppState::default();
+    let mut state = AppState::default();
     draw(&mut terminal, &state)?;
 
     loop {
@@ -70,20 +70,33 @@ pub fn launch_ui() -> std::io::Result<()> {
                     (KeyCode::Char(' '), KeyModifiers::ALT) => {
                         state.show_spotlight = !state.show_spotlight;
                     }
-                    // Typing in Zen Mode
-                    (KeyCode::Char(c), KeyModifiers::NONE) if state.mode == "zen" => {
+
+                    // Spotlight input handling
+                    (KeyCode::Char(c), KeyModifiers::NONE) if state.show_spotlight => {
+                        state.spotlight_input.push(c);
+                    }
+                    (KeyCode::Backspace, KeyModifiers::NONE) if state.show_spotlight => {
+                        state.spotlight_input.pop();
+                    }
+                    (KeyCode::Enter, KeyModifiers::NONE) if state.show_spotlight => {
+                        state.execute_spotlight_command();
+                    }
+
+                    // Zen mode typing
+                    (KeyCode::Char(c), KeyModifiers::NONE) if state.mode == "zen" && !state.show_spotlight => {
                         if let Some(last) = state.zen_buffer.last_mut() {
                             last.push(c);
                         }
                     }
-                    (KeyCode::Enter, KeyModifiers::NONE) if state.mode == "zen" => {
+                    (KeyCode::Enter, KeyModifiers::NONE) if state.mode == "zen" && !state.show_spotlight => {
                         state.zen_buffer.push(String::new());
                     }
-                    (KeyCode::Backspace, KeyModifiers::NONE) if state.mode == "zen" => {
+                    (KeyCode::Backspace, KeyModifiers::NONE) if state.mode == "zen" && !state.show_spotlight => {
                         if let Some(last) = state.zen_buffer.last_mut() {
                             last.pop();
                         }
                     }
+
                     _ => {}
                 }
             }
