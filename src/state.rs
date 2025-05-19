@@ -11,9 +11,9 @@ pub struct AppState {
 impl Default for AppState {
     fn default() -> Self {
         Self {
-            mode: "zen".into(),
+            mode: "mindmap".into(),
             zen_buffer: vec!["".into()],
-            mindmap_nodes: vec!["Root".into(), "Child A".into(), "Child B".into()],
+            mindmap_nodes: vec!["Root".into(), "Node A".into(), "Node B".into()],
             spotlight_input: String::new(),
             show_spotlight: false,
             show_triage: false,

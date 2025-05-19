@@ -33,7 +33,7 @@ pub fn draw<B: Backend>(terminal: &mut Terminal<B>, state: &AppState) -> std::io
                 .direction(Direction::Vertical)
                 .constraints([Constraint::Min(1), Constraint::Length(10)])
                 .split(chunks[1])[1];
-            render_status_bar(f, area);
+            render_triage(f, area);
         }
     })?;
     Ok(())
