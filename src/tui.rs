@@ -1,6 +1,7 @@
 use ratatui::Terminal;
 use ratatui::backend::{Backend, CrosstermBackend};
 use ratatui::layout::{Constraint, Direction, Layout};
+use ratatui::widgets::Paragraph;
 
 use crossterm::{
     event::{self, DisableMouseCapture, EnableMouseCapture, Event, KeyCode, KeyModifiers},
@@ -8,7 +9,7 @@ use crossterm::{
     terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
 };
 
-use std::io::{stdout, Write};
+use std::io::stdout;
 use crate::state::AppState;
 use crate::render::*;
 
@@ -76,7 +77,6 @@ pub fn launch_ui() -> std::io::Result<()> {
                         state.show_spotlight = !state.show_spotlight;
                     }
 
-                    // Spotlight input
                     (KeyCode::Char(c), KeyModifiers::NONE) if state.show_spotlight => {
                         state.spotlight_input.push(c);
                     }
@@ -87,7 +87,6 @@ pub fn launch_ui() -> std::io::Result<()> {
                         state.execute_spotlight_command();
                     }
 
-                    // Zen input
                     (KeyCode::Char(c), KeyModifiers::NONE) if state.mode == "zen" && !state.show_spotlight => {
                         if let Some(last) = state.zen_buffer.last_mut() {
                             last.push(c);
