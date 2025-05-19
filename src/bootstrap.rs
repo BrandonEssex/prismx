@@ -1,5 +1,3 @@
-use crate::tui;
-
-fn main() -> std::io::Result<()> {
-    tui::launch_ui()
+pub fn start() -> std::io::Result<()> {
+    crate::tui::launch_ui()
 }
