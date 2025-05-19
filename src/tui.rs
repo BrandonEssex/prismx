@@ -1,5 +1,5 @@
 use ratatui::Terminal;
-use ratatui::backend::CrosstermBackend;
+use ratatui::backend::{Backend, CrosstermBackend};
 use ratatui::layout::{Constraint, Direction, Layout};
 
 use crossterm::{
@@ -12,7 +12,7 @@ use std::io::{stdout, Write};
 use crate::state::AppState;
 use crate::render::*;
 
-pub fn draw<B: CrosstermBackend>(terminal: &mut Terminal<B>, state: &AppState) -> std::io::Result<()> {
+pub fn draw<B: Backend>(terminal: &mut Terminal<B>, state: &AppState) -> std::io::Result<()> {
     terminal.draw(|f| {
         let chunks = Layout::default()
             .direction(Direction::Vertical)
@@ -60,7 +60,10 @@ pub fn launch_ui() -> std::io::Result<()> {
         if event::poll(std::time::Duration::from_millis(100))? {
             if let Event::Key(key) = event::read()? {
                 match (key.code, key.modifiers) {
+                    // Exit on Ctrl+Q
                     (KeyCode::Char('q'), KeyModifiers::CONTROL) => break,
+
+                    // Toggles
                     (KeyCode::Char('i'), KeyModifiers::CONTROL) => {
                         state.show_triage = !state.show_triage;
                     }
@@ -71,7 +74,7 @@ pub fn launch_ui() -> std::io::Result<()> {
                         state.show_spotlight = !state.show_spotlight;
                     }
 
-                    // Spotlight input handling
+                    // Spotlight input
                     (KeyCode::Char(c), KeyModifiers::NONE) if state.show_spotlight => {
                         state.spotlight_input.push(c);
                     }
@@ -82,7 +85,7 @@ pub fn launch_ui() -> std::io::Result<()> {
                         state.execute_spotlight_command();
                     }
 
-                    // Zen mode typing
+                    // Zen mode input
                     (KeyCode::Char(c), KeyModifiers::NONE) if state.mode == "zen" && !state.show_spotlight => {
                         if let Some(last) = state.zen_buffer.last_mut() {
                             last.push(c);
