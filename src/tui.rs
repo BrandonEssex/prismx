@@ -1,6 +1,6 @@
 use ratatui::Terminal;
 use ratatui::backend::{Backend, CrosstermBackend};
-use ratatui::layout::{Constraint, Direction, Layout, Rect};
+use ratatui::layout::{Constraint, Direction, Layout};
 use ratatui::widgets::Paragraph;
 
 use crossterm::{
@@ -83,29 +83,30 @@ pub fn launch_ui() -> std::io::Result<()> {
                 last_key = format!("{:?} + {:?}", code, modifiers);
 
                 match code {
+                    // Quit
                     KeyCode::Char('q') if modifiers.contains(KeyModifiers::CONTROL) => break,
 
+                    // Mode switches
                     KeyCode::Char('m') if modifiers.contains(KeyModifiers::CONTROL) => {
                         state.mode = "mindmap".into();
                     }
-
                     KeyCode::Char('z') if modifiers.contains(KeyModifiers::CONTROL) => {
                         state.mode = "zen".into();
                     }
 
+                    // Panel toggles
+                    KeyCode::Char('h') if modifiers.contains(KeyModifiers::CONTROL) => {
+                        state.show_keymap = !state.show_keymap;
+                    }
                     KeyCode::Char('i') if modifiers.contains(KeyModifiers::CONTROL) => {
                         state.show_triage = !state.show_triage;
                     }
 
-                    KeyCode::Char('h') if modifiers.contains(KeyModifiers::CONTROL) => {
-                        state.show_keymap = !state.show_keymap;
-                    }
-
+                    // Spotlight triggers (Alt+Space or Ctrl+.)
                     KeyCode::Char('\u{a0}') | KeyCode::Char(' ') if modifiers.contains(KeyModifiers::ALT) => {
                         state.show_spotlight = !state.show_spotlight;
                     }
-
-                    KeyCode::Char('7') if modifiers.contains(KeyModifiers::CONTROL) => {
+                    KeyCode::Char('.') if modifiers.contains(KeyModifiers::CONTROL) => {
                         state.show_spotlight = !state.show_spotlight;
                     }
 
@@ -113,57 +114,68 @@ pub fn launch_ui() -> std::io::Result<()> {
                     KeyCode::Char(c) if modifiers.is_empty() && state.show_spotlight => {
                         state.spotlight_input.push(c);
                     }
-
                     KeyCode::Backspace if state.show_spotlight => {
                         state.spotlight_input.pop();
                     }
-
                     KeyCode::Enter if state.show_spotlight => {
                         state.execute_spotlight_command();
                     }
 
-                    // Escape clears overlays
+                    // Escape: exit edit mode or overlays
                     KeyCode::Esc => {
-                        state.mode = "mindmap".into();
-                        state.show_keymap = false;
-                        state.show_spotlight = false;
-                        state.show_triage = false;
+                        if state.edit_mode {
+                            state.edit_mode = false;
+                        } else {
+                            state.mode = "mindmap".into();
+                            state.show_keymap = false;
+                            state.show_spotlight = false;
+                            state.show_triage = false;
+                        }
                     }
 
                     // Navigation
                     KeyCode::Up if state.mode == "mindmap" && !state.show_spotlight => {
                         state.move_focus_up();
                     }
-
                     KeyCode::Down if state.mode == "mindmap" && !state.show_spotlight => {
                         state.move_focus_down();
                     }
 
-                    // Toggle Edit Mode
+                    // Edit mode toggle
                     KeyCode::Char('e') if modifiers.contains(KeyModifiers::CONTROL) && state.mode == "mindmap" => {
                         state.edit_mode = !state.edit_mode;
                     }
 
-                    // Direct editing
+                    // Edit active node (clear 'New' prefix on first key)
                     KeyCode::Char(c) if state.mode == "mindmap" && state.edit_mode => {
-                        state.update_active_label(c);
+                        let node = state.get_active_node();
+                        let mut n = node.borrow_mut();
+                        if n.label.starts_with("New ") {
+                            n.label.clear();
+                        }
+                        n.label.push(c);
                     }
 
                     KeyCode::Backspace if state.mode == "mindmap" && state.edit_mode => {
-                        state.delete_last_char();
+                        let node = state.get_active_node();
+                        node.borrow_mut().label.pop();
                     }
 
-                    // Add sibling / child
+                    // Add sibling
                     KeyCode::Enter if state.mode == "mindmap" && state.edit_mode => {
                         state.add_sibling();
                     }
 
+                    // Add child
                     KeyCode::Tab if state.mode == "mindmap" && state.edit_mode => {
                         state.add_child();
                     }
 
                     // Delete node
-                    KeyCode::Delete | KeyCode::Backspace if modifiers.contains(KeyModifiers::SHIFT) && state.mode == "mindmap" && state.edit_mode => {
+                    KeyCode::Delete | KeyCode::Backspace if modifiers.contains(KeyModifiers::SHIFT)
+                        && state.mode == "mindmap"
+                        && state.edit_mode =>
+                    {
                         state.delete_node();
                     }
 
