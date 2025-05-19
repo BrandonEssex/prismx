@@ -61,49 +61,50 @@ pub fn launch_ui() -> std::io::Result<()> {
     loop {
         if event::poll(std::time::Duration::from_millis(100))? {
             if let Event::Key(key) = event::read()? {
-                println!("[INPUT] key: {:?}  mods: {:?}", key.code, key.modifiers);
+                match key.code {
+                    // Exit
+                    KeyCode::Char('q') if key.modifiers.contains(KeyModifiers::CONTROL) => break,
 
-                match (key.code, key.modifiers) {
-                    (KeyCode::Char('q'), KeyModifiers::CONTROL) => break,
-
-                    (KeyCode::Char('i'), KeyModifiers::CONTROL) => {
-                        println!("[HOTKEY] Ctrl+I → Triage toggle");
+                    // Triage: Ctrl+I may appear as Tab
+                    KeyCode::Tab => {
                         state.show_triage = !state.show_triage;
                     }
 
-                    (KeyCode::Char('k'), KeyModifiers::CONTROL) => {
-                        println!("[HOTKEY] Ctrl+K → Keymap toggle");
+                    // Keymap toggle
+                    KeyCode::Char('k') if key.modifiers.contains(KeyModifiers::CONTROL) => {
                         state.show_keymap = !state.show_keymap;
                     }
 
-                    (KeyCode::Char(' '), KeyModifiers::ALT) | (KeyCode::Esc, KeyModifiers::ALT) => {
-                        println!("[HOTKEY] Alt+Space → Spotlight toggle");
+                    // Spotlight (Alt+Space, macOS workaround)
+                    KeyCode::Char('\u{a0}') | KeyCode::Char(' ') if key.modifiers.contains(KeyModifiers::ALT) => {
                         state.show_spotlight = !state.show_spotlight;
                     }
 
-                    (KeyCode::Char(c), KeyModifiers::NONE) if state.show_spotlight => {
+                    // Spotlight input
+                    KeyCode::Char(c) if key.modifiers.is_empty() && state.show_spotlight => {
                         state.spotlight_input.push(c);
                     }
 
-                    (KeyCode::Backspace, KeyModifiers::NONE) if state.show_spotlight => {
+                    KeyCode::Backspace if state.show_spotlight => {
                         state.spotlight_input.pop();
                     }
 
-                    (KeyCode::Enter, KeyModifiers::NONE) if state.show_spotlight => {
+                    KeyCode::Enter if state.show_spotlight => {
                         state.execute_spotlight_command();
                     }
 
-                    (KeyCode::Char(c), KeyModifiers::NONE) if state.mode == "zen" && !state.show_spotlight => {
+                    // Zen typing
+                    KeyCode::Char(c) if key.modifiers.is_empty() && state.mode == "zen" && !state.show_spotlight => {
                         if let Some(last) = state.zen_buffer.last_mut() {
                             last.push(c);
                         }
                     }
 
-                    (KeyCode::Enter, KeyModifiers::NONE) if state.mode == "zen" && !state.show_spotlight => {
+                    KeyCode::Enter if state.mode == "zen" && !state.show_spotlight => {
                         state.zen_buffer.push(String::new());
                     }
 
-                    (KeyCode::Backspace, KeyModifiers::NONE) if state.mode == "zen" && !state.show_spotlight => {
+                    KeyCode::Backspace if state.mode == "zen" && !state.show_spotlight => {
                         if let Some(last) = state.zen_buffer.last_mut() {
                             last.pop();
                         }
