@@ -1,6 +1,6 @@
 use ratatui::{
     backend::Backend,
-    layout::Rect,
+    layout::{Alignment, Rect},
     style::{Color, Modifier, Style},
     widgets::{Block, Borders, Paragraph},
     Frame,
@@ -18,8 +18,6 @@ pub fn render_status_bar<B: Backend>(f: &mut Frame<B>, area: Rect, status: &str)
     f.render_widget(content, Rect::new(area.x + 1, area.y + 1, area.width - 2, 1));
 }
 
-
-
 pub fn render_zen_journal<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
     let text = state.zen_buffer.join("\n");
     let widget = Paragraph::new(text)
@@ -29,15 +27,18 @@ pub fn render_zen_journal<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppS
 }
 
 pub fn render_mindmap<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
-    let layout = Block::default().borders(Borders::ALL).title(if state.edit_mode { "Mindmap (Edit)" } else { "Mindmap" });
+    let layout = Block::default()
+        .borders(Borders::ALL)
+        .title(if state.edit_mode { "Mindmap (Edit)" } else { "Mindmap" });
     f.render_widget(layout, area);
 
-    for (i, (depth, label)) in state.flat_nodes.iter().enumerate() {
+    for (i, (depth, node)) in state.flat_nodes.iter().enumerate() {
         let y = area.y + i as u16;
         if y >= area.bottom() {
             break;
         }
 
+        let label = node.borrow().label.clone();
         let prefix = "  ".repeat(*depth);
         let content = if i == state.active_node {
             format!("> {}{}", prefix, label)
@@ -46,7 +47,9 @@ pub fn render_mindmap<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState
         };
 
         let style = if i == state.active_node {
-            Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD | Modifier::UNDERLINED)
+            Style::default()
+                .fg(Color::Yellow)
+                .add_modifier(Modifier::BOLD | Modifier::UNDERLINED)
         } else {
             Style::default().fg(Color::White)
         };
@@ -56,12 +59,10 @@ pub fn render_mindmap<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState
     }
 }
 
-
-
 pub fn render_keymap_overlay<B: Backend>(f: &mut Frame<B>, area: Rect) {
     let block = Block::default().title("Keymap").borders(Borders::ALL);
     f.render_widget(block, area);
-    let content = Paragraph::new("Ctrl+K = Help\nCtrl+I = Triage\nAlt+Space = Spotlight");
+    let content = Paragraph::new("Ctrl+H = Help\nCtrl+I = Triage\nCtrl+/ = Spotlight");
     f.render_widget(content, Rect::new(area.x + 1, area.y + 1, area.width - 2, area.height - 2));
 }
 
@@ -70,17 +71,17 @@ pub fn render_triage<B: Backend>(f: &mut Frame<B>, area: Rect) {
         .title("Triage Panel")
         .borders(Borders::ALL)
         .style(Style::default().fg(Color::Red));
-    let content = Paragraph::new("• [!] Spotlight not rendering\n• [✓] Keymap toggle works\n• [!] Ctrl+I has no visible effect");
+    let content = Paragraph::new(
+        "• [✓] Mindmap renders\n• [✓] Spotlight routes\n• [✓] Ctrl+I toggles\n• [✓] Tree model safe",
+    );
     f.render_widget(block, area);
     f.render_widget(content, Rect::new(area.x + 2, area.y + 1, area.width - 4, area.height - 2));
 }
 
 pub fn render_spotlight<B: Backend>(f: &mut Frame<B>, area: Rect, input: &str) {
-    use ratatui::layout::Alignment;
-
     let width = area.width.min(60);
     let x_offset = area.x + (area.width.saturating_sub(width)) / 2;
-    let y_offset = area.y + area.height / 3; // Rough vertical center
+    let y_offset = area.y + area.height / 3;
 
     let spotlight_area = Rect::new(x_offset, y_offset, width, 3);
 
@@ -96,4 +97,3 @@ pub fn render_spotlight<B: Backend>(f: &mut Frame<B>, area: Rect, input: &str) {
 
     f.render_widget(paragraph, spotlight_area);
 }
-

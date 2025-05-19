@@ -93,7 +93,7 @@ pub fn launch_ui() -> std::io::Result<()> {
                         state.mode = "zen".into();
                     }
 
-                    KeyCode::Tab => {
+                    KeyCode::Char('i') if modifiers.contains(KeyModifiers::CONTROL) => {
                         state.show_triage = !state.show_triage;
                     }
 
@@ -101,8 +101,7 @@ pub fn launch_ui() -> std::io::Result<()> {
                         state.show_keymap = !state.show_keymap;
                     }
 
-                    // Spotlight: Alt+Space = Char('\u{a0}'), Ctrl+/ emits as Ctrl+7
-                    KeyCode::Char('\u{a0}') => {
+                    KeyCode::Char('\u{a0}') | KeyCode::Char(' ') if modifiers.contains(KeyModifiers::ALT) => {
                         state.show_spotlight = !state.show_spotlight;
                     }
 
@@ -123,29 +122,15 @@ pub fn launch_ui() -> std::io::Result<()> {
                         state.execute_spotlight_command();
                     }
 
+                    // Escape clears overlays
                     KeyCode::Esc => {
                         state.mode = "mindmap".into();
-                        state.show_triage = false;
                         state.show_keymap = false;
                         state.show_spotlight = false;
+                        state.show_triage = false;
                     }
 
-                    // Zen input
-                    KeyCode::Char(c) if modifiers.is_empty() && state.mode == "zen" && !state.show_spotlight => {
-                        if let Some(last) = state.zen_buffer.last_mut() {
-                            last.push(c);
-                        }
-                    }
-
-                    KeyCode::Enter if state.mode == "zen" && !state.show_spotlight => {
-                        state.zen_buffer.push(String::new());
-                    }
-
-                    KeyCode::Backspace if state.mode == "zen" && !state.show_spotlight => {
-                        if let Some(last) = state.zen_buffer.last_mut() {
-                            last.pop();
-                        }
-                    }
+                    // Navigation
                     KeyCode::Up if state.mode == "mindmap" && !state.show_spotlight => {
                         state.move_focus_up();
                     }
@@ -154,82 +139,32 @@ pub fn launch_ui() -> std::io::Result<()> {
                         state.move_focus_down();
                     }
 
-                    // Toggle edit/view mode
-                    KeyCode::Char('e') if modifiers.contains(KeyModifiers::CONTROL) => {
-                        if state.mode == "mindmap" {
-                            state.edit_mode = !state.edit_mode;
-                            if state.edit_mode {
-                                state.edit_buffer = state.mindmap_nodes[state.active_node].clone();
-                            }
-                        }
-                    }
-
-                    // Editing input
-                    KeyCode::Char(c) if state.mode == "mindmap" && state.edit_mode => {
-                        state.edit_buffer.push(c);
-                    }
-
-                    KeyCode::Backspace if state.mode == "mindmap" && state.edit_mode => {
-                        state.edit_buffer.pop();
-                    }
-
-                    KeyCode::Enter if state.mode == "mindmap" && state.edit_mode => {
-                        state.mindmap_nodes[state.active_node] = state.edit_buffer.clone();
-                        state.edit_mode = false;
-                        state.edit_buffer.clear();
-                    }
-
-                    // Tab → Add child
-                    KeyCode::Tab if state.mode == "mindmap" && state.edit_mode => {
-                        state.add_child_node();
-                    }
-
-                    // Ctrl+D → Delete node
-                    KeyCode::Char('d') if modifiers.contains(KeyModifiers::CONTROL) && state.mode == "mindmap" && state.edit_mode => {
-                        state.delete_node();
-                    }
                     // Toggle Edit Mode
                     KeyCode::Char('e') if modifiers.contains(KeyModifiers::CONTROL) && state.mode == "mindmap" => {
                         state.edit_mode = !state.edit_mode;
                     }
 
-                    // Arrow navigation always allowed
-                    KeyCode::Up if state.mode == "mindmap" && !state.show_spotlight => {
-                        state.move_focus_up();
-                    }
-                    KeyCode::Down if state.mode == "mindmap" && !state.show_spotlight => {
-                        state.move_focus_down();
-                    }
-
-                    // Direct editing (Shift supported)
+                    // Direct editing
                     KeyCode::Char(c) if state.mode == "mindmap" && state.edit_mode => {
-                        if let Some(label) = state.mindmap_nodes.get_mut(state.active_node) {
-                            label.push(c);
-                        }
+                        state.update_active_label(c);
                     }
+
                     KeyCode::Backspace if state.mode == "mindmap" && state.edit_mode => {
-                        if let Some(label) = state.mindmap_nodes.get_mut(state.active_node) {
-                            label.pop();
-                        }
+                        state.delete_last_char();
                     }
 
-                    // Node actions in edit mode
+                    // Add sibling / child
                     KeyCode::Enter if state.mode == "mindmap" && state.edit_mode => {
-                        state.add_sibling_node();
-                    }
-                    KeyCode::Tab if state.mode == "mindmap" && state.edit_mode => {
-                        state.add_child_node();
-                    }
-                    KeyCode::Delete | KeyCode::Backspace if modifiers.contains(KeyModifiers::SHIFT)
-                        && state.mode == "mindmap"
-                        && state.edit_mode =>
-                    {
-                        state.delete_node();
+                        state.add_sibling();
                     }
 
-                    // Triage now only on Ctrl+I
-                    KeyCode::Char('i') if modifiers.contains(KeyModifiers::CONTROL) => {
-                        state.show_triage = !state.show_triage;
+                    KeyCode::Tab if state.mode == "mindmap" && state.edit_mode => {
+                        state.add_child();
+                    }
+
+                    // Delete node
+                    KeyCode::Delete | KeyCode::Backspace if modifiers.contains(KeyModifiers::SHIFT) && state.mode == "mindmap" && state.edit_mode => {
+                        state.delete_node();
                     }
 
                     _ => {}
