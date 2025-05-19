@@ -4,7 +4,7 @@ use ratatui::layout::{Constraint, Direction, Layout, Rect};
 use ratatui::widgets::Paragraph;
 
 use crossterm::{
-    event::{self, DisableMouseCapture, EnableMouseCapture, Event, KeyCode, KeyModifiers},
+    event::{self, DisableMouseCapture, EnableMouseCapture, Event, KeyCode, KeyEvent, KeyModifiers},
     execute,
     terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
 };
@@ -13,52 +13,56 @@ use std::io::stdout;
 use crate::state::AppState;
 use crate::render::*;
 
-pub fn draw<B: Backend>(terminal: &mut Terminal<B>, state: &AppState) -> std::io::Result<()> {
+pub fn draw<B: Backend>(terminal: &mut Terminal<B>, state: &AppState, last_key: &str) -> std::io::Result<()> {
     terminal.draw(|f| {
         let full = f.size();
 
-        let zones = Layout::default()
-            .direction(Direction::Horizontal)
-            .constraints([Constraint::Min(50), Constraint::Length(30)].as_ref())
-            .split(full);
+        // Decide layout width
+        let layout_chunks = if state.show_keymap {
+            Layout::default()
+                .direction(Direction::Horizontal)
+                .constraints([Constraint::Min(50), Constraint::Length(30)].as_ref())
+                .split(full)
+        } else {
+            vec![full]
+        };
 
-        let main = Layout::default()
+        let vertical = Layout::default()
             .direction(Direction::Vertical)
             .constraints([Constraint::Min(1), Constraint::Length(3)])
-            .split(zones[0]);
+            .split(layout_chunks[0]);
 
-        // Main mode rendering
+        // Main panel
         match state.mode.as_str() {
-            "zen" => render_zen_journal(f, main[0], state),
-            "mindmap" => render_mindmap(f, main[0], state),
+            "zen" => render_zen_journal(f, vertical[0], state),
+            "mindmap" => render_mindmap(f, vertical[0], state),
             _ => {
                 let fallback = Paragraph::new("Unknown mode");
-                f.render_widget(fallback, main[0]);
+                f.render_widget(fallback, vertical[0]);
             }
         }
 
-        // Right-hand overlays
-        if state.show_keymap {
-            render_keymap_overlay(f, zones[1]);
-        }
-
-        // Overlay panels on top of main view
         if state.show_triage {
-            render_triage(f, main[0]);
+            render_triage(f, vertical[0]);
         }
 
         if state.show_spotlight {
-            render_spotlight(f, main[0], &state.spotlight_input);
+            render_spotlight(f, vertical[0], &state.spotlight_input);
+        }
+
+        if state.show_keymap && layout_chunks.len() > 1 {
+            render_keymap_overlay(f, layout_chunks[1]);
         }
 
         let status_text = format!(
-            "Mode: {} | Triage: {} | Spotlight: {} | Help: {}",
+            "Mode: {} | Triage: {} | Spotlight: {} | Help: {} | Last Key: {}",
             state.mode,
             state.show_triage,
             state.show_spotlight,
-            state.show_keymap
+            state.show_keymap,
+            last_key
         );
-        render_status_bar(f, main[1], &status_text);
+        render_status_bar(f, vertical[1], &status_text);
     })?;
     Ok(())
 }
@@ -71,74 +75,74 @@ pub fn launch_ui() -> std::io::Result<()> {
     let mut terminal = Terminal::new(backend)?;
 
     let mut state = AppState::default();
-    draw(&mut terminal, &state)?;
+    let mut last_key = String::new();
+
+    draw(&mut terminal, &state, &last_key)?;
 
     loop {
         if event::poll(std::time::Duration::from_millis(100))? {
-            if let Event::Key(key) = event::read()? {
-                match key.code {
+            if let Event::Key(KeyEvent { code, modifiers, .. }) = event::read()? {
+                last_key = format!("{:?} + {:?}", code, modifiers);
+
+                match code {
                     // Quit
-                    KeyCode::Char('q') if key.modifiers.contains(KeyModifiers::CONTROL) => break,
+                    KeyCode::Char('q') if modifiers.contains(KeyModifiers::CONTROL) => break,
 
                     // Mode switching
-                    KeyCode::Char('m') if key.modifiers.contains(KeyModifiers::CONTROL) => {
+                    KeyCode::Char('m') if modifiers.contains(KeyModifiers::CONTROL) => {
                         state.mode = "mindmap".into();
                     }
 
-                    KeyCode::Char('z') if key.modifiers.contains(KeyModifiers::CONTROL) => {
+                    KeyCode::Char('z') if modifiers.contains(KeyModifiers::CONTROL) => {
                         state.mode = "zen".into();
                     }
 
-                    // Triage (Ctrl+I = Tab)
+                    // Triage (Tab == Ctrl+I)
                     KeyCode::Tab => {
                         state.show_triage = !state.show_triage;
                     }
 
-                    // Help (Ctrl+H)
-                    KeyCode::Char('h') if key.modifiers.contains(KeyModifiers::CONTROL) => {
+                    // Help
+                    KeyCode::Char('h') if modifiers.contains(KeyModifiers::CONTROL) => {
                         state.show_keymap = !state.show_keymap;
                     }
 
-                    // Spotlight (Alt+Space or Ctrl+/)
-                    KeyCode::Char('\u{a0}') | KeyCode::Char(' ') if key.modifiers.contains(KeyModifiers::ALT) => {
+                    // Spotlight triggers
+                    KeyCode::Char('\u{a0}') | KeyCode::Char(' ') if modifiers.contains(KeyModifiers::ALT) => {
                         state.show_spotlight = !state.show_spotlight;
                     }
-                    KeyCode::Char('/') if key.modifiers.contains(KeyModifiers::CONTROL) => {
+                    KeyCode::Char('/') if modifiers.contains(KeyModifiers::CONTROL) => {
                         state.show_spotlight = !state.show_spotlight;
                     }
 
                     // Spotlight input
-                    KeyCode::Char(c) if key.modifiers.is_empty() && state.show_spotlight => {
+                    KeyCode::Char(c) if modifiers.is_empty() && state.show_spotlight => {
                         state.spotlight_input.push(c);
                     }
-
                     KeyCode::Backspace if state.show_spotlight => {
                         state.spotlight_input.pop();
                     }
-
                     KeyCode::Enter if state.show_spotlight => {
                         state.execute_spotlight_command();
                     }
 
-                    // Escape resets
+                    // Escape resets view
                     KeyCode::Esc => {
                         state.mode = "mindmap".into();
-                        state.show_keymap = false;
-                        state.show_spotlight = false;
                         state.show_triage = false;
+                        state.show_spotlight = false;
+                        state.show_keymap = false;
                     }
 
                     // Zen input
-                    KeyCode::Char(c) if key.modifiers.is_empty() && state.mode == "zen" && !state.show_spotlight => {
+                    KeyCode::Char(c) if modifiers.is_empty() && state.mode == "zen" && !state.show_spotlight => {
                         if let Some(last) = state.zen_buffer.last_mut() {
                             last.push(c);
                         }
                     }
-
                     KeyCode::Enter if state.mode == "zen" && !state.show_spotlight => {
                         state.zen_buffer.push(String::new());
                     }
-
                     KeyCode::Backspace if state.mode == "zen" && !state.show_spotlight => {
                         if let Some(last) = state.zen_buffer.last_mut() {
                             last.pop();
@@ -150,7 +154,7 @@ pub fn launch_ui() -> std::io::Result<()> {
             }
         }
 
-        draw(&mut terminal, &state)?;
+        draw(&mut terminal, &state, &last_key)?;
     }
 
     disable_raw_mode()?;
