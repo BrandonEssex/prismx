@@ -66,11 +66,24 @@ pub fn render_triage<B: Backend>(f: &mut Frame<B>, area: Rect) {
 }
 
 pub fn render_spotlight<B: Backend>(f: &mut Frame<B>, area: Rect, input: &str) {
+    use ratatui::layout::Alignment;
+
+    let width = area.width.min(60);
+    let x_offset = area.x + (area.width.saturating_sub(width)) / 2;
+    let y_offset = area.y + area.height / 3; // Rough vertical center
+
+    let spotlight_area = Rect::new(x_offset, y_offset, width, 3);
+
     let block = Block::default()
         .title("Spotlight")
         .borders(Borders::ALL)
         .style(Style::default().fg(Color::Cyan));
-    let paragraph = Paragraph::new(format!("> {}", input));
-    f.render_widget(block, area);
-    f.render_widget(paragraph, Rect::new(area.x + 2, area.y + 1, area.width - 4, 1));
+
+    let paragraph = Paragraph::new(format!("> {}", input))
+        .block(block)
+        .style(Style::default().fg(Color::White))
+        .alignment(Alignment::Left);
+
+    f.render_widget(paragraph, spotlight_area);
 }
+
