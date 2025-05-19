@@ -37,3 +37,15 @@ pub fn render_mindmap<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState
 }
 
 pub fn render_keymap_overlay<B: Backend>(f: &mut Frame<B>, area: Rect) {
+    let block = Block::default().title("Keymap").borders(Borders::ALL);
+    f.render_widget(block, area);
+    let content = Paragraph::new("Ctrl+K = Help\nCtrl+I = Triage\nAlt+Space = Spotlight");
+    f.render_widget(content, Rect::new(area.x + 1, area.y + 1, area.width - 2, area.height - 2));
+}
+
+pub fn render_spotlight<B: Backend>(f: &mut Frame<B>, area: Rect, input: &str) {
+    let block = Block::default().title("Spotlight").borders(Borders::ALL);
+    let paragraph = Paragraph::new(input.to_owned());
+    f.render_widget(block, area);
+    f.render_widget(paragraph, Rect::new(area.x + 2, area.y + 1, area.width - 4, 1));
+}
