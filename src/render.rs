@@ -19,19 +19,20 @@ pub fn render_status_bar<B: Backend>(f: &mut Frame<B>, area: Rect, status: &str)
 }
 
 pub fn render_zen_journal<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
-    let content = state.zen_buffer.join("\n");
+    use ratatui::widgets::Wrap;
+    use ratatui::layout::Alignment;
 
-    let x_pad = area.width.saturating_sub(60) / 2;
-    let y_pad = area.y + 3;
+    let text = state.zen_buffer.join("\n");
 
-    let padded = Rect::new(area.x + x_pad, y_pad, area.width - x_pad * 2, area.height - y_pad);
-
-    let widget = Paragraph::new(content)
+    let widget = Paragraph::new(text)
         .block(Block::default().title("Zen").borders(Borders::ALL))
-        .style(Style::default().fg(Color::Green));
+        .style(Style::default().fg(Color::Green))
+        .alignment(Alignment::Center)
+        .wrap(Wrap { trim: false });
 
-    f.render_widget(widget, padded);
+    f.render_widget(widget, area);
 }
+
 
 pub fn render_mindmap<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
     let layout = Block::default()

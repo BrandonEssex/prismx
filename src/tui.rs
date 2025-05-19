@@ -101,18 +101,24 @@ pub fn launch_ui() -> std::io::Result<()> {
                         state.show_keymap = !state.show_keymap;
                     }
 
-                    // Spotlight — Alt+Space and Ctrl+7
-                    KeyCode::Char('\u{a0}') | KeyCode::Char(' ') if modifiers.contains(KeyModifiers::ALT) => {
+                    // Spotlight triggers
+                    KeyCode::Char('\u{a0}') | KeyCode::Char(' ') => {
                         state.show_spotlight = !state.show_spotlight;
                     }
-                    KeyCode::Char('7') if modifiers.contains(KeyModifiers::CONTROL) => {
+                    KeyCode::Char('.') if modifiers.contains(KeyModifiers::CONTROL) => {
                         state.show_spotlight = !state.show_spotlight;
                     }
 
                     // Spotlight input
-                    KeyCode::Char(c) if modifiers.is_empty() && state.show_spotlight => {
-                        state.spotlight_input.push(c);
+                    KeyCode::Char(c) if state.mode == "mindmap" && state.edit_mode => {
+                        let node = state.get_active_node();
+                        let mut n = node.borrow_mut();
+                        if n.label == "New Child" || n.label == "New Sibling" {
+                            n.label.clear();
+                        }
+                        n.label.push(c);
                     }
+
                     KeyCode::Backspace if state.show_spotlight => {
                         state.spotlight_input.pop();
                     }
