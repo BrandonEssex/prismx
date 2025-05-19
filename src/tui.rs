@@ -17,13 +17,11 @@ pub fn draw<B: Backend>(terminal: &mut Terminal<B>, state: &AppState) -> std::io
     terminal.draw(|f| {
         let full = f.size();
 
-        // Layout split: Main area + status bar
         let chunks = Layout::default()
             .direction(Direction::Vertical)
-            .constraints([Constraint::Min(1), Constraint::Length(1)].as_ref())
+            .constraints([Constraint::Min(1), Constraint::Length(3)])
             .split(full);
 
-        // View routing based on mode
         match state.mode.as_str() {
             "zen" => render_zen_journal(f, chunks[0], state),
             "mindmap" => render_mindmap(f, chunks[0], state),
@@ -33,7 +31,10 @@ pub fn draw<B: Backend>(terminal: &mut Terminal<B>, state: &AppState) -> std::io
             }
         }
 
-        // Overlays
+        if state.show_triage {
+            render_triage(f, chunks[0]);
+        }
+
         if state.show_keymap {
             render_keymap_overlay(f, chunks[0]);
         }
@@ -42,11 +43,6 @@ pub fn draw<B: Backend>(terminal: &mut Terminal<B>, state: &AppState) -> std::io
             render_spotlight(f, chunks[0], &state.spotlight_input);
         }
 
-        if state.show_triage {
-            render_triage(f, chunks[0]);
-        }
-
-        // Always show status bar at bottom
         render_status_bar(f, chunks[1]);
     })?;
     Ok(())
@@ -65,24 +61,34 @@ pub fn launch_ui() -> std::io::Result<()> {
     loop {
         if event::poll(std::time::Duration::from_millis(100))? {
             if let Event::Key(key) = event::read()? {
+                println!("[INPUT] key: {:?}  mods: {:?}", key.code, key.modifiers);
+
                 match (key.code, key.modifiers) {
                     (KeyCode::Char('q'), KeyModifiers::CONTROL) => break,
+
                     (KeyCode::Char('i'), KeyModifiers::CONTROL) => {
+                        println!("[HOTKEY] Ctrl+I → Triage toggle");
                         state.show_triage = !state.show_triage;
                     }
+
                     (KeyCode::Char('k'), KeyModifiers::CONTROL) => {
+                        println!("[HOTKEY] Ctrl+K → Keymap toggle");
                         state.show_keymap = !state.show_keymap;
                     }
-                    (KeyCode::Char(' '), KeyModifiers::ALT) => {
+
+                    (KeyCode::Char(' '), KeyModifiers::ALT) | (KeyCode::Esc, KeyModifiers::ALT) => {
+                        println!("[HOTKEY] Alt+Space → Spotlight toggle");
                         state.show_spotlight = !state.show_spotlight;
                     }
 
                     (KeyCode::Char(c), KeyModifiers::NONE) if state.show_spotlight => {
                         state.spotlight_input.push(c);
                     }
+
                     (KeyCode::Backspace, KeyModifiers::NONE) if state.show_spotlight => {
                         state.spotlight_input.pop();
                     }
+
                     (KeyCode::Enter, KeyModifiers::NONE) if state.show_spotlight => {
                         state.execute_spotlight_command();
                     }
@@ -92,25 +98,5 @@ pub fn launch_ui() -> std::io::Result<()> {
                             last.push(c);
                         }
                     }
-                    (KeyCode::Enter, KeyModifiers::NONE) if state.mode == "zen" && !state.show_spotlight => {
-                        state.zen_buffer.push(String::new());
-                    }
-                    (KeyCode::Backspace, KeyModifiers::NONE) if state.mode == "zen" && !state.show_spotlight => {
-                        if let Some(last) = state.zen_buffer.last_mut() {
-                            last.pop();
-                        }
-                    }
 
-                    _ => {}
-                }
-            }
-        }
-
-        draw(&mut terminal, &state)?;
-    }
-
-    disable_raw_mode()?;
-    execute!(terminal.backend_mut(), LeaveAlternateScreen, DisableMouseCapture)?;
-    terminal.show_cursor()?;
-    Ok(())
-}
+                    (KeyCode::Enter, KeyModifiers::NONE) if state.mode == "zen" &&

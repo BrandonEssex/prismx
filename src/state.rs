@@ -32,7 +32,7 @@ impl AppState {
             "/mode zen" => self.mode = "zen".into(),
             "/mode mindmap" => self.mode = "mindmap".into(),
             "/clear" => self.zen_buffer = vec![String::new()],
-            _ => {} // Ignore unknown commands for now
+            _ => {}
         }
         self.spotlight_input.clear();
         self.show_spotlight = false;
