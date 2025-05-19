@@ -14,6 +14,7 @@ pub struct AppState {
     pub flat_nodes: Vec<(usize, Rc<RefCell<Node>>)>,
     pub active_node: usize,
     pub edit_mode: bool,
+    pub edit_ready: bool,
     pub spotlight_input: String,
     pub show_spotlight: bool,
     pub show_triage: bool,
@@ -45,6 +46,7 @@ impl Default for AppState {
             flat_nodes: flat,
             active_node: 0,
             edit_mode: false,
+            edit_ready: false,
             spotlight_input: String::new(),
             show_spotlight: false,
             show_triage: false,
@@ -126,6 +128,7 @@ impl AppState {
         self.reflatten();
         self.active_node = self.flat_nodes.len() - 1;
         self.edit_mode = true;
+        self.edit_ready = true;
     }
 
     pub fn add_sibling(&mut self) {
@@ -151,6 +154,7 @@ impl AppState {
             self.reflatten();
             self.active_node = self.flat_nodes.len() - 1;
             self.edit_mode = true;
+            self.edit_ready = true;
         }
     }
 

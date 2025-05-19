@@ -101,7 +101,7 @@ pub fn launch_ui() -> std::io::Result<()> {
                         state.show_keymap = !state.show_keymap;
                     }
 
-                    // Spotlight triggers
+                    // Spotlight: Alt+Space or Ctrl+.
                     KeyCode::Char('\u{a0}') | KeyCode::Char(' ') => {
                         state.show_spotlight = !state.show_spotlight;
                     }
@@ -110,15 +110,9 @@ pub fn launch_ui() -> std::io::Result<()> {
                     }
 
                     // Spotlight input
-                    KeyCode::Char(c) if state.mode == "mindmap" && state.edit_mode => {
-                        let node = state.get_active_node();
-                        let mut n = node.borrow_mut();
-                        if n.label == "New Child" || n.label == "New Sibling" {
-                            n.label.clear();
-                        }
-                        n.label.push(c);
+                    KeyCode::Char(c) if modifiers.is_empty() && state.show_spotlight => {
+                        state.spotlight_input.push(c);
                     }
-
                     KeyCode::Backspace if state.show_spotlight => {
                         state.spotlight_input.pop();
                     }
@@ -132,9 +126,9 @@ pub fn launch_ui() -> std::io::Result<()> {
                             state.edit_mode = false;
                         } else {
                             state.mode = "mindmap".into();
-                            state.show_triage = false;
                             state.show_keymap = false;
                             state.show_spotlight = false;
+                            state.show_triage = false;
                         }
                     }
 
@@ -146,17 +140,19 @@ pub fn launch_ui() -> std::io::Result<()> {
                         state.move_focus_down();
                     }
 
-                    // Toggle edit
+                    // Edit mode
                     KeyCode::Char('e') if modifiers.contains(KeyModifiers::CONTROL) && state.mode == "mindmap" => {
                         state.edit_mode = !state.edit_mode;
+                        state.edit_ready = state.edit_mode;
                     }
 
-                    // Edit node label
+                    // Editing node
                     KeyCode::Char(c) if state.mode == "mindmap" && state.edit_mode => {
                         let node = state.get_active_node();
                         let mut n = node.borrow_mut();
-                        if n.label.starts_with("New ") {
+                        if state.edit_ready && (n.label == "New Child" || n.label == "New Sibling") {
                             n.label.clear();
+                            state.edit_ready = false;
                         }
                         n.label.push(c);
                     }
@@ -181,7 +177,7 @@ pub fn launch_ui() -> std::io::Result<()> {
                         state.delete_node();
                     }
 
-                    // Zen typing
+                    // Zen input
                     KeyCode::Char(c) if state.mode == "zen" => {
                         if let Some(last) = state.zen_buffer.last_mut() {
                             last.push(c);
