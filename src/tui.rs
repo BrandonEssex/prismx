@@ -1,7 +1,8 @@
 use ratatui::Terminal;
 use ratatui::backend::Backend;
 use ratatui::layout::{Constraint, Direction, Layout};
-use crate::gemx::state::AppState;
+
+use crate::state::AppState;
 use crate::render::*;
 
 pub fn draw<B: Backend>(terminal: &mut Terminal<B>, state: &AppState) -> std::io::Result<()> {

@@ -1,12 +1,12 @@
 use ratatui::{
     backend::Backend,
-    layout::{Rect},
+    layout::Rect,
     style::{Color, Style},
     widgets::{Block, Borders, Paragraph},
     Frame,
 };
 
-use crate::gemx::state::AppState;
+use crate::state::AppState;
 
 pub fn render_status_bar<B: Backend>(f: &mut Frame<B>, area: Rect) {
     let block = Block::default()
