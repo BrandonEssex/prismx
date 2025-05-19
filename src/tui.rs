@@ -83,26 +83,25 @@ pub fn launch_ui() -> std::io::Result<()> {
                 last_key = format!("{:?} + {:?}", code, modifiers);
 
                 match code {
-                    // Quit
                     KeyCode::Char('q') if modifiers.contains(KeyModifiers::CONTROL) => break,
 
-                    // Mode switches
                     KeyCode::Char('m') if modifiers.contains(KeyModifiers::CONTROL) => {
                         state.mode = "mindmap".into();
                     }
+
                     KeyCode::Char('z') if modifiers.contains(KeyModifiers::CONTROL) => {
                         state.mode = "zen".into();
                     }
 
-                    // Panel toggles
-                    KeyCode::Char('h') if modifiers.contains(KeyModifiers::CONTROL) => {
-                        state.show_keymap = !state.show_keymap;
-                    }
                     KeyCode::Char('i') if modifiers.contains(KeyModifiers::CONTROL) => {
                         state.show_triage = !state.show_triage;
                     }
 
-                    // Spotlight triggers (Alt+Space or Ctrl+.)
+                    KeyCode::Char('h') if modifiers.contains(KeyModifiers::CONTROL) => {
+                        state.show_keymap = !state.show_keymap;
+                    }
+
+                    // Spotlight
                     KeyCode::Char('\u{a0}') | KeyCode::Char(' ') if modifiers.contains(KeyModifiers::ALT) => {
                         state.show_spotlight = !state.show_spotlight;
                     }
@@ -121,19 +120,19 @@ pub fn launch_ui() -> std::io::Result<()> {
                         state.execute_spotlight_command();
                     }
 
-                    // Escape: exit edit mode or overlays
+                    // Escape behavior
                     KeyCode::Esc => {
                         if state.edit_mode {
                             state.edit_mode = false;
                         } else {
                             state.mode = "mindmap".into();
+                            state.show_triage = false;
                             state.show_keymap = false;
                             state.show_spotlight = false;
-                            state.show_triage = false;
                         }
                     }
 
-                    // Navigation
+                    // Mindmap Navigation
                     KeyCode::Up if state.mode == "mindmap" && !state.show_spotlight => {
                         state.move_focus_up();
                     }
@@ -141,12 +140,12 @@ pub fn launch_ui() -> std::io::Result<()> {
                         state.move_focus_down();
                     }
 
-                    // Edit mode toggle
+                    // Toggle edit mode
                     KeyCode::Char('e') if modifiers.contains(KeyModifiers::CONTROL) && state.mode == "mindmap" => {
                         state.edit_mode = !state.edit_mode;
                     }
 
-                    // Edit active node (clear 'New' prefix on first key)
+                    // Node editing
                     KeyCode::Char(c) if state.mode == "mindmap" && state.edit_mode => {
                         let node = state.get_active_node();
                         let mut n = node.borrow_mut();
@@ -161,22 +160,36 @@ pub fn launch_ui() -> std::io::Result<()> {
                         node.borrow_mut().label.pop();
                     }
 
-                    // Add sibling
                     KeyCode::Enter if state.mode == "mindmap" && state.edit_mode => {
                         state.add_sibling();
                     }
 
-                    // Add child
                     KeyCode::Tab if state.mode == "mindmap" && state.edit_mode => {
                         state.add_child();
                     }
 
-                    // Delete node
                     KeyCode::Delete | KeyCode::Backspace if modifiers.contains(KeyModifiers::SHIFT)
                         && state.mode == "mindmap"
                         && state.edit_mode =>
                     {
                         state.delete_node();
+                    }
+
+                    // Zen input
+                    KeyCode::Char(c) if state.mode == "zen" => {
+                        if let Some(last) = state.zen_buffer.last_mut() {
+                            last.push(c);
+                        }
+                    }
+
+                    KeyCode::Enter if state.mode == "zen" => {
+                        state.zen_buffer.push(String::new());
+                    }
+
+                    KeyCode::Backspace if state.mode == "zen" => {
+                        if let Some(last) = state.zen_buffer.last_mut() {
+                            last.pop();
+                        }
                     }
 
                     _ => {}
