@@ -19,11 +19,18 @@ pub fn render_status_bar<B: Backend>(f: &mut Frame<B>, area: Rect, status: &str)
 }
 
 pub fn render_zen_journal<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
-    let text = state.zen_buffer.join("\n");
-    let widget = Paragraph::new(text)
+    let content = state.zen_buffer.join("\n");
+
+    let x_pad = area.width.saturating_sub(60) / 2;
+    let y_pad = area.y + 3;
+
+    let padded = Rect::new(area.x + x_pad, y_pad, area.width - x_pad * 2, area.height - y_pad);
+
+    let widget = Paragraph::new(content)
         .block(Block::default().title("Zen").borders(Borders::ALL))
         .style(Style::default().fg(Color::Green));
-    f.render_widget(widget, area);
+
+    f.render_widget(widget, padded);
 }
 
 pub fn render_mindmap<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
@@ -62,9 +69,26 @@ pub fn render_mindmap<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState
 pub fn render_keymap_overlay<B: Backend>(f: &mut Frame<B>, area: Rect) {
     let block = Block::default().title("Keymap").borders(Borders::ALL);
     f.render_widget(block, area);
-    let content = Paragraph::new("Ctrl+H = Help\nCtrl+I = Triage\nCtrl+/ = Spotlight");
+
+    let content = Paragraph::new(
+        "\
+        Ctrl+Q = Quit\n\
+        Ctrl+M = Mindmap Mode\n\
+        Ctrl+Z = Zen Mode\n\
+        Ctrl+E = Toggle Edit Mode\n\
+        Ctrl+I = Toggle Triage\n\
+        Ctrl+H = Toggle Help\n\
+        Ctrl+. / Alt+Space = Spotlight\n\
+        Tab = Add Child\n\
+        Enter = Add Sibling\n\
+        Delete / Shift+Backspace = Delete Node\n\
+        Esc = Exit Edit/Overlay\n\
+        ",
+    );
+
     f.render_widget(content, Rect::new(area.x + 1, area.y + 1, area.width - 2, area.height - 2));
 }
+
 
 pub fn render_triage<B: Backend>(f: &mut Frame<B>, area: Rect) {
     let block = Block::default()

@@ -101,11 +101,11 @@ pub fn launch_ui() -> std::io::Result<()> {
                         state.show_keymap = !state.show_keymap;
                     }
 
-                    // Spotlight
+                    // Spotlight — Alt+Space and Ctrl+7
                     KeyCode::Char('\u{a0}') | KeyCode::Char(' ') if modifiers.contains(KeyModifiers::ALT) => {
                         state.show_spotlight = !state.show_spotlight;
                     }
-                    KeyCode::Char('.') if modifiers.contains(KeyModifiers::CONTROL) => {
+                    KeyCode::Char('7') if modifiers.contains(KeyModifiers::CONTROL) => {
                         state.show_spotlight = !state.show_spotlight;
                     }
 
@@ -120,7 +120,7 @@ pub fn launch_ui() -> std::io::Result<()> {
                         state.execute_spotlight_command();
                     }
 
-                    // Escape behavior
+                    // Esc
                     KeyCode::Esc => {
                         if state.edit_mode {
                             state.edit_mode = false;
@@ -132,7 +132,7 @@ pub fn launch_ui() -> std::io::Result<()> {
                         }
                     }
 
-                    // Mindmap Navigation
+                    // Navigation
                     KeyCode::Up if state.mode == "mindmap" && !state.show_spotlight => {
                         state.move_focus_up();
                     }
@@ -140,12 +140,12 @@ pub fn launch_ui() -> std::io::Result<()> {
                         state.move_focus_down();
                     }
 
-                    // Toggle edit mode
+                    // Toggle edit
                     KeyCode::Char('e') if modifiers.contains(KeyModifiers::CONTROL) && state.mode == "mindmap" => {
                         state.edit_mode = !state.edit_mode;
                     }
 
-                    // Node editing
+                    // Edit node label
                     KeyCode::Char(c) if state.mode == "mindmap" && state.edit_mode => {
                         let node = state.get_active_node();
                         let mut n = node.borrow_mut();
@@ -175,7 +175,7 @@ pub fn launch_ui() -> std::io::Result<()> {
                         state.delete_node();
                     }
 
-                    // Zen input
+                    // Zen typing
                     KeyCode::Char(c) if state.mode == "zen" => {
                         if let Some(last) = state.zen_buffer.last_mut() {
                             last.push(c);
