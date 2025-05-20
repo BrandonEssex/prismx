@@ -5,6 +5,7 @@ use std::cell::RefCell;
 pub struct Node {
     pub label: String,
     pub children: Vec<Rc<RefCell<Node>>>,
+    pub collapsed: bool,
 }
 
 pub struct AppState {
@@ -31,12 +32,15 @@ impl Default for AppState {
                 Rc::new(RefCell::new(Node {
                     label: "Node A".into(),
                     children: vec![],
+                    collapsed: false,
                 })),
                 Rc::new(RefCell::new(Node {
                     label: "Node B".into(),
                     children: vec![],
+                    collapsed: false,
                 })),
             ],
+            collapsed: false,
         }));
 
         let flat = flatten_nodes(&root);
@@ -66,6 +70,11 @@ pub fn flatten_nodes(node: &Rc<RefCell<Node>>) -> Vec<(usize, Rc<RefCell<Node>>)
         out: &mut Vec<(usize, Rc<RefCell<Node>>)>
     ) {
         out.push((depth, Rc::clone(node)));
+
+        if node.borrow().collapsed {
+            return;
+        }
+
         for child in &node.borrow().children {
             recurse(child, depth + 1, out);
         }
@@ -112,6 +121,7 @@ impl AppState {
         let child = Rc::new(RefCell::new(Node {
             label: "New Child".into(),
             children: vec![],
+            collapsed: false,
         }));
         node.borrow_mut().children.push(child);
         self.reflatten();
@@ -139,6 +149,7 @@ impl AppState {
             parent.borrow_mut().children.push(Rc::new(RefCell::new(Node {
                 label: "New Sibling".into(),
                 children: vec![],
+                collapsed: false,
             })));
             self.reflatten();
             self.active_node = self.flat_nodes.len() - 1;
@@ -189,35 +200,6 @@ impl AppState {
         self.show_spotlight = false;
     }
 
-    pub fn export_zen_to_file(&self) {
-        use std::fs;
-        use std::io::Write;
-
-        let path = dirs::document_dir()
-            .unwrap_or_else(|| std::path::PathBuf::from("."))
-            .join("prismx")
-            .join("zen_export.md");
-
-        let content = self.zen_buffer.join("\n");
-
-        if let Some(parent) = path.parent() {
-            let _ = fs::create_dir_all(parent);
-        }
-
-        match fs::File::create(&path) {
-            Ok(mut file) => {
-                if let Err(err) = file.write_all(content.as_bytes()) {
-                    eprintln!("❌ Write failed: {}", err);
-                } else {
-                    println!("✅ Zen exported to: {:?}", path);
-                }
-            }
-            Err(e) => {
-                eprintln!("❌ File create failed: {}", e);
-            }
-        }
-    }
-
     pub fn get_module_by_index(&self) -> &str {
         match self.module_switcher_index % 4 {
             0 => "mindmap",
@@ -225,6 +207,24 @@ impl AppState {
             2 => "settings",
             3 => "triage",
             _ => "mindmap",
+        }
+    }
+
+    pub fn collapse_active_node(&mut self) {
+        let node = self.get_active_node();
+        let mut n = node.borrow_mut();
+        if !n.children.is_empty() {
+            n.collapsed = true;
+            self.reflatten();
+        }
+    }
+
+    pub fn expand_active_node(&mut self) {
+        let node = self.get_active_node();
+        let mut n = node.borrow_mut();
+        if !n.children.is_empty() && n.collapsed {
+            n.collapsed = false;
+            self.reflatten();
         }
     }
 }

@@ -106,12 +106,20 @@ pub fn render_mindmap<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState
             break;
         }
 
-        let label = node.borrow().label.clone();
-        let prefix = "  ".repeat(*depth);
-        let content = if i == state.active_node {
-            format!("> {}{}", prefix, label)
+        let n = node.borrow();
+        let label = &n.label;
+
+        let prefix = if !n.children.is_empty() {
+            if n.collapsed { "[+]" } else { "[-]" }
         } else {
-            format!("  {}{}", prefix, label)
+            "   "
+        };
+
+        let indent = "  ".repeat(*depth);
+        let content = if i == state.active_node {
+            format!("> {}{} {}", indent, prefix, label)
+        } else {
+            format!("  {}{} {}", indent, prefix, label)
         };
 
         let style = if i == state.active_node {

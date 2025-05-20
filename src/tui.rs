@@ -117,6 +117,15 @@ pub fn launch_ui() -> std::io::Result<()> {
                     KeyCode::Char('.') if modifiers.contains(KeyModifiers::CONTROL) => {
                         state.mode = "settings".into();
                     }
+                    // Collapse
+                    KeyCode::Char('-') if modifiers.contains(KeyModifiers::CONTROL) && state.mode == "mindmap" => {
+                        state.collapse_active_node();
+                    }
+
+                    // Expand
+                    KeyCode::Char('=') if modifiers.contains(KeyModifiers::CONTROL) && state.mode == "mindmap" => {
+                        state.expand_active_node();
+                    }
 
                     // Spotlight input
                     KeyCode::Char(c) if state.show_spotlight => {
