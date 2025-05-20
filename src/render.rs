@@ -19,19 +19,76 @@ pub fn render_status_bar<B: Backend>(f: &mut Frame<B>, area: Rect, status: &str)
 }
 
 pub fn render_zen_journal<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
-    use ratatui::widgets::Wrap;
+    use ratatui::widgets::{Wrap};
+    use ratatui::text::{Span, Line};
+    use ratatui::layout::Alignment;
 
-    let text = state.zen_buffer.join("\n");
+    let lines: Vec<Line> = state.zen_buffer.iter().map(|line| parse_markdown_line(line)).collect();
 
-    let widget = Paragraph::new(text)
+    let widget = Paragraph::new(lines)
         .block(Block::default().title("Zen").borders(Borders::ALL))
-        .alignment(Alignment::Center)
+        .alignment(Alignment::Left)
         .style(Style::default().fg(Color::Green))
         .wrap(Wrap { trim: false });
 
     let scroll_offset = state.zen_buffer.len().saturating_sub((area.height as usize).saturating_sub(5));
     f.render_widget(widget.scroll((scroll_offset as u16, 0)), area);
 }
+
+fn parse_markdown_line(input: &str) -> Line {
+    use ratatui::text::{Span, Line};
+    use ratatui::style::Modifier;
+
+    if input.starts_with("### ") {
+        return Line::from(Span::styled(&input[4..], Style::default().add_modifier(Modifier::ITALIC)));
+    } else if input.starts_with("## ") {
+        return Line::from(Span::styled(&input[3..], Style::default().add_modifier(Modifier::BOLD)));
+    } else if input.starts_with("# ") {
+        return Line::from(Span::styled(&input[2..], Style::default().add_modifier(Modifier::BOLD | Modifier::UNDERLINED)));
+    } else if input.starts_with("- ") || input.starts_with("* ") {
+        return Line::from(vec![
+            Span::styled("• ", Style::default().add_modifier(Modifier::BOLD)),
+            Span::raw(&input[2..]),
+        ]);
+    }
+
+    let mut spans = vec![];
+    let mut chars = input.chars().peekable();
+    while let Some(c) = chars.next() {
+        if c == '*' && chars.peek() == Some(&'*') {
+            chars.next(); // consume second '*'
+            let mut bold = String::new();
+            while let Some(&next) = chars.peek() {
+                if next == '*' {
+                    chars.next();
+                    if chars.peek() == Some(&'*') {
+                        chars.next();
+                        break;
+                    }
+                }
+                bold.push(next);
+                chars.next();
+            }
+            spans.push(Span::styled(bold, Style::default().add_modifier(Modifier::BOLD)));
+        } else if c == '_' {
+            let mut italic = String::new();
+            while let Some(&next) = chars.peek() {
+                if next == '_' {
+                    chars.next();
+                    break;
+                }
+                italic.push(next);
+                chars.next();
+            }
+            spans.push(Span::styled(italic, Style::default().add_modifier(Modifier::ITALIC)));
+        } else {
+            spans.push(Span::raw(c.to_string()));
+        }
+    }
+
+    Line::from(spans)
+}
+
 
 pub fn render_mindmap<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
     let layout = Block::default()
