@@ -14,6 +14,9 @@ pub fn load_default_hotkeys() -> HashMap<String, String> {
     map.insert("quit".into(), "ctrl-c".into());
     map.insert("help".into(), "?".into());
     map.insert("switch_module".into(), "shift-tab".into());
+    map.insert("toggle_edit".into(), "ctrl-e".into());
+    map.insert("toggle_triage".into(), "ctrl-t".into());
+    map.insert("toggle_keymap".into(), "ctrl-h".into());
 
     map
 }
