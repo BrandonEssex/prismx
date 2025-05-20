@@ -210,6 +210,36 @@ impl AppState {
         }
     }
 
+    pub fn export_zen_to_file(&self) {
+        use std::fs;
+        use std::io::Write;
+
+        let path = dirs::document_dir()
+            .unwrap_or_else(|| std::path::PathBuf::from("."))
+            .join("prismx")
+            .join("zen_export.md");
+
+        let content = self.zen_buffer.join("\n");
+
+        if let Some(parent) = path.parent() {
+            let _ = fs::create_dir_all(parent);
+        }
+
+        match fs::File::create(&path) {
+            Ok(mut file) => {
+                if let Err(err) = file.write_all(content.as_bytes()) {
+                    eprintln!("❌ Write failed: {}", err);
+                } else {
+                    println!("✅ Zen exported to: {:?}", path);
+                }
+            }
+            Err(e) => {
+                eprintln!("❌ File create failed: {}", e);
+            }
+        }
+    }
+
+
     pub fn collapse_active_node(&mut self) {
         let node = self.get_active_node();
         let mut n = node.borrow_mut();
