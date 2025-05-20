@@ -87,6 +87,7 @@ pub fn launch_ui() -> std::io::Result<()> {
         if event::poll(std::time::Duration::from_millis(100))? {
             if let Event::Key(KeyEvent { code, modifiers, .. }) = event::read()? {
                 last_key = format!("{:?} + {:?}", code, modifiers);
+
                 match code {
                     KeyCode::Char('q') if modifiers.contains(KeyModifiers::CONTROL) => break,
 
@@ -102,10 +103,6 @@ pub fn launch_ui() -> std::io::Result<()> {
                         state.mode = "triage".into();
                     }
 
-                    KeyCode::Char('x') if modifiers.contains(KeyModifiers::CONTROL) && state.mode == "zen" => {
-                        state.export_zen_to_file();
-                    }
-
                     KeyCode::Char('h') if modifiers.contains(KeyModifiers::CONTROL) => {
                         state.show_keymap = !state.show_keymap;
                     }
@@ -116,15 +113,6 @@ pub fn launch_ui() -> std::io::Result<()> {
 
                     KeyCode::Char('.') if modifiers.contains(KeyModifiers::CONTROL) => {
                         state.mode = "settings".into();
-                    }
-                    // Collapse
-                    KeyCode::Char('-') if modifiers.contains(KeyModifiers::CONTROL) && state.mode == "mindmap" => {
-                        state.collapse_active_node();
-                    }
-
-                    // Expand
-                    KeyCode::Char('=') if modifiers.contains(KeyModifiers::CONTROL) && state.mode == "mindmap" => {
-                        state.expand_active_node();
                     }
 
                     // Spotlight input
@@ -166,6 +154,16 @@ pub fn launch_ui() -> std::io::Result<()> {
                         state.module_switcher_open = false;
                     }
 
+                    // Mindmap collapse/expand
+                    KeyCode::Char('[') if modifiers.contains(KeyModifiers::CONTROL) => {
+                        state.collapse_active_node();
+                    }
+
+                    KeyCode::Char(']') if modifiers.contains(KeyModifiers::CONTROL) => {
+                        state.expand_active_node();
+                    }
+
+                    // Mindmap nav
                     KeyCode::Up if state.mode == "mindmap" && !state.show_spotlight => {
                         state.move_focus_up();
                     }
@@ -192,6 +190,12 @@ pub fn launch_ui() -> std::io::Result<()> {
                         n.label.push(c);
                     }
 
+                    KeyCode::Backspace if modifiers.contains(KeyModifiers::CONTROL)
+                        && state.mode == "mindmap"
+                        && state.edit_mode => {
+                        state.delete_node();
+                    }
+
                     KeyCode::Backspace if state.mode == "mindmap" && state.edit_mode => {
                         let node = state.get_active_node();
                         node.borrow_mut().label.pop();
@@ -203,13 +207,6 @@ pub fn launch_ui() -> std::io::Result<()> {
 
                     KeyCode::Tab if state.mode == "mindmap" && state.edit_mode => {
                         state.add_child();
-                    }
-
-                    KeyCode::Delete | KeyCode::Backspace if modifiers.contains(KeyModifiers::SHIFT)
-                        && state.mode == "mindmap"
-                        && state.edit_mode =>
-                    {
-                        state.delete_node();
                     }
 
                     // Zen input
