@@ -57,6 +57,10 @@ pub fn draw<B: Backend>(terminal: &mut Terminal<B>, state: &AppState, last_key: 
             render_keymap_overlay(f, layout_chunks[1]);
         }
 
+        if state.module_switcher_open {
+            render_module_switcher(f, vertical[0], state.module_switcher_index);
+        }
+
         let status_text = format!(
             "Mode: {} | Triage: {} | Spotlight: {} | Help: {} | Last Key: {}",
             state.mode,
@@ -90,7 +94,6 @@ pub fn launch_ui() -> std::io::Result<()> {
                 match code {
                     KeyCode::Char('q') if modifiers.contains(KeyModifiers::CONTROL) => break,
 
-                    // Restored Mindmap mode
                     KeyCode::Char('m') if modifiers.contains(KeyModifiers::CONTROL) => {
                         state.mode = "mindmap".into();
                     }
@@ -99,8 +102,7 @@ pub fn launch_ui() -> std::io::Result<()> {
                         state.mode = "zen".into();
                     }
 
-                    // ✅ FIXED Ctrl+I: Triage toggle only
-                    KeyCode::Char('i') if modifiers.contains(KeyModifiers::CONTROL) => {
+                    KeyCode::Char('t') if modifiers.contains(KeyModifiers::CONTROL) => {
                         state.show_triage = !state.show_triage;
                     }
 
@@ -129,8 +131,11 @@ pub fn launch_ui() -> std::io::Result<()> {
                         state.execute_spotlight_command();
                     }
 
+                    // Esc
                     KeyCode::Esc => {
-                        if state.edit_mode {
+                        if state.module_switcher_open {
+                            state.module_switcher_open = false;
+                        } else if state.edit_mode {
                             state.edit_mode = false;
                         } else {
                             state.mode = "mindmap".into();
@@ -140,7 +145,22 @@ pub fn launch_ui() -> std::io::Result<()> {
                         }
                     }
 
-                    // Mindmap nav
+                    // Module switcher
+                    KeyCode::BackTab => {
+                        state.module_switcher_open = true;
+                        state.module_switcher_index = 0;
+                    }
+
+                    KeyCode::Tab if state.module_switcher_open => {
+                        state.module_switcher_index = (state.module_switcher_index + 1) % 5;
+                    }
+
+                    KeyCode::Enter if state.module_switcher_open => {
+                        state.mode = state.get_module_by_index().into();
+                        state.module_switcher_open = false;
+                    }
+
+                    // Navigation
                     KeyCode::Up if state.mode == "mindmap" && !state.show_spotlight => {
                         state.move_focus_up();
                     }
@@ -149,6 +169,7 @@ pub fn launch_ui() -> std::io::Result<()> {
                         state.move_focus_down();
                     }
 
+                    // Toggle edit
                     KeyCode::Char('e') if modifiers.contains(KeyModifiers::CONTROL) && state.mode == "mindmap" => {
                         state.edit_mode = !state.edit_mode;
                         state.edit_ready = state.edit_mode;
@@ -187,7 +208,7 @@ pub fn launch_ui() -> std::io::Result<()> {
                         state.delete_node();
                     }
 
-                    // Zen typing
+                    // Zen input
                     KeyCode::Char(c) if state.mode == "zen" => {
                         if let Some(last) = state.zen_buffer.last_mut() {
                             last.push(c);

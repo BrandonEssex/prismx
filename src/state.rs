@@ -19,6 +19,8 @@ pub struct AppState {
     pub show_spotlight: bool,
     pub show_triage: bool,
     pub show_keymap: bool,
+    pub module_switcher_open: bool,
+    pub module_switcher_index: usize,
 }
 
 impl Default for AppState {
@@ -51,6 +53,8 @@ impl Default for AppState {
             show_spotlight: false,
             show_triage: false,
             show_keymap: false,
+            module_switcher_open: false,
+            module_switcher_index: 0,
         }
     }
 }
@@ -77,19 +81,18 @@ impl AppState {
         self.flat_nodes = flatten_nodes(&self.root);
     }
 
-    pub fn execute_spotlight_command(&mut self) {
-        let cmd = self.spotlight_input.trim();
-        match cmd {
-            "/toggle triage" => self.show_triage = !self.show_triage,
-            "/toggle keymap" => self.show_keymap = !self.show_keymap,
-            "/toggle spotlight" => self.show_spotlight = !self.show_spotlight,
-            "/mode zen" => self.mode = "zen".into(),
-            "/mode mindmap" => self.mode = "mindmap".into(),
-            "/clear" => self.zen_buffer = vec![String::new()],
-            _ => {}
-        }
-        self.spotlight_input.clear();
-        self.show_spotlight = false;
+    pub fn get_active_node(&self) -> Rc<RefCell<Node>> {
+        self.flat_nodes[self.active_node].1.clone()
+    }
+
+    pub fn update_active_label(&mut self, c: char) {
+        let node = self.get_active_node();
+        node.borrow_mut().label.push(c);
+    }
+
+    pub fn delete_last_char(&mut self) {
+        let node = self.get_active_node();
+        node.borrow_mut().label.pop();
     }
 
     pub fn move_focus_up(&mut self) {
@@ -102,30 +105,6 @@ impl AppState {
         if self.active_node + 1 < self.flat_nodes.len() {
             self.active_node += 1;
         }
-    }
-
-    pub fn get_active_node(&self) -> Rc<RefCell<Node>> {
-        self.flat_nodes[self.active_node].1.clone()
-    }
-
-    pub fn update_active_label(&mut self, c: char) {
-        let node = self.get_active_node();
-        let mut n = node.borrow_mut();
-        if self.edit_ready {
-            if n.label.starts_with("New ")
-                || n.label.starts_with("Node A")
-                || n.label.starts_with("Node B")
-            {
-                n.label.clear();
-            }
-            self.edit_ready = false;
-        }
-        n.label.push(c);
-    }
-
-    pub fn delete_last_char(&mut self) {
-        let node = self.get_active_node();
-        node.borrow_mut().label.pop();
     }
 
     pub fn add_child(&mut self) {
@@ -170,7 +149,7 @@ impl AppState {
 
     pub fn delete_node(&mut self) {
         if self.active_node == 0 {
-            return; // can't delete root
+            return;
         }
 
         let target = self.flat_nodes[self.active_node].1.clone();
@@ -193,5 +172,31 @@ impl AppState {
         recurse_delete(&self.root, &target);
         self.active_node = self.active_node.saturating_sub(1);
         self.reflatten();
+    }
+
+    pub fn execute_spotlight_command(&mut self) {
+        let cmd = self.spotlight_input.trim();
+        match cmd {
+            "/toggle triage" => self.show_triage = !self.show_triage,
+            "/toggle keymap" => self.show_keymap = !self.show_keymap,
+            "/toggle spotlight" => self.show_spotlight = !self.show_spotlight,
+            "/mode zen" => self.mode = "zen".into(),
+            "/mode mindmap" => self.mode = "mindmap".into(),
+            "/clear" => self.zen_buffer = vec![String::new()],
+            _ => {}
+        }
+        self.spotlight_input.clear();
+        self.show_spotlight = false;
+    }
+
+    pub fn get_module_by_index(&self) -> &str {
+        match self.module_switcher_index % 5 {
+            0 => "mindmap",
+            1 => "zen",
+            2 => "settings",
+            3 => "spotlight",
+            4 => "triage",
+            _ => "mindmap",
+        }
     }
 }
