@@ -195,7 +195,7 @@ impl AppState {
 
         let path = dirs::document_dir()
             .unwrap_or_else(|| std::path::PathBuf::from("."))
-            .join("PrismX")
+            .join("prismx")
             .join("zen_export.md");
 
         let content = self.zen_buffer.join("\n");
