@@ -78,10 +78,11 @@ pub fn render_keymap_overlay<B: Backend>(f: &mut Frame<B>, area: Rect) {
         Ctrl+M = Mindmap\n\
         Ctrl+Z = Zen\n\
         Ctrl+E = Edit Mode\n\
-        Ctrl+I = Triage\n\
+        Ctrl+T = Triage\n\
         Ctrl+H = Help\n\
         Ctrl+. = Settings\n\
         Alt+Space = Spotlight\n\
+        Shift+Tab = Switch Module\n\
         Tab = Add Child\n\
         Enter = Add Sibling\n\
         Shift+Backspace = Delete\n\
@@ -102,7 +103,7 @@ pub fn render_triage<B: Backend>(f: &mut Frame<B>, area: Rect) {
         "• Mindmap rendering: OK\n\
          • Node editing: OK\n\
          • Zen scroll: OK\n\
-         • Triage display: Fixed"
+         • Triage display: Working"
     );
 
     f.render_widget(block, area);
@@ -132,7 +133,7 @@ pub fn render_spotlight<B: Backend>(f: &mut Frame<B>, area: Rect, input: &str) {
 pub fn render_module_switcher<B: Backend>(f: &mut Frame<B>, area: Rect, index: usize) {
     use ratatui::widgets::Wrap;
 
-    let modules = ["Mindmap", "Zen", "Settings", "Spotlight", "Triage"];
+    let modules = ["Mindmap", "Zen", "Settings", "Triage"];
     let selected = modules[index % modules.len()];
     let width = 30;
     let height = 5;
@@ -152,4 +153,3 @@ pub fn render_module_switcher<B: Backend>(f: &mut Frame<B>, area: Rect, index: u
 
     f.render_widget(content, Rect::new(x, y, width, height));
 }
-

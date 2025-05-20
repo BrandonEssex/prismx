@@ -39,14 +39,11 @@ pub fn draw<B: Backend>(terminal: &mut Terminal<B>, state: &AppState, last_key: 
                     .block(Block::default().title("Settings").borders(Borders::ALL));
                 f.render_widget(fallback, vertical[0]);
             }
+            "triage" => render_triage(f, vertical[0]),
             _ => {
                 let fallback = Paragraph::new("Unknown mode");
                 f.render_widget(fallback, vertical[0]);
             }
-        }
-
-        if state.show_triage {
-            render_triage(f, vertical[0]);
         }
 
         if state.show_spotlight {
@@ -103,7 +100,7 @@ pub fn launch_ui() -> std::io::Result<()> {
                     }
 
                     KeyCode::Char('t') if modifiers.contains(KeyModifiers::CONTROL) => {
-                        state.show_triage = !state.show_triage;
+                        state.mode = "triage".into();
                     }
 
                     KeyCode::Char('h') if modifiers.contains(KeyModifiers::CONTROL) => {
@@ -131,7 +128,6 @@ pub fn launch_ui() -> std::io::Result<()> {
                         state.execute_spotlight_command();
                     }
 
-                    // Esc
                     KeyCode::Esc => {
                         if state.module_switcher_open {
                             state.module_switcher_open = false;
@@ -139,20 +135,18 @@ pub fn launch_ui() -> std::io::Result<()> {
                             state.edit_mode = false;
                         } else {
                             state.mode = "mindmap".into();
-                            state.show_triage = false;
                             state.show_keymap = false;
                             state.show_spotlight = false;
                         }
                     }
 
-                    // Module switcher
                     KeyCode::BackTab => {
                         state.module_switcher_open = true;
                         state.module_switcher_index = 0;
                     }
 
                     KeyCode::Tab if state.module_switcher_open => {
-                        state.module_switcher_index = (state.module_switcher_index + 1) % 5;
+                        state.module_switcher_index = (state.module_switcher_index + 1) % 4;
                     }
 
                     KeyCode::Enter if state.module_switcher_open => {
@@ -160,7 +154,6 @@ pub fn launch_ui() -> std::io::Result<()> {
                         state.module_switcher_open = false;
                     }
 
-                    // Navigation
                     KeyCode::Up if state.mode == "mindmap" && !state.show_spotlight => {
                         state.move_focus_up();
                     }
@@ -169,7 +162,6 @@ pub fn launch_ui() -> std::io::Result<()> {
                         state.move_focus_down();
                     }
 
-                    // Toggle edit
                     KeyCode::Char('e') if modifiers.contains(KeyModifiers::CONTROL) && state.mode == "mindmap" => {
                         state.edit_mode = !state.edit_mode;
                         state.edit_ready = state.edit_mode;

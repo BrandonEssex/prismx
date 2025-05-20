@@ -190,12 +190,11 @@ impl AppState {
     }
 
     pub fn get_module_by_index(&self) -> &str {
-        match self.module_switcher_index % 5 {
+        match self.module_switcher_index % 4 {
             0 => "mindmap",
             1 => "zen",
             2 => "settings",
-            3 => "spotlight",
-            4 => "triage",
+            3 => "triage",
             _ => "mindmap",
         }
     }
