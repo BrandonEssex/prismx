@@ -102,6 +102,10 @@ pub fn launch_ui() -> std::io::Result<()> {
                     KeyCode::Char('t') if modifiers.contains(KeyModifiers::CONTROL) => {
                         state.mode = "triage".into();
                     }
+                    
+                    KeyCode::Char('x') if modifiers.contains(KeyModifiers::CONTROL) && state.mode == "zen" => {
+                        state.export_zen_to_file();
+                    }
 
                     KeyCode::Char('h') if modifiers.contains(KeyModifiers::CONTROL) => {
                         state.show_keymap = !state.show_keymap;

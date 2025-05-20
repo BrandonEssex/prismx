@@ -189,6 +189,31 @@ impl AppState {
         self.show_spotlight = false;
     }
 
+    pub fn export_zen_to_file(&self) {
+        use std::fs;
+        use std::io::Write;
+
+        let path = dirs::document_dir()
+            .unwrap_or_else(|| std::path::PathBuf::from("."))
+            .join("PrismX")
+            .join("zen_export.md");
+
+        let content = self.zen_buffer.join("\n");
+
+        if let Some(parent) = path.parent() {
+            let _ = fs::create_dir_all(parent);
+        }
+
+        match fs::File::create(&path) {
+            Ok(mut file) => {
+                let _ = file.write_all(content.as_bytes());
+            }
+            Err(e) => {
+                eprintln!("Failed to save Zen export: {}", e);
+            }
+        }
+    }
+
     pub fn get_module_by_index(&self) -> &str {
         match self.module_switcher_index % 4 {
             0 => "mindmap",
