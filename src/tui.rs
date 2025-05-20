@@ -15,6 +15,7 @@ use crate::render::*;
 
 fn match_hotkey(action: &str, code: KeyCode, mods: KeyModifiers, state: &AppState) -> bool {
     if let Some(binding) = state.hotkeys.get(action) {
+        let binding = binding.trim().to_ascii_lowercase();
         let parts: Vec<&str> = binding.split('-').collect();
         let (m, k) = if parts.len() == 2 {
             (parts[0], parts[1])
@@ -26,7 +27,7 @@ fn match_hotkey(action: &str, code: KeyCode, mods: KeyModifiers, state: &AppStat
             "ctrl" => mods.contains(KeyModifiers::CONTROL),
             "alt" => mods.contains(KeyModifiers::ALT),
             "shift" => mods.contains(KeyModifiers::SHIFT),
-            "" => mods.is_empty(),
+            "" => mods.is_empty() || mods == KeyModifiers::NONE,
             _ => false,
         };
 
@@ -51,8 +52,10 @@ fn match_hotkey(action: &str, code: KeyCode, mods: KeyModifiers, state: &AppStat
 
         return mod_match && code_match;
     }
+
     false
 }
+
 
 pub fn draw<B: Backend>(terminal: &mut Terminal<B>, state: &AppState, last_key: &str) -> std::io::Result<()> {
     terminal.draw(|f| {
