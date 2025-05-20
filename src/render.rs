@@ -3,10 +3,12 @@ use ratatui::{
     layout::{Alignment, Rect},
     style::{Color, Modifier, Style},
     widgets::{Block, Borders, Paragraph},
+    prelude::Line,
     Frame,
 };
 
 use crate::state::AppState;
+
 
 pub fn render_status_bar<B: Backend>(f: &mut Frame<B>, area: Rect, status: &str) {
     let block = Block::default()
