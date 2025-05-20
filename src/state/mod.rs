@@ -50,3 +50,147 @@ impl Default for AppState {
         }
     }
 }
+
+impl AppState {
+    pub fn reflatten(&mut self) {
+        self.flat_nodes = flatten_nodes(&self.root);
+    }
+
+    pub fn get_active_node(&self) -> Rc<RefCell<Node>> {
+        self.flat_nodes[self.active_node].1.clone()
+    }
+
+    pub fn update_active_label(&mut self, c: char) {
+        let node = self.get_active_node();
+        node.borrow_mut().label.push(c);
+    }
+
+    pub fn delete_last_char(&mut self) {
+        let node = self.get_active_node();
+        node.borrow_mut().label.pop();
+    }
+
+    pub fn move_focus_up(&mut self) {
+        if self.active_node > 0 {
+            self.active_node -= 1;
+        }
+    }
+
+    pub fn move_focus_down(&mut self) {
+        if self.active_node + 1 < self.flat_nodes.len() {
+            self.active_node += 1;
+        }
+    }
+
+    pub fn add_child(&mut self) {
+        let node = self.get_active_node();
+        let child = Rc::new(RefCell::new(Node {
+            label: "New Child".into(),
+            children: vec![],
+            collapsed: false,
+        }));
+        node.borrow_mut().children.push(child);
+        self.reflatten();
+        self.active_node = self.flat_nodes.len() - 1;
+        self.edit_mode = true;
+        self.edit_ready = true;
+    }
+
+    pub fn add_sibling(&mut self) {
+        if self.active_node == 0 {
+            return;
+        }
+
+        let (target_depth, _) = self.flat_nodes[self.active_node];
+        let mut parent_to_update: Option<Rc<RefCell<Node>>> = None;
+
+        for (depth, node) in self.flat_nodes.iter().rev() {
+            if *depth == target_depth - 1 {
+                parent_to_update = Some(Rc::clone(node));
+                break;
+            }
+        }
+
+        if let Some(parent) = parent_to_update {
+            parent.borrow_mut().children.push(Rc::new(RefCell::new(Node {
+                label: "New Sibling".into(),
+                children: vec![],
+                collapsed: false,
+            })));
+            self.reflatten();
+            self.active_node = self.flat_nodes.len() - 1;
+            self.edit_mode = true;
+            self.edit_ready = true;
+        }
+    }
+
+    pub fn delete_node(&mut self) {
+        if self.active_node == 0 {
+            return;
+        }
+
+        let target = self.flat_nodes[self.active_node].1.clone();
+
+        fn recurse_delete(node: &Rc<RefCell<Node>>, target: &Rc<RefCell<Node>>) -> bool {
+            let mut n = node.borrow_mut();
+            let len = n.children.len();
+            n.children.retain(|child| !Rc::ptr_eq(child, target));
+            if n.children.len() < len {
+                return true;
+            }
+            for child in &n.children {
+                if recurse_delete(child, target) {
+                    return true;
+                }
+            }
+            false
+        }
+
+        recurse_delete(&self.root, &target);
+        self.active_node = self.active_node.saturating_sub(1);
+        self.reflatten();
+    }
+
+    pub fn collapse_active_node(&mut self) {
+        let node = self.get_active_node();
+        let mut n = node.borrow_mut();
+        if !n.children.is_empty() {
+            n.collapsed = true;
+            self.reflatten();
+        }
+    }
+
+    pub fn expand_active_node(&mut self) {
+        let node = self.get_active_node();
+        let mut n = node.borrow_mut();
+        if !n.children.is_empty() && n.collapsed {
+            n.collapsed = false;
+            self.reflatten();
+        }
+    }
+
+    pub fn execute_spotlight_command(&mut self) {
+        let cmd = self.spotlight_input.trim();
+        match cmd {
+            "/toggle triage" => self.show_triage = !self.show_triage,
+            "/toggle keymap" => self.show_keymap = !self.show_keymap,
+            "/toggle spotlight" => self.show_spotlight = !self.show_spotlight,
+            "/mode zen" => self.mode = "zen".into(),
+            "/mode mindmap" => self.mode = "mindmap".into(),
+            "/clear" => self.zen_buffer = vec![String::new()],
+            _ => {}
+        }
+        self.spotlight_input.clear();
+        self.show_spotlight = false;
+    }
+
+    pub fn get_module_by_index(&self) -> &str {
+        match self.module_switcher_index % 4 {
+            0 => "mindmap",
+            1 => "zen",
+            2 => "settings",
+            3 => "triage",
+            _ => "mindmap",
+        }
+    }
+}
