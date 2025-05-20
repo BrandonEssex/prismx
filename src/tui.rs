@@ -50,11 +50,21 @@ fn match_hotkey(action: &str, code: KeyCode, mods: KeyModifiers, state: &AppStat
             _ => false,
         };
 
-        return mod_match && code_match;
+        let matched = mod_match && code_match;
+
+        println!(
+            "[HOTKEY] action: {:<20} | binding: {:<10} | mods: {:?} | code: {:?} => {}",
+            action, binding, mods, code, matched
+        );
+
+        return matched;
+    } else {
+        println!("[HOTKEY] action: {:<20} not found in map", action);
     }
 
     false
 }
+
 
 
 pub fn draw<B: Backend>(terminal: &mut Terminal<B>, state: &AppState, last_key: &str) -> std::io::Result<()> {
