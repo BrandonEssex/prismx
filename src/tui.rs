@@ -87,7 +87,6 @@ pub fn launch_ui() -> std::io::Result<()> {
         if event::poll(std::time::Duration::from_millis(100))? {
             if let Event::Key(KeyEvent { code, modifiers, .. }) = event::read()? {
                 last_key = format!("{:?} + {:?}", code, modifiers);
-
                 match code {
                     KeyCode::Char('q') if modifiers.contains(KeyModifiers::CONTROL) => break,
 
@@ -102,7 +101,7 @@ pub fn launch_ui() -> std::io::Result<()> {
                     KeyCode::Char('t') if modifiers.contains(KeyModifiers::CONTROL) => {
                         state.mode = "triage".into();
                     }
-                    
+
                     KeyCode::Char('x') if modifiers.contains(KeyModifiers::CONTROL) && state.mode == "zen" => {
                         state.export_zen_to_file();
                     }
