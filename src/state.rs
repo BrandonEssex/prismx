@@ -206,10 +206,14 @@ impl AppState {
 
         match fs::File::create(&path) {
             Ok(mut file) => {
-                let _ = file.write_all(content.as_bytes());
+                if let Err(err) = file.write_all(content.as_bytes()) {
+                    eprintln!("❌ Write failed: {}", err);
+                } else {
+                    println!("✅ Zen exported to: {:?}", path);
+                }
             }
             Err(e) => {
-                eprintln!("Failed to save Zen export: {}", e);
+                eprintln!("❌ File create failed: {}", e);
             }
         }
     }
