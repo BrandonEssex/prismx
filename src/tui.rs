@@ -13,6 +13,47 @@ use std::io::stdout;
 use crate::state::AppState;
 use crate::render::*;
 
+fn match_hotkey(action: &str, code: KeyCode, mods: KeyModifiers, state: &AppState) -> bool {
+    if let Some(binding) = state.hotkeys.get(action) {
+        let parts: Vec<&str> = binding.split('-').collect();
+        let (m, k) = if parts.len() == 2 {
+            (parts[0], parts[1])
+        } else {
+            ("", parts[0])
+        };
+
+        let mod_match = match m {
+            "ctrl" => mods.contains(KeyModifiers::CONTROL),
+            "alt" => mods.contains(KeyModifiers::ALT),
+            "shift" => mods.contains(KeyModifiers::SHIFT),
+            "" => mods.is_empty(),
+            _ => false,
+        };
+
+        let code_match = match k {
+            "tab" => code == KeyCode::Tab,
+            "enter" => code == KeyCode::Enter,
+            "backspace" => code == KeyCode::Backspace,
+            "esc" => code == KeyCode::Esc,
+            "?" => code == KeyCode::Char('?'),
+            "," => code == KeyCode::Char(','),
+            "." => code == KeyCode::Char('.'),
+            "d" => code == KeyCode::Char('d'),
+            "w" => code == KeyCode::Char('w'),
+            "q" => code == KeyCode::Char('q'),
+            "n" => code == KeyCode::Char('n'),
+            "t" => code == KeyCode::Char('t'),
+            "x" => code == KeyCode::Char('x'),
+            "c" => code == KeyCode::Char('c'),
+            "h" => code == KeyCode::Char('h'),
+            _ => false,
+        };
+
+        return mod_match && code_match;
+    }
+    false
+}
+
 pub fn draw<B: Backend>(terminal: &mut Terminal<B>, state: &AppState, last_key: &str) -> std::io::Result<()> {
     terminal.draw(|f| {
         let full = f.size();
@@ -88,46 +129,54 @@ pub fn launch_ui() -> std::io::Result<()> {
             if let Event::Key(KeyEvent { code, modifiers, .. }) = event::read()? {
                 last_key = format!("{:?} + {:?}", code, modifiers);
 
+                if match_hotkey("quit", code, modifiers, &state) {
+                    break;
+                }
+
+                if match_hotkey("create_sibling", code, modifiers, &state) && state.mode == "mindmap" && state.edit_mode {
+                    state.add_sibling();
+                }
+
+                if match_hotkey("create_child", code, modifiers, &state) && state.mode == "mindmap" && state.edit_mode {
+                    state.add_child();
+                }
+
+                if match_hotkey("delete", code, modifiers, &state) && state.mode == "mindmap" && state.edit_mode {
+                    state.delete_node();
+                }
+
+                if match_hotkey("toggle_collapsed", code, modifiers, &state) && state.mode == "mindmap" {
+                    let node = state.get_active_node();
+                    if node.borrow().collapsed {
+                        state.expand_active_node();
+                    } else {
+                        state.collapse_active_node();
+                    }
+                }
+
+                if match_hotkey("toggle_edit", code, modifiers, &state) && state.mode == "mindmap" {
+                    state.edit_mode = !state.edit_mode;
+                    state.edit_ready = state.edit_mode;
+                }
+
+                if match_hotkey("save", code, modifiers, &state) && state.mode == "zen" {
+                    state.export_zen_to_file();
+                }
+
+                if match_hotkey("toggle_triage", code, modifiers, &state) {
+                    state.mode = "triage".into();
+                }
+
+                if match_hotkey("toggle_keymap", code, modifiers, &state) {
+                    state.show_keymap = !state.show_keymap;
+                }
+
+                if match_hotkey("switch_module", code, modifiers, &state) {
+                    state.module_switcher_open = true;
+                    state.module_switcher_index = 0;
+                }
+
                 match code {
-                    KeyCode::Char('q') if modifiers.contains(KeyModifiers::CONTROL) => break,
-
-                    KeyCode::Char('m') if modifiers.contains(KeyModifiers::CONTROL) => {
-                        state.mode = "mindmap".into();
-                    }
-
-                    KeyCode::Char('z') if modifiers.contains(KeyModifiers::CONTROL) => {
-                        state.mode = "zen".into();
-                    }
-
-                    KeyCode::Char('t') if modifiers.contains(KeyModifiers::CONTROL) => {
-                        state.mode = "triage".into();
-                    }
-
-                    KeyCode::Char('h') if modifiers.contains(KeyModifiers::CONTROL) => {
-                        state.show_keymap = !state.show_keymap;
-                    }
-
-                    KeyCode::Char('\u{a0}') => {
-                        state.show_spotlight = !state.show_spotlight;
-                    }
-
-                    KeyCode::Char('.') if modifiers.contains(KeyModifiers::CONTROL) => {
-                        state.mode = "settings".into();
-                    }
-
-                    // Spotlight input
-                    KeyCode::Char(c) if state.show_spotlight => {
-                        state.spotlight_input.push(c);
-                    }
-
-                    KeyCode::Backspace if state.show_spotlight => {
-                        state.spotlight_input.pop();
-                    }
-
-                    KeyCode::Enter if state.show_spotlight => {
-                        state.execute_spotlight_command();
-                    }
-
                     KeyCode::Esc => {
                         if state.module_switcher_open {
                             state.module_switcher_open = false;
@@ -140,11 +189,6 @@ pub fn launch_ui() -> std::io::Result<()> {
                         }
                     }
 
-                    KeyCode::BackTab => {
-                        state.module_switcher_open = true;
-                        state.module_switcher_index = 0;
-                    }
-
                     KeyCode::Tab if state.module_switcher_open => {
                         state.module_switcher_index = (state.module_switcher_index + 1) % 4;
                     }
@@ -154,27 +198,12 @@ pub fn launch_ui() -> std::io::Result<()> {
                         state.module_switcher_open = false;
                     }
 
-                    // Mindmap collapse/expand
-                    KeyCode::Char('[') if modifiers.contains(KeyModifiers::CONTROL) => {
-                        state.collapse_active_node();
-                    }
-
-                    KeyCode::Char(']') if modifiers.contains(KeyModifiers::CONTROL) => {
-                        state.expand_active_node();
-                    }
-
-                    // Mindmap nav
                     KeyCode::Up if state.mode == "mindmap" && !state.show_spotlight => {
                         state.move_focus_up();
                     }
 
                     KeyCode::Down if state.mode == "mindmap" && !state.show_spotlight => {
                         state.move_focus_down();
-                    }
-
-                    KeyCode::Char('e') if modifiers.contains(KeyModifiers::CONTROL) && state.mode == "mindmap" => {
-                        state.edit_mode = !state.edit_mode;
-                        state.edit_ready = state.edit_mode;
                     }
 
                     KeyCode::Char(c) if state.mode == "mindmap" && state.edit_mode => {
@@ -190,26 +219,11 @@ pub fn launch_ui() -> std::io::Result<()> {
                         n.label.push(c);
                     }
 
-                    KeyCode::Backspace if modifiers.contains(KeyModifiers::CONTROL)
-                        && state.mode == "mindmap"
-                        && state.edit_mode => {
-                        state.delete_node();
-                    }
-
                     KeyCode::Backspace if state.mode == "mindmap" && state.edit_mode => {
                         let node = state.get_active_node();
                         node.borrow_mut().label.pop();
                     }
 
-                    KeyCode::Enter if state.mode == "mindmap" && state.edit_mode => {
-                        state.add_sibling();
-                    }
-
-                    KeyCode::Tab if state.mode == "mindmap" && state.edit_mode => {
-                        state.add_child();
-                    }
-
-                    // Zen input
                     KeyCode::Char(c) if state.mode == "zen" => {
                         if let Some(last) = state.zen_buffer.last_mut() {
                             last.push(c);
@@ -224,6 +238,22 @@ pub fn launch_ui() -> std::io::Result<()> {
                         if let Some(last) = state.zen_buffer.last_mut() {
                             last.pop();
                         }
+                    }
+
+                    KeyCode::Char('\u{a0}') => {
+                        state.show_spotlight = !state.show_spotlight;
+                    }
+
+                    KeyCode::Char(c) if state.show_spotlight => {
+                        state.spotlight_input.push(c);
+                    }
+
+                    KeyCode::Backspace if state.show_spotlight => {
+                        state.spotlight_input.pop();
+                    }
+
+                    KeyCode::Enter if state.show_spotlight => {
+                        state.execute_spotlight_command();
                     }
 
                     _ => {}
