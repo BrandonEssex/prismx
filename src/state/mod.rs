@@ -1,20 +1,19 @@
 use std::collections::HashMap;
-use std::rc::Rc;
-use std::cell::RefCell;
 
-mod mindmap;
-mod zen;
 mod hotkeys;
+mod node;
+mod layout;
 
-pub use mindmap::*;
 pub use hotkeys::*;
+pub use node::*;
+pub use layout::*;
 
 pub struct AppState {
     pub mode: String,
     pub zen_buffer: Vec<String>,
-    pub root: Rc<RefCell<Node>>,
-    pub flat_nodes: Vec<(usize, Rc<RefCell<Node>>)>,
-    pub active_node: usize,
+    pub nodes: NodeMap,
+    pub root_id: NodeID,
+    pub selected: Option<NodeID>,
     pub spotlight_input: String,
     pub show_spotlight: bool,
     pub show_triage: bool,
@@ -28,15 +27,23 @@ pub struct AppState {
 
 impl Default for AppState {
     fn default() -> Self {
-        let root = Rc::new(RefCell::new(Node::default_root()));
-        let flat = flatten_nodes(&root);
+        let mut nodes = NodeMap::new();
+        let root_id = 1;
+        nodes.insert(root_id, Node::new(root_id, "Gemx Root", None));
+
+        let child_a = 2;
+        let child_b = 3;
+        nodes.insert(child_a, Node::new(child_a, "Node A", Some(root_id)));
+        nodes.insert(child_b, Node::new(child_b, "Node B", Some(root_id)));
+
+        nodes.get_mut(&root_id).unwrap().children = vec![child_a, child_b];
 
         Self {
-            mode: "mindmap".into(),
+            mode: "gemx".into(),
             zen_buffer: vec![String::from(" ")],
-            root,
-            flat_nodes: flat,
-            active_node: 0,
+            nodes,
+            root_id,
+            selected: Some(child_a),
             spotlight_input: String::new(),
             show_spotlight: false,
             show_triage: false,
@@ -49,6 +56,7 @@ impl Default for AppState {
         }
     }
 }
+
 
 impl AppState {
     pub fn reflatten(&mut self) {
@@ -184,7 +192,7 @@ impl AppState {
             "/toggle keymap" => self.show_keymap = !self.show_keymap,
             "/toggle spotlight" => self.show_spotlight = !self.show_spotlight,
             "/mode zen" => self.mode = "zen".into(),
-            "/mode mindmap" => self.mode = "mindmap".into(),
+            "/mode gemx" => self.mode = "gemx".into(),
             "/clear" => self.zen_buffer = vec![String::new()],
             _ => {}
         }
@@ -214,11 +222,11 @@ impl AppState {
 
     pub fn get_module_by_index(&self) -> &str {
         match self.module_switcher_index % 4 {
-            0 => "mindmap",
+            0 => "gemx",
             1 => "zen",
             2 => "settings",
             3 => "triage",
-            _ => "mindmap",
+            _ => "gemx",
         }
     }
 }

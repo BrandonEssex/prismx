@@ -1,3 +1,6 @@
+pub mod node;
+pub mod layout;
+pub mod screen;
 pub mod bootstrap;
 pub mod config;
 pub mod plugin;
@@ -16,4 +19,3 @@ pub mod gemx;
 pub mod routineforge;
 pub mod settings;
 pub mod state;
-pub mod screen;

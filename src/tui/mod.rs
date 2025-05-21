@@ -18,7 +18,7 @@ use crate::render::{
     render_triage,
     render_module_switcher,
 };
-use crate::screen::render_mindmap;
+use crate::screen::render_gemx;
 
 mod hotkeys;
 use hotkeys::match_hotkey;
@@ -46,7 +46,7 @@ pub fn draw<B: Backend>(terminal: &mut Terminal<B>, state: &mut AppState, last_k
 
         match state.mode.as_str() {
             "zen" => render_zen_journal(f, vertical[0], state),
-            "mindmap" => render_mindmap(f, vertical[0], state),
+            "gemx" => render_gemx(f, vertical[0], &state.nodes, state.root_id, state.selected);
             "settings" => {
                 let fallback = Paragraph::new("Settings panel coming soon...")
                     .block(Block::default().title("Settings").borders(Borders::ALL));
@@ -107,13 +107,13 @@ pub fn launch_ui() -> std::io::Result<()> {
                     state.mode = "triage".into();
                 } else if match_hotkey("toggle_keymap", code, modifiers, &state) {
                     state.show_keymap = !state.show_keymap;
-                } else if match_hotkey("create_child", code, modifiers, &state) && state.mode == "mindmap" {
+                } else if match_hotkey("create_child", code, modifiers, &state) && state.mode == "gemx" {
                     state.add_child();
-                } else if match_hotkey("create_sibling", code, modifiers, &state) && state.mode == "mindmap" {
+                } else if match_hotkey("create_sibling", code, modifiers, &state) && state.mode == "gemx" {
                     state.add_sibling();
                 } else if match_hotkey("add_free_node", code, modifiers, &state) {
                     state.add_free_node();
-                } else if match_hotkey("delete", code, modifiers, &state) && state.mode == "mindmap" {
+                } else if match_hotkey("delete", code, modifiers, &state) && state.mode == "gemx" {
                     state.delete_node();
                 } else if match_hotkey("save", code, modifiers, &state) && state.mode == "zen" {
                     state.export_zen_to_file();
@@ -126,7 +126,7 @@ pub fn launch_ui() -> std::io::Result<()> {
                 } else if match_hotkey("switch_module", code, modifiers, &state) {
                     state.module_switcher_open = true;
                     state.module_switcher_index = 0;
-                } else if match_hotkey("toggle_collapsed", code, modifiers, &state) && state.mode == "mindmap" {
+                } else if match_hotkey("toggle_collapsed", code, modifiers, &state) && state.mode == "gemx" {
                     state.toggle_collapse();
                 }
 
@@ -135,7 +135,7 @@ pub fn launch_ui() -> std::io::Result<()> {
                         if state.module_switcher_open {
                             state.module_switcher_open = false;
                         } else {
-                            state.mode = "mindmap".into();
+                            state.mode = "gemx".into();
                             state.show_keymap = false;
                             state.show_spotlight = false;
                         }
@@ -154,15 +154,15 @@ pub fn launch_ui() -> std::io::Result<()> {
                         state.module_switcher_open = false;
                     }
 
-                    KeyCode::Up if state.mode == "mindmap" && !state.show_spotlight => {
+                    KeyCode::Up if state.mode == "gemx" && !state.show_spotlight => {
                         state.move_focus_up();
                     }
 
-                    KeyCode::Down if state.mode == "mindmap" && !state.show_spotlight => {
+                    KeyCode::Down if state.mode == "gemx" && !state.show_spotlight => {
                         state.move_focus_down();
                     }
 
-                    KeyCode::Char(c) if state.mode == "mindmap" => {
+                    KeyCode::Char(c) if state.mode == "gemx" => {
                         let allowed = modifiers == KeyModifiers::NONE || modifiers == KeyModifiers::SHIFT;
                         if allowed && (c.is_ascii_graphic() || c == ' ') {
                             let node = state.get_active_node();
@@ -180,7 +180,7 @@ pub fn launch_ui() -> std::io::Result<()> {
                         }
                     }
 
-                    KeyCode::Backspace if state.mode == "mindmap" => {
+                    KeyCode::Backspace if state.mode == "gemx" => {
                         let node = state.get_active_node();
                         node.borrow_mut().label.pop();
                     }
