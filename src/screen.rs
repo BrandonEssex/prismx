@@ -8,7 +8,7 @@ use crate::state::{AppState, visible_nodes, Node};
 
 pub fn render_mindmap<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppState) {
     let block = Block::default()
-        .title(if state.edit_mode { "Mindmap (Edit)" } else { "Mindmap" })
+        .title("Gemx")
         .borders(Borders::ALL);
     f.render_widget(block, area);
 
