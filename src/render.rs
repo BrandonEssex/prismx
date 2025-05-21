@@ -44,8 +44,13 @@ pub fn render_zen_journal<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppS
     let vertical_padding = 2;
     let usable_height = total_height.saturating_sub(vertical_padding * 2);
     let start_line = lines.len().saturating_sub(usable_height);
-    let end_line = lines.len().min(start_line + usable_height);
-    let visible_lines = &lines[start_line..end_line];
+    let end_line = lines.len();
+
+    let visible_lines = if start_line < end_line {
+        &lines[start_line..end_line]
+    } else {
+        &lines[..]
+    };
 
     let padding_top = (usable_height.saturating_sub(visible_lines.len())) / 2;
     let margin = (total_width as f32 * 0.15).min((total_width / 2) as f32) as u16;
@@ -70,6 +75,7 @@ pub fn render_zen_journal<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppS
 
     f.render_widget(widget, padded_area);
 }
+
 
 
 fn parse_markdown_line(input: &str) -> Line {
