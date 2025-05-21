@@ -16,8 +16,6 @@ pub struct AppState {
     pub root: Rc<RefCell<Node>>,
     pub flat_nodes: Vec<(usize, Rc<RefCell<Node>>)>,
     pub active_node: usize,
-    pub edit_mode: bool,
-    pub edit_ready: bool,
     pub spotlight_input: String,
     pub show_spotlight: bool,
     pub show_triage: bool,
@@ -87,17 +85,15 @@ impl AppState {
     }
 
     pub fn add_child(&mut self) {
-        let node = self.get_active_node();
-        let child = Rc::new(RefCell::new(Node {
-            label: "New Child".into(),
-            children: vec![],
-            collapsed: false,
-        }));
-        node.borrow_mut().children.push(child);
-        self.reflatten();
-        self.active_node = self.flat_nodes.len() - 1;
-        self.edit_mode = true;
-        self.edit_ready = true;
+    let node = self.get_active_node();
+    let child = Rc::new(RefCell::new(Node {
+        label: "New Child".into(),
+        children: vec![],
+        collapsed: false,
+    }));
+    node.borrow_mut().children.push(child);
+    self.reflatten();
+    self.active_node = self.flat_nodes.len() - 1;
     }
 
     pub fn add_sibling(&mut self) {
@@ -123,10 +119,9 @@ impl AppState {
             })));
             self.reflatten();
             self.active_node = self.flat_nodes.len() - 1;
-            self.edit_mode = true;
-            self.edit_ready = true;
         }
     }
+
 
     pub fn delete_node(&mut self) {
         if self.active_node == 0 {

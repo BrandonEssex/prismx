@@ -103,16 +103,13 @@ pub fn launch_ui() -> std::io::Result<()> {
 
                 if match_hotkey("quit", code, modifiers, &state) {
                     break;
-                } else if match_hotkey("toggle_edit", code, modifiers, &state) && state.mode == "mindmap" {
-                    state.edit_mode = !state.edit_mode;
-                    state.edit_ready = state.edit_mode;
                 } else if match_hotkey("toggle_triage", code, modifiers, &state) {
                     state.mode = "triage".into();
                 } else if match_hotkey("toggle_keymap", code, modifiers, &state) {
                     state.show_keymap = !state.show_keymap;
-                } else if match_hotkey("create_child", code, modifiers, &state) && state.mode == "mindmap" && state.edit_mode {
+                } else if match_hotkey("create_child", code, modifiers, &state) && state.mode == "mindmap" {
                     state.add_child();
-                } else if match_hotkey("create_sibling", code, modifiers, &state) && state.mode == "mindmap" && state.edit_mode {
+                } else if match_hotkey("create_sibling", code, modifiers, &state) && state.mode == "mindmap" {
                     state.add_sibling();
                 } else if match_hotkey("add_free_node", code, modifiers, &state) {
                     state.add_free_node();
@@ -167,18 +164,20 @@ pub fn launch_ui() -> std::io::Result<()> {
                         state.move_focus_down();
                     }
 
-                    KeyCode::Char(c) if state.mode == "mindmap" && state.edit_mode => {
+                    KeyCode::Char(c) if state.mode == "mindmap" => {
                         let allowed = modifiers == KeyModifiers::NONE || modifiers == KeyModifiers::SHIFT;
                         if allowed && (c.is_ascii_graphic() || c == ' ') {
                             let node = state.get_active_node();
                             let mut n = node.borrow_mut();
-                            if state.edit_ready && (
-                                n.label == "New Child" || n.label == "New Sibling" ||
-                                n.label == "Node A" || n.label == "Node B"
-                            ) {
+
+                            if n.label == "New Child"
+                                || n.label == "New Sibling"
+                                || n.label == "Node A"
+                                || n.label == "Node B"
+                            {
                                 n.label.clear();
-                                state.edit_ready = false;
                             }
+
                             n.label.push(c);
                         }
                     }
