@@ -184,6 +184,28 @@ impl AppState {
         self.show_spotlight = false;
     }
 
+    pub fn add_free_node(&mut self) {
+        let new = Rc::new(RefCell::new(Node {
+            label: "Free Node".into(),
+            children: vec![],
+            collapsed: false,
+        }));
+        self.root.borrow_mut().children.push(new);
+        self.reflatten();
+        self.active_node = self.flat_nodes.len() - 1;
+        self.edit_mode = true;
+        self.edit_ready = true;
+    }
+
+    pub fn drill_down(&mut self) {
+        let current = self.get_active_node();
+        if !current.borrow().children.is_empty() {
+            self.root = current;
+            self.reflatten();
+            self.active_node = 0;
+        }
+    }
+
     pub fn get_module_by_index(&self) -> &str {
         match self.module_switcher_index % 4 {
             0 => "mindmap",

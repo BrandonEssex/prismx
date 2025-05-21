@@ -92,10 +92,8 @@ pub fn launch_ui() -> std::io::Result<()> {
     loop {
         if event::poll(std::time::Duration::from_millis(100))? {
             if let Event::Key(KeyEvent { code, modifiers, .. }) = event::read()? {
-//                println!("[KEY] mods: {:?} | code: {:?}", modifiers, code); // Key debug
                 last_key = format!("{:?} + {:?}", code, modifiers);
 
-                // Proper hotkey logic
                 if match_hotkey("quit", code, modifiers, &state) {
                     break;
                 } else if match_hotkey("toggle_edit", code, modifiers, &state) && state.mode == "mindmap" {
@@ -109,10 +107,16 @@ pub fn launch_ui() -> std::io::Result<()> {
                     state.add_child();
                 } else if match_hotkey("create_sibling", code, modifiers, &state) && state.mode == "mindmap" && state.edit_mode {
                     state.add_sibling();
+                } else if match_hotkey("add_free_node", code, modifiers, &state) {
+                    state.add_free_node();
                 } else if match_hotkey("delete", code, modifiers, &state) && state.mode == "mindmap" && state.edit_mode {
                     state.delete_node();
                 } else if match_hotkey("save", code, modifiers, &state) && state.mode == "zen" {
                     state.export_zen_to_file();
+                } else if match_hotkey("mode_zen", code, modifiers, &state) {
+                    state.mode = "zen".into();
+                } else if match_hotkey("drill_down", code, modifiers, &state) {
+                    state.drill_down();
                 } else if match_hotkey("switch_module", code, modifiers, &state) {
                     state.module_switcher_open = true;
                     state.module_switcher_index = 0;
@@ -125,7 +129,6 @@ pub fn launch_ui() -> std::io::Result<()> {
                     }
                 }
 
-                // Raw keys for navigation or fallback input
                 match code {
                     KeyCode::Esc => {
                         if state.module_switcher_open {
