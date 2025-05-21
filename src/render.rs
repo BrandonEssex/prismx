@@ -21,21 +21,26 @@ pub fn render_status_bar<B: Backend>(f: &mut Frame<B>, area: Rect, status: &str)
 }
 
 pub fn render_zen_journal<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
-    use ratatui::widgets::{Wrap};
+    use ratatui::widgets::Wrap;
     use ratatui::text::{Span, Line};
     use ratatui::layout::Alignment;
 
-    let lines: Vec<Line> = state.zen_buffer.iter().map(|line| parse_markdown_line(line)).collect();
+    let offset_lines = 2;
+    let viewable_height = area.height.saturating_sub(offset_lines) as usize;
 
-    let widget = Paragraph::new(lines)
+    let lines: Vec<Line> = state.zen_buffer.iter().map(|line| parse_markdown_line(line)).collect();
+    let start_line = lines.len().saturating_sub(viewable_height);
+    let visible_lines = &lines[start_line..];
+
+    let widget = Paragraph::new(visible_lines.to_vec())
         .block(Block::default().title("Zen").borders(Borders::ALL))
         .alignment(Alignment::Left)
         .style(Style::default().fg(Color::Green))
         .wrap(Wrap { trim: false });
 
-    let scroll_offset = state.zen_buffer.len().saturating_sub((area.height as usize).saturating_sub(5));
-    f.render_widget(widget.scroll((scroll_offset as u16, 0)), area);
+    f.render_widget(widget, area);
 }
+
 
 fn parse_markdown_line(input: &str) -> Line {
     use ratatui::text::{Span, Line};

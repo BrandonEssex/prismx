@@ -120,7 +120,7 @@ pub fn launch_ui() -> std::io::Result<()> {
                     state.module_switcher_open = true;
                     state.module_switcher_index = 0;
                 } else if match_hotkey("toggle_collapsed", code, modifiers, &state) && state.mode == "mindmap" {
-                    state.toggle_collapse(); // <- final fix
+                    state.toggle_collapse();
                 }
 
                 match code {
@@ -140,6 +140,10 @@ pub fn launch_ui() -> std::io::Result<()> {
                         state.module_switcher_index = (state.module_switcher_index + 1) % 4;
                     }
 
+                    KeyCode::BackTab => {
+                        state.module_switcher_open = true;
+                    }
+
                     KeyCode::Enter if state.module_switcher_open => {
                         state.mode = state.get_module_by_index().into();
                         state.module_switcher_open = false;
@@ -154,16 +158,18 @@ pub fn launch_ui() -> std::io::Result<()> {
                     }
 
                     KeyCode::Char(c) if state.mode == "mindmap" && state.edit_mode => {
-                        let node = state.get_active_node();
-                        let mut n = node.borrow_mut();
-                        if state.edit_ready && (
-                            n.label == "New Child" || n.label == "New Sibling" ||
-                            n.label == "Node A" || n.label == "Node B"
-                        ) {
-                            n.label.clear();
-                            state.edit_ready = false;
+                        if modifiers == KeyModifiers::NONE && c.is_ascii_graphic() {
+                            let node = state.get_active_node();
+                            let mut n = node.borrow_mut();
+                            if state.edit_ready && (
+                                n.label == "New Child" || n.label == "New Sibling" ||
+                                n.label == "Node A" || n.label == "Node B"
+                            ) {
+                                n.label.clear();
+                                state.edit_ready = false;
+                            }
+                            n.label.push(c);
                         }
-                        n.label.push(c);
                     }
 
                     KeyCode::Backspace if state.mode == "mindmap" && state.edit_mode => {
