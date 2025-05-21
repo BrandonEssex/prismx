@@ -37,12 +37,21 @@ pub fn flatten_nodes(node: &Rc<RefCell<Node>>) -> Vec<(usize, Rc<RefCell<Node>>)
     ) {
         out.push((depth, Rc::clone(node)));
 
-        if node.borrow().collapsed {
+        // Safely borrow once
+        let children;
+        let collapsed;
+        {
+            let n = node.borrow();
+            collapsed = n.collapsed;
+            children = n.children.clone(); // clone Vec<Rc<...>> — cheap
+        }
+
+        if collapsed {
             return;
         }
 
-        for child in &node.borrow().children {
-            recurse(child, depth + 1, out);
+        for child in children {
+            recurse(&child, depth + 1, out);
         }
     }
 
@@ -50,3 +59,4 @@ pub fn flatten_nodes(node: &Rc<RefCell<Node>>) -> Vec<(usize, Rc<RefCell<Node>>)
     recurse(node, 0, &mut result);
     result
 }
+
