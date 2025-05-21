@@ -45,6 +45,9 @@ pub fn match_hotkey(action: &str, code: KeyCode, mods: KeyModifiers, state: &App
             "z" => code == KeyCode::Char('z'),
             "y" => code == KeyCode::Char('y'),
             "m" => code == KeyCode::Char('m'),
+            "space" => code == KeyCode::Char(' '),
+            "." => code == KeyCode::Char('.'),
+
             _ => false,
         };
 

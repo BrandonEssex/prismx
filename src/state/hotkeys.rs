@@ -20,7 +20,7 @@ pub fn load_default_hotkeys() -> HashMap<String, String> {
     map.insert("mode_zen".into(), "ctrl-r".into());
     map.insert("undo".into(), "ctrl+z".into()); 
     map.insert("add_free_node".into(), "ctrl-n".into());
-    map.insert("open_module_switcher".into(), "ctrl-m".into());
-
+    map.insert("open_module_switcher".into(), "ctrl-space" .into());
+    
     map
 }
