@@ -113,6 +113,9 @@ pub fn launch_ui() -> std::io::Result<()> {
                     state.add_sibling();
                 } else if match_hotkey("add_free_node", code, modifiers, &state) {
                     state.add_free_node();
+                } else if match_hotkey("open_module_switcher", code, modifiers, &state) {
+                    state.module_switcher_open = true;
+                    state.module_switcher_index = 0;
                 } else if match_hotkey("delete", code, modifiers, &state) && state.mode == "gemx" {
                     state.delete_node();
                 } else if match_hotkey("save", code, modifiers, &state) && state.mode == "zen" {
@@ -123,9 +126,6 @@ pub fn launch_ui() -> std::io::Result<()> {
                     // undo_redo() not yet implemented
                 } else if match_hotkey("drill_down", code, modifiers, &state) {
                     state.drill_down();
-                } else if match_hotkey("switch_module", code, modifiers, &state) {
-                    state.module_switcher_open = true;
-                    state.module_switcher_index = 0;
                 } else if match_hotkey("toggle_collapsed", code, modifiers, &state) && state.mode == "gemx" {
                     state.toggle_collapse();
                 }
@@ -150,7 +150,7 @@ pub fn launch_ui() -> std::io::Result<()> {
                     }
 
                     KeyCode::BackTab if state.mode == "gemx" => {
-                        state.move_focus_left(); // Shift+Tab = go back up
+                        state.move_focus_left();
                     }
 
                     KeyCode::Enter if state.module_switcher_open => {
@@ -158,21 +158,10 @@ pub fn launch_ui() -> std::io::Result<()> {
                         state.module_switcher_open = false;
                     }
 
-                    KeyCode::Up if state.mode == "gemx" && !state.show_spotlight => {
-                        state.move_focus_up();
-                    }
-
-                    KeyCode::Down if state.mode == "gemx" && !state.show_spotlight => {
-                        state.move_focus_down();
-                    }
-
-                    KeyCode::Left if state.mode == "gemx" && !state.show_spotlight => {
-                        state.move_focus_left();
-                    }
-
-                    KeyCode::Right if state.mode == "gemx" && !state.show_spotlight => {
-                        state.move_focus_right();
-                    }
+                    KeyCode::Up if state.mode == "gemx" => state.move_focus_up(),
+                    KeyCode::Down if state.mode == "gemx" => state.move_focus_down(),
+                    KeyCode::Left if state.mode == "gemx" => state.move_focus_left(),
+                    KeyCode::Right if state.mode == "gemx" => state.move_focus_right(),
 
                     KeyCode::Char(c) if state.mode == "gemx" => {
                         let allowed = modifiers == KeyModifiers::NONE || modifiers == KeyModifiers::SHIFT;
