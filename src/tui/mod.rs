@@ -113,7 +113,7 @@ pub fn launch_ui() -> std::io::Result<()> {
                     state.add_sibling();
                 } else if match_hotkey("add_free_node", code, modifiers, &state) {
                     state.add_free_node();
-                } else if match_hotkey("delete", code, modifiers, &state) && state.mode == "mindmap" && state.edit_mode {
+                } else if match_hotkey("delete", code, modifiers, &state) && state.mode == "mindmap" {
                     state.delete_node();
                 } else if match_hotkey("save", code, modifiers, &state) && state.mode == "zen" {
                     state.export_zen_to_file();
@@ -134,8 +134,6 @@ pub fn launch_ui() -> std::io::Result<()> {
                     KeyCode::Esc => {
                         if state.module_switcher_open {
                             state.module_switcher_open = false;
-                        } else if state.edit_mode {
-                            state.edit_mode = false;
                         } else {
                             state.mode = "mindmap".into();
                             state.show_keymap = false;
@@ -182,7 +180,7 @@ pub fn launch_ui() -> std::io::Result<()> {
                         }
                     }
 
-                    KeyCode::Backspace if state.mode == "mindmap" && state.edit_mode => {
+                    KeyCode::Backspace if state.mode == "mindmap" => {
                         let node = state.get_active_node();
                         node.borrow_mut().label.pop();
                     }

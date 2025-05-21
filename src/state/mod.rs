@@ -38,8 +38,6 @@ impl Default for AppState {
             root,
             flat_nodes: flat,
             active_node: 0,
-            edit_mode: false,
-            edit_ready: false,
             spotlight_input: String::new(),
             show_spotlight: false,
             show_triage: false,
@@ -85,15 +83,15 @@ impl AppState {
     }
 
     pub fn add_child(&mut self) {
-    let node = self.get_active_node();
-    let child = Rc::new(RefCell::new(Node {
-        label: "New Child".into(),
-        children: vec![],
-        collapsed: false,
-    }));
-    node.borrow_mut().children.push(child);
-    self.reflatten();
-    self.active_node = self.flat_nodes.len() - 1;
+        let node = self.get_active_node();
+        let child = Rc::new(RefCell::new(Node {
+            label: "New Child".into(),
+            children: vec![],
+            collapsed: false,
+        }));
+        node.borrow_mut().children.push(child);
+        self.reflatten();
+        self.active_node = self.flat_nodes.len() - 1;
     }
 
     pub fn add_sibling(&mut self) {
@@ -122,7 +120,6 @@ impl AppState {
         }
     }
 
-
     pub fn delete_node(&mut self) {
         if self.active_node == 0 {
             return;
@@ -150,24 +147,6 @@ impl AppState {
         self.reflatten();
     }
 
-    pub fn collapse_active_node(&mut self) {
-        let node = self.get_active_node();
-        let mut n = node.borrow_mut();
-        if !n.children.is_empty() {
-            n.collapsed = true;
-            self.reflatten();
-        }
-    }
-
-    pub fn expand_active_node(&mut self) {
-        let node = self.get_active_node();
-        let mut n = node.borrow_mut();
-        if !n.children.is_empty() && n.collapsed {
-            n.collapsed = false;
-            self.reflatten();
-        }
-    }
-
     pub fn toggle_collapse(&mut self) {
         let collapsed = {
             let node = self.get_active_node();
@@ -176,7 +155,6 @@ impl AppState {
             n.collapsed
         };
 
-        // Reflatten only after borrow is dropped
         if collapsed || !collapsed {
             self.reflatten();
         }
@@ -206,8 +184,6 @@ impl AppState {
         self.root.borrow_mut().children.push(new);
         self.reflatten();
         self.active_node = self.flat_nodes.len() - 1;
-        self.edit_mode = true;
-        self.edit_ready = true;
     }
 
     pub fn drill_down(&mut self) {
