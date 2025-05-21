@@ -178,6 +178,27 @@ impl AppState {
         }
     }
 
+    pub fn export_zen_to_file(&self) {
+        use std::fs::{self, File};
+        use std::io::Write;
+        use dirs;
+
+        let path = dirs::document_dir()
+            .unwrap_or_else(|| std::path::PathBuf::from("."))
+            .join("prismx")
+            .join("zen_export.md");
+
+        let content = self.zen_buffer.join("\n");
+
+        if let Some(parent) = path.parent() {
+            let _ = fs::create_dir_all(parent);
+        }
+
+        if let Ok(mut file) = File::create(&path) {
+            let _ = file.write_all(content.as_bytes());
+        }
+    }
+
     pub fn get_module_by_index(&self) -> &str {
         match self.module_switcher_index % 4 {
             0 => "gemx",

@@ -46,7 +46,7 @@ pub fn draw<B: Backend>(terminal: &mut Terminal<B>, state: &mut AppState, last_k
 
         match state.mode.as_str() {
             "zen" => render_zen_journal(f, vertical[0], state),
-            "gemx" => render_gemx(f, vertical[0], &state.nodes, state.root_id, state.selected);
+            "gemx" => render_gemx(f, vertical[0], &state.nodes, state.root_id, state.selected),
             "settings" => {
                 let fallback = Paragraph::new("Settings panel coming soon...")
                     .block(Block::default().title("Settings").borders(Borders::ALL));
@@ -165,24 +165,23 @@ pub fn launch_ui() -> std::io::Result<()> {
                     KeyCode::Char(c) if state.mode == "gemx" => {
                         let allowed = modifiers == KeyModifiers::NONE || modifiers == KeyModifiers::SHIFT;
                         if allowed && (c.is_ascii_graphic() || c == ' ') {
-                            let node = state.get_active_node();
-                            let mut n = node.borrow_mut();
-
-                            if n.label == "New Child"
-                                || n.label == "New Sibling"
-                                || n.label == "Node A"
-                                || n.label == "Node B"
-                            {
-                                n.label.clear();
+                            if let Some(node) = state.get_selected_node_mut() {
+                                if node.label == "New Child"
+                                    || node.label == "New Sibling"
+                                    || node.label == "Node A"
+                                    || node.label == "Node B"
+                                {
+                                    node.label.clear();
+                                }
+                                node.label.push(c);
                             }
-
-                            n.label.push(c);
                         }
                     }
 
                     KeyCode::Backspace if state.mode == "gemx" => {
-                        let node = state.get_active_node();
-                        node.borrow_mut().label.pop();
+                        if let Some(node) = state.get_selected_node_mut() {
+                            node.label.pop();
+                        }
                     }
 
                     KeyCode::Char(c) if state.mode == "zen" => {
