@@ -1,82 +1,32 @@
-use std::rc::Rc;
-use std::cell::RefCell;
-
+use std::collections::HashMap;
 use ratatui::prelude::*;
 use ratatui::widgets::{Block, Borders, Paragraph};
 
-use crate::state::{AppState, visible_nodes, Node};
+use crate::layout::{Coords, layout_nodes};
+use crate::node::{NodeID, NodeMap};
 
-pub fn render_mindmap<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppState) {
+/// Renders nodes based on 2D layout produced by `layout_nodes`
+pub fn render_gemx<B: Backend>(
+    f: &mut Frame<B>,
+    area: Rect,
+    nodes: &NodeMap,
+    root_id: NodeID,
+    selected: Option<NodeID>,
+) {
     let block = Block::default()
         .title("Gemx")
         .borders(Borders::ALL);
     f.render_widget(block, area);
 
-    let offset_y = area.y + 1;
-    let height = area.height.saturating_sub(2) as usize;
-    state.max_visible_lines = height;
+    let drawn_at = layout_nodes(nodes, root_id, 2, 1);
 
-    // Collect visible nodes
-    let mut flat: Vec<(usize, Rc<RefCell<Node>>)> = Vec::new();
-    for child in &state.root.borrow().children {
-    visible_nodes(child, 0, &mut flat);
-    }
-    // Auto-scroll to keep active in view
-    if state.active_node < state.scroll_offset {
-        state.scroll_offset = state.active_node;
-    } else if state.active_node >= state.scroll_offset + height {
-        state.scroll_offset = state.active_node.saturating_sub(height - 1);
-    }
-
-    let view = flat
-        .iter()
-        .skip(state.scroll_offset)
-        .take(height)
-        .enumerate()
-        .collect::<Vec<_>>();
-
-    // For each visible node, build context of "is_last" flags at each depth
-    let mut depth_tracker = vec![false; 64]; // up to 64 nesting levels
-
-    for (i, (depth, node)) in view {
-        let y = offset_y + i as u16;
-        if y >= area.bottom() {
-            break;
+    for (&node_id, &Coords { x, y }) in &drawn_at {
+        if y as u16 >= area.height {
+            continue;
         }
 
-        let is_last = {
-            if i + 1 >= flat.len() {
-                true
-            } else {
-                let (next_depth, _) = flat[state.scroll_offset + i + 1];
-                next_depth < *depth
-            }
-        };
-
-        depth_tracker[*depth] = is_last;
-
-        // Build prefix lines like void-rs
-        let mut prefix = String::new();
-        for d in 0..*depth {
-            if depth_tracker[d] {
-                prefix.push_str("   ");
-            } else {
-                prefix.push_str("│  ");
-            }
-        }
-
-        prefix.push_str(if is_last { "└─" } else { "├─" });
-
-        let n = node.borrow();
-        let is_active = (state.scroll_offset + i) == state.active_node;
-
-        let label = if is_active {
-            format!("> {} {}", prefix, n.label)
-        } else {
-            format!("  {} {}", prefix, n.label)
-        };
-
-        let style = if is_active {
+        let node = &nodes[&node_id];
+        let style = if Some(node_id) == selected {
             Style::default()
                 .fg(Color::Yellow)
                 .add_modifier(Modifier::BOLD | Modifier::UNDERLINED)
@@ -84,7 +34,13 @@ pub fn render_mindmap<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppS
             Style::default().fg(Color::White)
         };
 
+        let label = if Some(node_id) == selected {
+            format!("> {}", node.label)
+        } else {
+            format!("  {}", node.label)
+        };
+
         let para = Paragraph::new(label).style(style);
-        f.render_widget(para, Rect::new(area.x + 2, y, area.width - 4, 1));
+        f.render_widget(para, Rect::new(x, y, area.width.saturating_sub(x), 1));
     }
 }
