@@ -28,7 +28,6 @@ pub fn render_zen_journal<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppS
     let total_height = area.height as usize;
     let total_width = area.width as usize;
 
-    // Safety check: skip rendering on tiny terminal
     if total_height < 4 || total_width < 10 {
         return;
     }
@@ -44,9 +43,15 @@ pub fn render_zen_journal<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppS
 
     let vertical_padding = 2;
     let usable_height = total_height.saturating_sub(vertical_padding * 2);
-    let visible_line_count = lines.len().min(usable_height);
-    let start_line = lines.len().saturating_sub(visible_line_count);
-    let end_line = start_line + visible_line_count;
+    let total_lines = lines.len();
+
+    let start_line = if total_lines > usable_height {
+        total_lines - usable_height
+    } else {
+        0
+    };
+    let end_line = total_lines;
+
     let visible_lines = &lines[start_line..end_line];
 
     let padding_top = (usable_height.saturating_sub(visible_lines.len())) / 2;
@@ -72,6 +77,7 @@ pub fn render_zen_journal<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppS
 
     f.render_widget(widget, padded_area);
 }
+
 
 
 
