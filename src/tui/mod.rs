@@ -121,8 +121,12 @@ pub fn launch_ui() -> std::io::Result<()> {
                     state.module_switcher_open = true;
                     state.module_switcher_index = 0;
                 } else if match_hotkey("toggle_collapsed", code, modifiers, &state) && state.mode == "mindmap" {
-                    let is_collapsed = state.get_active_node().borrow().collapsed;
-                    if is_collapsed {
+                    let collapsed = {
+                        let node_ref = state.get_active_node();
+                        node_ref.borrow().collapsed
+                    };
+
+                    if collapsed {
                         state.expand_active_node();
                     } else {
                         state.collapse_active_node();
