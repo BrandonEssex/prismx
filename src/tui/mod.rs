@@ -46,7 +46,7 @@ pub fn draw<B: Backend>(terminal: &mut Terminal<B>, state: &mut AppState, last_k
 
         match state.mode.as_str() {
             "zen" => render_zen_journal(f, vertical[0], state),
-            "gemx" => render_gemx(f, vertical[0], &state.nodes, state.root_id, state.selected),
+            "gemx" => render_gemx(f, vertical[0], &state.nodes, &state.root_nodes, state.selected),
             "settings" => {
                 let fallback = Paragraph::new("Settings panel coming soon...")
                     .block(Block::default().title("Settings").borders(Borders::ALL));
@@ -141,12 +141,16 @@ pub fn launch_ui() -> std::io::Result<()> {
                         }
                     }
 
-                    KeyCode::Tab if state.module_switcher_open => {
-                        state.module_switcher_index = (state.module_switcher_index + 1) % 4;
+                    KeyCode::Tab => {
+                        if state.mode == "gemx" {
+                            state.move_focus_right();
+                        } else if state.module_switcher_open {
+                            state.module_switcher_index = (state.module_switcher_index + 1) % 4;
+                        }
                     }
 
-                    KeyCode::BackTab => {
-                        state.module_switcher_open = true;
+                    KeyCode::BackTab if state.mode == "gemx" => {
+                        state.move_focus_left(); // Shift+Tab = go back up
                     }
 
                     KeyCode::Enter if state.module_switcher_open => {
@@ -160,6 +164,14 @@ pub fn launch_ui() -> std::io::Result<()> {
 
                     KeyCode::Down if state.mode == "gemx" && !state.show_spotlight => {
                         state.move_focus_down();
+                    }
+
+                    KeyCode::Left if state.mode == "gemx" && !state.show_spotlight => {
+                        state.move_focus_left();
+                    }
+
+                    KeyCode::Right if state.mode == "gemx" && !state.show_spotlight => {
+                        state.move_focus_right();
                     }
 
                     KeyCode::Char(c) if state.mode == "gemx" => {

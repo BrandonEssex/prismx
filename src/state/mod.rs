@@ -2,14 +2,13 @@ use std::collections::HashMap;
 use crate::node::{Node, NodeID, NodeMap};
 
 mod hotkeys;
-
 pub use hotkeys::*;
 
 pub struct AppState {
     pub mode: String,
     pub zen_buffer: Vec<String>,
     pub nodes: NodeMap,
-    pub root_id: NodeID,
+    pub root_nodes: Vec<NodeID>,
     pub selected: Option<NodeID>,
     pub spotlight_input: String,
     pub show_spotlight: bool,
@@ -25,22 +24,18 @@ pub struct AppState {
 impl Default for AppState {
     fn default() -> Self {
         let mut nodes = NodeMap::new();
-        let root_id = 1;
-        let child_a = 2;
-        let child_b = 3;
+        let node_a = 1;
+        let node_b = 2;
 
-        nodes.insert(root_id, Node::new(root_id, "Gemx Root", None));
-        nodes.insert(child_a, Node::new(child_a, "Node A", Some(root_id)));
-        nodes.insert(child_b, Node::new(child_b, "Node B", Some(root_id)));
-
-        nodes.get_mut(&root_id).unwrap().children = vec![child_a, child_b];
+        nodes.insert(node_a, Node::new(node_a, "Node A", None));
+        nodes.insert(node_b, Node::new(node_b, "Node B", None));
 
         Self {
             mode: "gemx".into(),
             zen_buffer: vec![String::from(" ")],
             nodes,
-            root_id,
-            selected: Some(child_a),
+            root_nodes: vec![node_a, node_b],
+            selected: Some(node_a),
             spotlight_input: String::new(),
             show_spotlight: false,
             show_triage: false,
@@ -63,6 +58,70 @@ impl AppState {
         self.selected.and_then(|id| self.nodes.get_mut(&id))
     }
 
+    pub fn visible_node_order(&self) -> Vec<NodeID> {
+        let mut result = Vec::new();
+
+        fn walk(id: NodeID, nodes: &NodeMap, out: &mut Vec<NodeID>) {
+            out.push(id);
+            if let Some(node) = nodes.get(&id) {
+                if node.collapsed {
+                    return;
+                }
+                for child in &node.children {
+                    walk(*child, nodes, out);
+                }
+            }
+        }
+
+        for root_id in &self.root_nodes {
+            if self.nodes.contains_key(root_id) {
+                walk(*root_id, &self.nodes, &mut result);
+            }
+        }
+
+        result
+    }
+
+    pub fn move_focus_up(&mut self) {
+        if let Some(current) = self.selected {
+            let order = self.visible_node_order();
+            if let Some(pos) = order.iter().position(|&id| id == current) {
+                if pos > 0 {
+                    self.selected = Some(order[pos - 1]);
+                }
+            }
+        }
+    }
+
+    pub fn move_focus_down(&mut self) {
+        if let Some(current) = self.selected {
+            let order = self.visible_node_order();
+            if let Some(pos) = order.iter().position(|&id| id == current) {
+                if pos + 1 < order.len() {
+                    self.selected = Some(order[pos + 1]);
+                }
+            }
+        }
+    }
+
+    pub fn move_focus_left(&mut self) {
+        if let Some(current) = self.selected {
+            if let Some(node) = self.nodes.get(&current) {
+                self.selected = node.parent;
+            }
+        }
+    }
+
+    pub fn move_focus_right(&mut self) {
+        if let Some(current) = self.selected {
+            if let Some(node) = self.nodes.get(&current) {
+                if !node.children.is_empty() {
+                    self.selected = Some(node.children[0]);
+                }
+            }
+        }
+    }
+
     pub fn update_active_label(&mut self, c: char) {
         if let Some(node) = self.get_selected_node_mut() {
             node.label.push(c);
@@ -75,19 +134,10 @@ impl AppState {
         }
     }
 
-    pub fn move_focus_up(&mut self) {
-        // Placeholder: in Patch 25.30 this will become graph-aware
-    }
-
-    pub fn move_focus_down(&mut self) {
-        // Placeholder: in Patch 25.30 this will become graph-aware
-    }
-
     pub fn add_child(&mut self) {
         if let Some(parent_id) = self.selected {
             let new_id = self.nodes.keys().max().copied().unwrap_or(100) + 1;
             let child = Node::new(new_id, "New Child", Some(parent_id));
-
             self.nodes.insert(new_id, child);
             if let Some(parent) = self.nodes.get_mut(&parent_id) {
                 parent.children.push(new_id);
@@ -99,33 +149,38 @@ impl AppState {
     pub fn add_sibling(&mut self) {
         if let Some(selected_id) = self.selected {
             if let Some(selected_node) = self.nodes.get(&selected_id) {
-                if let Some(parent_id) = selected_node.parent {
-                    let new_id = self.nodes.keys().max().copied().unwrap_or(100) + 1;
-                    let sibling = Node::new(new_id, "New Sibling", Some(parent_id));
-                    self.nodes.insert(new_id, sibling);
-                    if let Some(parent) = self.nodes.get_mut(&parent_id) {
-                        parent.children.push(new_id);
+                let parent_id = selected_node.parent;
+                let new_id = self.nodes.keys().max().copied().unwrap_or(100) + 1;
+                let sibling = Node::new(new_id, "New Sibling", parent_id);
+                self.nodes.insert(new_id, sibling);
+
+                match parent_id {
+                    Some(p_id) => {
+                        if let Some(parent) = self.nodes.get_mut(&p_id) {
+                            parent.children.push(new_id);
+                        }
                     }
-                    self.selected = Some(new_id);
+                    None => {
+                        self.root_nodes.push(new_id);
+                    }
                 }
+
+                self.selected = Some(new_id);
             }
         }
     }
 
     pub fn delete_node(&mut self) {
         if let Some(target_id) = self.selected {
-            if target_id == self.root_id {
-                return; // never delete root
-            }
-
             let parent_id = self.nodes.get(&target_id).and_then(|n| n.parent);
-            if let Some(parent_id) = parent_id {
-                if let Some(parent) = self.nodes.get_mut(&parent_id) {
+            if let Some(pid) = parent_id {
+                if let Some(parent) = self.nodes.get_mut(&pid) {
                     parent.children.retain(|&id| id != target_id);
                 }
+            } else {
+                self.root_nodes.retain(|&id| id != target_id);
             }
 
-            // Recursive delete of target and its children
             fn delete_recursive(map: &mut NodeMap, id: NodeID) {
                 if let Some(node) = map.remove(&id) {
                     for child in node.children {
@@ -135,7 +190,7 @@ impl AppState {
             }
 
             delete_recursive(&mut self.nodes, target_id);
-            self.selected = parent_id;
+            self.selected = parent_id.or_else(|| self.root_nodes.first().copied());
         }
     }
 
@@ -162,11 +217,9 @@ impl AppState {
 
     pub fn add_free_node(&mut self) {
         let new_id = self.nodes.keys().max().copied().unwrap_or(100) + 1;
-        let node = Node::new(new_id, "Free Node", Some(self.root_id));
+        let node = Node::new(new_id, "Free Node", None);
         self.nodes.insert(new_id, node);
-        if let Some(root) = self.nodes.get_mut(&self.root_id) {
-            root.children.push(new_id);
-        }
+        self.root_nodes.push(new_id);
         self.selected = Some(new_id);
     }
 

@@ -1,16 +1,15 @@
-use std::collections::HashMap;
 use ratatui::prelude::*;
 use ratatui::widgets::{Block, Borders, Paragraph};
 
-use crate::layout::{Coords, layout_nodes};
+use crate::layout::{layout_nodes, Coords};
 use crate::node::{NodeID, NodeMap};
 
-/// Renders nodes based on 2D layout produced by `layout_nodes`
+/// Renders all trees in root_nodes as independent forests
 pub fn render_gemx<B: Backend>(
     f: &mut Frame<B>,
     area: Rect,
     nodes: &NodeMap,
-    root_id: NodeID,
+    root_nodes: &[NodeID],
     selected: Option<NodeID>,
 ) {
     let block = Block::default()
@@ -18,15 +17,30 @@ pub fn render_gemx<B: Backend>(
         .borders(Borders::ALL);
     f.render_widget(block, area);
 
-    let drawn_at = layout_nodes(nodes, root_id, 2, 1);
+    // Start layout from (2,1)
+    let mut drawn_at = std::collections::HashMap::new();
+    let mut y = 1;
+    for &root_id in root_nodes {
+        let tree_layout = layout_nodes(nodes, root_id, 2, y);
+        y = tree_layout
+            .values()
+            .map(|c| c.y)
+            .max()
+            .unwrap_or(y)
+            .saturating_add(2);
+
+        drawn_at.extend(tree_layout);
+    }
 
     for (&node_id, &Coords { x, y }) in &drawn_at {
-        if y as u16 >= area.height {
+        if y >= area.height {
             continue;
         }
 
         let node = &nodes[&node_id];
-        let style = if Some(node_id) == selected {
+        let is_selected = Some(node_id) == selected;
+
+        let style = if is_selected {
             Style::default()
                 .fg(Color::Yellow)
                 .add_modifier(Modifier::BOLD | Modifier::UNDERLINED)
@@ -34,7 +48,7 @@ pub fn render_gemx<B: Backend>(
             Style::default().fg(Color::White)
         };
 
-        let label = if Some(node_id) == selected {
+        let label = if is_selected {
             format!("> {}", node.label)
         } else {
             format!("  {}", node.label)
