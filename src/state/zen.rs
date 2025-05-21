@@ -1,9 +1,9 @@
 use std::fs;
 use std::io::Write;
-
 use dirs;
+use crate::state::AppState;
 
-impl super::AppState {
+impl AppState {
     pub fn export_zen_to_file(&self) {
         let path = dirs::document_dir()
             .unwrap_or_else(|| std::path::PathBuf::from("."))
@@ -16,8 +16,13 @@ impl super::AppState {
             let _ = fs::create_dir_all(parent);
         }
 
-        if let Ok(mut file) = fs::File::create(&path) {
-            let _ = file.write_all(content.as_bytes());
+        match fs::File::create(&path) {
+            Ok(mut file) => {
+                let _ = file.write_all(content.as_bytes());
+            }
+            Err(_) => {
+                // Handle the error as needed
+            }
         }
     }
 }
