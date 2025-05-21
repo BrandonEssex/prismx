@@ -16,18 +16,16 @@ pub fn render_mindmap<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppS
     let height = area.height.saturating_sub(2) as usize; // usable lines
     state.max_visible_lines = height;
 
-    // Traverse visible tree
     let mut all_nodes: Vec<(usize, Rc<RefCell<Node>>)> = Vec::new();
     visible_nodes(&state.root, 0, &mut all_nodes);
 
-    // Ensure active node is within scroll window
     if state.active_node < state.scroll_offset {
         state.scroll_offset = state.active_node;
     } else if state.active_node >= state.scroll_offset + height {
         state.scroll_offset = state.active_node.saturating_sub(height - 1);
     }
 
-    let visible = &all_nodes
+    let visible = all_nodes
         .iter()
         .skip(state.scroll_offset)
         .take(height)
@@ -42,7 +40,6 @@ pub fn render_mindmap<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppS
         let n = node.borrow();
         let is_active = (state.scroll_offset + i) == state.active_node;
 
-        // Tree line prefix
         let mut prefix = String::new();
         if !n.children.is_empty() {
             prefix.push_str(if n.collapsed { "┠─" } else { "├─" });

@@ -10,13 +10,20 @@ use crossterm::{
 use std::io::stdout;
 
 use crate::state::AppState;
-use crate::render::{render_status_bar, render_zen_journal, render_keymap_overlay, render_spotlight, render_triage, render_module_switcher};
+use crate::render::{
+    render_status_bar,
+    render_zen_journal,
+    render_keymap_overlay,
+    render_spotlight,
+    render_triage,
+    render_module_switcher,
+};
 use crate::screen::render_mindmap;
 
 mod hotkeys;
 use hotkeys::match_hotkey;
 
-pub fn draw<B: Backend>(terminal: &mut Terminal<B>, state: &AppState, last_key: &str) -> std::io::Result<()> {
+pub fn draw<B: Backend>(terminal: &mut Terminal<B>, state: &mut AppState, last_key: &str) -> std::io::Result<()> {
     use ratatui::layout::{Constraint, Direction, Layout};
     use ratatui::widgets::{Block, Borders, Paragraph};
 
@@ -87,7 +94,7 @@ pub fn launch_ui() -> std::io::Result<()> {
     let mut state = AppState::default();
     let mut last_key = String::new();
 
-    draw(&mut terminal, &state, &last_key)?;
+    draw(&mut terminal, &mut state, &last_key)?;
 
     loop {
         if event::poll(std::time::Duration::from_millis(100))? {
@@ -117,7 +124,6 @@ pub fn launch_ui() -> std::io::Result<()> {
                     state.mode = "zen".into();
                 } else if match_hotkey("undo", code, modifiers, &state) {
                     // undo_redo() not yet implemented
-                    // placeholder logic or comment
                 } else if match_hotkey("drill_down", code, modifiers, &state) {
                     state.drill_down();
                 } else if match_hotkey("switch_module", code, modifiers, &state) {
@@ -177,7 +183,6 @@ pub fn launch_ui() -> std::io::Result<()> {
                         }
                     }
 
-
                     KeyCode::Backspace if state.mode == "mindmap" && state.edit_mode => {
                         let node = state.get_active_node();
                         node.borrow_mut().label.pop();
@@ -192,7 +197,6 @@ pub fn launch_ui() -> std::io::Result<()> {
                             }
                         }
                     }
-
 
                     KeyCode::Enter if state.mode == "zen" => {
                         state.zen_buffer.push(String::new());
@@ -225,7 +229,7 @@ pub fn launch_ui() -> std::io::Result<()> {
             }
         }
 
-        draw(&mut terminal, &state, &last_key)?;
+        draw(&mut terminal, &mut state, &last_key)?;
     }
 
     disable_raw_mode()?;
