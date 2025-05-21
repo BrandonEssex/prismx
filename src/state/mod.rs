@@ -169,6 +169,13 @@ impl AppState {
         }
     }
 
+    pub fn toggle_collapse(&mut self) {
+        let node = self.get_active_node();
+        let mut n = node.borrow_mut();
+        n.collapsed = !n.collapsed;
+        self.reflatten();
+}
+
     pub fn execute_spotlight_command(&mut self) {
         let cmd = self.spotlight_input.trim();
         match cmd {
