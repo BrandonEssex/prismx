@@ -16,17 +16,8 @@ impl super::AppState {
             let _ = fs::create_dir_all(parent);
         }
 
-        match fs::File::create(&path) {
-            Ok(mut file) => {
-                if let Err(err) = file.write_all(content.as_bytes()) {
-                    eprintln!("❌ Write failed: {}", err);
-                } else {
-                    println!("✅ Zen exported to: {:?}", path);
-                }
-            }
-            Err(e) => {
-                eprintln!("❌ File create failed: {}", e);
-            }
+        if let Ok(mut file) = fs::File::create(&path) {
+            let _ = file.write_all(content.as_bytes());
         }
     }
 }
