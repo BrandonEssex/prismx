@@ -114,6 +114,10 @@ pub fn launch_ui() -> std::io::Result<()> {
                     state.export_zen_to_file();
                 } else if match_hotkey("mode_zen", code, modifiers, &state) {
                     state.mode = "zen".into();
+                } else if match_hotkey("undo", code, modifiers, &state) {
+                    // undo_redo() not yet implemented
+                    // placeholder logic or comment
+                }
                 } else if match_hotkey("drill_down", code, modifiers, &state) {
                     state.drill_down();
                 } else if match_hotkey("switch_module", code, modifiers, &state) {

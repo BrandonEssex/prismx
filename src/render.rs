@@ -176,8 +176,9 @@ pub fn render_keymap_overlay<B: Backend>(f: &mut Frame<B>, area: Rect) {
 
     let keys = vec![
         "Ctrl+Q = Quit",
+        "Ctrl+Z = Undo",
         "Ctrl+M = Mindmap",
-        "Ctrl+Z = Zen",
+        "Ctrl+R = Zen",
         "Ctrl+E = Edit Mode",
         "Ctrl+Y = Triage",
         "Ctrl+H = Help",

@@ -17,7 +17,7 @@ pub fn load_default_hotkeys() -> HashMap<String, String> {
     map.insert("switch_module".into(), "shift-tab".into());
     map.insert("toggle_edit".into(), "ctrl-e".into());
     map.insert("toggle_keymap".into(), "ctrl-h".into());
-    map.insert("mode_zen".into(), "ctrl-z".into());
+    map.insert("mode_zen".into(), "ctrl-r".into());
 
     map
 }
