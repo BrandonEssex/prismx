@@ -34,32 +34,33 @@ pub fn render_zen_journal<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppS
 
     let zen_snapshot: Vec<String> = state.zen_buffer.clone();
 
-    let lines: Vec<Line> = if zen_snapshot.is_empty() {
+    let raw_lines: Vec<Line> = if zen_snapshot.is_empty() {
         vec![Line::from(" ")]
     } else {
         zen_snapshot.iter().map(|line| parse_markdown_line(line)).collect()
     };
 
-    // Clamp visible slice height
-    let usable_height = total_height.saturating_sub(3); // top padding only
-    let total_lines = lines.len();
-    let visible_line_count = usable_height.min(total_lines);
-    let start_line = total_lines.saturating_sub(visible_line_count);
-    let end_line = total_lines;
+    // Top-only vertical padding
+    let top_padding = 3;
 
-    let visible_lines = &lines[start_line..end_line];
+    // Add top lines before rendering actual content
+    let usable_height = total_height.saturating_sub(top_padding);
+    let start_line = raw_lines.len().saturating_sub(usable_height);
+    let visible_lines = &raw_lines[start_line..];
 
-    // Horizontal margin (keep)
-    let margin = (total_width as f32 * 0.15).min((total_width / 2) as f32) as u16;
+    // Compose padded lines
+    let mut padded_lines: Vec<Line> = std::iter::repeat(Line::from("")).take(top_padding).collect();
 
-    // Fullscreen block, but adjust padding in lines, not in area
-    let padded_area = area;
-
-    // Add 3 blank lines at the top, then render the visible content
-    let padded_lines: Vec<Line> = std::iter::repeat(Line::from(""))
-        .take(3)
-        .chain(visible_lines.iter().cloned())
-        .collect();
+    // Add left/right margin of ~30%
+    let h_margin = (total_width as f32 * 0.25) as usize;
+    for line in visible_lines {
+        let content = line.clone();
+        let mut padded = vec![
+            Span::raw(" ".repeat(h_margin)),
+        ];
+        padded.extend(content.spans.clone());
+        padded_lines.push(Line::from(padded));
+    }
 
     let widget = Paragraph::new(padded_lines)
         .block(Block::default().title("Zen").borders(Borders::ALL))
@@ -67,13 +68,8 @@ pub fn render_zen_journal<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppS
         .style(Style::default().fg(Color::Green))
         .wrap(Wrap { trim: false });
 
-    f.render_widget(widget, padded_area);
+    f.render_widget(widget, area);
 }
-
-
-
-
-
 
 fn parse_markdown_line(input: &str) -> Line {
     use ratatui::text::{Span, Line};
