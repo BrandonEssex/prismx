@@ -40,25 +40,19 @@ pub fn render_zen_journal<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppS
         zen_snapshot.iter().map(|line| parse_markdown_line(line)).collect()
     };
 
-    // Top-only vertical padding
     let top_padding = 3;
-
-    // Add top lines before rendering actual content
     let usable_height = total_height.saturating_sub(top_padding);
     let start_line = raw_lines.len().saturating_sub(usable_height);
     let visible_lines = &raw_lines[start_line..];
 
-    // Compose padded lines
+    // ⬅️➡️ Horizontal text pane: 20% margin on each side
+    let h_margin = (total_width as f32 * 0.20) as usize;
+
     let mut padded_lines: Vec<Line> = std::iter::repeat(Line::from("")).take(top_padding).collect();
 
-    // Add left/right margin of ~30%
-    let h_margin = (total_width as f32 * 0.25) as usize;
     for line in visible_lines {
-        let content = line.clone();
-        let mut padded = vec![
-            Span::raw(" ".repeat(h_margin)),
-        ];
-        padded.extend(content.spans.clone());
+        let mut padded = vec![Span::raw(" ".repeat(h_margin))];
+        padded.extend(line.spans.clone());
         padded_lines.push(Line::from(padded));
     }
 
@@ -70,6 +64,7 @@ pub fn render_zen_journal<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppS
 
     f.render_widget(widget, area);
 }
+
 
 fn parse_markdown_line(input: &str) -> Line {
     use ratatui::text::{Span, Line};
