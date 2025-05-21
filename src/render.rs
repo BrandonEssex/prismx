@@ -28,28 +28,27 @@ pub fn render_zen_journal<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppS
     let total_height = area.height as usize;
     let total_width = area.width as usize;
 
-    let lines: Vec<Line> = state.zen_buffer.iter().map(|line| parse_markdown_line(line)).collect();
-
-    // Protect against too-small screens
-    if total_height < 4 || total_width < 20 {
+    // Safety check: skip rendering on tiny terminal
+    if total_height < 4 || total_width < 10 {
         return;
     }
 
-    // Visible space after vertical padding
+    // Ensure we have something to render
+    let lines: Vec<Line> = if state.zen_buffer.is_empty() {
+        vec![Line::from(" ")]
+    } else {
+        state.zen_buffer.iter().map(|line| parse_markdown_line(line)).collect()
+    };
+
     let vertical_padding = 2;
     let usable_height = total_height.saturating_sub(vertical_padding * 2);
-
-    // Clamp visible range
     let start_line = lines.len().saturating_sub(usable_height);
-    let visible_lines = &lines[start_line..];
+    let end_line = lines.len().min(start_line + usable_height);
+    let visible_lines = &lines[start_line..end_line];
 
-    // Padding for vertical centering
     let padding_top = (usable_height.saturating_sub(visible_lines.len())) / 2;
-
-    // Horizontal margin max = 1/3 of width (to prevent over-clamp)
     let margin = (total_width as f32 * 0.15).min((total_width / 2) as f32) as u16;
 
-    // Clamp padded area
     let padded_area = Rect {
         x: area.x.saturating_add(margin),
         y: area.y.saturating_add(vertical_padding as u16 + padding_top as u16),
@@ -70,9 +69,6 @@ pub fn render_zen_journal<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppS
 
     f.render_widget(widget, padded_area);
 }
-
-
-
 
 
 fn parse_markdown_line(input: &str) -> Line {

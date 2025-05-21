@@ -34,7 +34,7 @@ impl Default for AppState {
 
         Self {
             mode: "mindmap".into(),
-            zen_buffer: vec!["".into()],
+            zen_buffer: vec![String::from(" ")],
             root,
             flat_nodes: flat,
             active_node: 0,
