@@ -136,8 +136,8 @@ pub fn render_mindmap<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState
 }
 
 pub fn render_keymap_overlay<B: Backend>(f: &mut Frame<B>, area: Rect) {
-    let block = Block::default().title("Keymap").borders(Borders::ALL);
-    f.render_widget(block, area);
+    use ratatui::widgets::{Block, Borders, Paragraph};
+    use ratatui::text::Line;
 
     let keys = vec![
         "Ctrl+Q = Quit",
@@ -158,11 +158,10 @@ pub fn render_keymap_overlay<B: Backend>(f: &mut Frame<B>, area: Rect) {
 
     let content = Paragraph::new(keys.join("\n"))
         .block(Block::default().title("Keymap").borders(Borders::ALL));
-    f.render_widget(content, Rect::new(area.x + 1, area.y + 1, area.width - 2, area.height - 2));
-
 
     f.render_widget(content, Rect::new(area.x + 1, area.y + 1, area.width - 2, area.height - 2));
 }
+
 
 pub fn render_triage<B: Backend>(f: &mut Frame<B>, area: Rect) {
     let block = Block::default()
