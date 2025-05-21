@@ -1,6 +1,11 @@
+use std::rc::Rc;
+use std::cell::RefCell;
+
 use ratatui::prelude::*;
 use ratatui::widgets::{Block, Borders, Paragraph};
 use crate::state::{AppState, visible_nodes};
+
+
 
 pub fn render_mindmap<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
     let block = Block::default()
