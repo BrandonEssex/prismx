@@ -95,17 +95,101 @@ pub fn launch_ui() -> std::io::Result<()> {
                 println!("[KEY] mods: {:?} | code: {:?}", modifiers, code);
                 last_key = format!("{:?} + {:?}", code, modifiers);
 
-                // Handle hotkeys...
-                // handlers module will be used here later
-
+                // Proper hotkey logic
                 if match_hotkey("quit", code, modifiers, &state) {
                     break;
+                } else if match_hotkey("toggle_edit", code, modifiers, &state) && state.mode == "mindmap" {
+                    state.edit_mode = !state.edit_mode;
+                    state.edit_ready = state.edit_mode;
+                } else if match_hotkey("toggle_triage", code, modifiers, &state) {
+                    state.mode = "triage".into();
+                } else if match_hotkey("toggle_keymap", code, modifiers, &state) {
+                    state.show_keymap = !state.show_keymap;
+                } else if match_hotkey("create_child", code, modifiers, &state) && state.mode == "mindmap" && state.edit_mode {
+                    state.add_child();
+                } else if match_hotkey("create_sibling", code, modifiers, &state) && state.mode == "mindmap" && state.edit_mode {
+                    state.add_sibling();
+                } else if match_hotkey("delete", code, modifiers, &state) && state.mode == "mindmap" && state.edit_mode {
+                    state.delete_node();
+                } else if match_hotkey("save", code, modifiers, &state) && state.mode == "zen" {
+                    state.export_zen_to_file();
+                } else if match_hotkey("switch_module", code, modifiers, &state) {
+                    state.module_switcher_open = true;
+                    state.module_switcher_index = 0;
+                } else if match_hotkey("toggle_collapsed", code, modifiers, &state) && state.mode == "mindmap" {
+                    let is_collapsed = state.get_active_node().borrow().collapsed;
+                    if is_collapsed {
+                        state.expand_active_node();
+                    } else {
+                        state.collapse_active_node();
+                    }
                 }
 
-                // ... other hotkey checks
-
-                // fallback spotlight + typing
+                // Raw keys for navigation or fallback input
                 match code {
+                    KeyCode::Esc => {
+                        if state.module_switcher_open {
+                            state.module_switcher_open = false;
+                        } else if state.edit_mode {
+                            state.edit_mode = false;
+                        } else {
+                            state.mode = "mindmap".into();
+                            state.show_keymap = false;
+                            state.show_spotlight = false;
+                        }
+                    }
+
+                    KeyCode::Tab if state.module_switcher_open => {
+                        state.module_switcher_index = (state.module_switcher_index + 1) % 4;
+                    }
+
+                    KeyCode::Enter if state.module_switcher_open => {
+                        state.mode = state.get_module_by_index().into();
+                        state.module_switcher_open = false;
+                    }
+
+                    KeyCode::Up if state.mode == "mindmap" && !state.show_spotlight => {
+                        state.move_focus_up();
+                    }
+
+                    KeyCode::Down if state.mode == "mindmap" && !state.show_spotlight => {
+                        state.move_focus_down();
+                    }
+
+                    KeyCode::Char(c) if state.mode == "mindmap" && state.edit_mode => {
+                        let node = state.get_active_node();
+                        let mut n = node.borrow_mut();
+                        if state.edit_ready && (
+                            n.label == "New Child" || n.label == "New Sibling" ||
+                            n.label == "Node A" || n.label == "Node B"
+                        ) {
+                            n.label.clear();
+                            state.edit_ready = false;
+                        }
+                        n.label.push(c);
+                    }
+
+                    KeyCode::Backspace if state.mode == "mindmap" && state.edit_mode => {
+                        let node = state.get_active_node();
+                        node.borrow_mut().label.pop();
+                    }
+
+                    KeyCode::Char(c) if state.mode == "zen" => {
+                        if let Some(last) = state.zen_buffer.last_mut() {
+                            last.push(c);
+                        }
+                    }
+
+                    KeyCode::Enter if state.mode == "zen" => {
+                        state.zen_buffer.push(String::new());
+                    }
+
+                    KeyCode::Backspace if state.mode == "zen" => {
+                        if let Some(last) = state.zen_buffer.last_mut() {
+                            last.pop();
+                        }
+                    }
+
                     KeyCode::Char('\u{a0}') => {
                         state.show_spotlight = !state.show_spotlight;
                     }
