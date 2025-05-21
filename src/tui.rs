@@ -18,9 +18,9 @@ fn match_hotkey(action: &str, code: KeyCode, mods: KeyModifiers, state: &AppStat
         let binding = binding.trim().to_ascii_lowercase();
         let parts: Vec<&str> = binding.split('-').collect();
         let (m, k) = if parts.len() == 2 {
-            (parts[0], parts[1])
+            (parts[0].trim(), parts[1].trim())
         } else {
-            ("", parts[0])
+            ("", parts[0].trim())
         };
 
         let mod_match = match m {
@@ -47,6 +47,7 @@ fn match_hotkey(action: &str, code: KeyCode, mods: KeyModifiers, state: &AppStat
             "x" => code == KeyCode::Char('x'),
             "c" => code == KeyCode::Char('c'),
             "h" => code == KeyCode::Char('h'),
+            "e" => code == KeyCode::Char('e'),
             _ => false,
         };
 
@@ -64,6 +65,7 @@ fn match_hotkey(action: &str, code: KeyCode, mods: KeyModifiers, state: &AppStat
 
     false
 }
+
 
 
 
@@ -159,13 +161,13 @@ pub fn launch_ui() -> std::io::Result<()> {
                 }
 
                 if match_hotkey("toggle_collapsed", code, modifiers, &state) && state.mode == "mindmap" {
-                    let node = state.get_active_node();
-                    if node.borrow().collapsed {
-                        state.expand_active_node();
-                    } else {
-                        state.collapse_active_node();
-                    }
+                let is_collapsed = state.get_active_node().borrow().collapsed;
+                if is_collapsed {
+                    state.expand_active_node();
+                } else {
+                    state.collapse_active_node();
                 }
+
 
                 if match_hotkey("toggle_edit", code, modifiers, &state) && state.mode == "mindmap" {
                     state.edit_mode = !state.edit_mode;
