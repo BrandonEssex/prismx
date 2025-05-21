@@ -28,10 +28,18 @@ pub fn render_zen_journal<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppS
     let total_height = area.height as usize;
     let total_width = area.width as usize;
 
-    // Safety check: skip rendering on tiny terminal
     if total_height < 4 || total_width < 10 {
         return;
     }
+
+    // ✅ Clone buffer to protect against live mutation during render
+    let zen_snapshot: Vec<String> = state.zen_buffer.clone();
+
+    let lines: Vec<Line> = if zen_snapshot.is_empty() {
+        vec![Line::from(" ")]
+    } else {
+        zen_snapshot.iter().map(|line| parse_markdown_line(line)).collect()
+    };
 
     // Ensure we have something to render
     let lines: Vec<Line> = if state.zen_buffer.is_empty() {
