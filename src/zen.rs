@@ -1,19 +1,25 @@
-use std::fs::{self, OpenOptions};
-use std::io::{self, Read, Write};
-use std::path::Path;
-use chrono::Utc;
+use std::fs::{self, File};
+use std::io::Write;
 
-pub fn start_journal() -> Result<(), Box<dyn std::error::Error>> {
-    println!("[ZEN] Journaling active. Type below:");
-    let mut buffer = String::new();
-    io::stdin().read_to_string(&mut buffer)?;
+use dirs;
 
-    let log_dir = Path::new("logs");
-    fs::create_dir_all(log_dir)?;
-    let filename = format!("logs/journal_{}.txt", Utc::now().format("%Y%m%d_%H%M%S"));
-    let mut file = OpenOptions::new().create(true).write(true).open(&filename)?;
-    file.write_all(buffer.as_bytes())?;
+impl super::AppState {
+    pub fn export_zen_to_file(&self) {
+        let path = dirs::document_dir()
+            .unwrap_or_else(|| std::path::PathBuf::from("."))
+            .join("prismx")
+            .join("zen_export.md");
 
-    println!("[ZEN] Saved to {}", filename);
-    Ok(())
+        // Clone zen buffer to avoid concurrent mutation
+        let lines: Vec<String> = self.zen_buffer.clone();
+        let content = lines.join("\n");
+
+        if let Some(parent) = path.parent() {
+            let _ = fs::create_dir_all(parent);
+        }
+
+        if let Ok(mut file) = File::create(&path) {
+            let _ = file.write_all(content.as_bytes());
+        }
+    }
 }
