@@ -6,10 +6,15 @@ authors = ["Brandon Essex"]
 description = "PrismX: Offline-first planning engine with trust, federation, and plugin runtime."
 
 [dependencies]
+# Serialization and config
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 toml = "0.7"
+
+# TUI and terminal control
 crossterm = "0.27"
 ratatui = "0.23"
+
+# Utilities
 chrono = "0.4"
 dirs = "4.0"
