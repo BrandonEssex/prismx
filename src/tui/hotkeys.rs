@@ -2,8 +2,13 @@ use crossterm::event::{KeyCode, KeyModifiers};
 use crate::state::AppState;
 
 pub fn match_hotkey(action: &str, code: KeyCode, mods: KeyModifiers, state: &AppState) -> bool {
-    if let Some(binding) = state.hotkeys.get(action) {
-        let binding = binding.trim().to_ascii_lowercase();
+    if let Some(binding_raw) = state.hotkeys.get(action) {
+        let binding = binding_raw
+            .trim()
+            .to_ascii_lowercase()
+            .replace('–', "-")
+            .replace('—', "-");
+
         let parts: Vec<&str> = binding.split('-').collect();
         let (m, k) = if parts.len() == 2 {
             (parts[0].trim(), parts[1].trim())
@@ -43,7 +48,7 @@ pub fn match_hotkey(action: &str, code: KeyCode, mods: KeyModifiers, state: &App
 
         println!(
             "[HOTKEY] action: {:<20} | binding: {:<10} | mods: {:?} | code: {:?} => {}",
-            action, binding, mods, code, matched
+            action, binding_raw, mods, code, matched
         );
 
         return matched;
