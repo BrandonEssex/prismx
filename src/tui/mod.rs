@@ -158,7 +158,8 @@ pub fn launch_ui() -> std::io::Result<()> {
                     }
 
                     KeyCode::Char(c) if state.mode == "mindmap" && state.edit_mode => {
-                        if modifiers == KeyModifiers::NONE && c.is_ascii_graphic() {
+                        let allowed = modifiers == KeyModifiers::NONE || modifiers == KeyModifiers::SHIFT;
+                        if allowed && c.is_ascii_graphic() {
                             let node = state.get_active_node();
                             let mut n = node.borrow_mut();
                             if state.edit_ready && (
@@ -172,16 +173,22 @@ pub fn launch_ui() -> std::io::Result<()> {
                         }
                     }
 
+
                     KeyCode::Backspace if state.mode == "mindmap" && state.edit_mode => {
                         let node = state.get_active_node();
                         node.borrow_mut().label.pop();
                     }
 
                     KeyCode::Char(c) if state.mode == "zen" => {
-                        if let Some(last) = state.zen_buffer.last_mut() {
-                            last.push(c);
+                        if modifiers.intersects(KeyModifiers::CONTROL | KeyModifiers::ALT | KeyModifiers::META) {
+                            // Block Ctrl/Alt input
+                        } else {
+                            if let Some(last) = state.zen_buffer.last_mut() {
+                                last.push(c);
+                            }
                         }
                     }
+
 
                     KeyCode::Enter if state.mode == "zen" => {
                         state.zen_buffer.push(String::new());

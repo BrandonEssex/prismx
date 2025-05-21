@@ -25,14 +25,23 @@ pub fn render_zen_journal<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppS
     use ratatui::text::{Span, Line};
     use ratatui::layout::Alignment;
 
-    let offset_lines = 2;
-    let viewable_height = area.height.saturating_sub(offset_lines) as usize;
+    let raw_lines: Vec<Line> = state.zen_buffer.iter().map(|line| parse_markdown_line(line)).collect();
 
-    let lines: Vec<Line> = state.zen_buffer.iter().map(|line| parse_markdown_line(line)).collect();
-    let start_line = lines.len().saturating_sub(viewable_height);
-    let visible_lines = &lines[start_line..];
+    let total_height = area.height as usize;
+    let visible_lines = total_height.saturating_sub(4); // Leave padding room
 
-    let widget = Paragraph::new(visible_lines.to_vec())
+    let start_line = raw_lines.len().saturating_sub(visible_lines);
+    let display_lines = &raw_lines[start_line..];
+
+    // Calculate vertical offset to center content
+    let padding_top = (area.height.saturating_sub(display_lines.len() as u16)) / 2;
+
+    let padded_lines: Vec<Line> = std::iter::repeat(Line::from(""))
+        .take(padding_top as usize)
+        .chain(display_lines.iter().cloned())
+        .collect();
+
+    let widget = Paragraph::new(padded_lines)
         .block(Block::default().title("Zen").borders(Borders::ALL))
         .alignment(Alignment::Left)
         .style(Style::default().fg(Color::Green))
@@ -40,6 +49,7 @@ pub fn render_zen_journal<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppS
 
     f.render_widget(widget, area);
 }
+
 
 
 fn parse_markdown_line(input: &str) -> Line {
