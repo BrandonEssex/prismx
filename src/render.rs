@@ -40,36 +40,24 @@ pub fn render_zen_journal<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppS
         zen_snapshot.iter().map(|line| parse_markdown_line(line)).collect()
     };
 
-    let vertical_padding = 2;
-    let usable_height = total_height.saturating_sub(vertical_padding * 2);
+    // Clamp visible slice height
+    let usable_height = total_height.saturating_sub(3); // top padding only
     let total_lines = lines.len();
     let visible_line_count = usable_height.min(total_lines);
     let start_line = total_lines.saturating_sub(visible_line_count);
     let end_line = total_lines;
 
     let visible_lines = &lines[start_line..end_line];
-    let padding_top = (usable_height.saturating_sub(visible_lines.len())) / 2;
 
-    // Safe margins and dimensions
+    // Horizontal margin (keep)
     let margin = (total_width as f32 * 0.15).min((total_width / 2) as f32) as u16;
-    let mut x = area.x.saturating_add(margin);
-    let mut y = area.y.saturating_add(vertical_padding as u16 + padding_top as u16);
-    let mut width = area.width.saturating_sub(margin * 2);
-    let mut height = area.height.saturating_sub(vertical_padding as u16 * 2);
 
-    // Clamp to terminal bounds
-    let screen = f.size();
-    if x + width > screen.width {
-        width = screen.width.saturating_sub(x);
-    }
-    if y + height > screen.height {
-        height = screen.height.saturating_sub(y);
-    }
+    // Fullscreen block, but adjust padding in lines, not in area
+    let padded_area = area;
 
-    let padded_area = Rect { x, y, width, height };
-
+    // Add 3 blank lines at the top, then render the visible content
     let padded_lines: Vec<Line> = std::iter::repeat(Line::from(""))
-        .take(padding_top)
+        .take(3)
         .chain(visible_lines.iter().cloned())
         .collect();
 
@@ -81,6 +69,7 @@ pub fn render_zen_journal<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppS
 
     f.render_widget(widget, padded_area);
 }
+
 
 
 
