@@ -101,6 +101,47 @@ pub fn launch_ui() -> std::io::Result<()> {
             if let Event::Key(KeyEvent { code, modifiers, .. }) = event::read()? {
                 last_key = format!("{:?} + {:?}", code, modifiers);
 
+                // Spotlight input has exclusive focus
+                if state.show_spotlight {
+                    match code {
+                        KeyCode::Char('\u{a0}') => state.show_spotlight = false,
+                        KeyCode::Backspace => {
+                            state.spotlight_input.pop();
+                        }
+                        KeyCode::Char(c) => {
+                            state.spotlight_input.push(c);
+                        }
+                        KeyCode::Enter => {
+                            state.execute_spotlight_command();
+                        }
+                        _ => {}
+                    }
+
+                    draw(&mut terminal, &mut state, &last_key)?;
+                    continue;
+                }
+
+                // Module switcher input has exclusive focus
+                if state.module_switcher_open {
+                    match code {
+                        KeyCode::Tab => {
+                            state.module_switcher_index = (state.module_switcher_index + 1) % 4;
+                        }
+                        KeyCode::Enter => {
+                            state.mode = state.get_module_by_index().into();
+                            state.module_switcher_open = false;
+                        }
+                        KeyCode::Esc => {
+                            state.module_switcher_open = false;
+                        }
+                        _ => {}
+                    }
+
+                    draw(&mut terminal, &mut state, &last_key)?;
+                    continue;
+                }
+
+                // Normal hotkeys
                 if match_hotkey("quit", code, modifiers, &state) {
                     break;
                 } else if match_hotkey("toggle_triage", code, modifiers, &state) {
@@ -132,36 +173,23 @@ pub fn launch_ui() -> std::io::Result<()> {
 
                 match code {
                     KeyCode::Esc => {
-                        if state.module_switcher_open {
-                            state.module_switcher_open = false;
-                        } else {
-                            state.mode = "gemx".into();
-                            state.show_keymap = false;
-                            state.show_spotlight = false;
-                        }
-                    }
-
-                    KeyCode::Tab => {
-                        if state.mode == "gemx" {
-                            state.move_focus_right();
-                        } else if state.module_switcher_open {
-                            state.module_switcher_index = (state.module_switcher_index + 1) % 4;
-                        }
-                    }
-
-                    KeyCode::BackTab if state.mode == "gemx" => {
-                        state.move_focus_left();
-                    }
-
-                    KeyCode::Enter if state.module_switcher_open => {
-                        state.mode = state.get_module_by_index().into();
-                        state.module_switcher_open = false;
+                        state.mode = "gemx".into();
+                        state.show_keymap = false;
+                        state.show_spotlight = false;
                     }
 
                     KeyCode::Up if state.mode == "gemx" => state.move_focus_up(),
                     KeyCode::Down if state.mode == "gemx" => state.move_focus_down(),
                     KeyCode::Left if state.mode == "gemx" => state.move_focus_left(),
                     KeyCode::Right if state.mode == "gemx" => state.move_focus_right(),
+                    KeyCode::Tab => {
+                        if state.mode == "gemx" {
+                            state.move_focus_right();
+                        }
+                    }
+                    KeyCode::BackTab if state.mode == "gemx" => {
+                        state.move_focus_left();
+                    }
 
                     KeyCode::Char(c) if state.mode == "gemx" => {
                         let allowed = modifiers == KeyModifiers::NONE || modifiers == KeyModifiers::SHIFT;
@@ -185,40 +213,8 @@ pub fn launch_ui() -> std::io::Result<()> {
                         }
                     }
 
-                    KeyCode::Char(c) if state.mode == "zen" => {
-                        if modifiers.intersects(KeyModifiers::CONTROL | KeyModifiers::ALT | KeyModifiers::META) {
-                            // Block Ctrl/Alt input
-                        } else {
-                            if let Some(last) = state.zen_buffer.last_mut() {
-                                last.push(c);
-                            }
-                        }
-                    }
-
-                    KeyCode::Enter if state.mode == "zen" => {
-                        state.zen_buffer.push(String::new());
-                    }
-
-                    KeyCode::Backspace if state.mode == "zen" => {
-                        if let Some(last) = state.zen_buffer.last_mut() {
-                            last.pop();
-                        }
-                    }
-
                     KeyCode::Char('\u{a0}') => {
                         state.show_spotlight = !state.show_spotlight;
-                    }
-
-                    KeyCode::Char(c) if state.show_spotlight => {
-                        state.spotlight_input.push(c);
-                    }
-
-                    KeyCode::Backspace if state.show_spotlight => {
-                        state.spotlight_input.pop();
-                    }
-
-                    KeyCode::Enter if state.show_spotlight => {
-                        state.execute_spotlight_command();
                     }
 
                     _ => {}
