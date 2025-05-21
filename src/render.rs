@@ -121,48 +121,48 @@ fn parse_markdown_line(input: &str) -> Line {
 }
 
 
-pub fn render_mindmap<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
-    let layout = Block::default()
-        .borders(Borders::ALL)
-        .title(if state.edit_mode { "Mindmap (Edit)" } else { "Mindmap" });
-    f.render_widget(layout, area);
+// pub fn render_mindmap<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
+//     let layout = Block::default()
+//         .borders(Borders::ALL)
+//         .title(if state.edit_mode { "Mindmap (Edit)" } else { "Mindmap" });
+//     f.render_widget(layout, area);
 
-    let offset_y = area.y + 1;
+//     let offset_y = area.y + 1;
 
-    for (i, (depth, node)) in state.flat_nodes.iter().enumerate() {
-        let y = offset_y + i as u16;
-        if y >= area.bottom() {
-            break;
-        }
+//     for (i, (depth, node)) in state.flat_nodes.iter().enumerate() {
+//         let y = offset_y + i as u16;
+//         if y >= area.bottom() {
+//             break;
+//         }
 
-        let n = node.borrow();
-        let label = &n.label;
+//         let n = node.borrow();
+//         let label = &n.label;
 
-        let prefix = if !n.children.is_empty() {
-            if n.collapsed { "[+]" } else { "[-]" }
-        } else {
-            "   "
-        };
+//         let prefix = if !n.children.is_empty() {
+//             if n.collapsed { "[+]" } else { "[-]" }
+//         } else {
+//             "   "
+//         };
 
-        let indent = "  ".repeat(*depth);
-        let content = if i == state.active_node {
-            format!("> {}{} {}", indent, prefix, label)
-        } else {
-            format!("  {}{} {}", indent, prefix, label)
-        };
+//         let indent = "  ".repeat(*depth);
+//         let content = if i == state.active_node {
+//             format!("> {}{} {}", indent, prefix, label)
+//         } else {
+//             format!("  {}{} {}", indent, prefix, label)
+//         };
 
-        let style = if i == state.active_node {
-            Style::default()
-                .fg(Color::Yellow)
-                .add_modifier(Modifier::BOLD | Modifier::UNDERLINED)
-        } else {
-            Style::default().fg(Color::White)
-        };
+//         let style = if i == state.active_node {
+//             Style::default()
+//                 .fg(Color::Yellow)
+//                 .add_modifier(Modifier::BOLD | Modifier::UNDERLINED)
+//         } else {
+//             Style::default().fg(Color::White)
+//         };
 
-        let para = Paragraph::new(content).style(style);
-        f.render_widget(para, Rect::new(area.x + 2, y, area.width - 4, 1));
-    }
-}
+//         let para = Paragraph::new(content).style(style);
+//         f.render_widget(para, Rect::new(area.x + 2, y, area.width - 4, 1));
+//     }
+// }
 
 pub fn render_keymap_overlay<B: Backend>(f: &mut Frame<B>, area: Rect) {
     use ratatui::widgets::{Block, Borders, Paragraph};

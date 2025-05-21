@@ -18,6 +18,7 @@ pub fn load_default_hotkeys() -> HashMap<String, String> {
     map.insert("toggle_edit".into(), "ctrl-e".into());
     map.insert("toggle_keymap".into(), "ctrl-h".into());
     map.insert("mode_zen".into(), "ctrl-r".into());
-
+    map.insert("undo".into(), "ctrl+z".into()); 
+    
     map
 }

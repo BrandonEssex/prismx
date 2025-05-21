@@ -10,7 +10,8 @@ use crossterm::{
 use std::io::stdout;
 
 use crate::state::AppState;
-use crate::render::*;
+use crate::render::{render_status_bar, render_zen_journal, render_keymap_overlay, render_spotlight, render_triage, render_module_switcher};
+use crate::screen::render_mindmap;
 
 mod hotkeys;
 use hotkeys::match_hotkey;

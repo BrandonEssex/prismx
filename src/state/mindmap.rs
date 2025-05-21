@@ -29,6 +29,7 @@ impl Node {
     }
 }
 
+/// Flattens all nodes (including collapsed), used for editing & indexing
 pub fn flatten_nodes(node: &Rc<RefCell<Node>>) -> Vec<(usize, Rc<RefCell<Node>>)> {
     fn recurse(
         node: &Rc<RefCell<Node>>,
@@ -37,11 +38,7 @@ pub fn flatten_nodes(node: &Rc<RefCell<Node>>) -> Vec<(usize, Rc<RefCell<Node>>)
     ) {
         out.push((depth, Rc::clone(node)));
 
-        let collapsed;
-        {
-            collapsed = node.borrow().collapsed;
-        }
-
+        let collapsed = node.borrow().collapsed;
         if collapsed {
             return;
         }
@@ -61,4 +58,19 @@ pub fn flatten_nodes(node: &Rc<RefCell<Node>>) -> Vec<(usize, Rc<RefCell<Node>>)
     result
 }
 
+/// Flattens only visible nodes (skips children of collapsed nodes)
+pub fn visible_nodes<'a>(
+    node: &'a Rc<RefCell<Node>>,
+    depth: usize,
+    out: &mut Vec<(usize, Rc<RefCell<Node>>)>
+) {
+    out.push((depth, Rc::clone(node)));
 
+    if node.borrow().collapsed {
+        return;
+    }
+
+    for child in &node.borrow().children {
+        visible_nodes(child, depth + 1, out);
+    }
+}
