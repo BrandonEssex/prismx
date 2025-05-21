@@ -82,15 +82,24 @@ impl AppState {
     }
 
     pub fn add_child(&mut self) {
-        let node = self.get_active_node();
+        let parent = self.get_active_node();
+
         let child = Rc::new(RefCell::new(Node {
             label: "New Child".into(),
             children: vec![],
             collapsed: false,
         }));
-        node.borrow_mut().children.push(child);
+
+        parent.borrow_mut().children.push(Rc::clone(&child));
         self.reflatten();
-        self.active_node = self.flat_nodes.len() - 1;
+
+        for (i, (_, node)) in self.flat_nodes.iter().enumerate() {
+            if Rc::ptr_eq(node, &child) {
+                self.active_node = i;
+                node.borrow_mut().label.clear(); // ⬅️ prep for typing
+                break;
+            }
+        }
     }
 
     pub fn add_sibling(&mut self) {
@@ -109,13 +118,22 @@ impl AppState {
         }
 
         if let Some(parent) = parent_to_update {
-            parent.borrow_mut().children.push(Rc::new(RefCell::new(Node {
+            let sibling = Rc::new(RefCell::new(Node {
                 label: "New Sibling".into(),
                 children: vec![],
                 collapsed: false,
-            })));
+            }));
+
+            parent.borrow_mut().children.push(Rc::clone(&sibling));
             self.reflatten();
-            self.active_node = self.flat_nodes.len() - 1;
+
+            for (i, (_, node)) in self.flat_nodes.iter().enumerate() {
+                if Rc::ptr_eq(node, &sibling) {
+                    self.active_node = i;
+                    node.borrow_mut().label.clear(); // ⬅️ ready to type
+                    break;
+                }
+            }
         }
     }
 
