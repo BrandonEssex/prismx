@@ -16,7 +16,6 @@ mod hotkeys;
 use hotkeys::match_hotkey;
 
 pub fn draw<B: Backend>(terminal: &mut Terminal<B>, state: &AppState, last_key: &str) -> std::io::Result<()> {
-    use crate::render::*;
     use ratatui::layout::{Constraint, Direction, Layout};
     use ratatui::widgets::{Block, Borders, Paragraph};
 
@@ -123,9 +122,9 @@ pub fn launch_ui() -> std::io::Result<()> {
                 } else if match_hotkey("toggle_collapsed", code, modifiers, &state) && state.mode == "mindmap" {
                     let collapsed = {
                         let node_ref = state.get_active_node();
-                        node_ref.borrow().collapsed
+                        let is_collapsed = node_ref.borrow().collapsed;
+                        is_collapsed
                     };
-
                     if collapsed {
                         state.expand_active_node();
                     } else {
