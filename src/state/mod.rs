@@ -1,12 +1,9 @@
 use std::collections::HashMap;
+use crate::node::{Node, NodeID, NodeMap};
 
 mod hotkeys;
-mod node;
-mod layout;
 
 pub use hotkeys::*;
-pub use node::*;
-pub use layout::*;
 
 pub struct AppState {
     pub mode: String,
@@ -29,10 +26,10 @@ impl Default for AppState {
     fn default() -> Self {
         let mut nodes = NodeMap::new();
         let root_id = 1;
-        nodes.insert(root_id, Node::new(root_id, "Gemx Root", None));
-
         let child_a = 2;
         let child_b = 3;
+
+        nodes.insert(root_id, Node::new(root_id, "Gemx Root", None));
         nodes.insert(child_a, Node::new(child_a, "Node A", Some(root_id)));
         nodes.insert(child_b, Node::new(child_b, "Node B", Some(root_id)));
 
@@ -57,131 +54,94 @@ impl Default for AppState {
     }
 }
 
-
 impl AppState {
-    pub fn reflatten(&mut self) {
-        self.flat_nodes = flatten_nodes(&self.root);
+    pub fn get_selected_node(&self) -> Option<&Node> {
+        self.selected.and_then(|id| self.nodes.get(&id))
     }
 
-    pub fn get_active_node(&self) -> Rc<RefCell<Node>> {
-        self.flat_nodes[self.active_node].1.clone()
+    pub fn get_selected_node_mut(&mut self) -> Option<&mut Node> {
+        self.selected.and_then(|id| self.nodes.get_mut(&id))
     }
 
     pub fn update_active_label(&mut self, c: char) {
-        let node = self.get_active_node();
-        node.borrow_mut().label.push(c);
+        if let Some(node) = self.get_selected_node_mut() {
+            node.label.push(c);
+        }
     }
 
     pub fn delete_last_char(&mut self) {
-        let node = self.get_active_node();
-        node.borrow_mut().label.pop();
+        if let Some(node) = self.get_selected_node_mut() {
+            node.label.pop();
+        }
     }
 
     pub fn move_focus_up(&mut self) {
-        if self.active_node > 0 {
-            self.active_node -= 1;
-        }
+        // Placeholder: in Patch 25.30 this will become graph-aware
     }
 
     pub fn move_focus_down(&mut self) {
-        if self.active_node + 1 < self.flat_nodes.len() {
-            self.active_node += 1;
-        }
+        // Placeholder: in Patch 25.30 this will become graph-aware
     }
 
     pub fn add_child(&mut self) {
-        let parent = self.get_active_node();
+        if let Some(parent_id) = self.selected {
+            let new_id = self.nodes.keys().max().copied().unwrap_or(100) + 1;
+            let child = Node::new(new_id, "New Child", Some(parent_id));
 
-        let child = Rc::new(RefCell::new(Node {
-            label: "New Child".into(),
-            children: vec![],
-            collapsed: false,
-        }));
-
-        parent.borrow_mut().children.push(Rc::clone(&child));
-        self.reflatten();
-
-        for (i, (_, node)) in self.flat_nodes.iter().enumerate() {
-            if Rc::ptr_eq(node, &child) {
-                self.active_node = i;
-                node.borrow_mut().label.clear(); // ⬅️ prep for typing
-                break;
+            self.nodes.insert(new_id, child);
+            if let Some(parent) = self.nodes.get_mut(&parent_id) {
+                parent.children.push(new_id);
             }
+            self.selected = Some(new_id);
         }
     }
 
     pub fn add_sibling(&mut self) {
-        if self.active_node == 0 {
-            return;
-        }
-
-        let (target_depth, _) = self.flat_nodes[self.active_node];
-        let mut parent_to_update: Option<Rc<RefCell<Node>>> = None;
-
-        for (depth, node) in self.flat_nodes.iter().rev() {
-            if *depth == target_depth - 1 {
-                parent_to_update = Some(Rc::clone(node));
-                break;
-            }
-        }
-
-        if let Some(parent) = parent_to_update {
-            let sibling = Rc::new(RefCell::new(Node {
-                label: "New Sibling".into(),
-                children: vec![],
-                collapsed: false,
-            }));
-
-            parent.borrow_mut().children.push(Rc::clone(&sibling));
-            self.reflatten();
-
-            for (i, (_, node)) in self.flat_nodes.iter().enumerate() {
-                if Rc::ptr_eq(node, &sibling) {
-                    self.active_node = i;
-                    node.borrow_mut().label.clear(); // ⬅️ ready to type
-                    break;
+        if let Some(selected_id) = self.selected {
+            if let Some(selected_node) = self.nodes.get(&selected_id) {
+                if let Some(parent_id) = selected_node.parent {
+                    let new_id = self.nodes.keys().max().copied().unwrap_or(100) + 1;
+                    let sibling = Node::new(new_id, "New Sibling", Some(parent_id));
+                    self.nodes.insert(new_id, sibling);
+                    if let Some(parent) = self.nodes.get_mut(&parent_id) {
+                        parent.children.push(new_id);
+                    }
+                    self.selected = Some(new_id);
                 }
             }
         }
     }
 
     pub fn delete_node(&mut self) {
-        if self.active_node == 0 {
-            return;
-        }
-
-        let target = self.flat_nodes[self.active_node].1.clone();
-
-        fn recurse_delete(node: &Rc<RefCell<Node>>, target: &Rc<RefCell<Node>>) -> bool {
-            let mut n = node.borrow_mut();
-            let len = n.children.len();
-            n.children.retain(|child| !Rc::ptr_eq(child, target));
-            if n.children.len() < len {
-                return true;
+        if let Some(target_id) = self.selected {
+            if target_id == self.root_id {
+                return; // never delete root
             }
-            for child in &n.children {
-                if recurse_delete(child, target) {
-                    return true;
+
+            let parent_id = self.nodes.get(&target_id).and_then(|n| n.parent);
+            if let Some(parent_id) = parent_id {
+                if let Some(parent) = self.nodes.get_mut(&parent_id) {
+                    parent.children.retain(|&id| id != target_id);
                 }
             }
-            false
-        }
 
-        recurse_delete(&self.root, &target);
-        self.active_node = self.active_node.saturating_sub(1);
-        self.reflatten();
+            // Recursive delete of target and its children
+            fn delete_recursive(map: &mut NodeMap, id: NodeID) {
+                if let Some(node) = map.remove(&id) {
+                    for child in node.children {
+                        delete_recursive(map, child);
+                    }
+                }
+            }
+
+            delete_recursive(&mut self.nodes, target_id);
+            self.selected = parent_id;
+        }
     }
 
     pub fn toggle_collapse(&mut self) {
-        let collapsed = {
-            let node = self.get_active_node();
-            let mut n = node.borrow_mut();
-            n.collapsed = !n.collapsed;
-            n.collapsed
-        };
-
-        if collapsed || !collapsed {
-            self.reflatten();
+        if let Some(node) = self.get_selected_node_mut() {
+            node.collapsed = !node.collapsed;
         }
     }
 
@@ -201,22 +161,20 @@ impl AppState {
     }
 
     pub fn add_free_node(&mut self) {
-        let new = Rc::new(RefCell::new(Node {
-            label: "Free Node".into(),
-            children: vec![],
-            collapsed: false,
-        }));
-        self.root.borrow_mut().children.push(new);
-        self.reflatten();
-        self.active_node = self.flat_nodes.len() - 1;
+        let new_id = self.nodes.keys().max().copied().unwrap_or(100) + 1;
+        let node = Node::new(new_id, "Free Node", Some(self.root_id));
+        self.nodes.insert(new_id, node);
+        if let Some(root) = self.nodes.get_mut(&self.root_id) {
+            root.children.push(new_id);
+        }
+        self.selected = Some(new_id);
     }
 
     pub fn drill_down(&mut self) {
-        let current = self.get_active_node();
-        if !current.borrow().children.is_empty() {
-            self.root = current;
-            self.reflatten();
-            self.active_node = 0;
+        if let Some(current) = self.get_selected_node() {
+            if !current.children.is_empty() {
+                self.selected = Some(current.children[0]);
+            }
         }
     }
 
