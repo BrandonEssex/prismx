@@ -41,13 +41,6 @@ pub fn render_zen_journal<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppS
         zen_snapshot.iter().map(|line| parse_markdown_line(line)).collect()
     };
 
-    // Ensure we have something to render
-    let lines: Vec<Line> = if state.zen_buffer.is_empty() {
-        vec![Line::from(" ")]
-    } else {
-        state.zen_buffer.iter().map(|line| parse_markdown_line(line)).collect()
-    };
-
     let vertical_padding = 2;
     let usable_height = total_height.saturating_sub(vertical_padding * 2);
     let start_line = lines.len().saturating_sub(usable_height);
