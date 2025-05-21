@@ -25,6 +25,8 @@ pub struct AppState {
     pub module_switcher_open: bool,
     pub module_switcher_index: usize,
     pub hotkeys: HashMap<String, String>,
+    pub scroll_offset: usize,
+    pub max_visible_lines: usize,
 }
 
 impl Default for AppState {
@@ -47,6 +49,8 @@ impl Default for AppState {
             module_switcher_open: false,
             module_switcher_index: 0,
             hotkeys: load_default_hotkeys(),
+            scroll_offset: 0,
+            max_visible_lines: 20,
         }
     }
 }
