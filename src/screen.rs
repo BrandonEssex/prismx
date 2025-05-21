@@ -18,8 +18,9 @@ pub fn render_mindmap<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppS
 
     // Collect visible nodes
     let mut flat: Vec<(usize, Rc<RefCell<Node>>)> = Vec::new();
-    visible_nodes(&state.root, 0, &mut flat);
-
+    for child in &state.root.borrow().children {
+    visible_nodes(child, 0, &mut flat);
+    }
     // Auto-scroll to keep active in view
     if state.active_node < state.scroll_offset {
         state.scroll_offset = state.active_node;
