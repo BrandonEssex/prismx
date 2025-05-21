@@ -28,11 +28,12 @@ pub fn render_zen_journal<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppS
     let total_height = area.height as usize;
     let total_width = area.width as usize;
 
+    // Safety check: skip rendering on tiny terminal
     if total_height < 4 || total_width < 10 {
         return;
     }
 
-    // ✅ Clone buffer to protect against live mutation during render
+    // Clone buffer to protect against live mutation during render
     let zen_snapshot: Vec<String> = state.zen_buffer.clone();
 
     let lines: Vec<Line> = if zen_snapshot.is_empty() {
@@ -43,14 +44,10 @@ pub fn render_zen_journal<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppS
 
     let vertical_padding = 2;
     let usable_height = total_height.saturating_sub(vertical_padding * 2);
-    let start_line = lines.len().saturating_sub(usable_height);
-    let end_line = lines.len();
-
-    let visible_lines = if start_line < end_line {
-        &lines[start_line..end_line]
-    } else {
-        &lines[..]
-    };
+    let visible_line_count = lines.len().min(usable_height);
+    let start_line = lines.len().saturating_sub(visible_line_count);
+    let end_line = start_line + visible_line_count;
+    let visible_lines = &lines[start_line..end_line];
 
     let padding_top = (usable_height.saturating_sub(visible_lines.len())) / 2;
     let margin = (total_width as f32 * 0.15).min((total_width / 2) as f32) as u16;
@@ -75,6 +72,7 @@ pub fn render_zen_journal<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppS
 
     f.render_widget(widget, padded_area);
 }
+
 
 
 
