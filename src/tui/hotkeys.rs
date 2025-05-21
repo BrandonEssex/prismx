@@ -44,17 +44,8 @@ pub fn match_hotkey(action: &str, code: KeyCode, mods: KeyModifiers, state: &App
             _ => false,
         };
 
-        let matched = mod_match && code_match;
-
-        println!(
-            "[HOTKEY] action: {:<20} | binding: {:<10} | mods: {:?} | code: {:?} => {}",
-            action, binding_raw, mods, code, matched
-        );
-
-        return matched;
+        mod_match && code_match
     } else {
-        println!("[HOTKEY] action: {:<20} not found in map", action);
+        false
     }
-
-    false
 }
