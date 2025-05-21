@@ -7,7 +7,6 @@ mod zen;
 mod hotkeys;
 
 pub use mindmap::*;
-pub use zen::*;
 pub use hotkeys::*;
 
 pub struct AppState {
