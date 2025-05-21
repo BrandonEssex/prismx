@@ -25,20 +25,31 @@ pub fn render_zen_journal<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppS
     use ratatui::text::{Span, Line};
     use ratatui::layout::Alignment;
 
-    let raw_lines: Vec<Line> = state.zen_buffer.iter().map(|line| parse_markdown_line(line)).collect();
-
     let total_height = area.height as usize;
-    let visible_lines = total_height.saturating_sub(4); // Leave padding room
+    let total_width = area.width as usize;
 
-    let start_line = raw_lines.len().saturating_sub(visible_lines);
-    let display_lines = &raw_lines[start_line..];
+    let lines: Vec<Line> = state.zen_buffer.iter().map(|line| parse_markdown_line(line)).collect();
 
-    // Calculate vertical offset to center content
-    let padding_top = (area.height.saturating_sub(display_lines.len() as u16)) / 2;
+    // Reserve vertical padding of 2 lines
+    let usable_height = total_height.saturating_sub(4);
+    let start_line = lines.len().saturating_sub(usable_height);
+    let visible_lines = &lines[start_line..];
+
+    // Calculate vertical padding
+    let padding_top = (usable_height.saturating_sub(visible_lines.len())) / 2;
+
+    // Calculate horizontal margin (e.g., 15% on each side)
+    let margin = (total_width as f32 * 0.15).floor() as u16;
+    let padded_area = Rect {
+        x: area.x + margin,
+        y: area.y + 2 + padding_top as u16,
+        width: area.width.saturating_sub(margin * 2),
+        height: area.height.saturating_sub(4),
+    };
 
     let padded_lines: Vec<Line> = std::iter::repeat(Line::from(""))
-        .take(padding_top as usize)
-        .chain(display_lines.iter().cloned())
+        .take(padding_top)
+        .chain(visible_lines.iter().cloned())
         .collect();
 
     let widget = Paragraph::new(padded_lines)
@@ -47,8 +58,9 @@ pub fn render_zen_journal<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppS
         .style(Style::default().fg(Color::Green))
         .wrap(Wrap { trim: false });
 
-    f.render_widget(widget, area);
+    f.render_widget(widget, padded_area);
 }
+
 
 
 

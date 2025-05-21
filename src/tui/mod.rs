@@ -159,7 +159,7 @@ pub fn launch_ui() -> std::io::Result<()> {
 
                     KeyCode::Char(c) if state.mode == "mindmap" && state.edit_mode => {
                         let allowed = modifiers == KeyModifiers::NONE || modifiers == KeyModifiers::SHIFT;
-                        if allowed && c.is_ascii_graphic() {
+                        if allowed && (c.is_ascii_graphic() || c == ' ') {
                             let node = state.get_active_node();
                             let mut n = node.borrow_mut();
                             if state.edit_ready && (
