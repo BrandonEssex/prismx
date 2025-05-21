@@ -139,23 +139,27 @@ pub fn render_keymap_overlay<B: Backend>(f: &mut Frame<B>, area: Rect) {
     let block = Block::default().title("Keymap").borders(Borders::ALL);
     f.render_widget(block, area);
 
-    let content = Paragraph::new(
-        "\
-        Ctrl+Q = Quit\n\
-        Ctrl+M = Mindmap\n\
-        Ctrl+Z = Zen\n\
-        Ctrl+E = Edit Mode\n\
-        Ctrl+T = Triage\n\
-        Ctrl+H = Help\n\
-        Ctrl+. = Settings\n\
-        Alt+Space = Spotlight\n\
-        Shift+Tab = Switch Module\n\
-        Tab = Add Child\n\
-        Enter = Add Sibling\n\
-        Shift+Backspace = Delete\n\
-        Esc = Exit overlay/edit\n\
-        ",
-    );
+    let keys = vec![
+        "Ctrl+Q = Quit",
+        "Ctrl+M = Mindmap",
+        "Ctrl+Z = Zen",
+        "Ctrl+E = Edit Mode",
+        "Ctrl+Y = Triage",
+        "Ctrl+H = Help",
+        "Ctrl+. = Settings",
+        "Alt+Space = Spotlight",
+        "Shift+Tab = Switch Module",
+        "Tab = Add Child",
+        "Enter = Add Sibling",
+        "Ctrl+N = Free Node",
+        "Ctrl+D = Delete",
+        "Esc = Exit overlay/edit"
+    ];
+
+    let content = Paragraph::new(keys.join("\n"))
+        .block(Block::default().title("Keymap").borders(Borders::ALL));
+    f.render_widget(content, Rect::new(area.x + 1, area.y + 1, area.width - 2, area.height - 2));
+
 
     f.render_widget(content, Rect::new(area.x + 1, area.y + 1, area.width - 2, area.height - 2));
 }

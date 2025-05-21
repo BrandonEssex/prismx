@@ -9,8 +9,8 @@ pub fn load_default_hotkeys() -> HashMap<String, String> {
     map.insert("drill_down".into(), "ctrl-w".into());
     map.insert("pop_up".into(), "ctrl-q".into());
     map.insert("create_free_node".into(), "ctrl-n".into());
-    map.insert("toggle_collapsed".into(), "ctrl-t".into());   // keep this here
-    map.insert("toggle_triage".into(), "ctrl-y".into());      // changed to avoid conflict
+    map.insert("toggle_collapsed".into(), "ctrl-t".into());
+    map.insert("toggle_triage".into(), "ctrl-y".into()); // changed to avoid conflict
     map.insert("save".into(), "ctrl-x".into());
     map.insert("quit".into(), "ctrl-c".into());
     map.insert("help".into(), "?".into());

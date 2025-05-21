@@ -26,6 +26,7 @@ pub fn match_hotkey(action: &str, code: KeyCode, mods: KeyModifiers, state: &App
 
         let code_match = match k {
             "tab" => code == KeyCode::Tab,
+            "shift-tab" => matches!(code, KeyCode::BackTab | KeyCode::Tab) && mods.contains(KeyModifiers::SHIFT),
             "enter" => code == KeyCode::Enter,
             "backspace" => code == KeyCode::Backspace,
             "esc" => code == KeyCode::Esc,
@@ -41,6 +42,8 @@ pub fn match_hotkey(action: &str, code: KeyCode, mods: KeyModifiers, state: &App
             "c" => code == KeyCode::Char('c'),
             "h" => code == KeyCode::Char('h'),
             "e" => code == KeyCode::Char('e'),
+            "z" => code == KeyCode::Char('z'),
+            "y" => code == KeyCode::Char('y'),
             _ => false,
         };
 
