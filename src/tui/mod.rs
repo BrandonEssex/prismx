@@ -92,7 +92,7 @@ pub fn launch_ui() -> std::io::Result<()> {
     loop {
         if event::poll(std::time::Duration::from_millis(100))? {
             if let Event::Key(KeyEvent { code, modifiers, .. }) = event::read()? {
-                println!("[KEY] mods: {:?} | code: {:?}", modifiers, code);
+//                println!("[KEY] mods: {:?} | code: {:?}", modifiers, code); // Key debug
                 last_key = format!("{:?} + {:?}", code, modifiers);
 
                 // Proper hotkey logic
