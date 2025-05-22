@@ -106,7 +106,9 @@ pub fn launch_ui() -> std::io::Result<()> {
                     match code {
                         KeyCode::Esc => state.show_spotlight = false,
                         KeyCode::Char(c) => state.spotlight_input.push(c),
-                        KeyCode::Backspace => state.spotlight_input.pop(),
+                        KeyCode::Backspace => {
+                            state.spotlight_input.pop();
+                        }
                         KeyCode::Enter => state.execute_spotlight_command(),
                         _ => {}
                     }

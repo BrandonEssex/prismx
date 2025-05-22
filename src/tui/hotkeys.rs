@@ -50,7 +50,6 @@ pub fn match_hotkey(action: &str, code: KeyCode, mods: KeyModifiers, state: &App
             "y" => code == KeyCode::Char('y'),
             "m" => code == KeyCode::Char('m'),
             "space" => code == KeyCode::Char(' '),
-            "." => code == KeyCode::Char('.'),
             "r" => code == KeyCode::Char('r'),
             "l" => code == KeyCode::Char('l'),
 
