@@ -14,6 +14,8 @@
 | `Ctrl + D`       | Delete node                  |
 | `Alt + ↑ / ↓`    | Move node among siblings     |
 | `Ctrl + Shift + M` | Move/Drag node             |
+| `Ctrl + ← / →`   | Horizontal scroll            |
+| `Cmd + ← / →` (macOS) | Horizontal scroll       |
 
 ---
 
