@@ -3,7 +3,6 @@ use crate::state::AppState;
 
 pub fn render_zen_journal<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
     use ratatui::text::{Span, Line};
-    use ratatui::style::Modifier;
 
     let total_height = area.height as usize;
     let total_width = area.width as usize;
@@ -13,8 +12,7 @@ pub fn render_zen_journal<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppS
     }
 
     let zen_snapshot: Vec<String> = state.zen_buffer.clone();
-    let raw_lines: Vec<Line> = zen_snapshot.iter().map(parse_markdown_line).collect();
-
+    let raw_lines: Vec<Line> = zen_snapshot.iter().map(|s| parse_markdown_line(s)).collect();
     let top_padding = 3;
     let usable_height = total_height.saturating_sub(top_padding);
     let start_line = raw_lines.len().saturating_sub(usable_height);
