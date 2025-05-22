@@ -101,17 +101,13 @@ pub fn launch_ui() -> std::io::Result<()> {
             if let Event::Key(KeyEvent { code, modifiers, .. }) = event::read()? {
                 last_key = format!("{:?} + {:?}", code, modifiers);
 
-                // 🌟 Spotlight takes full control
+                // 🌟 Spotlight exclusive input
                 if state.show_spotlight {
                     match code {
                         KeyCode::Esc => state.show_spotlight = false,
                         KeyCode::Char(c) => state.spotlight_input.push(c),
-                        KeyCode::Backspace => {
-                            state.spotlight_input.pop();
-                        }
-                        KeyCode::Enter => {
-                            state.execute_spotlight_command();
-                        }
+                        KeyCode::Backspace => state.spotlight_input.pop(),
+                        KeyCode::Enter => state.execute_spotlight_command(),
                         _ => {}
                     }
 
@@ -119,14 +115,14 @@ pub fn launch_ui() -> std::io::Result<()> {
                     continue;
                 }
 
-                // 💡 Toggle spotlight via Ctrl+Space or Alt+Space
+                // 🌐 Toggle spotlight
                 if code == KeyCode::Char('\u{a0}') {
                     state.show_spotlight = !state.show_spotlight;
                     draw(&mut terminal, &mut state, &last_key)?;
                     continue;
                 }
 
-                // 🔁 Module switcher lock
+                // 🧭 Module switcher exclusive input
                 if state.module_switcher_open {
                     match code {
                         KeyCode::Tab => {
@@ -146,7 +142,7 @@ pub fn launch_ui() -> std::io::Result<()> {
                     continue;
                 }
 
-                // 🎯 Main hotkey handling
+                // 🎯 Hotkeys
                 if match_hotkey("quit", code, modifiers, &state) {
                     break;
                 } else if match_hotkey("toggle_triage", code, modifiers, &state) {
@@ -154,29 +150,52 @@ pub fn launch_ui() -> std::io::Result<()> {
                 } else if match_hotkey("toggle_keymap", code, modifiers, &state) {
                     state.show_keymap = !state.show_keymap;
                 } else if match_hotkey("create_child", code, modifiers, &state) && state.mode == "gemx" {
+                    state.push_undo();
                     state.add_child();
                 } else if match_hotkey("create_sibling", code, modifiers, &state) && state.mode == "gemx" {
+                    state.push_undo();
                     state.add_sibling();
                 } else if match_hotkey("add_free_node", code, modifiers, &state) {
+                    state.push_undo();
                     state.add_free_node();
+                } else if match_hotkey("delete", code, modifiers, &state) && state.mode == "gemx" {
+                    state.push_undo();
+                    state.delete_node();
+                } else if match_hotkey("undo", code, modifiers, &state) {
+                    state.undo();
+                } else if match_hotkey("redo", code, modifiers, &state) {
+                    state.redo();
                 } else if match_hotkey("open_module_switcher", code, modifiers, &state) {
                     state.module_switcher_open = true;
                     state.module_switcher_index = 0;
-                } else if match_hotkey("delete", code, modifiers, &state) && state.mode == "gemx" {
-                    state.delete_node();
+                } else if match_hotkey("start_drag", code, modifiers, &state) {
+                    if let Some(_) = state.selected_drag_source {
+                        if let Some(target) = state.selected {
+                            state.push_undo();
+                            state.complete_drag(target);
+                        }
+                    } else {
+                        state.start_drag();
+                    }
+                } else if match_hotkey("start_link", code, modifiers, &state) {
+                    if let Some(_) = state.selected_drag_source {
+                        if let Some(target) = state.selected {
+                            state.complete_link(target);
+                        }
+                    } else {
+                        state.start_link();
+                    }
                 } else if match_hotkey("save", code, modifiers, &state) && state.mode == "zen" {
                     state.export_zen_to_file();
                 } else if match_hotkey("mode_zen", code, modifiers, &state) {
                     state.mode = "zen".into();
-                } else if match_hotkey("undo", code, modifiers, &state) {
-                    // undo_redo() not yet implemented
                 } else if match_hotkey("drill_down", code, modifiers, &state) {
                     state.drill_down();
                 } else if match_hotkey("toggle_collapsed", code, modifiers, &state) && state.mode == "gemx" {
                     state.toggle_collapse();
                 }
 
-                // 🔄 Navigation + Typing (if not blocked)
+                // 🔄 Navigation + Typing
                 match code {
                     KeyCode::Esc => {
                         state.mode = "gemx".into();
@@ -213,7 +232,6 @@ pub fn launch_ui() -> std::io::Result<()> {
                         }
                     }
 
-                    // ✍ Zen typing
                     KeyCode::Char(c) if state.mode == "zen" => {
                         if let Some(last) = state.zen_buffer.last_mut() {
                             last.push(c);
