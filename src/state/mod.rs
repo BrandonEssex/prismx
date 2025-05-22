@@ -19,6 +19,10 @@ pub struct AppState {
     pub hotkeys: HashMap<String, String>,
     pub scroll_offset: usize,
     pub max_visible_lines: usize,
+    pub undo_stack: Vec<NodeMap>,
+    pub redo_stack: Vec<NodeMap>,
+    pub selected_drag_source: Option<NodeID>,
+    pub link_map: std::collections::HashMap<NodeID, Vec<NodeID>>,
 }
 
 impl Default for AppState {
@@ -45,6 +49,10 @@ impl Default for AppState {
             hotkeys: load_default_hotkeys(),
             scroll_offset: 0,
             max_visible_lines: 20,
+            undo_stack: Vec::new(),
+            redo_stack: Vec::new(),
+            selected_drag_source: None,
+            link_map: std::collections::HashMap::new(),
         }
     }
 }
