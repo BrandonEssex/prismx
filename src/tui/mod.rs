@@ -101,15 +101,13 @@ pub fn launch_ui() -> std::io::Result<()> {
             if let Event::Key(KeyEvent { code, modifiers, .. }) = event::read()? {
                 last_key = format!("{:?} + {:?}", code, modifiers);
 
-                // Spotlight input has exclusive focus
+                // 🌟 Spotlight takes full control
                 if state.show_spotlight {
                     match code {
-                        KeyCode::Char('\u{a0}') => state.show_spotlight = false,
+                        KeyCode::Esc => state.show_spotlight = false,
+                        KeyCode::Char(c) => state.spotlight_input.push(c),
                         KeyCode::Backspace => {
                             state.spotlight_input.pop();
-                        }
-                        KeyCode::Char(c) => {
-                            state.spotlight_input.push(c);
                         }
                         KeyCode::Enter => {
                             state.execute_spotlight_command();
@@ -121,7 +119,14 @@ pub fn launch_ui() -> std::io::Result<()> {
                     continue;
                 }
 
-                // Module switcher input has exclusive focus
+                // 💡 Toggle spotlight via Ctrl+Space or Alt+Space
+                if code == KeyCode::Char('\u{a0}') {
+                    state.show_spotlight = !state.show_spotlight;
+                    draw(&mut terminal, &mut state, &last_key)?;
+                    continue;
+                }
+
+                // 🔁 Module switcher lock
                 if state.module_switcher_open {
                     match code {
                         KeyCode::Tab => {
@@ -141,7 +146,7 @@ pub fn launch_ui() -> std::io::Result<()> {
                     continue;
                 }
 
-                // Normal hotkeys
+                // 🎯 Main hotkey handling
                 if match_hotkey("quit", code, modifiers, &state) {
                     break;
                 } else if match_hotkey("toggle_triage", code, modifiers, &state) {
@@ -171,6 +176,7 @@ pub fn launch_ui() -> std::io::Result<()> {
                     state.toggle_collapse();
                 }
 
+                // 🔄 Navigation + Typing (if not blocked)
                 match code {
                     KeyCode::Esc => {
                         state.mode = "gemx".into();
@@ -182,14 +188,8 @@ pub fn launch_ui() -> std::io::Result<()> {
                     KeyCode::Down if state.mode == "gemx" => state.move_focus_down(),
                     KeyCode::Left if state.mode == "gemx" => state.move_focus_left(),
                     KeyCode::Right if state.mode == "gemx" => state.move_focus_right(),
-                    KeyCode::Tab => {
-                        if state.mode == "gemx" {
-                            state.move_focus_right();
-                        }
-                    }
-                    KeyCode::BackTab if state.mode == "gemx" => {
-                        state.move_focus_left();
-                    }
+                    KeyCode::Tab if state.mode == "gemx" => state.move_focus_right(),
+                    KeyCode::BackTab if state.mode == "gemx" => state.move_focus_left(),
 
                     KeyCode::Char(c) if state.mode == "gemx" => {
                         let allowed = modifiers == KeyModifiers::NONE || modifiers == KeyModifiers::SHIFT;
@@ -213,8 +213,21 @@ pub fn launch_ui() -> std::io::Result<()> {
                         }
                     }
 
-                    KeyCode::Char('\u{a0}') => {
-                        state.show_spotlight = !state.show_spotlight;
+                    // ✍ Zen typing
+                    KeyCode::Char(c) if state.mode == "zen" => {
+                        if let Some(last) = state.zen_buffer.last_mut() {
+                            last.push(c);
+                        }
+                    }
+
+                    KeyCode::Backspace if state.mode == "zen" => {
+                        if let Some(last) = state.zen_buffer.last_mut() {
+                            last.pop();
+                        }
+                    }
+
+                    KeyCode::Enter if state.mode == "zen" => {
+                        state.zen_buffer.push(String::new());
                     }
 
                     _ => {}

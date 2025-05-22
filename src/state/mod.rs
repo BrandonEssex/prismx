@@ -107,7 +107,9 @@ impl AppState {
     pub fn move_focus_left(&mut self) {
         if let Some(current) = self.selected {
             if let Some(node) = self.nodes.get(&current) {
-                self.selected = node.parent;
+                if let Some(parent_id) = node.parent {
+                    self.selected = Some(parent_id);
+                }
             }
         }
     }
