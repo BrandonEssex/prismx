@@ -156,6 +156,9 @@ pub fn launch_ui() -> std::io::Result<()> {
                 } else if match_hotkey("add_free_node", code, modifiers, &state) {
                     state.push_undo();
                     state.add_free_node();
+                } else if match_hotkey("create_branch", code, modifiers, &state) {
+                    state.push_undo();
+                    // placeholder: state.create_branch();
                 } else if match_hotkey("delete", code, modifiers, &state) && state.mode == "gemx" {
                     state.push_undo();
                     state.delete_node();
@@ -167,7 +170,7 @@ pub fn launch_ui() -> std::io::Result<()> {
                     state.module_switcher_open = true;
                     state.module_switcher_index = 0;
                 } else if match_hotkey("start_drag", code, modifiers, &state) {
-                    if let Some(_) = state.selected_drag_source {
+                    if state.selected_drag_source.is_some() {
                         if let Some(target) = state.selected {
                             state.push_undo();
                             state.complete_drag(target);
@@ -176,7 +179,7 @@ pub fn launch_ui() -> std::io::Result<()> {
                         state.start_drag();
                     }
                 } else if match_hotkey("start_link", code, modifiers, &state) {
-                    if let Some(_) = state.selected_drag_source {
+                    if state.selected_drag_source.is_some() {
                         if let Some(target) = state.selected {
                             state.complete_link(target);
                         }
@@ -190,12 +193,13 @@ pub fn launch_ui() -> std::io::Result<()> {
                 } else if match_hotkey("toggle_collapsed", code, modifiers, &state) && state.mode == "gemx" {
                     state.toggle_collapse();
                 } else if match_hotkey("drill_down", code, modifiers, &state) {
-                    state.drill_down();
+                    state.drawing_root = state.selected;
+                } else if match_hotkey("pop_up", code, modifiers, &state) {
+                    state.drawing_root = None;
                 } else if match_hotkey("toggle_settings", code, modifiers, &state) {
                     state.mode = "settings".into();
                 }
 
-                // Navigation + Typing
                 match code {
                     KeyCode::Esc => {
                         state.mode = "gemx".into();
@@ -203,12 +207,6 @@ pub fn launch_ui() -> std::io::Result<()> {
                         state.show_spotlight = false;
                     }
 
-                    KeyCode::Up if state.mode == "gemx" => state.move_focus_up(),
-                    KeyCode::Down if state.mode == "gemx" => state.move_focus_down(),
-                    KeyCode::Left if state.mode == "gemx" => state.move_focus_left(),
-                    KeyCode::Right if state.mode == "gemx" => state.move_focus_right(),
-                    KeyCode::Tab if state.mode == "gemx" => state.move_focus_right(),
-                    KeyCode::BackTab if state.mode == "gemx" => state.move_focus_left(),
                     KeyCode::Left if state.mode == "gemx" && modifiers == KeyModifiers::CONTROL => {
                         state.scroll_x = state.scroll_x.saturating_sub(4);
                     }
@@ -221,6 +219,12 @@ pub fn launch_ui() -> std::io::Result<()> {
                         state.auto_arrange = !state.auto_arrange;
                     }
 
+                    KeyCode::Up if state.mode == "gemx" => state.move_focus_up(),
+                    KeyCode::Down if state.mode == "gemx" => state.move_focus_down(),
+                    KeyCode::Left if state.mode == "gemx" => state.move_focus_left(),
+                    KeyCode::Right if state.mode == "gemx" => state.move_focus_right(),
+                    KeyCode::Tab if state.mode == "gemx" => state.move_focus_right(),
+                    KeyCode::BackTab if state.mode == "gemx" => state.move_focus_left(),
 
                     KeyCode::Char(c) if state.mode == "gemx" => {
                         let allowed = modifiers == KeyModifiers::NONE || modifiers == KeyModifiers::SHIFT;
