@@ -22,10 +22,11 @@ pub fn render_gemx<B: Backend>(
     let mut drawn_at = std::collections::HashMap::new();
     let mut y_cursor = 1;
 
-    for &root_id in &roots {
-        let layout = layout_nodes(&state.nodes, root_id, 2, y_cursor);
-        y_cursor = layout.values().map(|c| c.y).max().unwrap_or(y_cursor).saturating_add(2);
+    for &root_id in root_nodes {
+        let layout = layout_nodes(nodes, root_id, 2, y);
+        let max_y = layout.values().map(|c| c.y).max().unwrap_or(y);
         drawn_at.extend(layout);
+        y = max_y.saturating_add(3); // ensure spacing for next root's subtree
     }
 
     for (&node_id, &Coords { x, y }) in &drawn_at {
