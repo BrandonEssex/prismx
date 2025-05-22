@@ -1,14 +1,14 @@
 use ratatui::prelude::*;
 use ratatui::widgets::{Block, Borders, Paragraph};
+
 use crate::layout::{layout_nodes, Coords};
-use crate::node::{NodeID, NodeMap};
+use crate::node::NodeID;
+use crate::state::AppState;
 
 pub fn render_gemx<B: Backend>(
     f: &mut Frame<B>,
     area: Rect,
-    nodes: &NodeMap,
-    root_nodes: &[NodeID],
-    selected: Option<NodeID>,
+    state: &AppState,
 ) {
     let block = Block::default()
         .title("Gemx")
@@ -18,8 +18,8 @@ pub fn render_gemx<B: Backend>(
     let mut drawn_at = std::collections::HashMap::new();
     let mut y = 1;
 
-    for &root_id in root_nodes {
-        let layout = layout_nodes(nodes, root_id, 2, y);
+    for &root_id in &state.root_nodes {
+        let layout = layout_nodes(&state.nodes, root_id, 2, y);
         y = layout.values().map(|c| c.y).max().unwrap_or(y).saturating_add(2);
         drawn_at.extend(layout);
     }
@@ -29,8 +29,8 @@ pub fn render_gemx<B: Backend>(
             continue;
         }
 
-        let node = &nodes[&node_id];
-        let is_selected = Some(node_id) == selected;
+        let node = &state.nodes[&node_id];
+        let is_selected = Some(node_id) == state.selected;
 
         let mut label = if is_selected {
             format!("> {}", node.label)
@@ -38,7 +38,8 @@ pub fn render_gemx<B: Backend>(
             format!("  {}", node.label)
         };
 
-        if let Some(linked) = node.link.as_ref() {
+        // Show 📎 if node has outgoing links
+        if state.link_map.get(&node_id).map_or(false, |v| !v.is_empty()) {
             label.push_str(" 📎");
         }
 
