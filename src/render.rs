@@ -124,21 +124,25 @@ pub fn render_keymap_overlay<B: Backend>(f: &mut Frame<B>, area: Rect) {
     use ratatui::text::Line;
 
     let keys = vec![
-        "Ctrl+Q = Quit",
-        "Ctrl+Z = Undo",
-        "Ctrl+M = Mindmap",
-        "Ctrl+R = Zen",
-        "Ctrl+E = Edit Mode",
-        "Ctrl+Y = Triage",
-        "Ctrl+H = Help",
-        "Ctrl+. = Settings",
+        "Ctrl+C  = Quit",
+        "Ctrl+Z  = Undo",
+        "Ctrl+Shift+Z = Redo",
+        "Ctrl+R  = Start/Finish Drag",
+        "Ctrl+L  = Start/Finish Link",
+        "Ctrl+N  = Free Node",
+        "Tab     = Add Child",
+        "Enter   = Add Sibling",
+        "Ctrl+D  = Delete Node",
+        "Ctrl+W  = Drill Down",
+        "Ctrl+Q  = Pop Up",
+        "Ctrl+T  = Toggle Collapse",
+        "Ctrl+X  = Save Zen",
+        "Ctrl+Space = Module Switcher",
+        "Ctrl+Y  = Triage",
+        "Ctrl+H  = Help",
+        "Ctrl+.  = Settings",
         "Alt+Space = Spotlight",
-        "Shift+Tab = Switch Module",
-        "Tab = Add Child",
-        "Enter = Add Sibling",
-        "Ctrl+N = Free Node",
-        "Ctrl+D = Delete",
-        "Esc = Exit overlay/edit"
+        "Esc     = Close Overlay / Exit Mode"
     ];
 
     let content = Paragraph::new(keys.join("\n"))
@@ -154,7 +158,7 @@ pub fn render_triage<B: Backend>(f: &mut Frame<B>, area: Rect) {
         .style(Style::default().fg(Color::Red));
 
     let content = Paragraph::new(
-        "• Mindmap rendering: OK\n\
+        "• GemX rendering: OK\n\
          • Node editing: OK\n\
          • Zen scroll: OK\n\
          • Triage display: Working"

@@ -1,12 +1,11 @@
+// All use declarations remain unchanged
 use ratatui::Terminal;
 use ratatui::backend::{Backend, CrosstermBackend};
-
 use crossterm::{
     event::{self, Event, KeyCode, KeyEvent, KeyModifiers, EnableMouseCapture, DisableMouseCapture},
     execute,
     terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
 };
-
 use std::io::stdout;
 
 use crate::state::AppState;
@@ -29,10 +28,8 @@ pub fn draw<B: Backend>(terminal: &mut Terminal<B>, state: &mut AppState, last_k
 
     terminal.draw(|f| {
         let full = f.size();
-
         let layout_chunks = if state.show_keymap {
-            Layout::default()
-                .direction(Direction::Horizontal)
+            Layout::default().direction(Direction::Horizontal)
                 .constraints([Constraint::Min(50), Constraint::Length(30)].as_ref())
                 .split(full)
         } else {
@@ -97,11 +94,15 @@ pub fn launch_ui() -> std::io::Result<()> {
     draw(&mut terminal, &mut state, &last_key)?;
 
     loop {
+        if state.selected.is_none() && !state.nodes.is_empty() {
+            state.selected = Some(state.nodes.keys().next().copied().unwrap());
+        }
+
         if event::poll(std::time::Duration::from_millis(100))? {
             if let Event::Key(KeyEvent { code, modifiers, .. }) = event::read()? {
                 last_key = format!("{:?} + {:?}", code, modifiers);
 
-                // 🌟 Spotlight exclusive input
+                // Spotlight block
                 if state.show_spotlight {
                     match code {
                         KeyCode::Esc => state.show_spotlight = false,
@@ -112,19 +113,18 @@ pub fn launch_ui() -> std::io::Result<()> {
                         KeyCode::Enter => state.execute_spotlight_command(),
                         _ => {}
                     }
-
                     draw(&mut terminal, &mut state, &last_key)?;
                     continue;
                 }
 
-                // 🌐 Toggle spotlight
+                // Toggle spotlight
                 if code == KeyCode::Char('\u{a0}') {
                     state.show_spotlight = !state.show_spotlight;
                     draw(&mut terminal, &mut state, &last_key)?;
                     continue;
                 }
 
-                // 🧭 Module switcher exclusive input
+                // Module switcher
                 if state.module_switcher_open {
                     match code {
                         KeyCode::Tab => {
@@ -144,7 +144,7 @@ pub fn launch_ui() -> std::io::Result<()> {
                     continue;
                 }
 
-                // 🎯 Hotkeys
+                // Hotkey mapping
                 if match_hotkey("quit", code, modifiers, &state) {
                     break;
                 } else if match_hotkey("toggle_triage", code, modifiers, &state) {
@@ -182,22 +182,25 @@ pub fn launch_ui() -> std::io::Result<()> {
                 } else if match_hotkey("start_link", code, modifiers, &state) {
                     if let Some(_) = state.selected_drag_source {
                         if let Some(target) = state.selected {
+                            println!("🔗 Linked to node {}", target); // temporary feedback
                             state.complete_link(target);
                         }
                     } else {
                         state.start_link();
                     }
-                } else if match_hotkey("save", code, modifiers, &state) && state.mode == "zen" {
+                } else if match_hotkey("save", code, modifiers, &state) {
                     state.export_zen_to_file();
                 } else if match_hotkey("mode_zen", code, modifiers, &state) {
                     state.mode = "zen".into();
-                } else if match_hotkey("drill_down", code, modifiers, &state) {
-                    state.drill_down();
                 } else if match_hotkey("toggle_collapsed", code, modifiers, &state) && state.mode == "gemx" {
                     state.toggle_collapse();
+                } else if match_hotkey("drill_down", code, modifiers, &state) {
+                    state.drill_down();
+                } else if match_hotkey("toggle_settings", code, modifiers, &state) {
+                    state.mode = "settings".into();
                 }
 
-                // 🔄 Navigation + Typing
+                // Navigation + Typing
                 match code {
                     KeyCode::Esc => {
                         state.mode = "gemx".into();
@@ -235,6 +238,7 @@ pub fn launch_ui() -> std::io::Result<()> {
                     }
 
                     KeyCode::Char(c) if state.mode == "zen" => {
+                        state.push_undo(); // track Zen typing
                         if let Some(last) = state.zen_buffer.last_mut() {
                             last.push(c);
                         }
