@@ -191,7 +191,7 @@ pub fn render_spotlight<B: Backend>(f: &mut Frame<B>, area: Rect, input: &str) {
 pub fn render_module_switcher<B: Backend>(f: &mut Frame<B>, area: Rect, index: usize) {
     use ratatui::widgets::Wrap;
 
-    let modules = ["Mindmap", "Zen", "Settings", "Triage"];
+    let modules = ["GemX", "Zen", "Settings", "Triage"];
     let selected = modules[index % modules.len()];
     let width = 30;
     let height = 5;

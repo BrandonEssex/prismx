@@ -1,4 +1,3 @@
-// All use declarations remain unchanged
 use ratatui::Terminal;
 use ratatui::backend::{Backend, CrosstermBackend};
 use crossterm::{
@@ -95,21 +94,19 @@ pub fn launch_ui() -> std::io::Result<()> {
 
     loop {
         if state.selected.is_none() && !state.nodes.is_empty() {
-            state.selected = Some(state.nodes.keys().next().copied().unwrap());
+            state.selected = Some(state.nodes.keys().copied().next().unwrap());
         }
 
         if event::poll(std::time::Duration::from_millis(100))? {
             if let Event::Key(KeyEvent { code, modifiers, .. }) = event::read()? {
                 last_key = format!("{:?} + {:?}", code, modifiers);
 
-                // Spotlight block
+                // Spotlight
                 if state.show_spotlight {
                     match code {
                         KeyCode::Esc => state.show_spotlight = false,
                         KeyCode::Char(c) => state.spotlight_input.push(c),
-                        KeyCode::Backspace => {
-                            state.spotlight_input.pop();
-                        }
+                        KeyCode::Backspace => { state.spotlight_input.pop(); }
                         KeyCode::Enter => state.execute_spotlight_command(),
                         _ => {}
                     }
@@ -117,7 +114,7 @@ pub fn launch_ui() -> std::io::Result<()> {
                     continue;
                 }
 
-                // Toggle spotlight
+                // Alt+Space = spotlight
                 if code == KeyCode::Char('\u{a0}') {
                     state.show_spotlight = !state.show_spotlight;
                     draw(&mut terminal, &mut state, &last_key)?;
@@ -139,12 +136,11 @@ pub fn launch_ui() -> std::io::Result<()> {
                         }
                         _ => {}
                     }
-
                     draw(&mut terminal, &mut state, &last_key)?;
                     continue;
                 }
 
-                // Hotkey mapping
+                // Hotkeys
                 if match_hotkey("quit", code, modifiers, &state) {
                     break;
                 } else if match_hotkey("toggle_triage", code, modifiers, &state) {
@@ -182,7 +178,6 @@ pub fn launch_ui() -> std::io::Result<()> {
                 } else if match_hotkey("start_link", code, modifiers, &state) {
                     if let Some(_) = state.selected_drag_source {
                         if let Some(target) = state.selected {
-                            println!("🔗 Linked to node {}", target); // temporary feedback
                             state.complete_link(target);
                         }
                     } else {
@@ -238,7 +233,7 @@ pub fn launch_ui() -> std::io::Result<()> {
                     }
 
                     KeyCode::Char(c) if state.mode == "zen" => {
-                        state.push_undo(); // track Zen typing
+                        state.push_undo();
                         if let Some(last) = state.zen_buffer.last_mut() {
                             last.push(c);
                         }
