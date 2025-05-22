@@ -209,6 +209,18 @@ pub fn launch_ui() -> std::io::Result<()> {
                     KeyCode::Right if state.mode == "gemx" => state.move_focus_right(),
                     KeyCode::Tab if state.mode == "gemx" => state.move_focus_right(),
                     KeyCode::BackTab if state.mode == "gemx" => state.move_focus_left(),
+                    KeyCode::Left if state.mode == "gemx" && modifiers == KeyModifiers::CONTROL => {
+                        state.scroll_x = state.scroll_x.saturating_sub(4);
+                    }
+
+                    KeyCode::Right if state.mode == "gemx" && modifiers == KeyModifiers::CONTROL => {
+                        state.scroll_x = state.scroll_x.saturating_add(4);
+                    }
+
+                    KeyCode::Char('p') if modifiers == KeyModifiers::CONTROL && state.mode == "gemx" => {
+                        state.auto_arrange = !state.auto_arrange;
+                    }
+
 
                     KeyCode::Char(c) if state.mode == "gemx" => {
                         let allowed = modifiers == KeyModifiers::NONE || modifiers == KeyModifiers::SHIFT;
