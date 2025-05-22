@@ -95,4 +95,21 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
         let para = Paragraph::new(label).style(style);
         f.render_widget(para, Rect::new(x.saturating_sub(scroll_x), y, width as u16, 1));
     }
+
+    // Draw link arrows between nodes (horizontal layout)
+    for (source, targets) in &state.link_map {
+        for target in targets {
+            if let (Some(&Coords { x: sx, y: sy }), Some(&Coords { x: tx, y: ty })) = (drawn_at.get(source), drawn_at.get(target)) {
+                if sy == ty && sy < area.height {
+                    let arrow = if sx < tx { "→" } else { "←" };
+                    let mid = (sx + tx) / 2;
+                    let scroll_x = state.scroll_x.max(0) as u16;
+                    if mid >= scroll_x && mid < scroll_x + area.width {
+                        let para = Paragraph::new(arrow);
+                        f.render_widget(para, Rect::new(mid.saturating_sub(scroll_x), sy, 1, 1));
+                    }
+                }
+            }
+        }
+    }
 }

@@ -57,6 +57,7 @@ Alt + Spacebar                # open Spotlight command bar
 Enter / Tab / Ctrl+N         # create mindmap nodes
 Ctrl + .                     # toggle Zen Mode
 Ctrl + Q                     # quit
+Ctrl + ← / → (Cmd on macOS)    # horizontal scroll
 🧱 Architecture
 
 src/

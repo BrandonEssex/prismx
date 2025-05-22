@@ -13,6 +13,7 @@ pub mod keymap;
 pub mod spotlight;
 pub mod theme;
 pub mod clipboard;
+pub mod input;
 pub mod dashboard;
 pub mod render;
 pub mod gemx;

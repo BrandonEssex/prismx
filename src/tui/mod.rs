@@ -195,6 +195,12 @@ pub fn launch_ui() -> std::io::Result<()> {
                     state.mode = "settings".into();
                 }
 
+                // 🍎 macOS fallback for Cmd+Arrow scrolling
+                if crate::input::mac_fallback::handle_cmd_arrows(code, modifiers, &mut state) {
+                    draw(&mut terminal, &mut state, &last_key)?;
+                    continue;
+                }
+
                 // ⌨️ Navigation + Typing
                 match code {
                     KeyCode::Esc => {
