@@ -27,7 +27,7 @@ pub fn render_keymap_overlay<B: Backend>(f: &mut Frame<B>, area: Rect) {
         "Alt+Space = Spotlight",
         "Ctrl+Y  = Triage",
         "Ctrl+H  = Help",
-        "Esc     = Close Overlay / Exit",
+        "Esc     = Close Overlay / Reset",
     ];
 
     let content = Paragraph::new(keys.join("\n"))

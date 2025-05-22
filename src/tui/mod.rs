@@ -101,7 +101,7 @@ pub fn launch_ui() -> std::io::Result<()> {
             if let Event::Key(KeyEvent { code, modifiers, .. }) = event::read()? {
                 last_key = format!("{:?} + {:?}", code, modifiers);
 
-                // Spotlight
+                // 🌟 Spotlight
                 if state.show_spotlight {
                     match code {
                         KeyCode::Esc => state.show_spotlight = false,
@@ -121,7 +121,7 @@ pub fn launch_ui() -> std::io::Result<()> {
                     continue;
                 }
 
-                // Module switcher
+                // 🧭 Module switcher
                 if state.module_switcher_open {
                     match code {
                         KeyCode::Tab => {
@@ -140,7 +140,7 @@ pub fn launch_ui() -> std::io::Result<()> {
                     continue;
                 }
 
-                // Hotkeys
+                // 🎯 Hotkeys
                 if match_hotkey("quit", code, modifiers, &state) {
                     break;
                 } else if match_hotkey("toggle_triage", code, modifiers, &state) {
@@ -148,20 +148,15 @@ pub fn launch_ui() -> std::io::Result<()> {
                 } else if match_hotkey("toggle_keymap", code, modifiers, &state) {
                     state.show_keymap = !state.show_keymap;
                 } else if match_hotkey("create_child", code, modifiers, &state) && state.mode == "gemx" {
-                    state.push_undo();
-                    state.add_child();
+                    state.push_undo(); state.add_child();
                 } else if match_hotkey("create_sibling", code, modifiers, &state) && state.mode == "gemx" {
-                    state.push_undo();
-                    state.add_sibling();
+                    state.push_undo(); state.add_sibling();
                 } else if match_hotkey("add_free_node", code, modifiers, &state) {
-                    state.push_undo();
-                    state.add_free_node();
+                    state.push_undo(); state.add_free_node();
                 } else if match_hotkey("create_branch", code, modifiers, &state) {
-                    state.push_undo();
-                    // placeholder: state.create_branch();
+                    state.push_undo(); /* placeholder for create_branch() */
                 } else if match_hotkey("delete", code, modifiers, &state) && state.mode == "gemx" {
-                    state.push_undo();
-                    state.delete_node();
+                    state.push_undo(); state.delete_node();
                 } else if match_hotkey("undo", code, modifiers, &state) {
                     state.undo();
                 } else if match_hotkey("redo", code, modifiers, &state) {
@@ -200,6 +195,7 @@ pub fn launch_ui() -> std::io::Result<()> {
                     state.mode = "settings".into();
                 }
 
+                // ⌨️ Navigation + Typing
                 match code {
                     KeyCode::Esc => {
                         state.mode = "gemx".into();

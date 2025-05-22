@@ -1,28 +1,30 @@
 use ratatui::prelude::*;
 use ratatui::widgets::{Block, Borders, Paragraph};
-
 use crate::layout::{layout_nodes, Coords};
-use crate::node::{Node, NodeID, NodeMap};
 use crate::state::AppState;
 
-pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
+pub fn render_gemx<B: Backend>(
+    f: &mut Frame<B>,
+    area: Rect,
+    state: &AppState,
+) {
     let block = Block::default()
         .title(if state.auto_arrange { "Gemx [Auto-Arrange]" } else { "Gemx" })
         .borders(Borders::ALL);
     f.render_widget(block, area);
 
-    let mut drawn_at = std::collections::HashMap::new();
-    let mut y = 1;
-
-    let roots: Vec<NodeID> = if let Some(root_id) = state.drawing_root {
-        vec![root_id]
+    let roots = if let Some(drill_root) = state.drawing_root {
+        vec![drill_root]
     } else {
         state.root_nodes.clone()
     };
 
+    let mut drawn_at = std::collections::HashMap::new();
+    let mut y_cursor = 1;
+
     for &root_id in &roots {
-        let layout = layout_nodes(&state.nodes, root_id, 2, y);
-        y = layout.values().map(|c| c.y).max().unwrap_or(y).saturating_add(2);
+        let layout = layout_nodes(&state.nodes, root_id, 2, y_cursor);
+        y_cursor = layout.values().map(|c| c.y).max().unwrap_or(y_cursor).saturating_add(2);
         drawn_at.extend(layout);
     }
 
@@ -40,12 +42,12 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
             format!("  {}", node.label)
         };
 
-        if let Some(linked_id) = state.link_map.get(&node_id).and_then(|v| v.first()) {
+        if let Some(target_id) = state.link_map.get(&node_id).and_then(|v| v.first()) {
             label.push_str(" 📎");
         }
 
-        let width = label.len().min((area.width - x.saturating_sub(state.scroll_x as u16)) as usize);
         let scroll_x = state.scroll_x.max(0) as u16;
+        let width = label.len().min((area.width - x.saturating_sub(scroll_x)) as usize);
 
         let style = if is_selected {
             Style::default()
