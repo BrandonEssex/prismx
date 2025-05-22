@@ -23,6 +23,10 @@ pub struct AppState {
     pub redo_stack: Vec<NodeMap>,
     pub selected_drag_source: Option<NodeID>,
     pub link_map: std::collections::HashMap<NodeID, Vec<NodeID>>,
+    pub auto_arrange: bool,
+    pub scroll_x: i16,
+    pub drawing_root: Option<NodeID>,
+
 }
 
 impl Default for AppState {
@@ -53,6 +57,10 @@ impl Default for AppState {
             redo_stack: Vec::new(),
             selected_drag_source: None,
             link_map: std::collections::HashMap::new(),
+            auto_arrange: true,
+            scroll_x: 0,
+            drawing_root: None,
+
         }
     }
 }
