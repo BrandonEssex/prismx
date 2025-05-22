@@ -7,7 +7,7 @@ pub struct Coords {
     pub y: u16,
 }
 
-/// Horizontal auto-arrange layout logic
+/// Recursively assigns (x, y) positions to nodes based on depth
 pub fn layout_nodes(
     nodes: &NodeMap,
     root_id: NodeID,
@@ -19,6 +19,7 @@ pub fn layout_nodes(
     map
 }
 
+/// Internal layout logic for x/y assignment
 fn layout_recursive(
     nodes: &NodeMap,
     node_id: NodeID,
@@ -37,12 +38,11 @@ fn layout_recursive(
         return y;
     }
 
-    let mut child_y = y;
-    let mut child_x = x + 15;
+    let mut current_y = y + 1;
 
     for child_id in &node.children {
-        child_y = layout_recursive(nodes, *child_id, child_x, child_y, out).saturating_add(2);
+        current_y = layout_recursive(nodes, *child_id, x + 10, current_y, out) + 1;
     }
 
-    child_y - 1
+    current_y - 1
 }
