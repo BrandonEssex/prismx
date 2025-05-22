@@ -27,6 +27,8 @@ pub struct AppState {
     pub scroll_x: i16,
     pub snap_to_grid: bool,
     pub drawing_root: Option<NodeID>,
+    pub dragging: Option<NodeID>,
+    pub last_mouse: Option<(u16, u16)>,
 
 }
 
@@ -62,6 +64,8 @@ impl Default for AppState {
             scroll_x: 0,
             snap_to_grid: false,
             drawing_root: None,
+            dragging: None,
+            last_mouse: None,
 
         }
     }
