@@ -34,7 +34,7 @@ pub fn node_at_position(state: &AppState, x: u16, y: u16) -> Option<NodeID> {
         if ny == y {
             let node = &state.nodes[&id];
             let start_x = nx.saturating_sub(state.scroll_x.max(0) as u16);
-            let end_x = start_x + node.label.len() as u16 + 2; // prefix width
+            let end_x = start_x + node.label.len() as u16 + 2;
             if x >= start_x && x < end_x {
                 return Some(id);
             }
@@ -66,6 +66,7 @@ pub fn end_drag(state: &mut AppState) {
     state.last_mouse = None;
 }
 
+/// Drag a node and its children recursively.
 fn drag_recursive(id: NodeID, dx: i16, dy: i16, nodes: &mut NodeMap, snap: bool) {
     if let Some(node) = nodes.get_mut(&id) {
         node.x += dx;
@@ -81,6 +82,7 @@ fn drag_recursive(id: NodeID, dx: i16, dy: i16, nodes: &mut NodeMap, snap: bool)
     }
 }
 
+/// Snap to nearest 20px grid unit.
 fn snap_value(v: i16) -> i16 {
     ((v + 10) / 20) * 20
 }
