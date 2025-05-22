@@ -17,12 +17,16 @@ pub fn match_hotkey(action: &str, code: KeyCode, mods: KeyModifiers, state: &App
         };
 
         let mod_match = match m {
-            "ctrl" => mods.contains(KeyModifiers::CONTROL),
-            "alt" => mods.contains(KeyModifiers::ALT),
-            "shift" => mods.contains(KeyModifiers::SHIFT),
+            "ctrl" => mods == KeyModifiers::CONTROL,
+            "shift" => mods == KeyModifiers::SHIFT,
+            "alt" => mods == KeyModifiers::ALT,
+            "ctrl+shift" | "ctrl-shift" => {
+                mods.contains(KeyModifiers::CONTROL) && mods.contains(KeyModifiers::SHIFT)
+            }
             "" => mods.is_empty() || mods == KeyModifiers::NONE,
             _ => false,
         };
+
 
         let code_match = match k {
             "tab" => code == KeyCode::Tab,
@@ -47,6 +51,9 @@ pub fn match_hotkey(action: &str, code: KeyCode, mods: KeyModifiers, state: &App
             "m" => code == KeyCode::Char('m'),
             "space" => code == KeyCode::Char(' '),
             "." => code == KeyCode::Char('.'),
+            "r" => code == KeyCode::Char('r'),
+            "l" => code == KeyCode::Char('l'),
+
 
             _ => false,
         };
