@@ -1,0 +1,43 @@
+name: PrismX CI – Ubuntu & macOS
+
+on:
+  push:
+    branches:
+      - main
+      - patch/**
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  test:
+    name: Build & Patch Test (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v3
+
+      - name: 🦀 Install Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
+
+      - name: 📦 Install dependencies
+        run: |
+          sudo apt-get update || true
+          sudo apt-get install -y libxcb-shape0-dev libxcb-xfixes0-dev || true
+        if: matrix.os == 'ubuntu-latest'
+
+      - name: 🛠️ Build project
+        run: cargo build --release
+
+      - name: ✅ Run test plan
+        run: |
+          chmod +x patches/patch-25.43-link-arrows-mac-scroll/test_plan.sh
+          ./patches/patch-25.43-link-arrows-mac-scroll/test_plan.sh
+        shell: bash
