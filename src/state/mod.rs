@@ -262,6 +262,65 @@ impl AppState {
         }
     }
 
+    pub fn push_undo(&mut self) {
+        self.undo_stack.push(self.nodes.clone());
+        self.redo_stack.clear(); // Clear redo on new action
+    }
+
+    pub fn undo(&mut self) {
+        if let Some(prev) = self.undo_stack.pop() {
+            self.redo_stack.push(self.nodes.clone());
+            self.nodes = prev;
+        }
+    }
+
+    pub fn redo(&mut self) {
+        if let Some(next) = self.redo_stack.pop() {
+            self.undo_stack.push(self.nodes.clone());
+            self.nodes = next;
+        }
+    }
+
+    pub fn start_drag(&mut self) {
+        self.selected_drag_source = self.selected;
+    }
+
+    pub fn complete_drag(&mut self, target_id: NodeID) {
+        if let Some(source_id) = self.selected_drag_source.take() {
+            if source_id == target_id {
+                return; // prevent self-parenting
+            }
+
+            // Remove from old parent
+            if let Some(old_parent_id) = self.nodes.get(&source_id).and_then(|n| n.parent) {
+                if let Some(parent) = self.nodes.get_mut(&old_parent_id) {
+                    parent.children.retain(|&id| id != source_id);
+                }
+            } else {
+                self.root_nodes.retain(|&id| id != source_id);
+            }
+
+            // Reparent
+            if let Some(source_node) = self.nodes.get_mut(&source_id) {
+                source_node.parent = Some(target_id);
+            }
+
+            self.nodes.get_mut(&target_id).map(|t| t.children.push(source_id));
+        }
+    }
+
+    pub fn start_link(&mut self) {
+        self.selected_drag_source = self.selected;
+    }
+
+    pub fn complete_link(&mut self, target_id: NodeID) {
+        if let Some(source_id) = self.selected_drag_source.take() {
+            if source_id != target_id {
+                self.link_map.entry(source_id).or_default().push(target_id);
+            }
+        }
+    }
+
     pub fn get_module_by_index(&self) -> &str {
         match self.module_switcher_index % 4 {
             0 => "gemx",
