@@ -25,6 +25,7 @@ pub struct AppState {
     pub link_map: std::collections::HashMap<NodeID, Vec<NodeID>>,
     pub auto_arrange: bool,
     pub scroll_x: i16,
+    pub snap_to_grid: bool,
     pub drawing_root: Option<NodeID>,
 
 }
@@ -59,6 +60,7 @@ impl Default for AppState {
             link_map: std::collections::HashMap::new(),
             auto_arrange: true,
             scroll_x: 0,
+            snap_to_grid: false,
             drawing_root: None,
 
         }
@@ -287,6 +289,10 @@ impl AppState {
             self.undo_stack.push(self.nodes.clone());
             self.nodes = next;
         }
+    }
+
+    pub fn toggle_snap_grid(&mut self) {
+        self.snap_to_grid = !self.snap_to_grid;
     }
 
     pub fn start_drag(&mut self) {

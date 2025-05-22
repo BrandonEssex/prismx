@@ -9,6 +9,8 @@ pub struct Node {
     pub parent: Option<NodeID>,
     pub children: Vec<NodeID>,
     pub collapsed: bool,
+    pub x: i16,
+    pub y: i16,
 }
 
 impl Node {
@@ -19,6 +21,8 @@ impl Node {
             parent,
             children: vec![],
             collapsed: false,
+            x: 0,
+            y: 0,
         }
     }
 }

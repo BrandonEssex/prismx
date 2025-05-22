@@ -21,6 +21,7 @@ pub fn render_keymap_overlay<B: Backend>(f: &mut Frame<B>, area: Rect) {
         "Ctrl+T  = Toggle Collapse",
         "Ctrl+X  = Save Zen",
         "Ctrl+P  = Toggle Auto-Arrange",
+        "Ctrl+G  = Snap Grid",
         "Alt+← / Alt+→ = Horizontal Scroll",
         "Ctrl+Space = Module Switcher",
         "Ctrl+.  = Settings",

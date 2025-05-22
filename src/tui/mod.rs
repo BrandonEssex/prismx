@@ -221,6 +221,10 @@ pub fn launch_ui() -> std::io::Result<()> {
                         state.auto_arrange = !state.auto_arrange;
                     }
 
+                    KeyCode::Char('g') if modifiers == KeyModifiers::CONTROL && state.mode == "gemx" => {
+                        state.toggle_snap_grid();
+                    }
+
                     KeyCode::Up if state.mode == "gemx" => state.move_focus_up(),
                     KeyCode::Down if state.mode == "gemx" => state.move_focus_down(),
                     KeyCode::Left if state.mode == "gemx" => state.move_focus_left(),
