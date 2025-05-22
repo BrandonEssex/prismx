@@ -1,7 +1,8 @@
 use ratatui::prelude::*;
 use ratatui::widgets::{Block, Borders, Paragraph};
-use crate::layout::{layout_nodes, Coords};
+use crate::layout::Coords;
 use crate::state::AppState;
+use crate::gemx::render::calculate_positions;
 use std::collections::HashMap;
 
 pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
@@ -20,7 +21,7 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
     let mut y = 1;
 
     for &root_id in &roots {
-        let layout = layout_nodes(&state.nodes, root_id, 2, y);
+        let layout = calculate_positions(state, root_id);
         let max_y = layout.values().map(|c| c.y).max().unwrap_or(y);
         drawn_at.extend(layout);
         y = max_y.saturating_add(3);

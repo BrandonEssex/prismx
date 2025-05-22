@@ -185,6 +185,8 @@ pub fn launch_ui() -> std::io::Result<()> {
                     state.export_zen_to_file();
                 } else if match_hotkey("mode_zen", code, modifiers, &state) {
                     state.mode = "zen".into();
+                } else if match_hotkey("toggle_snap", code, modifiers, &state) {
+                    state.toggle_snap_to_grid();
                 } else if match_hotkey("toggle_collapsed", code, modifiers, &state) && state.mode == "gemx" {
                     state.toggle_collapse();
                 } else if match_hotkey("drill_down", code, modifiers, &state) {

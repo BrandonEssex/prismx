@@ -9,6 +9,10 @@ pub struct Node {
     pub parent: Option<NodeID>,
     pub children: Vec<NodeID>,
     pub collapsed: bool,
+    /// X coordinate when manually positioned
+    pub x: i32,
+    /// Y coordinate when manually positioned
+    pub y: i32,
 }
 
 impl Node {
@@ -19,6 +23,8 @@ impl Node {
             parent,
             children: vec![],
             collapsed: false,
+            x: 0,
+            y: 0,
         }
     }
 }

@@ -26,6 +26,7 @@ pub struct AppState {
     pub auto_arrange: bool,
     pub scroll_x: i16,
     pub drawing_root: Option<NodeID>,
+    pub snap_to_grid: bool,
 
 }
 
@@ -60,6 +61,7 @@ impl Default for AppState {
             auto_arrange: true,
             scroll_x: 0,
             drawing_root: None,
+            snap_to_grid: false,
 
         }
     }
@@ -287,6 +289,23 @@ impl AppState {
             self.undo_stack.push(self.nodes.clone());
             self.nodes = next;
         }
+    }
+
+    /// Move a node by a delta, applying optional snap-to-grid.
+    pub fn drag_node_position(&mut self, node_id: NodeID, dx: i16, dy: i16) {
+        if let Some(node) = self.nodes.get_mut(&node_id) {
+            node.x = node.x.saturating_add(dx as i32);
+            node.y = node.y.saturating_add(dy as i32);
+            if self.snap_to_grid {
+                node.x = ((node.x + 10) / 20) * 20;
+                node.y = ((node.y + 10) / 20) * 20;
+            }
+        }
+    }
+
+    /// Toggle snap-to-grid behavior
+    pub fn toggle_snap_to_grid(&mut self) {
+        self.snap_to_grid = !self.snap_to_grid;
     }
 
     pub fn start_drag(&mut self) {
