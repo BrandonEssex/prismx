@@ -1,6 +1,5 @@
 use ratatui::prelude::*;
 use ratatui::widgets::{Block, Borders, Paragraph};
-
 use crate::layout::{layout_nodes, Coords};
 use crate::node::{NodeID, NodeMap};
 
@@ -33,11 +32,15 @@ pub fn render_gemx<B: Backend>(
         let node = &nodes[&node_id];
         let is_selected = Some(node_id) == selected;
 
-        let label = if is_selected {
+        let mut label = if is_selected {
             format!("> {}", node.label)
         } else {
             format!("  {}", node.label)
         };
+
+        if let Some(linked) = node.link.as_ref() {
+            label.push_str(" 📎");
+        }
 
         let width = label.len().min((area.width - x) as usize);
 
@@ -53,4 +56,3 @@ pub fn render_gemx<B: Backend>(
         f.render_widget(para, Rect::new(x, y, width as u16, 1));
     }
 }
-
