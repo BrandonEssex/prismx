@@ -1,6 +1,5 @@
 use ratatui::prelude::*;
 use ratatui::widgets::{Block, Borders, Paragraph};
-
 use crate::layout::{layout_nodes, Coords};
 use crate::state::AppState;
 
@@ -14,20 +13,20 @@ pub fn render_gemx<B: Backend>(
         .borders(Borders::ALL);
     f.render_widget(block, area);
 
-    let root_ids = if let Some(drill_root) = state.drawing_root {
+    let roots = if let Some(drill_root) = state.drawing_root {
         vec![drill_root]
     } else {
         state.root_nodes.clone()
     };
 
     let mut drawn_at = std::collections::HashMap::new();
-    let mut y = 1;
+    let mut y_cursor = 1;
 
-    for &root_id in &root_ids {
-        let layout = layout_nodes(&state.nodes, root_id, 2, y);
-        let max_y = layout.values().map(|c| c.y).max().unwrap_or(y);
+    for &root_id in &roots {
+        let layout = layout_nodes(&state.nodes, root_id, 2, y_cursor);
+        let max_y = layout.values().map(|c| c.y).max().unwrap_or(y_cursor);
         drawn_at.extend(layout);
-        y = max_y.saturating_add(3); // Add vertical padding for next root
+        y_cursor = max_y.saturating_add(3);
     }
 
     for (&node_id, &Coords { x, y }) in &drawn_at {

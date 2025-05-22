@@ -1,56 +1,48 @@
 use std::collections::HashMap;
-use crate::node::{Node, NodeID};
+use crate::node::{NodeID, NodeMap};
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct Coords {
     pub x: u16,
     pub y: u16,
 }
 
-/// Horizontally auto-arranges nodes into a visual grid layout.
+/// Horizontal auto-arrange layout logic
 pub fn layout_nodes(
-    nodes: &HashMap<NodeID, Node>,
-    root: NodeID,
-    offset_x: u16,
-    offset_y: u16,
+    nodes: &NodeMap,
+    root_id: NodeID,
+    start_x: u16,
+    start_y: u16,
 ) -> HashMap<NodeID, Coords> {
-    let mut positions = HashMap::new();
-    let mut max_y = offset_y;
+    let mut map = HashMap::new();
+    layout_recursive(nodes, root_id, start_x, start_y, &mut map);
+    map
+}
 
-    fn layout_recursive(
-        id: NodeID,
-        nodes: &HashMap<NodeID, Node>,
-        x: &mut u16,
-        y: &mut u16,
-        positions: &mut HashMap<NodeID, Coords>,
-        depth: u16,
-    ) {
-        let mut current_y = *y;
-        *y += 2;
+fn layout_recursive(
+    nodes: &NodeMap,
+    node_id: NodeID,
+    x: u16,
+    y: u16,
+    out: &mut HashMap<NodeID, Coords>,
+) -> u16 {
+    out.insert(node_id, Coords { x, y });
 
-        let node = &nodes[&id];
+    let node = match nodes.get(&node_id) {
+        Some(n) => n,
+        None => return y,
+    };
 
-        if node.collapsed || node.children.is_empty() {
-            positions.insert(id, Coords { x: *x, y: current_y });
-            return;
-        }
-
-        let start_x = *x;
-        for &child_id in &node.children {
-            layout_recursive(child_id, nodes, x, y, positions, depth + 1);
-            *x += 2;
-        }
-
-        let mid_x = (*x + start_x).saturating_sub(2) / 2;
-        positions.insert(id, Coords { x: mid_x, y: current_y });
+    if node.collapsed || node.children.is_empty() {
+        return y;
     }
 
-    let mut x = offset_x;
-    for &root_id in nodes[&root].children.iter() {
-        layout_recursive(root_id, nodes, &mut x, &mut max_y, &mut positions, 0);
-        x += 4; // spacing between subtrees
+    let mut child_y = y;
+    let mut child_x = x + 15;
+
+    for child_id in &node.children {
+        child_y = layout_recursive(nodes, *child_id, child_x, child_y, out).saturating_add(2);
     }
 
-    positions.insert(root, Coords { x: offset_x, y: offset_y }); // place root at origin
-    positions
+    child_y - 1
 }
