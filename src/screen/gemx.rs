@@ -2,14 +2,10 @@ use ratatui::prelude::*;
 use ratatui::widgets::{Block, Borders, Paragraph};
 
 use crate::layout::{layout_nodes, Coords};
-use crate::node::NodeID;
+use crate::node::{Node, NodeID, NodeMap};
 use crate::state::AppState;
 
-pub fn render_gemx<B: Backend>(
-    f: &mut Frame<B>,
-    area: Rect,
-    state: &AppState,
-) {
+pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
     let block = Block::default()
         .title(if state.auto_arrange { "Gemx [Auto-Arrange]" } else { "Gemx" })
         .borders(Borders::ALL);
@@ -24,19 +20,11 @@ pub fn render_gemx<B: Backend>(
         state.root_nodes.clone()
     };
 
-    // Use layout engine if auto-arrange is enabled
-    if state.auto_arrange {
-        for &root_id in &roots {
-            let layout = layout_nodes(&state.nodes, root_id, 2, y);
-            y = layout.values().map(|c| c.y).max().unwrap_or(y).saturating_add(2);
-            drawn_at.extend(layout);
-        }
-    } else {
-        // TODO: support manual XY in future
-        return;
+    for &root_id in &roots {
+        let layout = layout_nodes(&state.nodes, root_id, 2, y);
+        y = layout.values().map(|c| c.y).max().unwrap_or(y).saturating_add(2);
+        drawn_at.extend(layout);
     }
-
-    let scroll_offset = state.scroll_x.max(0) as u16;
 
     for (&node_id, &Coords { x, y }) in &drawn_at {
         if y >= area.height {
@@ -52,20 +40,22 @@ pub fn render_gemx<B: Backend>(
             format!("  {}", node.label)
         };
 
-        if state.link_map.get(&node_id).map_or(false, |v| !v.is_empty()) {
+        if let Some(linked_id) = state.link_map.get(&node_id).and_then(|v| v.first()) {
             label.push_str(" 📎");
         }
 
-        let width = label.len().min((area.width - x.saturating_sub(scroll_offset)) as usize);
-        let draw_x = x.saturating_sub(scroll_offset);
+        let width = label.len().min((area.width - x.saturating_sub(state.scroll_x as u16)) as usize);
+        let scroll_x = state.scroll_x.max(0) as u16;
 
         let style = if is_selected {
-            Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD | Modifier::UNDERLINED)
+            Style::default()
+                .fg(Color::Yellow)
+                .add_modifier(Modifier::BOLD | Modifier::UNDERLINED)
         } else {
             Style::default().fg(Color::White)
         };
 
         let para = Paragraph::new(label).style(style);
-        f.render_widget(para, Rect::new(draw_x, y, width as u16, 1));
+        f.render_widget(para, Rect::new(x.saturating_sub(scroll_x), y, width as u16, 1));
     }
 }
