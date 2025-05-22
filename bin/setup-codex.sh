@@ -1,23 +1,25 @@
 #!/bin/bash
 set -e
 
-echo "🔧 PrismX Setup Starting..."
+echo "🔧 Running PrismX Codex Setup..."
 
-# Skip curl/rustup if Rust is already pre-installed
+# Move to actual project directory
+cd /workspace/prismx
+
+# Check that Rust is available
 if ! command -v cargo &> /dev/null; then
-  echo "❌ Rust toolchain not found. Please preinstall Rust in this environment."
+  echo "❌ Rust toolchain not found. Cannot continue."
   exit 127
 fi
 
-# Build project
-echo "🛠️ Running cargo build..."
+# Build the project once (with network access)
+echo "🛠️ Building PrismX..."
 cargo build --release
 
-# Run test plan if present
-if [[ -x patches/patch-25.44-drag-drop-snap/test_plan.sh ]]; then
-  ./patches/patch-25.44-drag-drop-snap/test_plan.sh
-else
-  echo "⚠️ No test plan found for current patch."
-fi
+# Ensure the offline tester is ready
+echo "🔐 Setting up offline tools..."
+chmod +x /workspace/prismx/bin/offline-patch-check.sh
+chmod +x /workspace/prismx/bin/reset-codex-env.sh
+chmod +x /workspace/prismx/bin/commit-patch.sh
 
-echo "✅ Setup complete."
+echo "✅ PrismX environment is ready for offline patching and testing."
