@@ -16,6 +16,9 @@
 | `Ctrl + Shift + M` | Move/Drag node             |
 | `Ctrl + ← / →`   | Horizontal scroll            |
 | `Cmd + ← / →` (macOS) | Horizontal scroll       |
+| `Ctrl + =`     | Zoom in                      |
+| `Ctrl + -`     | Zoom out                     |
+| `Ctrl + 0`     | Reset zoom                   |
 
 ---
 

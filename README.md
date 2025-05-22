@@ -58,6 +58,8 @@ Enter / Tab / Ctrl+N         # create mindmap nodes
 Ctrl + .                     # toggle Zen Mode
 Ctrl + Q                     # quit
 Ctrl + ← / → (Cmd on macOS)    # horizontal scroll
+Ctrl += / Ctrl -            # zoom in/out mindmap
+Ctrl + 0                    # reset zoom
 🧱 Architecture
 
 src/

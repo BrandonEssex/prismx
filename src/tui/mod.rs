@@ -225,6 +225,18 @@ pub fn launch_ui() -> std::io::Result<()> {
                         state.toggle_snap_grid();
                     }
 
+                    KeyCode::Char('=') if modifiers == KeyModifiers::CONTROL && state.mode == "gemx" => {
+                        state.zoom_in();
+                    }
+
+                    KeyCode::Char('-') if modifiers == KeyModifiers::CONTROL && state.mode == "gemx" => {
+                        state.zoom_out();
+                    }
+
+                    KeyCode::Char('0') if modifiers == KeyModifiers::CONTROL && state.mode == "gemx" => {
+                        state.reset_zoom();
+                    }
+
                     KeyCode::Up if state.mode == "gemx" => state.move_focus_up(),
                     KeyCode::Down if state.mode == "gemx" => state.move_focus_down(),
                     KeyCode::Left if state.mode == "gemx" => state.move_focus_left(),
