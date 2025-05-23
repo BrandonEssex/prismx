@@ -26,14 +26,17 @@ pub fn node_at_position(state: &AppState, x: u16, y: u16) -> Option<NodeID> {
         }
     } else {
         for (id, node) in &state.nodes {
-            layout.insert(*id, Coords { x: node.x as u16, y: node.y as u16 });
+            layout.insert(*id, Coords { x: node.x, y: node.y });
         }
     }
 
     for (&id, &Coords { x: nx, y: ny }) in &layout {
-        if ny == y {
+        let draw_x = (nx - state.scroll_x).max(0) as u16;
+        let draw_y = (ny - state.scroll_y).max(0) as u16;
+
+        if draw_y == y {
             let node = &state.nodes[&id];
-            let start_x = nx.saturating_sub(state.scroll_x.max(0) as u16);
+            let start_x = draw_x;
             let end_x = start_x + node.label.len() as u16 + 2;
             if x >= start_x && x < end_x {
                 return Some(id);

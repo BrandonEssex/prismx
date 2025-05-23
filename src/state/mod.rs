@@ -25,6 +25,7 @@ pub struct AppState {
     pub link_map: std::collections::HashMap<NodeID, Vec<NodeID>>,
     pub auto_arrange: bool,
     pub scroll_x: i16,
+    pub scroll_y: i16,
     pub snap_to_grid: bool,
     pub drawing_root: Option<NodeID>,
     pub dragging: Option<NodeID>,

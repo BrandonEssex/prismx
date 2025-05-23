@@ -30,7 +30,7 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
     } else {
         fn collect(nodes: &NodeMap, id: NodeID, out: &mut HashMap<NodeID, Coords>) {
             if let Some(n) = nodes.get(&id) {
-                out.insert(id, Coords { x: n.x as u16, y: n.y as u16 });
+                out.insert(id, Coords { x: n.x, y: n.y });
                 if !n.collapsed {
                     for child in &n.children {
                         collect(nodes, *child, out);
@@ -44,7 +44,10 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
     }
 
     for (&node_id, &Coords { x, y }) in &drawn_at {
-        if y >= area.height {
+        let draw_x = (x - state.scroll_x).max(0) as u16;
+        let draw_y = (y - state.scroll_y).max(0) as u16;
+
+        if draw_y >= area.height {
             continue;
         }
 
@@ -52,7 +55,7 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
         let is_selected = Some(node_id) == state.selected;
 
         let parent_glyph = if let Some(parent_id) = node.parent {
-            let parent_y = drawn_at.get(&parent_id).map(|c| c.y).unwrap_or(y.saturating_sub(1));
+            let parent_y = drawn_at.get(&parent_id).map(|c| c.y).unwrap_or(y - 1);
             if parent_y < y { Some("│ ") } else { Some("  ") }
         } else { None };
 
@@ -72,8 +75,7 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
             label.push_str(" 📎");
         }
 
-        let scroll_x = state.scroll_x.max(0) as u16;
-        let width = label.len().min((area.width - x.saturating_sub(scroll_x)) as usize);
+        let width = label.len().min((area.width - draw_x) as usize);
 
         let style = if is_selected {
             Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD | Modifier::UNDERLINED)
@@ -82,20 +84,21 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
         };
 
         let para = Paragraph::new(label).style(style);
-        f.render_widget(para, Rect::new(x.saturating_sub(scroll_x), y, width as u16, 1));
+        f.render_widget(para, Rect::new(draw_x, draw_y, width as u16, 1));
     }
 
-    // Draw link arrows between nodes (horizontal layout)
+    // Draw arrows
     for (source, targets) in &state.link_map {
         for target in targets {
             if let (Some(&Coords { x: sx, y: sy }), Some(&Coords { x: tx, y: ty })) = (drawn_at.get(source), drawn_at.get(target)) {
-                if sy == ty && sy < area.height {
+                if sy == ty {
                     let arrow = if sx < tx { "→" } else { "←" };
                     let mid = (sx + tx) / 2;
-                    let scroll_x = state.scroll_x.max(0) as u16;
-                    if mid >= scroll_x && mid < scroll_x + area.width {
+                    let draw_mid = (mid - state.scroll_x).max(0) as u16;
+                    let draw_sy = (sy - state.scroll_y).max(0) as u16;
+                    if draw_sy < area.height && draw_mid < area.width {
                         let para = Paragraph::new(arrow);
-                        f.render_widget(para, Rect::new(mid.saturating_sub(scroll_x), sy, 1, 1));
+                        f.render_widget(para, Rect::new(draw_mid, draw_sy, 1, 1));
                     }
                 }
             }
