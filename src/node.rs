@@ -11,6 +11,7 @@ pub struct Node {
     pub collapsed: bool,
     pub x: i16,
     pub y: i16,
+    pub is_positioned: bool,
 }
 
 impl Node {
@@ -23,6 +24,7 @@ impl Node {
             collapsed: false,
             x: 0,
             y: 0,
+            is_positioned: false,
         }
     }
 }

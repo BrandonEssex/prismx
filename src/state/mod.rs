@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 use crate::node::{Node, NodeID, NodeMap};
+use crate::gemx::layout::{SpacingProfile, DEFAULT_SPACING_PROFILE};
 
 mod hotkeys;
 pub use hotkeys::*;
@@ -29,6 +30,8 @@ pub struct AppState {
     pub drawing_root: Option<NodeID>,
     pub dragging: Option<NodeID>,
     pub last_mouse: Option<(u16, u16)>,
+    pub zoom_scale: f32,
+    pub layout_spacing_profile: SpacingProfile,
     pub debug_input_mode: bool,
     pub status_message: String,
     pub status_message_last_updated: Option<std::time::Instant>,
@@ -69,6 +72,8 @@ impl Default for AppState {
             drawing_root: None,
             dragging: None,
             last_mouse: None,
+            zoom_scale: 1.0,
+            layout_spacing_profile: DEFAULT_SPACING_PROFILE,
             debug_input_mode: true,
             status_message: String::new(),
             status_message_last_updated: None,
@@ -303,6 +308,24 @@ impl AppState {
 
     pub fn toggle_snap_grid(&mut self) {
         self.snap_to_grid = !self.snap_to_grid;
+    }
+
+    pub fn set_zoom_scale(&mut self, scale: f32) {
+        self.zoom_scale = scale.clamp(0.5, 2.0);
+    }
+
+    pub fn zoom_in(&mut self) {
+        let new = self.zoom_scale + 0.1;
+        self.set_zoom_scale(new);
+    }
+
+    pub fn zoom_out(&mut self) {
+        let new = self.zoom_scale - 0.1;
+        self.set_zoom_scale(new);
+    }
+
+    pub fn reset_zoom(&mut self) {
+        self.zoom_scale = 1.0;
     }
 
     pub fn start_drag(&mut self) {

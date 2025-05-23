@@ -1,6 +1,7 @@
 use crate::state::AppState;
 use crate::node::{NodeID, NodeMap};
 use crate::layout::{layout_nodes, Coords};
+use crate::gemx::layout::{spacing_for, DEFAULT_SPACING_PROFILE};
 use std::collections::HashMap;
 
 /// Toggle snap-to-grid mode
@@ -19,7 +20,7 @@ pub fn node_at_position(state: &AppState, x: u16, y: u16) -> Option<NodeID> {
         };
         let mut row = 1;
         for &root_id in &roots {
-            let l = layout_nodes(&state.nodes, root_id, 2, row);
+            let l = layout_nodes(&state.nodes, root_id, 2, row, DEFAULT_SPACING_PROFILE);
             let max_y = l.values().map(|c| c.y).max().unwrap_or(row);
             layout.extend(l);
             row = max_y.saturating_add(3);
@@ -30,10 +31,13 @@ pub fn node_at_position(state: &AppState, x: u16, y: u16) -> Option<NodeID> {
         }
     }
 
+    let spacing = spacing_for(DEFAULT_SPACING_PROFILE);
     for (&id, &Coords { x: nx, y: ny }) in &layout {
-        if ny == y {
+        let draw_x = (nx as f32 * spacing.x as f32 * state.zoom_scale) as u16;
+        let draw_y = (ny as f32 * spacing.y as f32 * state.zoom_scale) as u16;
+        if draw_y == y {
             let node = &state.nodes[&id];
-            let start_x = nx.saturating_sub(state.scroll_x.max(0) as u16);
+            let start_x = draw_x.saturating_sub(state.scroll_x.max(0) as u16);
             let end_x = start_x + node.label.len() as u16 + 2;
             if x >= start_x && x < end_x {
                 return Some(id);
@@ -53,9 +57,12 @@ pub fn start_drag(state: &mut AppState, id: NodeID, x: u16, y: u16) {
 /// Update dragging node position based on new mouse coords.
 pub fn drag_update(state: &mut AppState, x: u16, y: u16) {
     if let (Some(id), Some((lx, ly))) = (state.dragging, state.last_mouse) {
-        let dx = x as i16 - lx as i16;
-        let dy = y as i16 - ly as i16;
-        drag_recursive(id, dx, dy, &mut state.nodes, state.snap_to_grid);
+        let spacing = spacing_for(DEFAULT_SPACING_PROFILE);
+        let dx = ((x as f32 - lx as f32) / (spacing.x as f32 * state.zoom_scale)) as i16;
+        let dy = ((y as f32 - ly as f32) / (spacing.y as f32 * state.zoom_scale)) as i16;
+        if dx != 0 || dy != 0 {
+            drag_recursive(id, dx, dy, &mut state.nodes, state.snap_to_grid);
+        }
         state.last_mouse = Some((x, y));
     }
 }
@@ -71,6 +78,7 @@ fn drag_recursive(id: NodeID, dx: i16, dy: i16, nodes: &mut NodeMap, snap: bool)
     if let Some(node) = nodes.get_mut(&id) {
         node.x += dx;
         node.y += dy;
+        node.is_positioned = true;
         if snap {
             node.x = snap_value(node.x);
             node.y = snap_value(node.y);
@@ -84,5 +92,5 @@ fn drag_recursive(id: NodeID, dx: i16, dy: i16, nodes: &mut NodeMap, snap: bool)
 
 /// Snap to nearest 20px grid unit.
 fn snap_value(v: i16) -> i16 {
-    ((v + 10) / 20) * 20
+    v
 }
