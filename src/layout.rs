@@ -9,6 +9,7 @@ pub struct Coords {
 
 pub const SIBLING_SPACING_X: i16 = 3;
 pub const CHILD_SPACING_Y: i16 = 1;
+pub const FREE_GRID_COLUMNS: usize = 4;
 pub const MAX_LAYOUT_DEPTH: usize = 50;
 
 /// Public layout function

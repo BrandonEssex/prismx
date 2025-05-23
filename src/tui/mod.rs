@@ -181,7 +181,8 @@ pub fn launch_ui() -> std::io::Result<()> {
                 } else if match_hotkey("create_sibling", code, modifiers, &state) && state.mode == "gemx" {
                     state.push_undo(); state.add_sibling();
                 } else if match_hotkey("add_free_node", code, modifiers, &state) {
-                    state.push_undo(); state.add_free_node();
+                    state.push_undo();
+                    crate::gemx::interaction::spawn_free_node(&mut state);
                 } else if match_hotkey("create_branch", code, modifiers, &state) {
                     state.push_undo(); /* placeholder for create_branch() */
                 } else if match_hotkey("delete", code, modifiers, &state) && state.mode == "gemx" {
