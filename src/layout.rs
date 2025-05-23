@@ -8,7 +8,7 @@ pub struct Coords {
 }
 
 pub const SIBLING_SPACING_X: i16 = 3;
-pub const CHILD_SPACING_Y: i16 = 2;
+pub const CHILD_SPACING_Y: i16 = 1;
 pub const MAX_LAYOUT_DEPTH: usize = 50;
 
 /// Public layout function
@@ -59,11 +59,11 @@ fn layout_recursive_safe(
     }
 
     let child_count = node.children.len();
-    let mid_index = child_count as i16 / 2;
+    let mid = child_count / 2;
     let mut max_y = y;
 
     for (i, child_id) in node.children.iter().enumerate() {
-        let offset_x = (i as i16 - mid_index) * SIBLING_SPACING_X;
+        let offset_x = (i as i16 - mid as i16) * SIBLING_SPACING_X;
         let child_x = x + offset_x;
         let child_y = y + CHILD_SPACING_Y;
 

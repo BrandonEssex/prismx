@@ -29,7 +29,7 @@ pub struct AppState {
     pub snap_to_grid: bool,
     pub drawing_root: Option<NodeID>,
     pub dragging: Option<NodeID>,
-    pub last_mouse: Option<(u16, u16)>,
+    pub last_mouse: Option<(i16, i16)>,
     pub debug_input_mode: bool,
     pub status_message: String,
     pub status_message_last_updated: Option<std::time::Instant>,
@@ -110,6 +110,25 @@ impl AppState {
         }
 
         result
+    }
+
+    /// Ensure nodes have unique positions when auto-arrange is disabled.
+    pub fn ensure_grid_positions(&mut self) {
+        if self.auto_arrange {
+            return;
+        }
+
+        let ids: Vec<NodeID> = self.nodes.keys().copied().collect();
+        let mut index = 0;
+        for id in ids {
+            if let Some(node) = self.nodes.get_mut(&id) {
+                if node.x == 0 && node.y == 0 {
+                    node.x = ((index % 4) * 6) as i16;
+                    node.y = ((index / 4) * 2) as i16;
+                    index += 1;
+                }
+            }
+        }
     }
 
     pub fn move_focus_up(&mut self) {
