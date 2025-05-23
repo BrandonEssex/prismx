@@ -88,3 +88,13 @@
 | `Ctrl + Shift + Z` | Runtime diagnostic overlay     |
 
 ---
+## 🗂 Workspaces
+
+| Key Combo           | Action             |
+|---------------------|--------------------|
+| `Ctrl + Tab`        | Switch workspace   |
+| `Ctrl + Shift + S`  | Save workspace     |
+| `Ctrl + Shift + O`  | Load workspace     |
+
+Workspace data is stored in `./data/workspace.json`.
+

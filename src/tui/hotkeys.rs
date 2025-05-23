@@ -28,6 +28,11 @@ pub fn match_hotkey(action: &str, code: KeyCode, mods: KeyModifiers, state: &App
         };
 
 
+        let code_lower_char = match code {
+            KeyCode::Char(c) => Some(c.to_ascii_lowercase()),
+            _ => None,
+        };
+
         let code_match = match k {
             "tab" => code == KeyCode::Tab,
             "shift-tab" => matches!(code, KeyCode::BackTab | KeyCode::Tab) && mods.contains(KeyModifiers::SHIFT),
@@ -37,22 +42,24 @@ pub fn match_hotkey(action: &str, code: KeyCode, mods: KeyModifiers, state: &App
             "?" => code == KeyCode::Char('?'),
             "," => code == KeyCode::Char(','),
             "." => code == KeyCode::Char('.'),
-            "d" => code == KeyCode::Char('d'),
-            "w" => code == KeyCode::Char('w'),
-            "q" => code == KeyCode::Char('q'),
-            "n" => code == KeyCode::Char('n'),
-            "t" => code == KeyCode::Char('t'),
-            "x" => code == KeyCode::Char('x'),
-            "c" => code == KeyCode::Char('c'),
-            "h" => code == KeyCode::Char('h'),
-            "e" => code == KeyCode::Char('e'),
-            "z" => code == KeyCode::Char('z'),
-            "y" => code == KeyCode::Char('y'),
-            "m" => code == KeyCode::Char('m'),
+            "d" => code_lower_char == Some('d'),
+            "w" => code_lower_char == Some('w'),
+            "q" => code_lower_char == Some('q'),
+            "n" => code_lower_char == Some('n'),
+            "t" => code_lower_char == Some('t'),
+            "x" => code_lower_char == Some('x'),
+            "c" => code_lower_char == Some('c'),
+            "h" => code_lower_char == Some('h'),
+            "e" => code_lower_char == Some('e'),
+            "z" => code_lower_char == Some('z'),
+            "y" => code_lower_char == Some('y'),
+            "m" => code_lower_char == Some('m'),
             "space" => code == KeyCode::Char(' '),
-            "r" => code == KeyCode::Char('r'),
-            "l" => code == KeyCode::Char('l'),
-            "g" => code == KeyCode::Char('g'),
+            "r" => code_lower_char == Some('r'),
+            "l" => code_lower_char == Some('l'),
+            "g" => code_lower_char == Some('g'),
+            "s" => code_lower_char == Some('s'),
+            "o" => code_lower_char == Some('o'),
 
 
             _ => false,
