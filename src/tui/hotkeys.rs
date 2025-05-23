@@ -2,6 +2,11 @@ use crossterm::event::{KeyCode, KeyModifiers};
 use crate::state::AppState;
 
 pub fn match_hotkey(action: &str, code: KeyCode, mods: KeyModifiers, state: &AppState) -> bool {
+    let code = match code {
+        KeyCode::Char(c) => KeyCode::Char(c.to_ascii_lowercase()),
+        _ => code,
+    };
+
     if let Some(binding_raw) = state.hotkeys.get(action) {
         let binding = binding_raw
             .trim()
@@ -49,6 +54,8 @@ pub fn match_hotkey(action: &str, code: KeyCode, mods: KeyModifiers, state: &App
             "z" => code == KeyCode::Char('z'),
             "y" => code == KeyCode::Char('y'),
             "m" => code == KeyCode::Char('m'),
+            "s" => code == KeyCode::Char('s'),
+            "o" => code == KeyCode::Char('o'),
             "space" => code == KeyCode::Char(' '),
             "r" => code == KeyCode::Char('r'),
             "l" => code == KeyCode::Char('l'),
@@ -61,5 +68,23 @@ pub fn match_hotkey(action: &str, code: KeyCode, mods: KeyModifiers, state: &App
         mod_match && code_match
     } else {
         false
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn ctrl_shift_s_matches_lowercase_binding() {
+        let mut state = AppState::default();
+        state.hotkeys.insert("save_ws".into(), "ctrl+shift-s".into());
+
+        assert!(match_hotkey(
+            "save_ws",
+            KeyCode::Char('S'),
+            KeyModifiers::CONTROL | KeyModifiers::SHIFT,
+            &state,
+        ));
     }
 }
