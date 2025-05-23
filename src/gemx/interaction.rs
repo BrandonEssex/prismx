@@ -1,6 +1,6 @@
 use crate::state::AppState;
 use crate::node::{NodeID, NodeMap};
-use crate::layout::{layout_nodes, Coords};
+use crate::gemx::layout::{layout_nodes, Coords};
 use std::collections::HashMap;
 
 /// Toggle snap-to-grid mode
@@ -22,7 +22,7 @@ pub fn node_at_position(state: &AppState, x: u16, y: u16) -> Option<NodeID> {
             let l = layout_nodes(&state.nodes, root_id, 2, row);
             let max_y = l.values().map(|c| c.y).max().unwrap_or(row);
             layout.extend(l);
-            row = max_y.saturating_add(3);
+            row = max_y.saturating_add(crate::gemx::layout::BASE_CHILD_SPACING_Y);
         }
     } else {
         for (id, node) in &state.nodes {
