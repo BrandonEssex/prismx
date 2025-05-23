@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use crate::node::{NodeID, NodeMap};
 
 /// Horizontal spacing between siblings when auto-arranging
@@ -59,4 +59,30 @@ fn layout_recursive(
     }
 
     max_y
+}
+
+/// Ensure manual positions are unique and use layout defaults when unset
+pub fn ensure_manual_positions(nodes: &mut NodeMap, roots: &[NodeID]) {
+    // build auto layout to use as fallback
+    let mut layout = HashMap::new();
+    let mut row = 1;
+    for &root_id in roots {
+        let l = layout_nodes(nodes, root_id, 2, row);
+        let max_y = l.values().map(|c| c.y).max().unwrap_or(row);
+        layout.extend(l);
+        row = max_y.saturating_add(CHILD_SPACING_Y);
+    }
+
+    // assign unique coordinates
+    let mut used = HashSet::new();
+    for (&id, node) in nodes.iter_mut() {
+        let pos = (node.x, node.y);
+        if pos == (0, 0) || used.contains(&pos) {
+            if let Some(&Coords { x, y }) = layout.get(&id) {
+                node.x = x as i16;
+                node.y = y as i16;
+            }
+        }
+        used.insert((node.x, node.y));
+    }
 }

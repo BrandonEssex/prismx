@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 use crate::node::{Node, NodeID, NodeMap};
+use crate::layout::ensure_manual_positions;
 
 mod hotkeys;
 pub use hotkeys::*;
@@ -175,6 +176,9 @@ impl AppState {
                 parent.children.push(new_id);
             }
             self.selected = Some(new_id);
+            if !self.auto_arrange {
+                ensure_manual_positions(&mut self.nodes, &self.root_nodes);
+            }
         }
     }
 
@@ -198,6 +202,9 @@ impl AppState {
                 }
 
                 self.selected = Some(new_id);
+                if !self.auto_arrange {
+                    ensure_manual_positions(&mut self.nodes, &self.root_nodes);
+                }
             }
         }
     }
@@ -253,6 +260,9 @@ impl AppState {
         self.nodes.insert(new_id, node);
         self.root_nodes.push(new_id);
         self.selected = Some(new_id);
+        if !self.auto_arrange {
+            ensure_manual_positions(&mut self.nodes, &self.root_nodes);
+        }
     }
 
     pub fn drill_down(&mut self) {
