@@ -21,7 +21,7 @@ use crate::screen::render_gemx;
 mod hotkeys;
 use hotkeys::match_hotkey;
 use crate::shortcuts::{match_shortcut, Shortcut};
-use std::time::Duration;
+use std::time::{Duration, Instant};
 
 pub fn draw<B: Backend>(terminal: &mut Terminal<B>, state: &mut AppState, _last_key: &str) -> std::io::Result<()> {
     use ratatui::layout::{Constraint, Direction, Layout};
@@ -122,7 +122,21 @@ pub fn launch_ui() -> std::io::Result<()> {
                             Shortcut::ToggleDebugInput => {
                                 state.debug_input_mode = !state.debug_input_mode;
                             }
-                            _ => {}
+                            Shortcut::ZoomIn => {
+                                state.zoom_in();
+                                state.status_message = format!("Zoom {:.1}x", state.zoom_scale);
+                                state.status_message_last_updated = Some(Instant::now());
+                            }
+                            Shortcut::ZoomOut => {
+                                state.zoom_out();
+                                state.status_message = format!("Zoom {:.1}x", state.zoom_scale);
+                                state.status_message_last_updated = Some(Instant::now());
+                            }
+                            Shortcut::ZoomReset => {
+                                state.reset_zoom();
+                                state.status_message = format!("Zoom {:.1}x", state.zoom_scale);
+                                state.status_message_last_updated = Some(Instant::now());
+                            }
                         }
                     }
 
