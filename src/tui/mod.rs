@@ -181,6 +181,12 @@ pub fn launch_ui() -> std::io::Result<()> {
                     } else {
                         state.start_link();
                     }
+                } else if match_hotkey("switch_workspace", code, modifiers, &state) {
+                    state.switch_workspace();
+                } else if match_hotkey("save_workspace", code, modifiers, &state) {
+                    state.save_workspace();
+                } else if match_hotkey("load_workspace", code, modifiers, &state) {
+                    state.load_workspace();
                 } else if match_hotkey("save", code, modifiers, &state) {
                     state.export_zen_to_file();
                 } else if match_hotkey("mode_zen", code, modifiers, &state) {

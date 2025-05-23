@@ -2,6 +2,15 @@ use crossterm::event::{KeyCode, KeyModifiers};
 use crate::state::AppState;
 
 pub fn match_hotkey(action: &str, code: KeyCode, mods: KeyModifiers, state: &AppState) -> bool {
+    // Normalize input: convert letter characters to lowercase so hotkey
+    // matching is case-insensitive. Crossterm reports `KeyCode::Char` in the
+    // case typed by the user (e.g. Ctrl+Shift+S yields `Char('S')`). Lowercase
+    // before comparison so bindings using lowercase letters still match.
+    let code_norm_char = match code {
+        KeyCode::Char(c) => Some(c.to_ascii_lowercase()),
+        _ => None,
+    };
+
     if let Some(binding_raw) = state.hotkeys.get(action) {
         let binding = binding_raw
             .trim()
@@ -37,22 +46,24 @@ pub fn match_hotkey(action: &str, code: KeyCode, mods: KeyModifiers, state: &App
             "?" => code == KeyCode::Char('?'),
             "," => code == KeyCode::Char(','),
             "." => code == KeyCode::Char('.'),
-            "d" => code == KeyCode::Char('d'),
-            "w" => code == KeyCode::Char('w'),
-            "q" => code == KeyCode::Char('q'),
-            "n" => code == KeyCode::Char('n'),
-            "t" => code == KeyCode::Char('t'),
-            "x" => code == KeyCode::Char('x'),
-            "c" => code == KeyCode::Char('c'),
-            "h" => code == KeyCode::Char('h'),
-            "e" => code == KeyCode::Char('e'),
-            "z" => code == KeyCode::Char('z'),
-            "y" => code == KeyCode::Char('y'),
-            "m" => code == KeyCode::Char('m'),
+            "d" => code_norm_char == Some('d'),
+            "w" => code_norm_char == Some('w'),
+            "q" => code_norm_char == Some('q'),
+            "n" => code_norm_char == Some('n'),
+            "t" => code_norm_char == Some('t'),
+            "x" => code_norm_char == Some('x'),
+            "c" => code_norm_char == Some('c'),
+            "h" => code_norm_char == Some('h'),
+            "e" => code_norm_char == Some('e'),
+            "z" => code_norm_char == Some('z'),
+            "y" => code_norm_char == Some('y'),
+            "m" => code_norm_char == Some('m'),
             "space" => code == KeyCode::Char(' '),
-            "r" => code == KeyCode::Char('r'),
-            "l" => code == KeyCode::Char('l'),
-            "g" => code == KeyCode::Char('g'),
+            "r" => code_norm_char == Some('r'),
+            "l" => code_norm_char == Some('l'),
+            "g" => code_norm_char == Some('g'),
+            "s" => code_norm_char == Some('s'),
+            "o" => code_norm_char == Some('o'),
 
 
             _ => false,
@@ -61,5 +72,22 @@ pub fn match_hotkey(action: &str, code: KeyCode, mods: KeyModifiers, state: &App
         mod_match && code_match
     } else {
         false
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn ctrl_shift_s_matches_lowercase_binding() {
+        let state = AppState::default();
+        let result = match_hotkey(
+            "save_workspace",
+            KeyCode::Char('S'),
+            KeyModifiers::CONTROL | KeyModifiers::SHIFT,
+            &state,
+        );
+        assert!(result, "Ctrl+Shift+S should match save_workspace hotkey");
     }
 }
