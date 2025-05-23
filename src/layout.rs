@@ -1,6 +1,9 @@
 use std::collections::HashMap;
 use crate::node::{NodeID, NodeMap};
 
+/// Minimum vertical gap between nodes in layout units
+pub const MIN_NODE_GAP: u16 = 1;
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct Coords {
     pub x: u16,
@@ -38,11 +41,13 @@ fn layout_recursive(
         return y;
     }
 
-    let mut current_y = y + 1;
+    // increment by minimum gap to prevent visual collisions when scaled
+    let mut current_y = y + MIN_NODE_GAP;
 
     for child_id in &node.children {
-        current_y = layout_recursive(nodes, *child_id, x + 10, current_y, out) + 1;
+        // use layout units for spacing; horizontal indent grows by 1 unit
+        current_y = layout_recursive(nodes, *child_id, x + 1, current_y, out) + MIN_NODE_GAP;
     }
 
-    current_y - 1
+    current_y - MIN_NODE_GAP
 }
