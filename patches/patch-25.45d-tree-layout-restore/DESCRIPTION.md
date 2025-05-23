@@ -9,7 +9,6 @@
 
 ## Logic
 - In layout_nodes or render:
-  - child.x = parent.x
-  - child.y = parent.y + BASE_CHILD_SPACING_Y
-- Use minimal X offset if siblings would otherwise overlap
+  - child.x = parent.x + (index - mid) * SIBLING_SPACING_X
+  - child.y = parent.y + CHILD_SPACING_Y
 
