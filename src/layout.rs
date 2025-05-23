@@ -1,18 +1,23 @@
 use std::collections::HashMap;
 use crate::node::{NodeID, NodeMap};
 
+/// Horizontal gap between siblings in auto layout
+pub const SIBLING_SPACING_X: i16 = 3;
+/// Vertical gap between parent and children in auto layout
+pub const CHILD_SPACING_Y: i16 = 2;
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct Coords {
-    pub x: u16,
-    pub y: u16,
+    pub x: i16,
+    pub y: i16,
 }
 
 /// Recursively assigns (x, y) positions to nodes based on depth
 pub fn layout_nodes(
     nodes: &NodeMap,
     root_id: NodeID,
-    start_x: u16,
-    start_y: u16,
+    start_x: i16,
+    start_y: i16,
 ) -> HashMap<NodeID, Coords> {
     let mut map = HashMap::new();
     layout_recursive(nodes, root_id, start_x, start_y, &mut map);
@@ -23,26 +28,28 @@ pub fn layout_nodes(
 fn layout_recursive(
     nodes: &NodeMap,
     node_id: NodeID,
-    x: u16,
-    y: u16,
+    x: i16,
+    y: i16,
     out: &mut HashMap<NodeID, Coords>,
-) -> u16 {
+) {
     out.insert(node_id, Coords { x, y });
 
     let node = match nodes.get(&node_id) {
         Some(n) => n,
-        None => return y,
+        None => return,
     };
 
-    if node.collapsed || node.children.is_empty() {
-        return y;
+    if node.collapsed {
+        return;
     }
 
-    let mut current_y = y + 1;
+    let sibling_count = node.children.len();
+    let mid_index = sibling_count / 2;
 
-    for child_id in &node.children {
-        current_y = layout_recursive(nodes, *child_id, x + 10, current_y, out) + 1;
+    for (i, &child_id) in node.children.iter().enumerate() {
+        let offset_x = (i as i16 - mid_index as i16) * SIBLING_SPACING_X;
+        let child_x = x + offset_x;
+        let child_y = y + CHILD_SPACING_Y;
+        layout_recursive(nodes, child_id, child_x, child_y, out);
     }
-
-    current_y - 1
 }
