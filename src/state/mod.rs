@@ -29,6 +29,9 @@ pub struct AppState {
     pub drawing_root: Option<NodeID>,
     pub dragging: Option<NodeID>,
     pub last_mouse: Option<(u16, u16)>,
+    pub debug_input_mode: bool,
+    pub status_message: String,
+    pub status_message_last_updated: Option<std::time::Instant>,
 
 }
 
@@ -66,6 +69,9 @@ impl Default for AppState {
             drawing_root: None,
             dragging: None,
             last_mouse: None,
+            debug_input_mode: true,
+            status_message: String::new(),
+            status_message_last_updated: None,
 
         }
     }

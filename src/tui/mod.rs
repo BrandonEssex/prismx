@@ -20,8 +20,10 @@ use crate::screen::render_gemx;
 
 mod hotkeys;
 use hotkeys::match_hotkey;
+use crate::shortcuts::{match_shortcut, Shortcut};
+use std::time::Duration;
 
-pub fn draw<B: Backend>(terminal: &mut Terminal<B>, state: &mut AppState, last_key: &str) -> std::io::Result<()> {
+pub fn draw<B: Backend>(terminal: &mut Terminal<B>, state: &mut AppState, _last_key: &str) -> std::io::Result<()> {
     use ratatui::layout::{Constraint, Direction, Layout};
     use ratatui::widgets::{Block, Borders, Paragraph};
 
@@ -67,15 +69,26 @@ pub fn draw<B: Backend>(terminal: &mut Terminal<B>, state: &mut AppState, last_k
             render_module_switcher(f, vertical[0], state.module_switcher_index);
         }
 
-        let status_text = format!(
-            "Mode: {} | Triage: {} | Spotlight: {} | Help: {} | Last Key: {}",
+        if let Some(last) = state.status_message_last_updated {
+            if last.elapsed() > Duration::from_secs(4) {
+                state.status_message.clear();
+                state.status_message_last_updated = None;
+            }
+        }
+
+        let default_status = format!(
+            "Mode: {} | Triage: {} | Spotlight: {} | Help: {}",
             state.mode,
             state.show_triage,
             state.show_spotlight,
             state.show_keymap,
-            last_key
         );
-        render_status_bar(f, vertical[1], &status_text);
+        let display = if state.status_message.is_empty() {
+            default_status.as_str()
+        } else {
+            state.status_message.as_str()
+        };
+        render_status_bar(f, vertical[1], display);
     })?;
     Ok(())
 }
@@ -101,6 +114,17 @@ pub fn launch_ui() -> std::io::Result<()> {
             match event::read()? {
                 Event::Key(KeyEvent { code, modifiers, .. }) => {
                     last_key = format!("{:?} + {:?}", code, modifiers);
+                    if state.debug_input_mode {
+                        crate::tui::hotkeys::debug_input(&mut state, code, modifiers);
+                    }
+                    if let Some(sc) = match_shortcut(code, modifiers) {
+                        match sc {
+                            Shortcut::ToggleDebugInput => {
+                                state.debug_input_mode = !state.debug_input_mode;
+                            }
+                            _ => {}
+                        }
+                    }
 
                 // 🌟 Spotlight
                 if state.show_spotlight {
