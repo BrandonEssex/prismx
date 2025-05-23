@@ -1,10 +1,10 @@
 ## 1. Fix Parent-Child Layout
-- Update layout_nodes() to stack children vertically
-- BASE_CHILD_SPACING_Y = 3
+- Update layout_nodes() so children share a single row below the parent
+- CHILD_SPACING_Y = 2
+- SIBLING_SPACING_X = 3
 
 ## 2. Remove Excessive Horizontal Offset
-- Set child.x = parent.x by default
-- Optionally stagger siblings by +1 X if needed for spacing
+- Center siblings horizontally around the parent using `(i - mid) * SIBLING_SPACING_X`
 
 ## 3. Preserve Zoom
 - All spacing must multiply by zoom_scale at render time

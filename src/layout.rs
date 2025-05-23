@@ -1,6 +1,11 @@
 use std::collections::HashMap;
 use crate::node::{NodeID, NodeMap};
 
+/// Horizontal spacing between siblings when auto-arranging
+pub const SIBLING_SPACING_X: u16 = 3;
+/// Vertical spacing between parent and child when auto-arranging
+pub const CHILD_SPACING_Y: u16 = 2;
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct Coords {
     pub x: u16,
@@ -27,6 +32,7 @@ fn layout_recursive(
     y: u16,
     out: &mut HashMap<NodeID, Coords>,
 ) -> u16 {
+    // record current node position
     out.insert(node_id, Coords { x, y });
 
     let node = match nodes.get(&node_id) {
@@ -38,11 +44,24 @@ fn layout_recursive(
         return y;
     }
 
-    let mut current_y = y + 1;
+    // children appear directly beneath their parent with optional horizontal
+    // spread between siblings
+    let mid = (node.children.len() as f32 - 1.0) / 2.0;
+    let child_y = y + CHILD_SPACING_Y;
+    let mut max_y = child_y;
 
-    for child_id in &node.children {
-        current_y = layout_recursive(nodes, *child_id, x + 10, current_y, out) + 1;
+    for (idx, child_id) in node.children.iter().enumerate() {
+        let offset = ((idx as f32) - mid) * SIBLING_SPACING_X as f32;
+        let mut child_x = x as f32 + offset;
+        if child_x < 0.0 {
+            child_x = 0.0;
+        }
+        let child_x = child_x.round() as u16;
+        let bottom = layout_recursive(nodes, *child_id, child_x, child_y, out);
+        if bottom > max_y {
+            max_y = bottom;
+        }
     }
 
-    current_y - 1
+    max_y
 }
