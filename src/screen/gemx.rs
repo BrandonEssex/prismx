@@ -22,7 +22,7 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
 
     if state.auto_arrange {
         for &root_id in &roots {
-            let layout = layout_nodes(&state.nodes, root_id, 2, y);
+            let layout = layout_nodes(&state.nodes, root_id, 2, y as i16);
             let max_y = layout.values().map(|c| c.y).max().unwrap_or(y);
             drawn_at.extend(layout);
             y = max_y.saturating_add(3);

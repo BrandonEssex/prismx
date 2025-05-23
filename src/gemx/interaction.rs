@@ -19,7 +19,7 @@ pub fn node_at_position(state: &AppState, x: u16, y: u16) -> Option<NodeID> {
         };
         let mut row = 1;
         for &root_id in &roots {
-            let l = layout_nodes(&state.nodes, root_id, 2, row);
+            let l = layout_nodes(&state.nodes, root_id, 2, row as i16);
             let max_y = l.values().map(|c| c.y).max().unwrap_or(row);
             layout.extend(l);
             row = max_y.saturating_add(3);
