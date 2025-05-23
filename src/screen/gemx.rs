@@ -1,6 +1,7 @@
 use ratatui::prelude::*;
 use ratatui::widgets::{Block, Borders, Paragraph};
 use crate::layout::{layout_nodes, Coords};
+use crate::node::{NodeID, NodeMap};
 use crate::state::AppState;
 use crate::gemx::render::apply_zoom;
 use std::collections::HashMap;
@@ -20,11 +21,27 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppStat
     let mut drawn_at = HashMap::new();
     let mut y = 1;
 
-    for &root_id in &roots {
-        let layout = layout_nodes(&state.nodes, root_id, 2, y);
-        let max_y = layout.values().map(|c| c.y).max().unwrap_or(y);
-        drawn_at.extend(layout);
-        y = max_y.saturating_add(3);
+    if state.auto_arrange {
+        for &root_id in &roots {
+            let layout = layout_nodes(&state.nodes, root_id, 2, y);
+            let max_y = layout.values().map(|c| c.y).max().unwrap_or(y);
+            drawn_at.extend(layout);
+            y = max_y.saturating_add(3);
+        }
+    } else {
+        fn collect(nodes: &NodeMap, id: NodeID, out: &mut HashMap<NodeID, Coords>) {
+            if let Some(n) = nodes.get(&id) {
+                out.insert(id, Coords { x: n.x as u16, y: n.y as u16 });
+                if !n.collapsed {
+                    for child in &n.children {
+                        collect(nodes, *child, out);
+                    }
+                }
+            }
+        }
+        for &root_id in &roots {
+            collect(&state.nodes, root_id, &mut drawn_at);
+        }
     }
 
     let scale = state.zoom_scale;
@@ -51,48 +68,22 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppStat
 
         let parent_glyph = if let Some(parent_id) = node.parent {
             let parent_y = drawn_at.get(&parent_id).map(|c| c.y).unwrap_or(y.saturating_sub(1));
-            if parent_y < y {
-                Some("│ ")
-            } else {
-                Some("  ")
-            }
-        } else {
-            None
-        };
+            if parent_y < y { Some("│ ") } else { Some("  ") }
+        } else { None };
 
         let elbow_glyph = if let Some(parent_id) = node.parent {
             let siblings = &state.nodes[&parent_id].children;
             if let Some(last) = siblings.last() {
-                if *last == node_id {
-                    Some("└─")
-                } else {
-                    Some("├─")
-                }
-            } else {
-                None
-            }
-        } else {
-            None
-        };
+                if *last == node_id { Some("└─") } else { Some("├─") }
+            } else { None }
+        } else { None };
 
         let mut label = String::new();
-
-        if is_selected {
-            label.push_str("> ");
-        } else {
-            label.push_str("  ");
-        }
-
-        if let Some(glyph) = parent_glyph {
-            label.push_str(glyph);
-        }
-        if let Some(elbow) = elbow_glyph {
-            label.push_str(elbow);
-        }
-
+        if is_selected { label.push_str("> "); } else { label.push_str("  "); }
+        if let Some(glyph) = parent_glyph { label.push_str(glyph); }
+        if let Some(elbow) = elbow_glyph { label.push_str(elbow); }
         label.push_str(&node.label);
-
-        if let Some(target_id) = state.link_map.get(&node_id).and_then(|v| v.first()) {
+        if state.link_map.get(&node_id).and_then(|v| v.first()).is_some() {
             label.push_str(" 📎");
         }
 
@@ -100,9 +91,7 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppStat
         let width = label.len().min((area.width - sx.saturating_sub(scroll_x)) as usize);
 
         let style = if is_selected {
-            Style::default()
-                .fg(Color::Yellow)
-                .add_modifier(Modifier::BOLD | Modifier::UNDERLINED)
+            Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD | Modifier::UNDERLINED)
         } else {
             Style::default().fg(Color::White)
         };

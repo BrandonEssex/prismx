@@ -98,8 +98,9 @@ pub fn launch_ui() -> std::io::Result<()> {
         }
 
         if event::poll(std::time::Duration::from_millis(100))? {
-            if let Event::Key(KeyEvent { code, modifiers, .. }) = event::read()? {
-                last_key = format!("{:?} + {:?}", code, modifiers);
+            match event::read()? {
+                Event::Key(KeyEvent { code, modifiers, .. }) => {
+                    last_key = format!("{:?} + {:?}", code, modifiers);
 
                 // 🌟 Spotlight
                 if state.show_spotlight {
@@ -285,6 +286,27 @@ pub fn launch_ui() -> std::io::Result<()> {
 
                     _ => {}
                 }
+                }
+                Event::Mouse(me) => {
+                    use crossterm::event::{MouseButton, MouseEventKind};
+                    if state.mode == "gemx" {
+                        match me.kind {
+                            MouseEventKind::Down(MouseButton::Left) => {
+                                if let Some(id) = crate::gemx::interaction::node_at_position(&state, me.column, me.row) {
+                                    crate::gemx::interaction::start_drag(&mut state, id, me.column, me.row);
+                                }
+                            }
+                            MouseEventKind::Drag(MouseButton::Left) => {
+                                crate::gemx::interaction::drag_update(&mut state, me.column, me.row);
+                            }
+                            MouseEventKind::Up(MouseButton::Left) => {
+                                crate::gemx::interaction::end_drag(&mut state);
+                            }
+                            _ => {}
+                        }
+                    }
+                }
+                _ => {}
             }
         }
 
