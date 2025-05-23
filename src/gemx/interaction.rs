@@ -49,17 +49,21 @@ pub fn node_at_position(state: &AppState, x: u16, y: u16) -> Option<NodeID> {
 /// Begin dragging the specified node from mouse coords.
 pub fn start_drag(state: &mut AppState, id: NodeID, x: u16, y: u16) {
     state.dragging = Some(id);
-    state.last_mouse = Some((x, y));
+    let wx = x as i16 + state.scroll_x;
+    let wy = y as i16 + state.scroll_y;
+    state.last_mouse = Some((wx, wy));
     state.selected = Some(id);
 }
 
 /// Update dragging node position based on new mouse coords.
 pub fn drag_update(state: &mut AppState, x: u16, y: u16) {
+    let wx = x as i16 + state.scroll_x;
+    let wy = y as i16 + state.scroll_y;
     if let (Some(id), Some((lx, ly))) = (state.dragging, state.last_mouse) {
-        let dx = x as i16 - lx as i16;
-        let dy = y as i16 - ly as i16;
+        let dx = wx - lx;
+        let dy = wy - ly;
         drag_recursive(id, dx, dy, &mut state.nodes, state.snap_to_grid);
-        state.last_mouse = Some((x, y));
+        state.last_mouse = Some((wx, wy));
     }
 }
 
