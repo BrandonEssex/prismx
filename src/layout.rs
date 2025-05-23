@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use crate::node::{NodeID, NodeMap};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -7,36 +7,52 @@ pub struct Coords {
     pub y: i16,
 }
 
-// Layout spacing constants
-const SIBLING_SPACING_X: i16 = 3;
-const CHILD_SPACING_Y: i16 = 2;
+pub const SIBLING_SPACING_X: i16 = 3;
+pub const CHILD_SPACING_Y: i16 = 2;
+pub const MAX_LAYOUT_DEPTH: usize = 50;
 
-/// Recursively assigns (x, y) positions to nodes based on void-rs style
+/// Public layout function
 pub fn layout_nodes(
     nodes: &NodeMap,
     root_id: NodeID,
     start_x: i16,
     start_y: i16,
 ) -> HashMap<NodeID, Coords> {
-    let mut map = HashMap::new();
-    layout_recursive(nodes, root_id, start_x, start_y, &mut map);
-    map
+    let mut coords = HashMap::new();
+    let mut visited = HashSet::new();
+    layout_recursive_safe(nodes, root_id, start_x, start_y, &mut coords, &mut visited, 0);
+    coords
 }
 
-/// Internal layout logic that balances siblings and stacks children
-fn layout_recursive(
+fn layout_recursive_safe(
     nodes: &NodeMap,
     node_id: NodeID,
     x: i16,
     y: i16,
     out: &mut HashMap<NodeID, Coords>,
+    visited: &mut HashSet<NodeID>,
+    depth: usize,
 ) -> i16 {
-    out.insert(node_id, Coords { x, y });
+    if !visited.insert(node_id) {
+        println!("⚠️  Cycle detected: {}", node_id);
+        return y;
+    }
 
+    if depth > MAX_LAYOUT_DEPTH {
+        println!("🛑 Max layout depth exceeded at node {}", node_id);
+        return y;
+    }
+
+    out.insert(node_id, Coords { x, y });
     let node = match nodes.get(&node_id) {
         Some(n) => n,
         None => return y,
     };
+
+    // println!(
+    //     "📐 layout: node {} at x={}, y={}, children={:?}",
+    //     node_id, x, y, node.children
+    // );
 
     if node.collapsed || node.children.is_empty() {
         return y;
@@ -51,7 +67,21 @@ fn layout_recursive(
         let child_x = x + offset_x;
         let child_y = y + CHILD_SPACING_Y;
 
-        let branch_max_y = layout_recursive(nodes, *child_id, child_x, child_y, out);
+        // println!(
+        //     "├── child {} of {} at x={}, y={}",
+        //     child_id, node_id, child_x, child_y
+        // );
+
+        let branch_max_y = layout_recursive_safe(
+            nodes,
+            *child_id,
+            child_x,
+            child_y,
+            out,
+            visited,
+            depth + 1,
+        );
+
         max_y = max_y.max(branch_max_y);
     }
 

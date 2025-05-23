@@ -66,6 +66,7 @@ impl Default for AppState {
             link_map: std::collections::HashMap::new(),
             auto_arrange: true,
             scroll_x: 0,
+            scroll_y: 0,
             snap_to_grid: false,
             drawing_root: None,
             dragging: None,
@@ -168,38 +169,42 @@ impl AppState {
     pub fn add_child(&mut self) {
         if let Some(parent_id) = self.selected {
             let new_id = self.nodes.keys().max().copied().unwrap_or(100) + 1;
-            let child = Node::new(new_id, "New Child", Some(parent_id));
-            self.nodes.insert(new_id, child);
+
+            let mut child = Node::new(new_id, "New Child", Some(parent_id));
+
             if let Some(parent) = self.nodes.get_mut(&parent_id) {
                 parent.children.push(new_id);
             }
+
+            self.nodes.insert(new_id, child);
             self.selected = Some(new_id);
         }
     }
 
     pub fn add_sibling(&mut self) {
         if let Some(selected_id) = self.selected {
-            if let Some(selected_node) = self.nodes.get(&selected_id) {
-                let parent_id = selected_node.parent;
-                let new_id = self.nodes.keys().max().copied().unwrap_or(100) + 1;
-                let sibling = Node::new(new_id, "New Sibling", parent_id);
-                self.nodes.insert(new_id, sibling);
+            let parent_id = self.nodes.get(&selected_id).and_then(|n| n.parent);
 
-                match parent_id {
-                    Some(p_id) => {
-                        if let Some(parent) = self.nodes.get_mut(&p_id) {
-                            parent.children.push(new_id);
-                        }
-                    }
-                    None => {
-                        self.root_nodes.push(new_id);
+            let new_id = self.nodes.keys().max().copied().unwrap_or(100) + 1;
+            let mut sibling = Node::new(new_id, "New Sibling", parent_id);
+
+            match parent_id {
+                Some(p_id) => {
+                    if let Some(parent) = self.nodes.get_mut(&p_id) {
+                        parent.children.push(new_id);
                     }
                 }
-
-                self.selected = Some(new_id);
+                None => {
+                    // Top-level node: must be added to root_nodes
+                    self.root_nodes.push(new_id);
+                }
             }
+
+            self.nodes.insert(new_id, sibling);
+            self.selected = Some(new_id);
         }
     }
+
 
     pub fn delete_node(&mut self) {
         if let Some(target_id) = self.selected {

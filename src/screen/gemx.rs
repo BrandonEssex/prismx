@@ -11,6 +11,12 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
         .borders(Borders::ALL);
     f.render_widget(block, area);
 
+    // // ✅ Always print the structure for diagnostics
+    // println!("=== NODES AND CHILDREN ===");
+    // for (id, node) in &state.nodes {
+    //     println!("Node {} → parent: {:?}, children: {:?}", id, node.parent, node.children);
+    // }
+
     let roots = if let Some(drill_root) = state.drawing_root {
         vec![drill_root]
     } else {
@@ -18,14 +24,11 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
     };
 
     let mut drawn_at = HashMap::new();
-    let mut y = 1;
-
     if state.auto_arrange {
         for &root_id in &roots {
-            let layout = layout_nodes(&state.nodes, root_id, 2, y);
-            let max_y = layout.values().map(|c| c.y).max().unwrap_or(y);
+            //println!("🔁 layout_nodes(root={})", root_id);
+            let layout = layout_nodes(&state.nodes, root_id, 2, 1); // 🧠 force y=1
             drawn_at.extend(layout);
-            y = max_y.saturating_add(3);
         }
     } else {
         fn collect(nodes: &NodeMap, id: NodeID, out: &mut HashMap<NodeID, Coords>) {
@@ -90,7 +93,8 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
     // Draw arrows
     for (source, targets) in &state.link_map {
         for target in targets {
-            if let (Some(&Coords { x: sx, y: sy }), Some(&Coords { x: tx, y: ty })) = (drawn_at.get(source), drawn_at.get(target)) {
+            if let (Some(&Coords { x: sx, y: sy }), Some(&Coords { x: tx, y: ty })) =
+                (drawn_at.get(source), drawn_at.get(target)) {
                 if sy == ty {
                     let arrow = if sx < tx { "→" } else { "←" };
                     let mid = (sx + tx) / 2;
