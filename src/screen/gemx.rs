@@ -2,9 +2,10 @@ use ratatui::prelude::*;
 use ratatui::widgets::{Block, Borders, Paragraph};
 use crate::layout::{layout_nodes, Coords};
 use crate::state::AppState;
+use crate::gemx::render::apply_zoom;
 use std::collections::HashMap;
 
-pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
+pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppState) {
     let block = Block::default()
         .title(if state.auto_arrange { "Gemx [Auto-Arrange]" } else { "Gemx" })
         .borders(Borders::ALL);
@@ -26,8 +27,22 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
         y = max_y.saturating_add(3);
     }
 
+    let scale = state.zoom_scale;
+
+    // Center view on selected node when zoomed
+    if let Some(sel) = state.selected {
+        if let Some(&Coords { x: cx, y: cy }) = drawn_at.get(&sel) {
+            let sx = apply_zoom(cx, scale) as i16 - area.width as i16 / 2;
+            let sy = apply_zoom(cy, scale) as i16 - area.height as i16 / 2;
+            state.offset_x = sx.max(0);
+            state.offset_y = sy.max(0);
+        }
+    }
+
     for (&node_id, &Coords { x, y }) in &drawn_at {
-        if y >= area.height {
+        let sx = apply_zoom(x, scale).saturating_sub(state.offset_x.max(0) as u16);
+        let sy = apply_zoom(y, scale).saturating_sub(state.offset_y.max(0) as u16);
+        if sy >= area.height {
             continue;
         }
 
@@ -82,7 +97,7 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
         }
 
         let scroll_x = state.scroll_x.max(0) as u16;
-        let width = label.len().min((area.width - x.saturating_sub(scroll_x)) as usize);
+        let width = label.len().min((area.width - sx.saturating_sub(scroll_x)) as usize);
 
         let style = if is_selected {
             Style::default()
@@ -93,14 +108,17 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
         };
 
         let para = Paragraph::new(label).style(style);
-        f.render_widget(para, Rect::new(x.saturating_sub(scroll_x), y, width as u16, 1));
+        f.render_widget(para, Rect::new(sx.saturating_sub(scroll_x), sy, width as u16, 1));
     }
 
     // Draw link arrows between nodes (horizontal layout)
     for (source, targets) in &state.link_map {
         for target in targets {
             if let (Some(&Coords { x: sx, y: sy }), Some(&Coords { x: tx, y: ty })) = (drawn_at.get(source), drawn_at.get(target)) {
-                if sy == ty && sy < area.height {
+                let sy = apply_zoom(sy, scale).saturating_sub(state.offset_y.max(0) as u16);
+                let tx = apply_zoom(tx, scale).saturating_sub(state.offset_x.max(0) as u16);
+                let sx = apply_zoom(sx, scale).saturating_sub(state.offset_x.max(0) as u16);
+                if sy == apply_zoom(ty, scale).saturating_sub(state.offset_y.max(0) as u16) && sy < area.height {
                     let arrow = if sx < tx { "→" } else { "←" };
                     let mid = (sx + tx) / 2;
                     let scroll_x = state.scroll_x.max(0) as u16;

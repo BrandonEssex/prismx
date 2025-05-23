@@ -42,7 +42,7 @@ pub fn draw<B: Backend>(terminal: &mut Terminal<B>, state: &mut AppState, last_k
 
         match state.mode.as_str() {
             "zen" => render_zen_journal(f, vertical[0], state),
-            "gemx" => render_gemx(f, vertical[0], &state),
+            "gemx" => render_gemx(f, vertical[0], state),
             "settings" => {
                 let fallback = Paragraph::new("Settings panel coming soon...")
                     .block(Block::default().title("Settings").borders(Borders::ALL));
@@ -223,6 +223,18 @@ pub fn launch_ui() -> std::io::Result<()> {
 
                     KeyCode::Char('g') if modifiers == KeyModifiers::CONTROL && state.mode == "gemx" => {
                         state.toggle_snap_grid();
+                    }
+
+                    KeyCode::Char('=') if modifiers == KeyModifiers::ALT && state.mode == "gemx" => {
+                        state.zoom_in();
+                    }
+
+                    KeyCode::Char('-') if modifiers == KeyModifiers::ALT && state.mode == "gemx" => {
+                        state.zoom_out();
+                    }
+
+                    KeyCode::Char('0') if modifiers == KeyModifiers::ALT && state.mode == "gemx" => {
+                        state.reset_zoom();
                     }
 
                     KeyCode::Up if state.mode == "gemx" => state.move_focus_up(),
