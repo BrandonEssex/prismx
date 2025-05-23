@@ -17,23 +17,23 @@ pub fn node_at_position(state: &AppState, x: u16, y: u16) -> Option<NodeID> {
         } else {
             state.root_nodes.clone()
         };
-        let mut row = 1;
+        let mut row: i16 = 1;
         for &root_id in &roots {
             let l = layout_nodes(&state.nodes, root_id, 2, row);
             let max_y = l.values().map(|c| c.y).max().unwrap_or(row);
             layout.extend(l);
-            row = max_y.saturating_add(3);
+            row = max_y + 3;
         }
     } else {
         for (id, node) in &state.nodes {
-            layout.insert(*id, Coords { x: node.x as u16, y: node.y as u16 });
+            layout.insert(*id, Coords { x: node.x, y: node.y });
         }
     }
 
     for (&id, &Coords { x: nx, y: ny }) in &layout {
-        if ny == y {
+        if ny == y as i16 {
             let node = &state.nodes[&id];
-            let start_x = nx.saturating_sub(state.scroll_x.max(0) as u16);
+            let start_x = (nx - state.scroll_x).max(0) as u16;
             let end_x = start_x + node.label.len() as u16 + 2;
             if x >= start_x && x < end_x {
                 return Some(id);
