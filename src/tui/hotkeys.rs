@@ -1,7 +1,13 @@
 use crossterm::event::{KeyCode, KeyModifiers};
 use crate::state::AppState;
+use std::time::Instant;
 
 pub fn match_hotkey(action: &str, code: KeyCode, mods: KeyModifiers, state: &AppState) -> bool {
+    let code = match code {
+        KeyCode::Char(c) => KeyCode::Char(c.to_ascii_lowercase()),
+        _ => code,
+    };
+
     if let Some(binding_raw) = state.hotkeys.get(action) {
         let binding = binding_raw
             .trim()
@@ -49,6 +55,8 @@ pub fn match_hotkey(action: &str, code: KeyCode, mods: KeyModifiers, state: &App
             "z" => code == KeyCode::Char('z'),
             "y" => code == KeyCode::Char('y'),
             "m" => code == KeyCode::Char('m'),
+            "s" => code == KeyCode::Char('s'),
+            "o" => code == KeyCode::Char('o'),
             "space" => code == KeyCode::Char(' '),
             "r" => code == KeyCode::Char('r'),
             "l" => code == KeyCode::Char('l'),
@@ -61,5 +69,39 @@ pub fn match_hotkey(action: &str, code: KeyCode, mods: KeyModifiers, state: &App
         mod_match && code_match
     } else {
         false
+    }
+}
+
+pub fn debug_input(state: &mut AppState, code: KeyCode, mods: KeyModifiers) {
+    let mut parts = Vec::new();
+    if mods.contains(KeyModifiers::CONTROL) { parts.push("Ctrl"); }
+    if mods.contains(KeyModifiers::ALT) { parts.push("Alt"); }
+    if mods.contains(KeyModifiers::SHIFT) { parts.push("Shift"); }
+
+    let key_str = match code {
+        KeyCode::Char(c) => c.to_string(),
+        other => format!("{:?}", other),
+    };
+
+    let prefix = if parts.is_empty() { String::new() } else { format!("{}+", parts.join("+")) };
+    state.status_message = format!("Key: {}{}", prefix, key_str);
+    state.status_message_last_updated = Some(Instant::now());
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn ctrl_shift_s_matches_lowercase_binding() {
+        let mut state = AppState::default();
+        state.hotkeys.insert("save_ws".into(), "ctrl+shift-s".into());
+
+        assert!(match_hotkey(
+            "save_ws",
+            KeyCode::Char('S'),
+            KeyModifiers::CONTROL | KeyModifiers::SHIFT,
+            &state,
+        ));
     }
 }

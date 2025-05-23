@@ -158,6 +158,25 @@ See: docs/cheatsheet.md
 
 Default mode: Ctrl-based
 VIM mode toggle available in keymap.rs
+
+🔑 Hotkey Compatibility (macOS + iTerm2)
+
+PrismX is fully keyboard-driven and depends on accurate key modifier support.
+macOS users should enable CSI u Mode in iTerm2 for full compatibility.
+Without CSI u, combinations like Ctrl+Shift+= or Alt+Shift+D may not work.
+
+How to enable CSI u:
+1. Open iTerm2 → Preferences → Profiles → Keys
+2. Enable CSI u Mode
+3. Accept prompt to remove conflicting mappings (can be restored later)
+
+Recommended modifier-only shortcuts:
+- Ctrl+Alt+Z: Zoom In
+- Ctrl+Alt+X: Zoom Out
+- Ctrl+Alt+0: Reset Zoom
+- Alt+Shift+D: Toggle Debug Mode
+
+All commands use modifiers (no raw letters) to preserve typing flow in Zen, Spotlight, and GemX.
 🧠 Project Aether (AI Subsystems)
 
 Included in 10.1.0:

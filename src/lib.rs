@@ -19,4 +19,6 @@ pub mod render;
 pub mod gemx;
 pub mod routineforge;
 pub mod settings;
+#[path = "state/mod.rs"]
 pub mod state;
+pub mod shortcuts;
