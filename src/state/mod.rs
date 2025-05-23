@@ -1,8 +1,11 @@
 use std::collections::HashMap;
 use crate::node::{Node, NodeID, NodeMap};
+use crate::storage::json_io::WorkspaceData;
 
 mod hotkeys;
+mod workspace;
 pub use hotkeys::*;
+pub use workspace::*;
 
 pub struct AppState {
     pub mode: String,
@@ -27,6 +30,7 @@ pub struct AppState {
     pub scroll_x: i16,
     pub snap_to_grid: bool,
     pub drawing_root: Option<NodeID>,
+    pub workspaces: WorkspaceSet,
 
 }
 
@@ -38,6 +42,7 @@ impl Default for AppState {
 
         nodes.insert(node_a, Node::new(node_a, "Node A", None));
         nodes.insert(node_b, Node::new(node_b, "Node B", None));
+        let workspace_nodes = nodes.clone();
 
         Self {
             mode: "gemx".into(),
@@ -62,6 +67,7 @@ impl Default for AppState {
             scroll_x: 0,
             snap_to_grid: false,
             drawing_root: None,
+            workspaces: WorkspaceSet::new(WorkspaceData { nodes: workspace_nodes, root_nodes: vec![node_a, node_b] }),
 
         }
     }
@@ -342,6 +348,30 @@ impl AppState {
             2 => "settings",
             3 => "triage",
             _ => "gemx",
+        }
+    }
+
+    pub fn switch_workspace(&mut self) {
+        let current = WorkspaceData { nodes: self.nodes.clone(), root_nodes: self.root_nodes.clone() };
+        self.workspaces.replace_current(current);
+        self.workspaces.switch_next();
+        let data = self.workspaces.current_data();
+        self.nodes = data.nodes;
+        self.root_nodes = data.root_nodes;
+        self.selected = self.root_nodes.first().copied();
+    }
+
+    pub fn save_workspace(&self) {
+        let data = WorkspaceData { nodes: self.nodes.clone(), root_nodes: self.root_nodes.clone() };
+        let _ = crate::storage::json_io::save_workspace(&data);
+    }
+
+    pub fn load_workspace(&mut self) {
+        if let Ok(data) = crate::storage::json_io::load_workspace() {
+            self.nodes = data.nodes.clone();
+            self.root_nodes = data.root_nodes.clone();
+            self.selected = self.root_nodes.first().copied();
+            self.workspaces.replace_current(data);
         }
     }
 }

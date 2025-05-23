@@ -23,36 +23,46 @@ pub fn match_hotkey(action: &str, code: KeyCode, mods: KeyModifiers, state: &App
             "ctrl+shift" | "ctrl-shift" => {
                 mods.contains(KeyModifiers::CONTROL) && mods.contains(KeyModifiers::SHIFT)
             }
+            "alt+shift" | "alt-shift" => {
+                mods.contains(KeyModifiers::ALT) && mods.contains(KeyModifiers::SHIFT)
+            }
             "" => mods.is_empty() || mods == KeyModifiers::NONE,
             _ => false,
         };
 
 
+        let normalized_code = match code {
+            KeyCode::Char(c) => KeyCode::Char(c.to_ascii_lowercase()),
+            other => other,
+        };
+
         let code_match = match k {
-            "tab" => code == KeyCode::Tab,
-            "shift-tab" => matches!(code, KeyCode::BackTab | KeyCode::Tab) && mods.contains(KeyModifiers::SHIFT),
-            "enter" => code == KeyCode::Enter,
-            "backspace" => code == KeyCode::Backspace,
-            "esc" => code == KeyCode::Esc,
-            "?" => code == KeyCode::Char('?'),
-            "," => code == KeyCode::Char(','),
-            "." => code == KeyCode::Char('.'),
-            "d" => code == KeyCode::Char('d'),
-            "w" => code == KeyCode::Char('w'),
-            "q" => code == KeyCode::Char('q'),
-            "n" => code == KeyCode::Char('n'),
-            "t" => code == KeyCode::Char('t'),
-            "x" => code == KeyCode::Char('x'),
-            "c" => code == KeyCode::Char('c'),
-            "h" => code == KeyCode::Char('h'),
-            "e" => code == KeyCode::Char('e'),
-            "z" => code == KeyCode::Char('z'),
-            "y" => code == KeyCode::Char('y'),
-            "m" => code == KeyCode::Char('m'),
-            "space" => code == KeyCode::Char(' '),
-            "r" => code == KeyCode::Char('r'),
-            "l" => code == KeyCode::Char('l'),
-            "g" => code == KeyCode::Char('g'),
+            "tab" => normalized_code == KeyCode::Tab,
+            "shift-tab" => matches!(normalized_code, KeyCode::BackTab | KeyCode::Tab) && mods.contains(KeyModifiers::SHIFT),
+            "enter" => normalized_code == KeyCode::Enter,
+            "backspace" => normalized_code == KeyCode::Backspace,
+            "esc" => normalized_code == KeyCode::Esc,
+            "?" => normalized_code == KeyCode::Char('?'),
+            "," => normalized_code == KeyCode::Char(','),
+            "." => normalized_code == KeyCode::Char('.'),
+            "d" => normalized_code == KeyCode::Char('d'),
+            "w" => normalized_code == KeyCode::Char('w'),
+            "q" => normalized_code == KeyCode::Char('q'),
+            "n" => normalized_code == KeyCode::Char('n'),
+            "t" => normalized_code == KeyCode::Char('t'),
+            "x" => normalized_code == KeyCode::Char('x'),
+            "c" => normalized_code == KeyCode::Char('c'),
+            "h" => normalized_code == KeyCode::Char('h'),
+            "e" => normalized_code == KeyCode::Char('e'),
+            "z" => normalized_code == KeyCode::Char('z'),
+            "y" => normalized_code == KeyCode::Char('y'),
+            "m" => normalized_code == KeyCode::Char('m'),
+            "space" => normalized_code == KeyCode::Char(' '),
+            "r" => normalized_code == KeyCode::Char('r'),
+            "l" => normalized_code == KeyCode::Char('l'),
+            "g" => normalized_code == KeyCode::Char('g'),
+            "s" => normalized_code == KeyCode::Char('s'),
+            "o" => normalized_code == KeyCode::Char('o'),
 
 
             _ => false,
@@ -61,5 +71,22 @@ pub fn match_hotkey(action: &str, code: KeyCode, mods: KeyModifiers, state: &App
         mod_match && code_match
     } else {
         false
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn ctrl_shift_s_uppercase_matches() {
+        let state = AppState::default();
+        let result = match_hotkey(
+            "save_workspace",
+            KeyCode::Char('S'),
+            KeyModifiers::CONTROL | KeyModifiers::SHIFT,
+            &state,
+        );
+        assert!(result, "Uppercase Ctrl+Shift+S should match save_workspace");
     }
 }
