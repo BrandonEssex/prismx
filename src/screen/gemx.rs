@@ -50,6 +50,7 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
 
         let node = &state.nodes[&node_id];
         let is_selected = Some(node_id) == state.selected;
+        let is_dragged = state.dragging == Some(node_id);
 
         let parent_glyph = if let Some(parent_id) = node.parent {
             let parent_y = drawn_at.get(&parent_id).map(|c| c.y).unwrap_or(y.saturating_sub(1));
@@ -59,12 +60,18 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
         let elbow_glyph = if let Some(parent_id) = node.parent {
             let siblings = &state.nodes[&parent_id].children;
             if let Some(last) = siblings.last() {
-                if *last == node_id { Some("└─") } else { Some("├─") }
+                if *last == node_id { Some("╰─") } else { Some("↳ ") }
             } else { None }
         } else { None };
 
         let mut label = String::new();
-        if is_selected { label.push_str("> "); } else { label.push_str("  "); }
+        if is_dragged {
+            label.push_str("* ");
+        } else if is_selected {
+            label.push_str("> ");
+        } else {
+            label.push_str("  ");
+        }
         if let Some(glyph) = parent_glyph { label.push_str(glyph); }
         if let Some(elbow) = elbow_glyph { label.push_str(elbow); }
         label.push_str(&node.label);
@@ -75,7 +82,9 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
         let scroll_x = state.scroll_x.max(0) as u16;
         let width = label.len().min((area.width - x.saturating_sub(scroll_x)) as usize);
 
-        let style = if is_selected {
+        let style = if is_dragged {
+            Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD | Modifier::REVERSED)
+        } else if is_selected {
             Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD | Modifier::UNDERLINED)
         } else {
             Style::default().fg(Color::White)

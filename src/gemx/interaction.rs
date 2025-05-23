@@ -57,6 +57,18 @@ pub fn drag_update(state: &mut AppState, x: u16, y: u16) {
         let dy = y as i16 - ly as i16;
         drag_recursive(id, dx, dy, &mut state.nodes, state.snap_to_grid);
         state.last_mouse = Some((x, y));
+
+        // Detach from parent if dragged far enough
+        if let Some(parent_id) = state.nodes.get(&id).and_then(|n| n.parent) {
+            if let (Some(node), Some(parent)) = (state.nodes.get(&id), state.nodes.get(&parent_id)) {
+                let dx = node.x - parent.x;
+                let dy = node.y - parent.y;
+                let dist = ((dx * dx + dy * dy) as f32).sqrt();
+                if dist > 30.0 {
+                    detach_node(state, id, parent_id);
+                }
+            }
+        }
     }
 }
 
@@ -85,4 +97,17 @@ fn drag_recursive(id: NodeID, dx: i16, dy: i16, nodes: &mut NodeMap, snap: bool)
 /// Snap to nearest 20px grid unit.
 fn snap_value(v: i16) -> i16 {
     ((v + 10) / 20) * 20
+}
+
+/// Detach a node from its parent and promote to root
+fn detach_node(state: &mut AppState, id: NodeID, parent_id: NodeID) {
+    if let Some(parent) = state.nodes.get_mut(&parent_id) {
+        parent.children.retain(|&c| c != id);
+    }
+    if let Some(node) = state.nodes.get_mut(&id) {
+        node.parent = None;
+    }
+    if !state.root_nodes.contains(&id) {
+        state.root_nodes.push(id);
+    }
 }
