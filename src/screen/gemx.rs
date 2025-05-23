@@ -1,6 +1,6 @@
 use ratatui::prelude::*;
 use ratatui::widgets::{Block, Borders, Paragraph};
-use crate::layout::{layout_nodes, Coords};
+use crate::gemx::layout::{layout_nodes, Coords};
 use crate::node::{NodeID, NodeMap};
 use crate::state::AppState;
 use std::collections::HashMap;
@@ -25,26 +25,39 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
             let layout = layout_nodes(&state.nodes, root_id, 2, y);
             let max_y = layout.values().map(|c| c.y).max().unwrap_or(y);
             drawn_at.extend(layout);
-            y = max_y.saturating_add(3);
+            y = max_y.saturating_add(crate::gemx::layout::CHILD_SPACING_Y);
         }
     } else {
-        fn collect(nodes: &NodeMap, id: NodeID, out: &mut HashMap<NodeID, Coords>) {
+        fn collect(nodes: &NodeMap, id: NodeID, out: &mut HashMap<NodeID, Coords>, idx: &mut u16) {
             if let Some(n) = nodes.get(&id) {
-                out.insert(id, Coords { x: n.x as u16, y: n.y as u16 });
+                let (x, y) = if n.x == 0 && n.y == 0 {
+                    let grid_x = (*idx % 10) * crate::gemx::layout::SIBLING_SPACING_X;
+                    let grid_y = (*idx / 10) * crate::gemx::layout::CHILD_SPACING_Y;
+                    *idx += 1;
+                    (grid_x as u16, grid_y as u16)
+                } else {
+                    (n.x as u16, n.y as u16)
+                };
+                out.insert(id, Coords { x, y });
                 if !n.collapsed {
                     for child in &n.children {
-                        collect(nodes, *child, out);
+                        collect(nodes, *child, out, idx);
                     }
                 }
             }
         }
+        let mut idx = 0u16;
         for &root_id in &roots {
-            collect(&state.nodes, root_id, &mut drawn_at);
+            collect(&state.nodes, root_id, &mut drawn_at, &mut idx);
         }
     }
 
+    let zoom = state.zoom_scale;
+
     for (&node_id, &Coords { x, y }) in &drawn_at {
-        if y >= area.height {
+        let zx = ((x as f32) * zoom).round() as u16;
+        let zy = ((y as f32) * zoom).round() as u16;
+        if zy >= area.height {
             continue;
         }
 
@@ -73,7 +86,7 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
         }
 
         let scroll_x = state.scroll_x.max(0) as u16;
-        let width = label.len().min((area.width - x.saturating_sub(scroll_x)) as usize);
+        let width = label.len().min((area.width - zx.saturating_sub(scroll_x)) as usize);
 
         let style = if is_selected {
             Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD | Modifier::UNDERLINED)
@@ -82,16 +95,19 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
         };
 
         let para = Paragraph::new(label).style(style);
-        f.render_widget(para, Rect::new(x.saturating_sub(scroll_x), y, width as u16, 1));
+        f.render_widget(para, Rect::new(zx.saturating_sub(scroll_x), zy, width as u16, 1));
     }
 
     // Draw link arrows between nodes (horizontal layout)
     for (source, targets) in &state.link_map {
         for target in targets {
-            if let (Some(&Coords { x: sx, y: sy }), Some(&Coords { x: tx, y: ty })) = (drawn_at.get(source), drawn_at.get(target)) {
+            if let (Some(&Coords { x: sx, y: sy }), Some(&Coords { x: tx, y: ty })) =
+                (drawn_at.get(source), drawn_at.get(target))
+            {
                 if sy == ty && sy < area.height {
                     let arrow = if sx < tx { "→" } else { "←" };
-                    let mid = (sx + tx) / 2;
+                    let mid = (((sx + tx) / 2) as f32 * zoom).round() as u16;
+                    let sy = ((sy as f32) * zoom).round() as u16;
                     let scroll_x = state.scroll_x.max(0) as u16;
                     if mid >= scroll_x && mid < scroll_x + area.width {
                         let para = Paragraph::new(arrow);

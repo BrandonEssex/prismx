@@ -25,6 +25,7 @@ pub struct AppState {
     pub link_map: std::collections::HashMap<NodeID, Vec<NodeID>>,
     pub auto_arrange: bool,
     pub scroll_x: i16,
+    pub zoom_scale: f32,
     pub snap_to_grid: bool,
     pub drawing_root: Option<NodeID>,
     pub dragging: Option<NodeID>,
@@ -65,6 +66,7 @@ impl Default for AppState {
             link_map: std::collections::HashMap::new(),
             auto_arrange: true,
             scroll_x: 0,
+            zoom_scale: 1.0,
             snap_to_grid: false,
             drawing_root: None,
             dragging: None,
@@ -303,6 +305,20 @@ impl AppState {
 
     pub fn toggle_snap_grid(&mut self) {
         self.snap_to_grid = !self.snap_to_grid;
+    }
+
+    /// Ensure all nodes have unique manual positions when auto-arrange is disabled
+    pub fn ensure_manual_positions(&mut self) {
+        let mut idx: u16 = 0;
+        for node in self.nodes.values_mut() {
+            if node.x == 0 && node.y == 0 {
+                let x = (idx % 10) * crate::gemx::layout::SIBLING_SPACING_X;
+                let y = (idx / 10) * crate::gemx::layout::CHILD_SPACING_Y;
+                node.x = x as i16;
+                node.y = y as i16;
+                idx += 1;
+            }
+        }
     }
 
     pub fn start_drag(&mut self) {

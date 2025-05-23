@@ -21,7 +21,7 @@ use crate::screen::render_gemx;
 mod hotkeys;
 use hotkeys::match_hotkey;
 use crate::shortcuts::{match_shortcut, Shortcut};
-use std::time::Duration;
+use std::time::{Duration, Instant};
 
 pub fn draw<B: Backend>(terminal: &mut Terminal<B>, state: &mut AppState, _last_key: &str) -> std::io::Result<()> {
     use ratatui::layout::{Constraint, Direction, Layout};
@@ -122,7 +122,16 @@ pub fn launch_ui() -> std::io::Result<()> {
                             Shortcut::ToggleDebugInput => {
                                 state.debug_input_mode = !state.debug_input_mode;
                             }
-                            _ => {}
+                            Shortcut::ZoomIn => {
+                                state.zoom_scale = (state.zoom_scale + 0.1).min(2.0);
+                                state.status_message = format!("Zoom: {:.1}", state.zoom_scale);
+                                state.status_message_last_updated = Some(Instant::now());
+                            }
+                            Shortcut::ZoomOut => {
+                                state.zoom_scale = (state.zoom_scale - 0.1).max(0.5);
+                                state.status_message = format!("Zoom: {:.1}", state.zoom_scale);
+                                state.status_message_last_updated = Some(Instant::now());
+                            }
                         }
                     }
 
@@ -244,6 +253,9 @@ pub fn launch_ui() -> std::io::Result<()> {
 
                     KeyCode::Char('p') if modifiers == KeyModifiers::CONTROL && state.mode == "gemx" => {
                         state.auto_arrange = !state.auto_arrange;
+                        if !state.auto_arrange {
+                            state.ensure_manual_positions();
+                        }
                     }
 
                     KeyCode::Char('g') if modifiers == KeyModifiers::CONTROL && state.mode == "gemx" => {
