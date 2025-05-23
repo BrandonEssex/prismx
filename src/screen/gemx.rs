@@ -1,6 +1,8 @@
 use ratatui::prelude::*;
 use ratatui::widgets::{Block, Borders, Paragraph};
-use crate::layout::{layout_nodes, Coords};
+use crate::layout::{
+    layout_nodes, Coords, SIBLING_SPACING_X, CHILD_SPACING_Y, FREE_GRID_COLUMNS,
+};
 use crate::node::{NodeID, NodeMap};
 use crate::state::AppState;
 use std::collections::HashMap;
@@ -21,11 +23,23 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
     let mut y = 1;
 
     if state.auto_arrange {
+        let mut free_nodes = Vec::new();
         for &root_id in &roots {
-            let layout = layout_nodes(&state.nodes, root_id, 2, y);
-            let max_y = layout.values().map(|c| c.y).max().unwrap_or(y);
-            drawn_at.extend(layout);
-            y = max_y.saturating_add(3);
+            let node = &state.nodes[&root_id];
+            if node.parent.is_none() && node.children.is_empty() {
+                free_nodes.push(root_id);
+            } else {
+                let layout = layout_nodes(&state.nodes, root_id, 2, y);
+                let max_y = layout.values().map(|c| c.y).max().unwrap_or(y);
+                drawn_at.extend(layout);
+                y = max_y.saturating_add(3);
+            }
+        }
+
+        for (i, id) in free_nodes.iter().enumerate() {
+            let fx = 2 + (i as i16 % FREE_GRID_COLUMNS) * SIBLING_SPACING_X;
+            let fy = y as i16 + (i as i16 / FREE_GRID_COLUMNS) * CHILD_SPACING_Y;
+            drawn_at.insert(*id, Coords { x: fx as u16, y: fy as u16 });
         }
     } else {
         fn collect(nodes: &NodeMap, id: NodeID, out: &mut HashMap<NodeID, Coords>) {

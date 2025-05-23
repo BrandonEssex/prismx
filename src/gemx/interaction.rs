@@ -1,6 +1,8 @@
 use crate::state::AppState;
 use crate::node::{NodeID, NodeMap};
-use crate::layout::{layout_nodes, Coords};
+use crate::layout::{
+    layout_nodes, Coords, SIBLING_SPACING_X, CHILD_SPACING_Y, FREE_GRID_COLUMNS,
+};
 use std::collections::HashMap;
 
 /// Toggle snap-to-grid mode
@@ -18,11 +20,23 @@ pub fn node_at_position(state: &AppState, x: u16, y: u16) -> Option<NodeID> {
             state.root_nodes.clone()
         };
         let mut row = 1;
+        let mut free_nodes = Vec::new();
         for &root_id in &roots {
-            let l = layout_nodes(&state.nodes, root_id, 2, row);
-            let max_y = l.values().map(|c| c.y).max().unwrap_or(row);
-            layout.extend(l);
-            row = max_y.saturating_add(3);
+            let node = &state.nodes[&root_id];
+            if node.parent.is_none() && node.children.is_empty() {
+                free_nodes.push(root_id);
+            } else {
+                let l = layout_nodes(&state.nodes, root_id, 2, row);
+                let max_y = l.values().map(|c| c.y).max().unwrap_or(row);
+                layout.extend(l);
+                row = max_y.saturating_add(3);
+            }
+        }
+
+        for (i, id) in free_nodes.iter().enumerate() {
+            let fx = 2 + (i as i16 % FREE_GRID_COLUMNS) * SIBLING_SPACING_X;
+            let fy = row as i16 + (i as i16 / FREE_GRID_COLUMNS) * CHILD_SPACING_Y;
+            layout.insert(*id, Coords { x: fx as u16, y: fy as u16 });
         }
     } else {
         for (id, node) in &state.nodes {

@@ -1,6 +1,10 @@
 use std::collections::HashMap;
 use crate::node::{NodeID, NodeMap};
 
+pub const SIBLING_SPACING_X: i16 = 3;
+pub const CHILD_SPACING_Y: i16 = 2;
+pub const FREE_GRID_COLUMNS: i16 = 4;
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct Coords {
     pub x: u16,
@@ -15,7 +19,7 @@ pub fn layout_nodes(
     start_y: u16,
 ) -> HashMap<NodeID, Coords> {
     let mut map = HashMap::new();
-    layout_recursive(nodes, root_id, start_x, start_y, &mut map);
+    layout_recursive(nodes, root_id, start_x as i16, start_y as i16, &mut map);
     map
 }
 
@@ -23,11 +27,12 @@ pub fn layout_nodes(
 fn layout_recursive(
     nodes: &NodeMap,
     node_id: NodeID,
-    x: u16,
-    y: u16,
+    x: i16,
+    y: i16,
     out: &mut HashMap<NodeID, Coords>,
-) -> u16 {
-    out.insert(node_id, Coords { x, y });
+
+) -> i16 {
+    out.insert(node_id, Coords { x: x.max(0) as u16, y: y.max(0) as u16 });
 
     let node = match nodes.get(&node_id) {
         Some(n) => n,
@@ -38,11 +43,20 @@ fn layout_recursive(
         return y;
     }
 
-    let mut current_y = y + 1;
+    let count = node.children.len() as i16;
+    let mid = count / 2;
 
-    for child_id in &node.children {
-        current_y = layout_recursive(nodes, *child_id, x + 10, current_y, out) + 1;
+    let mut max_y = y;
+
+    for (i, child_id) in node.children.iter().enumerate() {
+        let offset_x = (i as i16 - mid) * SIBLING_SPACING_X;
+        let child_x = x + offset_x;
+        let child_y = y + CHILD_SPACING_Y;
+        let end_y = layout_recursive(nodes, *child_id, child_x, child_y, out);
+        if end_y > max_y {
+            max_y = end_y;
+        }
     }
 
-    current_y - 1
+    max_y
 }
