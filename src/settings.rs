@@ -7,7 +7,7 @@ use ratatui::{
 };
 use crate::beamx::{render_beam_logo, render_full_border, style_for_mode};
 
-pub fn render_settings_panel<B: Backend>(f: &mut Frame<B>, area: Rect) {
+pub fn render_settings<B: Backend>(f: &mut Frame<B>, area: Rect) {
     let style = style_for_mode("settings");
     let lines = vec![
         Line::from("PrismX Settings"),
@@ -24,6 +24,6 @@ pub fn render_settings_panel<B: Backend>(f: &mut Frame<B>, area: Rect) {
 
     let paragraph = Paragraph::new(lines).block(block);
     f.render_widget(paragraph, area);
-    render_beam_logo(f, Rect::new(area.x, area.y + 1, area.width, 3), &style);
     render_full_border(f, area, &style);
+    render_beam_logo(f, area, &style);
 }

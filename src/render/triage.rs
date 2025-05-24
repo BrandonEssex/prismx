@@ -15,6 +15,6 @@ pub fn render_triage<B: Backend>(f: &mut Frame<B>, area: Rect) {
 
     f.render_widget(block, area);
     f.render_widget(content, Rect::new(area.x + 2, area.y + 1, area.width - 4, area.height - 2));
-    render_beam_logo(f, Rect::new(area.x, area.y + 1, area.width, 3), &style);
     render_full_border(f, area, &style);
+    render_beam_logo(f, area, &style);
 }

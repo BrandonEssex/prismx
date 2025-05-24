@@ -17,6 +17,7 @@ use crate::render::{
     render_module_switcher,
 };
 use crate::screen::render_gemx;
+use crate::settings::render_settings;
 
 mod hotkeys;
 use hotkeys::match_hotkey;
@@ -49,11 +50,7 @@ pub fn draw<B: Backend>(terminal: &mut Terminal<B>, state: &mut AppState, _last_
         match state.mode.as_str() {
             "zen" => render_zen_journal(f, vertical[0], state),
             "gemx" => render_gemx(f, vertical[0], &state),
-            "settings" => {
-                let fallback = Paragraph::new("Settings panel coming soon...")
-                    .block(Block::default().title("Settings").borders(Borders::ALL));
-                f.render_widget(fallback, vertical[0]);
-            }
+            "settings" => render_settings(f, vertical[0]),
             "triage" => render_triage(f, vertical[0]),
             _ => {
                 let fallback = Paragraph::new("Unknown mode");

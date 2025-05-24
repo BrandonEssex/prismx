@@ -34,8 +34,8 @@ pub fn render_zen_journal<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppS
         .wrap(Wrap { trim: false });
 
     f.render_widget(widget, area);
-    render_beam_logo(f, Rect::new(area.x, area.y + 1, area.width, 3), &style);
     render_full_border(f, area, &style);
+    render_beam_logo(f, area, &style);
 }
 
 fn parse_markdown_line(input: &str) -> Line {

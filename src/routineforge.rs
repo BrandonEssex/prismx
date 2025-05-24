@@ -21,6 +21,6 @@ pub fn render_triage_panel<B: Backend>(f: &mut Frame<B>, area: Rect) {
 
     let paragraph = Paragraph::new(tasks).block(block);
     f.render_widget(paragraph, area);
-    render_beam_logo(f, Rect::new(area.x, area.y + 1, area.width, 3), &style);
     render_full_border(f, area, &style);
+    render_beam_logo(f, area, &style);
 }
