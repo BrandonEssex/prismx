@@ -1,6 +1,9 @@
 use crate::state::AppState;
 use crate::node::{Node, NodeID, NodeMap};
-use crate::layout::{layout_nodes, Coords, SIBLING_SPACING_X, CHILD_SPACING_Y, FREE_GRID_COLUMNS};
+use crate::layout::{
+    layout_nodes, Coords, SIBLING_SPACING_X, CHILD_SPACING_Y, FREE_GRID_COLUMNS,
+    GEMX_HEADER_HEIGHT,
+};
 use std::collections::HashMap;
 
 /// Toggle snap-to-grid mode
@@ -22,8 +25,10 @@ pub fn spawn_free_node(state: &mut AppState) {
 
     if !state.auto_arrange {
         let index = state.root_nodes.len();
-        node.x = ((index % FREE_GRID_COLUMNS) as i16) * SIBLING_SPACING_X * 2;
-        node.y = ((index / FREE_GRID_COLUMNS) as i16) * CHILD_SPACING_Y * 2;
+        node.x = ((index % FREE_GRID_COLUMNS) as i16) * SIBLING_SPACING_X * 2 + 1;
+        node.y = ((index / FREE_GRID_COLUMNS) as i16) * CHILD_SPACING_Y * 2
+            + GEMX_HEADER_HEIGHT
+            + 1;
     }
 
     state.nodes.insert(new_id, node);
@@ -40,9 +45,10 @@ pub fn node_at_position(state: &AppState, x: u16, y: u16) -> Option<NodeID> {
         } else {
             state.root_nodes.clone()
         };
-        let mut row = 1;
+        let (tw, _) = crossterm::terminal::size().unwrap_or((80, 20));
+        let mut row = GEMX_HEADER_HEIGHT + 1;
         for &root_id in &roots {
-            let l = layout_nodes(&state.nodes, root_id, 2, row);
+            let l = layout_nodes(&state.nodes, root_id, row, tw as i16);
             let max_y = l.values().map(|c| c.y).max().unwrap_or(row);
             layout.extend(l);
             row = max_y.saturating_add(3);

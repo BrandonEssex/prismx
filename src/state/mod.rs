@@ -1,6 +1,8 @@
 use std::collections::HashMap;
 use crate::node::{Node, NodeID, NodeMap};
-use crate::layout::{SIBLING_SPACING_X, CHILD_SPACING_Y, FREE_GRID_COLUMNS};
+use crate::layout::{
+    SIBLING_SPACING_X, CHILD_SPACING_Y, FREE_GRID_COLUMNS, GEMX_HEADER_HEIGHT,
+};
 
 mod hotkeys;
 pub use hotkeys::*;
@@ -126,10 +128,13 @@ impl AppState {
                 if node.x == 0 && node.y == 0 {
                     node.x = ((index % FREE_GRID_COLUMNS) as i16)
                         * SIBLING_SPACING_X
-                        * 2;
+                        * 2
+                        + 1;
                     node.y = ((index / FREE_GRID_COLUMNS) as i16)
                         * CHILD_SPACING_Y
-                        * 2;
+                        * 2
+                        + GEMX_HEADER_HEIGHT
+                        + 1;
                     index += 1;
                 }
             }
