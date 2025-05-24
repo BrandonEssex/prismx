@@ -16,9 +16,13 @@
 ` Ctrl+P ` → Toggle Auto-Arrange
 ` Ctrl+G ` → Snap Grid
 ` Alt+Left/Right ` → Horizontal Scroll
+` Alt+= ` → Zoom In
+` Alt+- ` → Zoom Out
 ` Ctrl+Space ` → Module Switch
 ` Ctrl+. ` → Settings
 ` Alt+Shift+S ` → Spotlight
+` /zoom in ` → Zoom In via Spotlight
+` /zoom out ` → Zoom Out via Spotlight
 ` Ctrl+Y ` → Triage
 ` /start pomodoro ` → Begin Pomodoro
 ` /countdown +3d Launch ` → Add Countdown
