@@ -122,3 +122,26 @@ fn shift_subtree(id: NodeID, dx: i16, out: &mut HashMap<NodeID, Coords>, nodes: 
         }
     }
 }
+
+/// Recenter scroll offsets so the given node remains the anchor after a zoom change.
+pub fn zoom_to_anchor(state: &mut crate::state::AppState, node_id: NodeID) {
+    if let Some(node) = state.nodes.get(&node_id) {
+        let (tw, th) = crossterm::terminal::size().unwrap_or((80, 20));
+        let zoom = state.zoom_scale;
+        let anchor_x = node.x as f32 * crate::layout::BASE_SPACING_X as f32 * zoom;
+        let anchor_y = node.y as f32 * crate::layout::BASE_SPACING_Y as f32 * zoom;
+        state.scroll_x = (anchor_x - tw as f32 / 2.0).round() as i16;
+        state.scroll_y = (anchor_y - th as f32 / 2.0).round() as i16;
+        clamp_scroll(state);
+    }
+}
+
+/// Ensure scroll offsets never go below zero.
+pub fn clamp_scroll(state: &mut crate::state::AppState) {
+    if state.scroll_x < 0 {
+        state.scroll_x = 0;
+    }
+    if state.scroll_y < 0 {
+        state.scroll_y = 0;
+    }
+}
