@@ -343,7 +343,7 @@ impl AppState {
     }
 
     pub fn zoom_in(&mut self) {
-        self.zoom_scale = (self.zoom_scale + 0.1).min(2.0);
+        self.zoom_scale = (self.zoom_scale + 0.1).min(1.5);
         if let Some(id) = self.selected {
             crate::layout::zoom_to_anchor(self, id);
         }
