@@ -5,3 +5,4 @@
 - Remove unnecessary `mut` keywords from `state/mod.rs`
 - Resolve unused imports (`Block`, `Borders`)
 - Improve CI resilience and syntax
+- Clean up junk files like `.DS_Store`, swap files, logs, and merge artifacts

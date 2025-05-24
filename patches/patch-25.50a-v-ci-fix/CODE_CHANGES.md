@@ -25,3 +25,10 @@ use ratatui::widgets::Paragraph;
 
 - In `.github/workflows/prismx-patch-tests.yml`:
   Fix `env:` syntax in `Post Summary to PR` block
+
+- In all scripts (test, archive):
+  Add cleanup logic:
+```bash
+find . -name .DS_Store -delete
+find . -name "*.swp" -o -name "*.tmp" -o -name "*.log" -o -name "*.swo" -o -name "*.orig" -delete
+```
