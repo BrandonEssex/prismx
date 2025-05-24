@@ -21,9 +21,21 @@ pub fn spawn_free_node(state: &mut AppState) {
     let mut node = Node::new(new_id, "Free Node", None);
 
     if !state.auto_arrange {
-        let index = state.root_nodes.len();
-        node.x = ((index % FREE_GRID_COLUMNS) as i16) * SIBLING_SPACING_X * 2;
-        node.y = ((index / FREE_GRID_COLUMNS) as i16) * CHILD_SPACING_Y * 2;
+        let mut index = 0;
+        loop {
+            let x = ((index % FREE_GRID_COLUMNS) as i16) * SIBLING_SPACING_X * 3;
+            let y = ((index / FREE_GRID_COLUMNS) as i16) * CHILD_SPACING_Y * 3;
+            if state
+                .nodes
+                .values()
+                .all(|n| !(n.x == x && n.y == y))
+            {
+                node.x = x;
+                node.y = y;
+                break;
+            }
+            index += 1;
+        }
     }
 
     state.nodes.insert(new_id, node);

@@ -119,18 +119,36 @@ impl AppState {
             return;
         }
 
+        use std::collections::HashSet;
         let ids: Vec<NodeID> = self.nodes.keys().copied().collect();
-        let mut index = 0;
+        let mut occupied: HashSet<(i16, i16)> = self
+            .nodes
+            .values()
+            .filter(|n| n.x != 0 || n.y != 0)
+            .map(|n| (n.x, n.y))
+            .collect();
+
         for id in ids {
             if let Some(node) = self.nodes.get_mut(&id) {
                 if node.x == 0 && node.y == 0 {
-                    node.x = ((index % FREE_GRID_COLUMNS) as i16)
-                        * SIBLING_SPACING_X
-                        * 2;
-                    node.y = ((index / FREE_GRID_COLUMNS) as i16)
-                        * CHILD_SPACING_Y
-                        * 2;
-                    index += 1;
+                    let mut index = 0;
+                    loop {
+                        let x = ((index % FREE_GRID_COLUMNS) as i16)
+                            * SIBLING_SPACING_X
+                            * 3;
+                        let y = ((index / FREE_GRID_COLUMNS) as i16)
+                            * CHILD_SPACING_Y
+                            * 3;
+                        if !occupied.contains(&(x, y)) {
+                            node.x = x;
+                            node.y = y;
+                            occupied.insert((x, y));
+                            break;
+                        }
+                        index += 1;
+                    }
+                } else {
+                    occupied.insert((node.x, node.y));
                 }
             }
         }
