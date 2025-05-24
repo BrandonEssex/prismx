@@ -6,31 +6,30 @@ on:
     - cron: '0 5 * * *'  # Runs daily at 5AM UTC
 
 jobs:
-  generate-regression-matrix:
+  matrix:
     name: Build Regression Matrix
     runs-on: ubuntu-latest
     outputs:
-      matrix: ${{ steps.set.outputs.matrix }}
+      matrix: ${{ steps.matrix.outputs.matrix }}
     steps:
       - name: 📥 Checkout
         uses: actions/checkout@v3
 
       - name: 🧮 Generate Patch Matrix
-        id: set
+        id: matrix
         run: |
           chmod +x ./bin/generate-regression-matrix.sh
-          matrix=$(./bin/generate-regression-matrix.sh)
-          echo "matrix=$matrix" >> $GITHUB_OUTPUT
+          ./bin/generate-regression-matrix.sh
 
   regression-test:
     name: Run All Regression Patches (${{ matrix.patch }})
-    needs: generate-regression-matrix
+    needs: matrix
     runs-on: ubuntu-latest
 
     strategy:
       fail-fast: false
       matrix:
-        patch: ${{ fromJson(needs.generate-regression-matrix.outputs.matrix) }}
+        patch: ${{ fromJson(needs.matrix.outputs.matrix) }}
 
     steps:
       - name: 📥 Checkout
