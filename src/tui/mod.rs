@@ -26,7 +26,7 @@ use std::time::Duration;
 
 pub fn draw<B: Backend>(terminal: &mut Terminal<B>, state: &mut AppState, _last_key: &str) -> std::io::Result<()> {
     use ratatui::layout::{Constraint, Direction, Layout};
-    use ratatui::widgets::{Block, Borders, Paragraph};
+    use ratatui::widgets::Paragraph;
 
     if !state.auto_arrange {
         state.ensure_grid_positions();
