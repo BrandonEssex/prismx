@@ -204,7 +204,14 @@ impl AppState {
         if let Some(parent_id) = self.selected {
             let new_id = self.nodes.keys().max().copied().unwrap_or(100) + 1;
 
-            let child = Node::new(new_id, "New Child", Some(parent_id));
+            let mut child = Node::new(new_id, "New Child", Some(parent_id));
+
+            if !self.auto_arrange {
+                if let Some(parent) = self.nodes.get(&parent_id) {
+                    child.x = parent.x;
+                    child.y = parent.y + CHILD_SPACING_Y;
+                }
+            }
 
             if let Some(parent) = self.nodes.get_mut(&parent_id) {
                 parent.children.push(new_id);
@@ -220,7 +227,14 @@ impl AppState {
             let parent_id = self.nodes.get(&selected_id).and_then(|n| n.parent);
 
             let new_id = self.nodes.keys().max().copied().unwrap_or(100) + 1;
-            let sibling = Node::new(new_id, "New Sibling", parent_id);
+            let mut sibling = Node::new(new_id, "New Sibling", parent_id);
+
+            if !self.auto_arrange {
+                if let Some(selected) = self.nodes.get(&selected_id) {
+                    sibling.x = selected.x + SIBLING_SPACING_X;
+                    sibling.y = selected.y;
+                }
+            }
 
             match parent_id {
                 Some(p_id) => {

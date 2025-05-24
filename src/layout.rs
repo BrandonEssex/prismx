@@ -89,7 +89,7 @@ impl PackRegion {
             self.row_height = 0;
         }
         let anchor = (self.cursor_x, self.cursor_y);
-        self.cursor_x += w + SIBLING_SPACING_X;
+        self.cursor_x += w + SIBLING_SPACING_X * 2;
         if h > self.row_height {
             self.row_height = h;
         }
@@ -193,29 +193,20 @@ fn layout_recursive_safe(
     }
 
     let child_y = y + CHILD_SPACING_Y;
-    let mut spans = Vec::new();
-    for child_id in &node.children {
-        let w = subtree_span(nodes, *child_id);
-        let label_w = nodes[&child_id].label.len() as i16 + 2;
-        let span = w.max(label_w + MIN_NODE_GAP);
-        spans.push((*child_id, span));
-    }
-
-    let mut total_width: i16 = spans.iter().map(|(_, w)| *w).sum();
-    if spans.len() > 1 {
-        total_width += SIBLING_SPACING_X * (spans.len() as i16 - 1);
-    }
 
     let mut max_y = y;
     let mut min_x_span = x;
     let mut max_x_span = x + label_width;
 
-    if spans.len() == 1 {
-        let (child_id, _w) = spans[0];
+    let count = node.children.len() as i16;
+    let mid = count / 2;
+    for (i, child_id) in node.children.iter().enumerate() {
+        let offset_x = (i as i16 - mid) * SIBLING_SPACING_X;
+        let child_x = x + offset_x;
         let (cy, mi, ma) = layout_recursive_safe(
             nodes,
-            child_id,
-            x,
+            *child_id,
+            child_x,
             child_y,
             _term_width,
             out,
@@ -227,27 +218,6 @@ fn layout_recursive_safe(
         max_y = max_y.max(cy);
         min_x_span = min_x_span.min(mi);
         max_x_span = max_x_span.max(ma);
-    } else {
-        let mut cursor = x - total_width / 2;
-        for (child_id, span) in spans {
-            let child_x = cursor + span / 2;
-            let (cy, mi, ma) = layout_recursive_safe(
-                nodes,
-                child_id,
-                child_x,
-                child_y,
-                _term_width,
-                out,
-                roles,
-                auto_arrange,
-                visited,
-                depth + 1,
-            );
-            max_y = max_y.max(cy);
-            min_x_span = min_x_span.min(mi);
-            max_x_span = max_x_span.max(ma);
-            cursor += span + SIBLING_SPACING_X;
-        }
     }
 
     (max_y, min_x_span.min(x), max_x_span.max(x + label_width))
