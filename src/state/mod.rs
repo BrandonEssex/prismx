@@ -301,6 +301,9 @@ impl AppState {
                 "/toggle spotlight" => self.show_spotlight = !self.show_spotlight,
                 "/mode zen" => self.mode = "zen".into(),
                 "/mode gemx" => self.mode = "gemx".into(),
+                "/arrange" => {
+                    self.auto_arrange = true;
+                }
                 "/clear" => self.zen_buffer = vec![String::new()],
                 _ => {}
             }

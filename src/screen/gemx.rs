@@ -11,7 +11,7 @@ use crate::ui::beamx::{BeamX, BeamXStyle, BeamXMode};
 use std::time::{SystemTime, UNIX_EPOCH};
 use std::collections::HashMap;
 
-pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
+pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppState) {
     let style = style_for_mode(&state.mode);
     let block = Block::default()
         .title(if state.auto_arrange { "Gemx [Auto-Arrange]" } else { "Gemx" })
@@ -64,6 +64,39 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
             let (_, roles) =
                 layout_nodes(&state.nodes, root_id, 0, area.width as i16, state.auto_arrange);
             node_roles.extend(roles);
+        }
+
+    }
+
+    // When auto-arrange is active, adjust zoom and scroll to fit all nodes
+    if state.auto_arrange && !drawn_at.is_empty() {
+        let min_x = drawn_at.values().map(|c| c.x).min().unwrap_or(0);
+        let max_x = drawn_at.values().map(|c| c.x).max().unwrap_or(0);
+        let min_y = drawn_at.values().map(|c| c.y).min().unwrap_or(0);
+        let max_y = drawn_at.values().map(|c| c.y).max().unwrap_or(0);
+
+        let total_w = (max_x - min_x + 1) as f32;
+        let total_h = (max_y - min_y + 1) as f32;
+
+        let mut zoom = (area.width as f32 / total_w)
+            .min(area.height as f32 / total_h);
+        zoom = zoom.clamp(0.5, 2.0);
+        state.zoom_scale = zoom;
+
+        let (bsx, bsy) = spacing_for_zoom(state.zoom_scale);
+        let center_x = (min_x + max_x) as f32 / 2.0;
+        let center_y = (min_y + max_y) as f32 / 2.0;
+
+        state.scroll_x =
+            (center_x - (area.width as f32 / (bsx as f32 * zoom)) / 2.0).round() as i16;
+        state.scroll_y =
+            (center_y - (area.height as f32 / (bsy as f32 * zoom)) / 2.0).round() as i16;
+
+        if state.scroll_x < 0 {
+            state.scroll_x = 0;
+        }
+        if state.scroll_y < 0 {
+            state.scroll_y = 0;
         }
     }
 
@@ -167,6 +200,12 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
                 }
             }
         }
+    }
+
+    if state.auto_arrange {
+        let indicator = Paragraph::new("[A] Auto-Arrange")
+            .style(Style::default().fg(Color::Gray).add_modifier(Modifier::DIM));
+        f.render_widget(indicator, Rect::new(area.x + 1, area.y + 1, 20, 1));
     }
 
     render_full_border(f, area, &style, true);
