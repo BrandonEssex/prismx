@@ -8,6 +8,8 @@ pub struct Coords {
 }
 
 pub const SIBLING_SPACING_X: i16 = 3;
+/// Minimum space reserved between sibling nodes
+pub const MIN_NODE_GAP: i16 = 3;
 pub const CHILD_SPACING_Y: i16 = 1;
 pub const FREE_GRID_COLUMNS: usize = 4;
 pub const GEMX_HEADER_HEIGHT: i16 = 2;
@@ -113,7 +115,7 @@ fn layout_recursive_safe(
     let mut min_x_span = x;
     let mut max_x_span = x + node.label.len() as i16 + 2;
 
-    for (i, child_id) in node.children.iter().enumerate() {
+    for child_id in &node.children {
         let child_y = y + CHILD_SPACING_Y;
         let (branch_max_y, branch_min_x, branch_max_x) = layout_recursive_safe(
             nodes,
@@ -125,25 +127,27 @@ fn layout_recursive_safe(
             visited,
             depth + 1,
         );
-        let span_width = branch_max_x - branch_min_x;
-        spans.push((*child_id, span_width, branch_min_x, branch_max_x));
-        if i > 0 {
-            total_width += SIBLING_SPACING_X;
-        }
-        total_width += span_width.max(1);
+        let subtree_width = branch_max_x - branch_min_x;
+        let label_width = nodes
+            .get(child_id)
+            .map(|c| c.label.len() as i16)
+            .unwrap_or(0);
+        let child_span = subtree_width.max(label_width) + MIN_NODE_GAP;
+        spans.push((*child_id, child_span, branch_min_x, branch_max_x));
+        total_width += child_span;
         max_y = max_y.max(branch_max_y);
     }
 
     if !spans.is_empty() {
         // Second pass: position each child relative to the overall width
         let mut cursor_x = x - total_width / 2;
-        for (child_id, span_width, branch_min_x, branch_max_x) in spans {
+        for (child_id, child_span, branch_min_x, branch_max_x) in spans {
             let current_x = out.get(&child_id).map(|c| c.x).unwrap_or(x);
             let dx = cursor_x - current_x;
             shift_subtree(child_id, dx, out, nodes);
             min_x_span = min_x_span.min(branch_min_x + dx);
             max_x_span = max_x_span.max(branch_max_x + dx);
-            cursor_x += span_width.max(1) + SIBLING_SPACING_X;
+            cursor_x += child_span;
         }
 
         // Recenter the parent horizontally above its children.
