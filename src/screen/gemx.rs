@@ -18,6 +18,10 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppStat
         .borders(Borders::NONE);
     f.render_widget(block, area);
 
+    if state.auto_arrange {
+        state.recalculate_roles();
+    }
+
 
     // // ✅ Always print the structure for diagnostics
     // println!("=== NODES AND CHILDREN ===");
@@ -209,10 +213,14 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppStat
     }
 
     render_full_border(f, area, &style, true);
-    let tick = (SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .unwrap_or_default()
-        .as_millis() / 300) as u64;
+    let tick = if std::env::var("PRISMX_TEST").is_ok() {
+        0
+    } else {
+        (SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap_or_default()
+            .as_millis() / 300) as u64
+    };
     let beamx = BeamX {
         tick,
         enabled: true,

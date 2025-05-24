@@ -118,6 +118,7 @@ pub fn drag_update(state: &mut AppState, x: u16, y: u16) {
 pub fn end_drag(state: &mut AppState) {
     state.dragging = None;
     state.last_mouse = None;
+    state.recalculate_roles();
 }
 
 /// Drag a node and its children recursively.
