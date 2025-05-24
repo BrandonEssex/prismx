@@ -70,14 +70,15 @@ pub fn render_beamx<B: Backend>(
         .duration_since(UNIX_EPOCH)
         .unwrap_or_default()
         .as_millis() / 300;
-    let center = match tick % 48 {
-        0..=5 => "·",
-        6..=11 => "✦",
-        12..=23 => "❖",
-        24..=29 => "✦",
-        30..=35 => "X",
-        36..=41 => "✦",
-        42..=47 => "❖",
+    let prism = match tick % 36 {
+        0..=3 => "·",
+        4..=7 => "◆",
+        8..=11 => "✦",
+        12..=15 => "x",
+        16..=19 => "X",
+        20..=23 => "x",
+        24..=27 => "✦",
+        28..=31 => "◆",
         _ => "·",
     };
 
@@ -90,7 +91,7 @@ pub fn render_beamx<B: Backend>(
             f.render_widget(tr, Rect::new(x_offset + 4, y_offset, 1, 1));
 
             // center glyph
-            let center_widget = Paragraph::new(center).style(style_prism);
+            let center_widget = Paragraph::new(prism).style(style_prism);
             f.render_widget(center_widget, Rect::new(x_offset + 2, y_offset + 1, 1, 1));
 
             // bottom row corners
@@ -102,8 +103,8 @@ pub fn render_beamx<B: Backend>(
         BeamXStyle::Cross => {
             let left = Paragraph::new("⨯").style(style_status);
             f.render_widget(left, Rect::new(x_offset + 1, y_offset + 1, 1, 1));
-            let prism = Paragraph::new(center).style(style_prism);
-            f.render_widget(prism, Rect::new(x_offset + 2, y_offset + 1, 1, 1));
+            let prism_widget = Paragraph::new(prism).style(style_prism);
+            f.render_widget(prism_widget, Rect::new(x_offset + 2, y_offset + 1, 1, 1));
             let right = Paragraph::new("⨯").style(style_border);
             f.render_widget(right, Rect::new(x_offset + 3, y_offset + 1, 1, 1));
         }
