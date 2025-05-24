@@ -1,8 +1,8 @@
 use ratatui::prelude::*;
 use ratatui::widgets::{Block, Borders, Paragraph};
 use crate::layout::{
-    layout_nodes, Coords, LayoutRole, GEMX_HEADER_HEIGHT, BASE_SPACING_X,
-    BASE_SPACING_Y,
+    layout_nodes, Coords, LayoutRole, PackRegion, GEMX_HEADER_HEIGHT,
+    BASE_SPACING_X, BASE_SPACING_Y, CHILD_SPACING_Y, subtree_span, subtree_depth,
 };
 use crate::node::{NodeID, NodeMap};
 use crate::state::AppState;
@@ -29,14 +29,19 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
     let mut drawn_at = HashMap::new();
     let mut node_roles = HashMap::new();
     if state.auto_arrange {
-        let mut row = GEMX_HEADER_HEIGHT + 1;
+        let mut pack = PackRegion::new(area.width as i16, GEMX_HEADER_HEIGHT + 1);
         for &root_id in &roots {
-            let (layout, roles) =
-                layout_nodes(&state.nodes, root_id, row, area.width as i16, state.auto_arrange);
-            let max_y = layout.values().map(|c| c.y).max().unwrap_or(row);
+            let w = subtree_span(&state.nodes, root_id);
+            let h = subtree_depth(&state.nodes, root_id) * CHILD_SPACING_Y + 1;
+            let (ox, oy) = pack.insert((w, h));
+
+            let (mut layout, roles) =
+                layout_nodes(&state.nodes, root_id, oy, area.width as i16, state.auto_arrange);
+            for pos in layout.values_mut() {
+                pos.x += ox;
+            }
             drawn_at.extend(layout);
             node_roles.extend(roles);
-            row = max_y.saturating_add(3);
         }
     } else {
         fn collect(nodes: &NodeMap, id: NodeID, out: &mut HashMap<NodeID, Coords>) {
