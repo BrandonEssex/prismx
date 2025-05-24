@@ -66,10 +66,10 @@ pub fn node_at_position(state: &AppState, x: u16, y: u16) -> Option<NodeID> {
 
     for (&id, &Coords { x: nx, y: ny }) in &layout {
         let zoom = state.zoom_scale as f32;
-        let draw_x = ((nx as f32 * BASE_SPACING_X as f32 * zoom) - state.scroll_x as f32)
+        let draw_x = ((nx as f32 - state.scroll_x as f32) * BASE_SPACING_X as f32 * zoom)
             .round()
             .max(0.0) as u16;
-        let draw_y = ((ny as f32 * BASE_SPACING_Y as f32 * zoom) - state.scroll_y as f32)
+        let draw_y = ((ny as f32 - state.scroll_y as f32) * BASE_SPACING_Y as f32 * zoom)
             .round()
             .max(0.0) as u16;
 
@@ -89,8 +89,8 @@ pub fn node_at_position(state: &AppState, x: u16, y: u16) -> Option<NodeID> {
 pub fn start_drag(state: &mut AppState, id: NodeID, x: u16, y: u16) {
     state.dragging = Some(id);
     let zoom = state.zoom_scale as f32;
-    let wx = ((x as f32 + state.scroll_x as f32) / (BASE_SPACING_X as f32 * zoom)).round() as i16;
-    let wy = ((y as f32 + state.scroll_y as f32) / (BASE_SPACING_Y as f32 * zoom)).round() as i16;
+    let wx = (state.scroll_x as f32 + (x as f32 / (BASE_SPACING_X as f32 * zoom))).round() as i16;
+    let wy = (state.scroll_y as f32 + (y as f32 / (BASE_SPACING_Y as f32 * zoom))).round() as i16;
     state.last_mouse = Some((wx, wy));
     state.selected = Some(id);
 }
@@ -98,8 +98,8 @@ pub fn start_drag(state: &mut AppState, id: NodeID, x: u16, y: u16) {
 /// Update dragging node position based on new mouse coords.
 pub fn drag_update(state: &mut AppState, x: u16, y: u16) {
     let zoom = state.zoom_scale as f32;
-    let wx = ((x as f32 + state.scroll_x as f32) / (BASE_SPACING_X as f32 * zoom)).round() as i16;
-    let wy = ((y as f32 + state.scroll_y as f32) / (BASE_SPACING_Y as f32 * zoom)).round() as i16;
+    let wx = (state.scroll_x as f32 + (x as f32 / (BASE_SPACING_X as f32 * zoom))).round() as i16;
+    let wy = (state.scroll_y as f32 + (y as f32 / (BASE_SPACING_Y as f32 * zoom))).round() as i16;
     if let (Some(id), Some((lx, ly))) = (state.dragging, state.last_mouse) {
         let dx = wx - lx;
         let dy = wy - ly;
