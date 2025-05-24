@@ -1,7 +1,10 @@
-use ratatui::{backend::Backend, layout::Rect, Frame};
+use ratatui::{backend::CrosstermBackend, layout::Rect, Frame};
+use std::io::Stdout;
+
+pub type PluginFrame<'a> = Frame<'a, CrosstermBackend<Stdout>>;
 
 pub trait PluginRender {
-    fn render<B: Backend>(&mut self, f: &mut Frame<B>, area: Rect);
+    fn render(&mut self, f: &mut PluginFrame<'_>, area: Rect);
 }
 
 pub mod countdown;

@@ -3,6 +3,7 @@ use crate::node::{Node, NodeID, NodeMap};
 use crate::layout::{
     SIBLING_SPACING_X, CHILD_SPACING_Y, FREE_GRID_COLUMNS, GEMX_HEADER_HEIGHT,
 };
+use crate::plugin::PluginHost;
 
 mod hotkeys;
 pub use hotkeys::*;
@@ -37,6 +38,7 @@ pub struct AppState {
     pub debug_input_mode: bool,
     pub status_message: String,
     pub status_message_last_updated: Option<std::time::Instant>,
+    pub plugin_host: PluginHost,
 
 }
 
@@ -79,6 +81,7 @@ impl Default for AppState {
             debug_input_mode: true,
             status_message: String::new(),
             status_message_last_updated: None,
+            plugin_host: PluginHost::new(),
 
         }
     }
@@ -268,15 +271,29 @@ impl AppState {
     }
 
     pub fn execute_spotlight_command(&mut self) {
-        let cmd = self.spotlight_input.trim();
-        match cmd {
-            "/toggle triage" => self.show_triage = !self.show_triage,
-            "/toggle keymap" => self.show_keymap = !self.show_keymap,
-            "/toggle spotlight" => self.show_spotlight = !self.show_spotlight,
-            "/mode zen" => self.mode = "zen".into(),
-            "/mode gemx" => self.mode = "gemx".into(),
-            "/clear" => self.zen_buffer = vec![String::new()],
-            _ => {}
+        let input = self.spotlight_input.trim();
+        if input == "/start pomodoro" {
+            self.plugin_host.start_pomodoro();
+        } else if input.starts_with("/countdown ") {
+            let rest = &input["/countdown ".len()..];
+            let mut parts = rest.splitn(2, ' ');
+            let days_part = parts.next().unwrap_or("");
+            let label = parts.next().unwrap_or("").to_string();
+            if let Some(num) = days_part.strip_prefix('+').and_then(|s| s.strip_suffix('d')) {
+                if let Ok(days) = num.parse::<u64>() {
+                    self.plugin_host.add_countdown(label, days);
+                }
+            }
+        } else {
+            match input {
+                "/toggle triage" => self.show_triage = !self.show_triage,
+                "/toggle keymap" => self.show_keymap = !self.show_keymap,
+                "/toggle spotlight" => self.show_spotlight = !self.show_spotlight,
+                "/mode zen" => self.mode = "zen".into(),
+                "/mode gemx" => self.mode = "gemx".into(),
+                "/clear" => self.zen_buffer = vec![String::new()],
+                _ => {}
+            }
         }
         self.spotlight_input.clear();
         self.show_spotlight = false;

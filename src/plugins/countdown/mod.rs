@@ -1,5 +1,5 @@
-use super::PluginRender;
-use ratatui::{backend::Backend, layout::Rect, widgets::Paragraph, Frame};
+use super::{PluginFrame, PluginRender};
+use ratatui::{layout::Rect, widgets::Paragraph};
 use std::time::{SystemTime, UNIX_EPOCH};
 
 pub struct CountdownPlugin {
@@ -8,7 +8,7 @@ pub struct CountdownPlugin {
 }
 
 impl PluginRender for CountdownPlugin {
-    fn render<B: Backend>(&mut self, f: &mut Frame<B>, area: Rect) {
+    fn render(&mut self, f: &mut PluginFrame<'_>, area: Rect) {
         let now = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs();
         let target = self.target.duration_since(UNIX_EPOCH).unwrap().as_secs();
         let remaining = target.saturating_sub(now);
