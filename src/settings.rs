@@ -1,5 +1,4 @@
 use std::time::{SystemTime, UNIX_EPOCH};
-use std::time::{SystemTime, UNIX_EPOCH};
 use ratatui::{
     backend::Backend,
     layout::{Rect, Alignment},
@@ -9,6 +8,7 @@ use ratatui::{
 };
 use crate::beamx::{render_full_border, style_for_mode};
 use crate::ui::beamx::{BeamX, BeamXStyle, BeamXMode};
+
 
 pub fn render_settings<B: Backend>(f: &mut Frame<B>, area: Rect) {
     let style = style_for_mode("settings");
