@@ -23,6 +23,7 @@ fn buffer_to_string(buf: &Buffer) -> String {
 
 #[test]
 fn gemx_renders_correctly() {
+    std::env::set_var("PRISMX_TEST", "1");
     let area = Rect::new(0, 0, 50, 10);
     let backend = TestBackend::new(area.width, area.height);
     let mut terminal = Terminal::new(backend).unwrap();
