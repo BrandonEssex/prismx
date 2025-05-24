@@ -1,7 +1,6 @@
 # Patch 25.50b-c – System Safeguard Suite
 
 ## Goals
-- Add regression defenses and meta validation
-- Golden snapshot testing for render logic (e.g. `render_gemx`)
-- Patch risk scoring for core file changes
-- Status table generator from PATCH_SUMMARY files
+- Add golden render test for `GemX` layout
+- Add patch risk score linter for high-risk code paths
+- Generate `STATUS_TABLE.md` from patch summaries
