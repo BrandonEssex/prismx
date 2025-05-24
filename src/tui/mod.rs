@@ -224,6 +224,8 @@ pub fn launch_ui() -> std::io::Result<()> {
                     state.drawing_root = None;
                 } else if match_hotkey("toggle_settings", code, modifiers, &state) {
                     state.mode = "settings".into();
+                } else if code == KeyCode::Char('.') && modifiers == KeyModifiers::CONTROL {
+                    state.mode = "settings".into();
                 }
 
                 // 🍎 macOS fallback for Cmd+Arrow scrolling
