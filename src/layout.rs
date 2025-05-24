@@ -16,6 +16,32 @@ pub const MAX_LAYOUT_DEPTH: usize = 50;
 pub const BASE_SPACING_X: i16 = 20;
 pub const BASE_SPACING_Y: i16 = 5;
 
+fn subtree_span(nodes: &NodeMap, id: NodeID) -> i16 {
+    fn walk(nodes: &NodeMap, nid: NodeID, visited: &mut HashSet<NodeID>) -> i16 {
+        if !visited.insert(nid) {
+            return 0;
+        }
+        if let Some(node) = nodes.get(&nid) {
+            let label_w = node.label.len() as i16 + 2;
+            if node.collapsed || node.children.is_empty() {
+                return label_w;
+            }
+            let mut total = 0;
+            for (i, c) in node.children.iter().enumerate() {
+                if i > 0 {
+                    total += SIBLING_SPACING_X;
+                }
+                total += walk(nodes, *c, visited);
+            }
+            label_w.max(total)
+        } else {
+            0
+        }
+    }
+
+    walk(nodes, id, &mut HashSet::new())
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum LayoutRole {
     Root,
@@ -51,6 +77,15 @@ pub fn layout_nodes(
         &mut visited,
         0,
     );
+
+    if let Some(min_x) = coords.values().map(|c| c.x).min() {
+        if min_x < 0 {
+            for pos in coords.values_mut() {
+                pos.x -= min_x;
+            }
+        }
+    }
+
     (coords, roles)
 }
 
@@ -95,22 +130,34 @@ fn layout_recursive_safe(
     };
     roles.insert(node_id, role);
 
+    let label_width = node.label.len() as i16 + 2;
+    out.insert(node_id, Coords { x, y });
+
     if node.collapsed || node.children.is_empty() {
-        out.insert(node_id, Coords { x, y });
-        return (y, x, x + node.label.len() as i16 + 2);
+        return (y, x, x + label_width);
     }
 
     let child_y = y + CHILD_SPACING_Y;
     let mut spans = Vec::new();
-    let mut total_width = 0;
+    for child_id in &node.children {
+        let w = subtree_span(nodes, *child_id);
+        spans.push((*child_id, w));
+    }
+
+    let mut total_width: i16 = spans.iter().map(|(_, w)| *w).sum();
+    if spans.len() > 1 {
+        total_width += SIBLING_SPACING_X * (spans.len() as i16 - 1);
+    }
+
     let mut max_y = y;
     let mut min_x_span = x;
-    let mut max_x_span = x + node.label.len() as i16 + 2;
+    let mut max_x_span = x + label_width;
 
-    for child_id in &node.children {
-        let (branch_max_y, branch_min_x, branch_max_x) = layout_recursive_safe(
+    if spans.len() == 1 {
+        let (child_id, _w) = spans[0];
+        let (cy, mi, ma) = layout_recursive_safe(
             nodes,
-            *child_id,
+            child_id,
             x,
             child_y,
             _term_width,
@@ -120,30 +167,33 @@ fn layout_recursive_safe(
             visited,
             depth + 1,
         );
-        let subtree_width = branch_max_x - branch_min_x;
-        let label_width = nodes.get(child_id).map(|c| c.label.len() as i16).unwrap_or(0);
-        let child_span = subtree_width.max(label_width) + MIN_NODE_GAP;
-        spans.push((*child_id, child_span, branch_min_x, branch_max_x));
-        total_width += child_span;
-        max_y = max_y.max(branch_max_y);
+        max_y = max_y.max(cy);
+        min_x_span = min_x_span.min(mi);
+        max_x_span = max_x_span.max(ma);
+    } else {
+        let mut cursor = x - total_width / 2;
+        for (child_id, span) in spans {
+            let child_x = cursor + span / 2;
+            let (cy, mi, ma) = layout_recursive_safe(
+                nodes,
+                child_id,
+                child_x,
+                child_y,
+                _term_width,
+                out,
+                roles,
+                auto_arrange,
+                visited,
+                depth + 1,
+            );
+            max_y = max_y.max(cy);
+            min_x_span = min_x_span.min(mi);
+            max_x_span = max_x_span.max(ma);
+            cursor += span + SIBLING_SPACING_X;
+        }
     }
 
-    let mut cursor_x = x - total_width / 2;
-    for (child_id, child_span, branch_min_x, branch_max_x) in spans {
-        let current_x = out.get(&child_id).map(|c| c.x).unwrap_or(x);
-        let dx = cursor_x - current_x;
-        shift_subtree(child_id, dx, out, nodes);
-        min_x_span = min_x_span.min(branch_min_x + dx);
-        max_x_span = max_x_span.max(branch_max_x + dx);
-        cursor_x += child_span;
-    }
-
-    let new_x = (min_x_span + max_x_span) / 2;
-    out.insert(node_id, Coords { x: new_x, y });
-    min_x_span = min_x_span.min(new_x);
-    max_x_span = max_x_span.max(new_x + node.label.len() as i16 + 2);
-
-    (max_y, min_x_span, max_x_span)
+    (max_y, min_x_span.min(x), max_x_span.max(x + label_width))
 }
 
 fn shift_subtree(id: NodeID, dx: i16, out: &mut HashMap<NodeID, Coords>, nodes: &NodeMap) {
