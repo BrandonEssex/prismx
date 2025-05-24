@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 use crate::node::{Node, NodeID, NodeMap};
+use crate::layout::{SIBLING_SPACING_X, CHILD_SPACING_Y, FREE_GRID_COLUMNS};
 
 mod hotkeys;
 pub use hotkeys::*;
@@ -123,8 +124,12 @@ impl AppState {
         for id in ids {
             if let Some(node) = self.nodes.get_mut(&id) {
                 if node.x == 0 && node.y == 0 {
-                    node.x = ((index % 4) * 6) as i16;
-                    node.y = ((index / 4) * 2) as i16;
+                    node.x = ((index % FREE_GRID_COLUMNS) as i16)
+                        * SIBLING_SPACING_X
+                        * 2;
+                    node.y = ((index / FREE_GRID_COLUMNS) as i16)
+                        * CHILD_SPACING_Y
+                        * 2;
                     index += 1;
                 }
             }

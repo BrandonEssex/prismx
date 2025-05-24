@@ -1,11 +1,34 @@
 use crate::state::AppState;
-use crate::node::{NodeID, NodeMap};
-use crate::layout::{layout_nodes, Coords};
+use crate::node::{Node, NodeID, NodeMap};
+use crate::layout::{layout_nodes, Coords, SIBLING_SPACING_X, CHILD_SPACING_Y, FREE_GRID_COLUMNS};
 use std::collections::HashMap;
 
 /// Toggle snap-to-grid mode
 pub fn toggle_snap(state: &mut AppState) {
     state.toggle_snap_grid();
+}
+
+/// Create a new free node using the fallback grid spacing when manual mode is active.
+pub fn spawn_free_node(state: &mut AppState) {
+    let new_id = state
+        .nodes
+        .keys()
+        .max()
+        .copied()
+        .unwrap_or(100)
+        + 1;
+
+    let mut node = Node::new(new_id, "Free Node", None);
+
+    if !state.auto_arrange {
+        let index = state.root_nodes.len();
+        node.x = ((index % FREE_GRID_COLUMNS) as i16) * SIBLING_SPACING_X * 2;
+        node.y = ((index / FREE_GRID_COLUMNS) as i16) * CHILD_SPACING_Y * 2;
+    }
+
+    state.nodes.insert(new_id, node);
+    state.root_nodes.push(new_id);
+    state.selected = Some(new_id);
 }
 
 /// Determine which node is at the given coordinates considering current layout.
