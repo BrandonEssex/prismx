@@ -1,14 +1,15 @@
 ## Code Changes
 
 - In `render_settings.rs`:
-  - Ensure all header Paragraphs render from x=0
-  - Manually set Rect if needed: `Rect::new(0, y, width, 1)`
-  - Add `.alignment(Alignment::Left)` if any Paragraph is misaligned
+  - Ensure Paragraphs start at x=0
+  - Set alignment: `.alignment(Alignment::Left)`
+  - Use explicit Rects if needed to override padding
 
-- In `render_beamx.rs`:
-  - Animate prism glyph using `tick % 3`: (`◆`, `✦`, `·`)
-  - Use symmetric glyphs: `⇘` top-left, `⇖` top-right, etc.
-  - Refactor style application to reflect “beam energy” vs “frame border”
-
-- Optional:
-  - Add `BeamPulseMode::Glow` or enum variant if needed
+- In `render_beamx()`:
+  - Animate prism: tick % 3 → ("◆", "✦", "·")
+  - Layout as:
+      ⇘     ⇖
+         ◆
+      ⇖     ⇘
+  - Use border_color vs status_color for beam styling
+  - Prism always centered, logo rendered last
