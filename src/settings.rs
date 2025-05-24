@@ -1,6 +1,6 @@
 use ratatui::{
     backend::Backend,
-    layout::Rect,
+    layout::{Rect, Alignment},
     Frame,
     widgets::{Block, Borders, Paragraph},
     text::Line,
@@ -21,9 +21,13 @@ pub fn render_settings<B: Backend>(f: &mut Frame<B>, area: Rect) {
     let block = Block::default()
         .title("Settings")
         .borders(Borders::NONE);
+    // Draw title first so the text area can be precisely positioned
+    f.render_widget(block, area);
 
-    let paragraph = Paragraph::new(lines).block(block);
-    f.render_widget(paragraph, area);
+    let inner = Rect::new(area.x + 1, area.y + 1, area.width.saturating_sub(2), area.height.saturating_sub(2));
+    let paragraph = Paragraph::new(lines)
+        .alignment(Alignment::Left);
+    f.render_widget(paragraph, inner);
     render_full_border(f, area, &style);
     render_beamx(f, area, &style, BeamXStyle::Split);
 }
