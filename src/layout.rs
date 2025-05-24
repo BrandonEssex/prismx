@@ -106,50 +106,44 @@ fn layout_recursive_safe(
         return (y, x, x + node.label.len() as i16 + 2);
     }
 
-    // Compute spans for each child subtree so siblings can be spaced without
-    // overlap.
+    // First pass: layout children temporarily to determine their spans
     let mut spans = Vec::new();
     let mut total_width = 0;
-    for (i, child_id) in node.children.iter().enumerate() {
-        let (cw, _) = get_subtree_span(nodes, *child_id);
-        if i > 0 {
-            total_width += SIBLING_SPACING_X;
-        }
-        total_width += cw.max(1);
-        spans.push((*child_id, cw.max(1))); 
-    }
-
     let mut max_y = y;
     let mut min_x_span = x;
     let mut max_x_span = x + node.label.len() as i16 + 2;
 
+    for (i, child_id) in node.children.iter().enumerate() {
+        let child_y = y + CHILD_SPACING_Y;
+        let (branch_max_y, branch_min_x, branch_max_x) = layout_recursive_safe(
+            nodes,
+            *child_id,
+            x,
+            child_y,
+            term_width,
+            out,
+            visited,
+            depth + 1,
+        );
+        let span_width = branch_max_x - branch_min_x;
+        spans.push((*child_id, span_width, branch_min_x, branch_max_x));
+        if i > 0 {
+            total_width += SIBLING_SPACING_X;
+        }
+        total_width += span_width.max(1);
+        max_y = max_y.max(branch_max_y);
+    }
+
     if !spans.is_empty() {
-        // Start laying out children so the entire cluster is centered around the
-        // parent node's x coordinate.
+        // Second pass: position each child relative to the overall width
         let mut cursor_x = x - total_width / 2;
-        for (child_id, span_width) in spans {
-            let child_x = cursor_x;
-            let child_y = y + CHILD_SPACING_Y;
-
-        // println!(
-        //     "├── child {} of {} at x={}, y={}",
-        //     child_id, node_id, child_x, child_y
-        // );
-
-            let (branch_max_y, branch_min_x, branch_max_x) = layout_recursive_safe(
-                nodes,
-                child_id,
-                child_x,
-                child_y,
-                term_width,
-                out,
-                visited,
-                depth + 1,
-            );
-            max_y = max_y.max(branch_max_y);
-            min_x_span = min_x_span.min(branch_min_x);
-            max_x_span = max_x_span.max(branch_max_x);
-            cursor_x += span_width + SIBLING_SPACING_X;
+        for (child_id, span_width, branch_min_x, branch_max_x) in spans {
+            let current_x = out.get(&child_id).map(|c| c.x).unwrap_or(x);
+            let dx = cursor_x - current_x;
+            shift_subtree(child_id, dx, out, nodes);
+            min_x_span = min_x_span.min(branch_min_x + dx);
+            max_x_span = max_x_span.max(branch_max_x + dx);
+            cursor_x += span_width.max(1) + SIBLING_SPACING_X;
         }
 
         // Recenter the parent horizontally above its children.
@@ -169,6 +163,22 @@ fn layout_recursive_safe(
     }
 
     (max_y, min_x_span, max_x_span)
+}
+
+fn shift_subtree(id: NodeID, dx: i16, out: &mut HashMap<NodeID, Coords>, nodes: &NodeMap) {
+    if dx == 0 {
+        return;
+    }
+    if let Some(pos) = out.get_mut(&id) {
+        pos.x += dx;
+    }
+    if let Some(node) = nodes.get(&id) {
+        if !node.collapsed {
+            for child in &node.children {
+                shift_subtree(*child, dx, out, nodes);
+            }
+        }
+    }
 }
 
 #[cfg(test)]
@@ -220,6 +230,56 @@ mod tests {
 
         let (left_span, _) = get_subtree_span(&nodes, 2);
         assert!(right.x >= left.x + left_span + SIBLING_SPACING_X);
+    }
+
+    fn subtree_bounds(nodes: &NodeMap, layout: &HashMap<NodeID, Coords>, id: NodeID) -> (i16, i16) {
+        fn walk(nodes: &NodeMap, layout: &HashMap<NodeID, Coords>, id: NodeID, mi: &mut i16, ma: &mut i16) {
+            if let Some(n) = nodes.get(&id) {
+                if let Some(c) = layout.get(&id) {
+                    let w = n.label.len() as i16 + 2;
+                    *mi = (*mi).min(c.x);
+                    *ma = (*ma).max(c.x + w);
+                    if !n.collapsed {
+                        for child in &n.children {
+                            walk(nodes, layout, *child, mi, ma);
+                        }
+                    }
+                }
+            }
+        }
+
+        let mut mi = i16::MAX;
+        let mut ma = i16::MIN;
+        walk(nodes, layout, id, &mut mi, &mut ma);
+        (mi, ma)
+    }
+
+    #[test]
+    fn subtree_packing_prevents_overlap() {
+        let mut nodes = NodeMap::new();
+
+        let mut root = Node::new(1, "Root", None);
+        root.children = vec![2, 3];
+
+        let mut left = Node::new(2, "L", Some(1));
+        left.children = vec![4, 5];
+
+        let right = Node::new(3, "R", Some(1));
+        let g1 = Node::new(4, "WideWideWide", Some(2));
+        let g2 = Node::new(5, "WideWideWide", Some(2));
+
+        nodes.insert(1, root);
+        nodes.insert(2, left);
+        nodes.insert(3, right);
+        nodes.insert(4, g1);
+        nodes.insert(5, g2);
+
+        let layout = layout_nodes(&nodes, 1, 0, 200);
+
+        let (_, left_max) = subtree_bounds(&nodes, &layout, 2);
+        let right_x = layout[&3].x;
+
+        assert!(right_x >= left_max + SIBLING_SPACING_X);
     }
 
     #[test]
