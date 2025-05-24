@@ -70,16 +70,19 @@ pub fn render_beamx<B: Backend>(
         .duration_since(UNIX_EPOCH)
         .unwrap_or_default()
         .as_millis() / 300;
-    let prism = match tick % 36 {
-        0..=3 => "·",
-        4..=7 => "◆",
-        8..=11 => "✦",
-        12..=15 => "x",
-        16..=19 => "X",
-        20..=23 => "x",
-        24..=27 => "✦",
-        28..=31 => "◆",
-        _ => "·",
+    let prism = match tick % 12 {
+        0 => "·",
+        1 => "✦",
+        2 => "◆",
+        3 => "✦",
+        4 => "·",
+        5 => "x",
+        6 => "X",
+        7 => "x",
+        8 => "·",
+        9 => "✦",
+        10 => "◆",
+        _ => "✦",
     };
 
     match variant {
