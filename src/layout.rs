@@ -141,7 +141,9 @@ fn layout_recursive_safe(
     let mut spans = Vec::new();
     for child_id in &node.children {
         let w = subtree_span(nodes, *child_id);
-        spans.push((*child_id, w));
+        let label_w = nodes[&child_id].label.len() as i16 + 2;
+        let span = w.max(label_w + MIN_NODE_GAP);
+        spans.push((*child_id, span));
     }
 
     let mut total_width: i16 = spans.iter().map(|(_, w)| *w).sum();
