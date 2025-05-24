@@ -2,7 +2,8 @@ use crate::state::AppState;
 use crate::node::{Node, NodeID, NodeMap};
 use crate::layout::{
     layout_nodes, Coords, SIBLING_SPACING_X, CHILD_SPACING_Y, FREE_GRID_COLUMNS,
-    GEMX_HEADER_HEIGHT, BASE_SPACING_X, BASE_SPACING_Y,
+    GEMX_HEADER_HEIGHT, BASE_SPACING_X, BASE_SPACING_Y, PackRegion, subtree_span,
+    subtree_depth,
 };
 use std::collections::HashMap;
 
@@ -46,12 +47,16 @@ pub fn node_at_position(state: &AppState, x: u16, y: u16) -> Option<NodeID> {
             state.root_nodes.clone()
         };
         let (tw, _) = crossterm::terminal::size().unwrap_or((80, 20));
-        let mut row = GEMX_HEADER_HEIGHT + 1;
+        let mut pack = PackRegion::new(tw as i16, GEMX_HEADER_HEIGHT + 1);
         for &root_id in &roots {
-            let (l, _roles) = layout_nodes(&state.nodes, root_id, row, tw as i16, state.auto_arrange);
-            let max_y = l.values().map(|c| c.y).max().unwrap_or(row);
+            let w = subtree_span(&state.nodes, root_id);
+            let h = subtree_depth(&state.nodes, root_id) * CHILD_SPACING_Y + 1;
+            let (ox, oy) = pack.insert((w, h));
+            let (mut l, _roles) = layout_nodes(&state.nodes, root_id, oy, tw as i16, state.auto_arrange);
+            for pos in l.values_mut() {
+                pos.x += ox;
+            }
             layout.extend(l);
-            row = max_y.saturating_add(3);
         }
     } else {
         for (id, node) in &state.nodes {

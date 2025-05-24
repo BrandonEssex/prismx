@@ -16,7 +16,7 @@ pub const MAX_LAYOUT_DEPTH: usize = 50;
 pub const BASE_SPACING_X: i16 = 20;
 pub const BASE_SPACING_Y: i16 = 5;
 
-fn subtree_span(nodes: &NodeMap, id: NodeID) -> i16 {
+pub fn subtree_span(nodes: &NodeMap, id: NodeID) -> i16 {
     fn walk(nodes: &NodeMap, nid: NodeID, visited: &mut HashSet<NodeID>) -> i16 {
         if !visited.insert(nid) {
             return 0;
@@ -40,6 +40,61 @@ fn subtree_span(nodes: &NodeMap, id: NodeID) -> i16 {
     }
 
     walk(nodes, id, &mut HashSet::new())
+}
+
+pub fn subtree_depth(nodes: &NodeMap, id: NodeID) -> i16 {
+    fn walk(nodes: &NodeMap, nid: NodeID, visited: &mut HashSet<NodeID>) -> i16 {
+        if !visited.insert(nid) {
+            return 0;
+        }
+        if let Some(node) = nodes.get(&nid) {
+            if node.collapsed || node.children.is_empty() {
+                return 1;
+            }
+            let mut max_child = 0;
+            for c in &node.children {
+                max_child = max_child.max(walk(nodes, *c, visited));
+            }
+            1 + max_child
+        } else {
+            1
+        }
+    }
+
+    walk(nodes, id, &mut HashSet::new())
+}
+
+pub struct PackRegion {
+    pub cursor_x: i16,
+    pub cursor_y: i16,
+    pub row_height: i16,
+    pub term_width: i16,
+}
+
+impl PackRegion {
+    pub fn new(term_width: i16, start_y: i16) -> Self {
+        Self {
+            cursor_x: 0,
+            cursor_y: start_y,
+            row_height: 0,
+            term_width,
+        }
+    }
+
+    pub fn insert(&mut self, size: (i16, i16)) -> (i16, i16) {
+        let (w, h) = size;
+        if self.cursor_x + w > self.term_width {
+            self.cursor_x = 0;
+            self.cursor_y += self.row_height + CHILD_SPACING_Y * 2;
+            self.row_height = 0;
+        }
+        let anchor = (self.cursor_x, self.cursor_y);
+        self.cursor_x += w + SIBLING_SPACING_X;
+        if h > self.row_height {
+            self.row_height = h;
+        }
+        anchor
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
