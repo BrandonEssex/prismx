@@ -6,17 +6,18 @@ use crate::layout::{
 };
 use crate::node::{NodeID, NodeMap};
 use crate::state::AppState;
-use crate::beamx::render_beam_logo;
+use crate::beamx::{render_beam_logo, render_full_border, style_for_mode};
 use std::collections::HashMap;
 
 pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
+    let style = style_for_mode(&state.mode);
     let block = Block::default()
         .title(if state.auto_arrange { "Gemx [Auto-Arrange]" } else { "Gemx" })
-        .borders(Borders::ALL);
+        .borders(Borders::NONE);
     f.render_widget(block, area);
 
     // BeamX logo at the top center
-    render_beam_logo(f, Rect::new(area.x, area.y + 1, area.width, 3));
+    render_beam_logo(f, Rect::new(area.x, area.y + 1, area.width, 3), &style);
 
     // // ✅ Always print the structure for diagnostics
     // println!("=== NODES AND CHILDREN ===");
@@ -165,4 +166,6 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
             }
         }
     }
+
+    render_full_border(f, area, &style);
 }
