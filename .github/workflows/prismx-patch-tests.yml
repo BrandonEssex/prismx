@@ -82,11 +82,8 @@ jobs:
 
       - name: 💬 Post Summary to PR (if applicable)
         if: github.event_name == 'pull_request'
-        env: # merged
-  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  PR_URL: ${{ github.event.pull_request.html_url }}          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
         run: |
           gh pr comment "$PR_URL" --body "$(cat patches/${{ matrix.patch }}/PATCH_SUMMARY.md)" || echo "⚠️ Could not post PR comment"
-        env: # merged
-  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  PR_URL: ${{ github.event.pull_request.html_url }}          PR_URL: ${{ github.event.pull_request.html_url }}
