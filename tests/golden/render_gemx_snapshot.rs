@@ -26,9 +26,9 @@ fn gemx_renders_correctly() {
     let area = Rect::new(0, 0, 50, 10);
     let backend = TestBackend::new(area.width, area.height);
     let mut terminal = Terminal::new(backend).unwrap();
-    let state = AppState::default();
+    let mut state = AppState::default();
     let completed = terminal
-        .draw(|f| render_gemx(f, area, &state))
+        .draw(|f| render_gemx(f, area, &mut state))
         .unwrap();
     let buffer = completed.buffer.clone();
     let expected = buffer_from_file("tests/golden/gemx.snapshot");
