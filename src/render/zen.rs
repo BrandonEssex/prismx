@@ -34,7 +34,7 @@ pub fn render_zen_journal<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppS
         .wrap(Wrap { trim: false });
 
     f.render_widget(widget, area);
-    render_full_border(f, area, &style);
+    render_full_border(f, area, &style, true);
     render_beamx(f, area, &style, BeamXStyle::Split);
 }
 

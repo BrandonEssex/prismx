@@ -115,7 +115,12 @@ pub fn render_beam_logo<B: Backend>(f: &mut Frame<B>, area: Rect, style: &BeamSt
     render_beamx(f, area, style, BeamXStyle::Split);
 }
 
-pub fn render_full_border<B: Backend>(f: &mut Frame<B>, area: Rect, style: &BeamStyle) {
+pub fn render_full_border<B: Backend>(
+    f: &mut Frame<B>,
+    area: Rect,
+    style: &BeamStyle,
+    beamx_enabled: bool,
+) {
     let fg = Style::default().fg(style.border_color);
     let right = area.x + area.width - 1;
     let bottom = area.y + area.height - 1;
@@ -125,13 +130,16 @@ pub fn render_full_border<B: Backend>(f: &mut Frame<B>, area: Rect, style: &Beam
     let beam_start = area.right().saturating_sub(5);
     let beam_end = beam_start + 4;
     for x in area.x + 1..right {
-        if x >= beam_start && x <= beam_end {
+        if beamx_enabled && x >= beam_start && x <= beam_end {
             continue;
         }
         let p = Paragraph::new("━").style(fg);
         f.render_widget(p, Rect::new(x, area.y, 1, 1));
     }
-    // Skip top-right corner so the beam can cut through
+    if !beamx_enabled {
+        let tr = Paragraph::new("┓").style(fg);
+        f.render_widget(tr, Rect::new(right, area.y, 1, 1));
+    }
 
     for y in area.y + 1..bottom {
         let p = Paragraph::new("┃").style(fg);
