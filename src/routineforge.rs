@@ -6,7 +6,7 @@ use ratatui::{
     text::Line,
 };
 use crate::beamx::{render_full_border, style_for_mode};
-use crate::ui::beamx::{BeamX, BeamXStyle, BeamXMode};
+use crate::ui::beamx::{BeamX, BeamXStyle, BeamXMode, BeamXAnimationMode};
 use crate::state::AppState;
 use std::io::Stdout;
 
@@ -37,6 +37,7 @@ pub fn render_triage_panel(f: &mut PluginFrame<'_>, area: Rect, state: &mut AppS
         tick,
         enabled: true,
         style: BeamXStyle::from(BeamXMode::Triage),
+        animation: BeamXAnimationMode::PulseEntryRadiate,
     };
     beamx.render(f, area);
 

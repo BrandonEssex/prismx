@@ -7,7 +7,7 @@ use ratatui::{
     text::Line,
 };
 use crate::beamx::{render_full_border, style_for_mode};
-use crate::ui::beamx::{BeamX, BeamXStyle, BeamXMode};
+use crate::ui::beamx::{BeamX, BeamXStyle, BeamXMode, BeamXAnimationMode};
 
 
 pub fn render_settings<B: Backend>(f: &mut Frame<B>, area: Rect) {
@@ -40,6 +40,7 @@ pub fn render_settings<B: Backend>(f: &mut Frame<B>, area: Rect) {
         tick,
         enabled: true,
         style: BeamXStyle::from(BeamXMode::Settings),
+        animation: BeamXAnimationMode::PulseEntryRadiate,
     };
     beamx.render(f, area);
 }
