@@ -16,6 +16,14 @@ pub const MAX_LAYOUT_DEPTH: usize = 50;
 pub const BASE_SPACING_X: i16 = 20;
 pub const BASE_SPACING_Y: i16 = 5;
 
+pub fn spacing_for_zoom(zoom: f32) -> (i16, i16) {
+    if zoom < 0.7 {
+        (4, 2)
+    } else {
+        (6, 3)
+    }
+}
+
 pub fn subtree_span(nodes: &NodeMap, id: NodeID) -> i16 {
     fn walk(nodes: &NodeMap, nid: NodeID, visited: &mut HashSet<NodeID>) -> i16 {
         if !visited.insert(nid) {
@@ -198,11 +206,9 @@ fn layout_recursive_safe(
     let mut min_x_span = x;
     let mut max_x_span = x + label_width;
 
-    let count = node.children.len() as i16;
-    let mid = count / 2;
-    for (i, child_id) in node.children.iter().enumerate() {
-        let offset_x = (i as i16 - mid) * SIBLING_SPACING_X;
-        let child_x = x + offset_x;
+    let mut offset = 0;
+    for child_id in node.children.iter() {
+        let child_x = x + offset;
         let (cy, mi, ma) = layout_recursive_safe(
             nodes,
             *child_id,
@@ -218,6 +224,7 @@ fn layout_recursive_safe(
         max_y = max_y.max(cy);
         min_x_span = min_x_span.min(mi);
         max_x_span = max_x_span.max(ma);
+        offset += BASE_SPACING_X;
     }
 
     (max_y, min_x_span.min(x), max_x_span.max(x + label_width))
@@ -244,8 +251,9 @@ pub fn zoom_to_anchor(state: &mut crate::state::AppState, node_id: NodeID) {
     if let Some(node) = state.nodes.get(&node_id) {
         let (tw, th) = crossterm::terminal::size().unwrap_or((80, 20));
         let zoom = state.zoom_scale;
-        state.scroll_x = (node.x as f32 - (tw as f32 / 2.0) / (crate::layout::BASE_SPACING_X as f32 * zoom)).round() as i16;
-        state.scroll_y = (node.y as f32 - (th as f32 / 2.0) / (crate::layout::BASE_SPACING_Y as f32 * zoom)).round() as i16;
+        let (bsx, bsy) = spacing_for_zoom(state.zoom_scale);
+        state.scroll_x = (node.x as f32 - (tw as f32 / 2.0) / (bsx as f32 * zoom)).round() as i16;
+        state.scroll_y = (node.y as f32 - (th as f32 / 2.0) / (bsy as f32 * zoom)).round() as i16;
         clamp_scroll(state);
     }
 }
