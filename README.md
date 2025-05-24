@@ -53,7 +53,7 @@ Prebuilt binaries coming soon for Linux (deb/rpm), macOS (arm64/x64), and Window
 ⚙️ Quick Start
 
 prismx                        # launch main interface
-Alt + Spacebar                # open Spotlight command bar
+Alt + Shift + S               # open Spotlight command bar
 Enter / Tab / Ctrl+N         # create mindmap nodes
 Ctrl + .                     # toggle Zen Mode
 Ctrl + Q                     # quit
@@ -126,7 +126,7 @@ Pink → Personal
 
 Fuzzy search and launcher:
 
-Alt + Spacebar
+Alt + Shift + S
 Search examples:
 
 "node:inspect duct"
