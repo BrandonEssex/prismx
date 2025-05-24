@@ -1,12 +1,15 @@
 name: PrismX Patch Tests
 
 on:
-  push:
-    branches:
-      - patch/**     # Run on all patch branches
   pull_request:
     branches:
       - main
+    paths:
+      - 'patches/patch-*/*'
+
+concurrency:
+  group: patch-tests-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   generate-matrix:
@@ -35,6 +38,10 @@ jobs:
         patch: ${{ fromJson(needs.generate-matrix.outputs.matrix) }}
 
     steps:
+      - name: 🔁 Skip if no patches found
+        if: needs.generate-matrix.outputs.matrix == '[]'
+        run: echo "🟡 No valid patches. Matrix skipped."
+
       - name: 📥 Checkout
         uses: actions/checkout@v3
 
