@@ -1,7 +1,8 @@
 use ratatui::prelude::*;
 use ratatui::widgets::{Block, Borders, Paragraph};
 use crate::layout::{
-    layout_nodes, Coords, GEMX_HEADER_HEIGHT, BASE_SPACING_X, BASE_SPACING_Y,
+    layout_nodes, Coords, LayoutRole, GEMX_HEADER_HEIGHT, BASE_SPACING_X,
+    BASE_SPACING_Y,
 };
 use crate::node::{NodeID, NodeMap};
 use crate::state::AppState;
@@ -26,12 +27,15 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
     };
 
     let mut drawn_at = HashMap::new();
+    let mut node_roles = HashMap::new();
     if state.auto_arrange {
         let mut row = GEMX_HEADER_HEIGHT + 1;
         for &root_id in &roots {
-            let (layout, _roles) = layout_nodes(&state.nodes, root_id, row, area.width as i16, state.auto_arrange);
+            let (layout, roles) =
+                layout_nodes(&state.nodes, root_id, row, area.width as i16, state.auto_arrange);
             let max_y = layout.values().map(|c| c.y).max().unwrap_or(row);
             drawn_at.extend(layout);
+            node_roles.extend(roles);
             row = max_y.saturating_add(3);
         }
     } else {
@@ -47,10 +51,20 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
         }
         for &root_id in &roots {
             collect(&state.nodes, root_id, &mut drawn_at);
+            let (_, roles) =
+                layout_nodes(&state.nodes, root_id, 0, area.width as i16, state.auto_arrange);
+            node_roles.extend(roles);
         }
     }
 
     for (&node_id, &Coords { x, y }) in &drawn_at {
+        let role = node_roles
+            .get(&node_id)
+            .copied()
+            .unwrap_or(LayoutRole::Child);
+        if role == LayoutRole::Ghost {
+            continue;
+        }
         let zoom = state.zoom_scale as f32;
         let draw_x = ((x as f32 * BASE_SPACING_X as f32 * zoom) - state.scroll_x as f32)
             .round()
@@ -85,17 +99,33 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
         if let Some(glyph) = parent_glyph { label.push_str(glyph); }
         if let Some(elbow) = elbow_glyph { label.push_str(elbow); }
         label.push_str(&node.label);
+        if role == LayoutRole::Free {
+            label.push_str(" 🧩");
+        }
         if state.link_map.get(&node_id).and_then(|v| v.first()).is_some() {
             label.push_str(" 📎");
         }
 
         let width = label.len().min((area.width - draw_x) as usize);
 
-        let style = if is_selected {
-            Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD | Modifier::UNDERLINED)
+        let mut style = if is_selected {
+            Style::default()
+                .fg(Color::Yellow)
+                .add_modifier(Modifier::BOLD | Modifier::UNDERLINED)
         } else {
             Style::default().fg(Color::White)
         };
+        if !is_selected {
+            match role {
+                LayoutRole::Root => {
+                    style = style.fg(Color::Cyan).add_modifier(Modifier::BOLD);
+                }
+                LayoutRole::Orphan => {
+                    style = style.add_modifier(Modifier::DIM | Modifier::UNDERLINED);
+                }
+                _ => {}
+            }
+        }
 
         let para = Paragraph::new(label).style(style);
         f.render_widget(para, Rect::new(draw_x, draw_y, width as u16, 1));
