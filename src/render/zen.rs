@@ -1,6 +1,8 @@
 use ratatui::{prelude::*, widgets::{Block, Borders, Paragraph, Wrap}};
 use crate::state::AppState;
-use crate::beamx::{render_beamx, render_full_border, style_for_mode, BeamXStyle};
+use crate::beamx::{render_full_border, style_for_mode};
+use crate::ui::beamx::{BeamX, BeamXStyle};
+use std::time::{SystemTime, UNIX_EPOCH};
 
 pub fn render_zen_journal<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
     use ratatui::text::{Span, Line};
@@ -35,7 +37,16 @@ pub fn render_zen_journal<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppS
 
     f.render_widget(widget, area);
     render_full_border(f, area, &style, true);
-    render_beamx(f, area, &style, BeamXStyle::Split);
+    let tick = (SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap_or_default()
+        .as_millis() / 300) as u64;
+    let beamx = BeamX {
+        tick,
+        enabled: true,
+        style: BeamXStyle::default(),
+    };
+    beamx.render(f, area);
 }
 
 fn parse_markdown_line(input: &str) -> Line {
