@@ -1,4 +1,5 @@
 use ratatui::{backend::Backend, layout::Rect, style::{Color, Style}, widgets::Paragraph, Frame};
+use std::time::{SystemTime, UNIX_EPOCH};
 
 pub struct BeamStyle {
     pub border_color: Color,
@@ -58,29 +59,48 @@ pub fn render_beamx<B: Backend>(
     variant: BeamXStyle,
 ) {
     let x_offset = area.right().saturating_sub(6);
-    let base_x = x_offset + 1;
     let y_offset = area.top();
 
     let style_border = Style::default().fg(style.border_color);
     let style_status = Style::default().fg(style.status_color);
     let style_prism = Style::default().fg(style.prism_color);
 
+    // simple time-based tick for prism animation
+    let tick = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap_or_default()
+        .as_millis() / 300;
+    let prism_glyph = match tick % 3 {
+        0 => "◆",
+        1 => "✦",
+        _ => "·",
+    };
+
     match variant {
         BeamXStyle::Split => {
-            let left = Paragraph::new("⇆").style(style_status);
-            f.render_widget(left, Rect::new(base_x, y_offset, 1, 1));
-            let prism = Paragraph::new(style.center_glyph).style(style_prism);
-            f.render_widget(prism, Rect::new(base_x + 1, y_offset, 1, 1));
-            let right = Paragraph::new("⇉").style(style_border);
-            f.render_widget(right, Rect::new(base_x + 2, y_offset, 1, 1));
+            // top row
+            let tl = Paragraph::new("⇘").style(style_border);
+            f.render_widget(tl, Rect::new(x_offset, y_offset, 1, 1));
+            let tr = Paragraph::new("⇖").style(style_status);
+            f.render_widget(tr, Rect::new(x_offset + 5, y_offset, 1, 1));
+
+            // center prism
+            let center = Paragraph::new(prism_glyph).style(style_prism);
+            f.render_widget(center, Rect::new(x_offset + 3, y_offset + 1, 1, 1));
+
+            // bottom row
+            let bl = Paragraph::new("⇖").style(style_status);
+            f.render_widget(bl, Rect::new(x_offset, y_offset + 2, 1, 1));
+            let br = Paragraph::new("⇘").style(style_border);
+            f.render_widget(br, Rect::new(x_offset + 5, y_offset + 2, 1, 1));
         }
         BeamXStyle::Cross => {
             let left = Paragraph::new("⨯").style(style_status);
-            f.render_widget(left, Rect::new(base_x, y_offset, 1, 1));
-            let prism = Paragraph::new(style.center_glyph).style(style_prism);
-            f.render_widget(prism, Rect::new(base_x + 1, y_offset, 1, 1));
+            f.render_widget(left, Rect::new(x_offset + 1, y_offset + 1, 1, 1));
+            let prism = Paragraph::new(prism_glyph).style(style_prism);
+            f.render_widget(prism, Rect::new(x_offset + 3, y_offset + 1, 1, 1));
             let right = Paragraph::new("⨯").style(style_border);
-            f.render_widget(right, Rect::new(base_x + 2, y_offset, 1, 1));
+            f.render_widget(right, Rect::new(x_offset + 5, y_offset + 1, 1, 1));
         }
     }
 }
