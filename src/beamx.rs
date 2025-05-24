@@ -58,7 +58,7 @@ pub fn render_beamx<B: Backend>(
     style: &BeamStyle,
     variant: BeamXStyle,
 ) {
-    let x_offset = area.right().saturating_sub(6);
+    let x_offset = area.right().saturating_sub(7);
     let y_offset = area.top();
 
     let style_border = Style::default().fg(style.border_color);
@@ -70,28 +70,36 @@ pub fn render_beamx<B: Backend>(
         .duration_since(UNIX_EPOCH)
         .unwrap_or_default()
         .as_millis() / 300;
-    let prism_glyph = match tick % 3 {
-        0 => "◆",
-        1 => "✦",
+    let prism_glyph = match tick % 24 {
+        0..=3 => "·",
+        4..=7 => "◆",
+        8..=11 => "✦",
+        12..=15 => "X",
+        16..=19 => "✦",
+        20..=23 => "◆",
         _ => "·",
     };
 
     match variant {
         BeamXStyle::Split => {
-            // top row
-            let tl = Paragraph::new("⇘").style(style_border);
-            f.render_widget(tl, Rect::new(x_offset, y_offset, 1, 1));
-            let tr = Paragraph::new("⇖").style(style_status);
+            // top row corners
+            let tl = Paragraph::new("⬊").style(style_border);
+            f.render_widget(tl, Rect::new(x_offset + 1, y_offset, 1, 1));
+            let tr = Paragraph::new("⬋").style(style_border);
             f.render_widget(tr, Rect::new(x_offset + 5, y_offset, 1, 1));
 
-            // center prism
+            // middle row with inward beams and pulsing prism
+            let left = Paragraph::new("⥤").style(style_status);
+            f.render_widget(left, Rect::new(x_offset, y_offset + 1, 1, 1));
             let center = Paragraph::new(prism_glyph).style(style_prism);
             f.render_widget(center, Rect::new(x_offset + 3, y_offset + 1, 1, 1));
+            let right = Paragraph::new("⥢").style(style_status);
+            f.render_widget(right, Rect::new(x_offset + 6, y_offset + 1, 1, 1));
 
-            // bottom row
-            let bl = Paragraph::new("⇖").style(style_status);
-            f.render_widget(bl, Rect::new(x_offset, y_offset + 2, 1, 1));
-            let br = Paragraph::new("⇘").style(style_border);
+            // bottom row corners
+            let bl = Paragraph::new("⬈").style(style_border);
+            f.render_widget(bl, Rect::new(x_offset + 1, y_offset + 2, 1, 1));
+            let br = Paragraph::new("⬉").style(style_border);
             f.render_widget(br, Rect::new(x_offset + 5, y_offset + 2, 1, 1));
         }
         BeamXStyle::Cross => {
@@ -117,8 +125,8 @@ pub fn render_full_border<B: Backend>(f: &mut Frame<B>, area: Rect, style: &Beam
 
     let tl = Paragraph::new("┏").style(fg);
     f.render_widget(tl, Rect::new(area.x, area.y, 1, 1));
-    let beam_start = area.right().saturating_sub(6);
-    let beam_end = beam_start + 3;
+    let beam_start = area.right().saturating_sub(7);
+    let beam_end = beam_start + 4;
     for x in area.x + 1..right {
         if x >= beam_start && x <= beam_end {
             continue;
