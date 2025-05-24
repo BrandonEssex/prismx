@@ -144,8 +144,11 @@ pub fn launch_ui() -> std::io::Result<()> {
                     continue;
                 }
 
-                // Alt+Space = spotlight
-                if code == KeyCode::Char('\u{a0}') {
+                // Alt+Shift+S toggles Spotlight
+                if code == KeyCode::Char('S')
+                    && modifiers.contains(KeyModifiers::ALT)
+                    && modifiers.contains(KeyModifiers::SHIFT)
+                {
                     state.show_spotlight = !state.show_spotlight;
                     draw(&mut terminal, &mut state, &last_key)?;
                     continue;

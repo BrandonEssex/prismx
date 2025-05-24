@@ -25,7 +25,7 @@ pub fn render_keymap_overlay<B: Backend>(f: &mut Frame<B>, area: Rect) {
         "Alt+← / Alt+→ = Horizontal Scroll",
         "Ctrl+Space = Module Switcher",
         "Ctrl+.  = Settings",
-        "Alt+Space = Spotlight",
+        "Alt+Shift+S = Spotlight",
         "Ctrl+Y  = Triage",
         "Ctrl+H  = Help",
         "Esc     = Close Overlay / Reset",
