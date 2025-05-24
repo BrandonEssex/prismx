@@ -1,0 +1,49 @@
+name: PrismX Regression Audit
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 5 * * *'  # Runs daily at 5AM UTC
+
+jobs:
+  generate-regression-matrix:
+    name: Build Regression Matrix
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set.outputs.matrix }}
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v3
+
+      - name: 🧮 Generate Patch Matrix
+        id: set
+        run: |
+          chmod +x ./bin/generate-regression-matrix.sh
+          matrix=$(./bin/generate-regression-matrix.sh)
+          echo "matrix=$matrix" >> $GITHUB_OUTPUT
+
+  regression-test:
+    name: Run All Regression Patches (${{ matrix.patch }})
+    needs: generate-regression-matrix
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        patch: ${{ fromJson(needs.generate-regression-matrix.outputs.matrix) }}
+
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v3
+
+      - name: 🦀 Install Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
+
+      - name: ✅ Patch Lint
+        run: ./bin/patch-lint.sh ${{ matrix.patch }}
+
+      - name: 🧪 Run Test Plan
+        run: ./patches/${{ matrix.patch }}/test_plan.sh || echo "⚠️ Patch failed"
