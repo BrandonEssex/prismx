@@ -1,31 +1,22 @@
-use std::collections::HashMap;
+use crate::node::NodeID;
 
-pub struct Spotlight {
-    pub input: String,
-    pub commands: HashMap<String, Box<dyn FnMut()>>,
+pub enum SpotlightMode {
+    Command,
+    Node,
+    Tag,
+    Jump,
 }
 
-impl Spotlight {
-    pub fn new() -> Self {
-        Self {
-            input: String::new(),
-            commands: HashMap::new(),
-        }
-    }
+pub enum SpotlightResult {
+    Command(String),
+    Node(NodeID),
+    Tag(String),
+    Jump(NodeID),
+}
 
-    pub fn register_command<F>(&mut self, name: &str, handler: F)
-    where
-        F: FnMut() + 'static,
-    {
-        self.commands.insert(name.to_string(), Box::new(handler));
-    }
-
-    pub fn execute(&mut self) {
-        let trimmed = self.input.trim();
-        if let Some(cmd) = self.commands.get_mut(trimmed) {
-            cmd();
-        } else {
-            // Ignore unknown command (remove spam)
-        }
-    }
+pub struct Spotlight {
+    pub input_buffer: String,
+    pub result_list: Vec<SpotlightResult>,
+    pub focus_index: usize,
+    pub mode: SpotlightMode,
 }
