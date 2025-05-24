@@ -6,7 +6,7 @@ on:
 
 jobs:
   label-and-merge:
-    if: startsWith(github.head_ref, 'patch-') && github.actor == 'BrandonEssex'
+    if: startsWith(github.event.pull_request.head.ref, 'patch-')
     runs-on: ubuntu-latest
 
     steps:
