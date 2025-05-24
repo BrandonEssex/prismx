@@ -62,11 +62,12 @@ fn layout_recursive_safe(
     let child_count = node.children.len();
     let mid = child_count / 2;
     let mut max_y = y;
+    let mut next_y = y + CHILD_SPACING_Y;
 
     for (i, child_id) in node.children.iter().enumerate() {
         let offset_x = (i as i16 - mid as i16) * SIBLING_SPACING_X;
         let child_x = x + offset_x;
-        let child_y = y + CHILD_SPACING_Y;
+        let child_y = next_y;
 
         // println!(
         //     "├── child {} of {} at x={}, y={}",
@@ -84,6 +85,7 @@ fn layout_recursive_safe(
         );
 
         max_y = max_y.max(branch_max_y);
+        next_y = branch_max_y + CHILD_SPACING_Y;
     }
 
     max_y

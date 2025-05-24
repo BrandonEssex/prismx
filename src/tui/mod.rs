@@ -27,9 +27,6 @@ pub fn draw<B: Backend>(terminal: &mut Terminal<B>, state: &mut AppState, _last_
     use ratatui::layout::{Constraint, Direction, Layout};
     use ratatui::widgets::{Block, Borders, Paragraph};
 
-    if !state.auto_arrange {
-        state.ensure_grid_positions();
-    }
 
     terminal.draw(|f| {
         let full = f.size();
