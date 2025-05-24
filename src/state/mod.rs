@@ -27,6 +27,7 @@ pub struct AppState {
     pub selected_drag_source: Option<NodeID>,
     pub link_map: std::collections::HashMap<NodeID, Vec<NodeID>>,
     pub auto_arrange: bool,
+    pub zoom_scale: f32,
     pub scroll_x: i16,
     pub scroll_y: i16,
     pub snap_to_grid: bool,
@@ -68,6 +69,7 @@ impl Default for AppState {
             selected_drag_source: None,
             link_map: std::collections::HashMap::new(),
             auto_arrange: true,
+            zoom_scale: 1.0,
             scroll_x: 0,
             scroll_y: 0,
             snap_to_grid: false,
@@ -338,6 +340,27 @@ impl AppState {
 
     pub fn toggle_snap_grid(&mut self) {
         self.snap_to_grid = !self.snap_to_grid;
+    }
+
+    pub fn zoom_in(&mut self) {
+        self.zoom_scale = (self.zoom_scale + 0.1).min(2.0);
+        if let Some(id) = self.selected {
+            crate::layout::zoom_to_anchor(self, id);
+        }
+    }
+
+    pub fn zoom_out(&mut self) {
+        self.zoom_scale = (self.zoom_scale - 0.1).max(0.5);
+        if let Some(id) = self.selected {
+            crate::layout::zoom_to_anchor(self, id);
+        }
+    }
+
+    pub fn zoom_reset(&mut self) {
+        self.zoom_scale = 1.0;
+        if let Some(id) = self.selected {
+            crate::layout::zoom_to_anchor(self, id);
+        }
     }
 
     pub fn start_drag(&mut self) {

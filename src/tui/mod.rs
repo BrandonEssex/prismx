@@ -126,7 +126,8 @@ pub fn launch_ui() -> std::io::Result<()> {
                             Shortcut::ToggleDebugInput => {
                                 state.debug_input_mode = !state.debug_input_mode;
                             }
-                            _ => {}
+                            Shortcut::ZoomIn => state.zoom_in(),
+                            Shortcut::ZoomOut => state.zoom_out(),
                         }
                     }
 

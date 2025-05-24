@@ -1,6 +1,8 @@
 use ratatui::prelude::*;
 use ratatui::widgets::{Block, Borders, Paragraph};
-use crate::layout::{layout_nodes, Coords, GEMX_HEADER_HEIGHT};
+use crate::layout::{
+    layout_nodes, Coords, GEMX_HEADER_HEIGHT, BASE_SPACING_X, BASE_SPACING_Y,
+};
 use crate::node::{NodeID, NodeMap};
 use crate::state::AppState;
 use std::collections::HashMap;
@@ -49,8 +51,13 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
     }
 
     for (&node_id, &Coords { x, y }) in &drawn_at {
-        let draw_x = (x - state.scroll_x).max(0) as u16;
-        let draw_y = (y - state.scroll_y).max(0) as u16;
+        let zoom = state.zoom_scale as f32;
+        let draw_x = ((x as f32 * BASE_SPACING_X as f32 * zoom) - state.scroll_x as f32)
+            .round()
+            .max(0.0) as u16;
+        let draw_y = ((y as f32 * BASE_SPACING_Y as f32 * zoom) - state.scroll_y as f32)
+            .round()
+            .max(0.0) as u16;
 
         if draw_y >= area.height {
             continue;
@@ -96,15 +103,19 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
     for (source, targets) in &state.link_map {
         for target in targets {
             if let (Some(&Coords { x: sx, y: sy }), Some(&Coords { x: tx, y: ty })) =
-                (drawn_at.get(source), drawn_at.get(target)) {
+                (drawn_at.get(source), drawn_at.get(target))
+            {
                 if sy == ty {
+                    let zoom = state.zoom_scale as f32;
+                    let sxp = ((sx as f32 * BASE_SPACING_X as f32 * zoom) - state.scroll_x as f32).round();
+                    let txp = ((tx as f32 * BASE_SPACING_X as f32 * zoom) - state.scroll_x as f32).round();
+                    let syp = ((sy as f32 * BASE_SPACING_Y as f32 * zoom) - state.scroll_y as f32).round();
                     let arrow = if sx < tx { "→" } else { "←" };
-                    let mid = (sx + tx) / 2;
-                    let draw_mid = (mid - state.scroll_x).max(0) as u16;
-                    let draw_sy = (sy - state.scroll_y).max(0) as u16;
-                    if draw_sy < area.height && draw_mid < area.width {
+                    let mid = ((sxp + txp) / 2.0).round().max(0.0) as u16;
+                    let draw_sy = syp.max(0.0) as u16;
+                    if draw_sy < area.height && mid < area.width {
                         let para = Paragraph::new(arrow);
-                        f.render_widget(para, Rect::new(draw_mid, draw_sy, 1, 1));
+                        f.render_widget(para, Rect::new(mid, draw_sy, 1, 1));
                     }
                 }
             }
