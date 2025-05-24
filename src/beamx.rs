@@ -13,46 +13,46 @@ pub fn style_for_mode(mode: &str) -> BeamStyle {
             border_color: Color::Cyan,
             status_color: Color::White,
             prism_color: Color::White,
-            center_glyph: "✦",
+            center_glyph: "◆",
         },
         "zen" => BeamStyle {
             border_color: Color::Green,
             status_color: Color::Gray,
             prism_color: Color::White,
-            center_glyph: "✦",
+            center_glyph: "◆",
         },
         "triage" => BeamStyle {
             border_color: Color::White,
             status_color: Color::Red,
             prism_color: Color::Cyan,
-            center_glyph: "✦",
+            center_glyph: "◆",
         },
         "settings" => BeamStyle {
             border_color: Color::Gray,
             status_color: Color::Gray,
             prism_color: Color::White,
-            center_glyph: "✦",
+            center_glyph: "◆",
         },
         _ => BeamStyle {
             border_color: Color::Gray,
             status_color: Color::Gray,
             prism_color: Color::Gray,
-            center_glyph: "✦",
+            center_glyph: "◆",
         },
     }
 }
 
 /// Render a beam logo using custom colors.
 pub fn render_beam_logo<B: Backend>(f: &mut Frame<B>, area: Rect, style: &BeamStyle) {
-    let x_offset = area.x + area.width.saturating_sub(6);
-    let y_offset = area.y;
+    let x_offset = area.width.saturating_sub(6);
+    let y_offset = area.y + 1;
 
     let style_border = Style::default().fg(style.border_color);
     let style_status = Style::default().fg(style.status_color);
     let style_prism = Style::default().fg(style.prism_color);
 
     // Line 0
-    let para = Paragraph::new("╱").style(style_border);
+    let para = Paragraph::new("\\").style(style_border);
     f.render_widget(para, Rect::new(x_offset, y_offset, 1, 1));
     let para = Paragraph::new("/").style(style_status);
     f.render_widget(para, Rect::new(x_offset + 3, y_offset, 1, 1));
@@ -64,7 +64,7 @@ pub fn render_beam_logo<B: Backend>(f: &mut Frame<B>, area: Rect, style: &BeamSt
     // Line 2
     let para = Paragraph::new("/").style(style_status);
     f.render_widget(para, Rect::new(x_offset, y_offset + 2, 1, 1));
-    let para = Paragraph::new("╲").style(style_border);
+    let para = Paragraph::new("\\").style(style_border);
     f.render_widget(para, Rect::new(x_offset + 3, y_offset + 2, 1, 1));
 }
 
