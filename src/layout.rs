@@ -140,8 +140,8 @@ fn layout_recursive_safe(
     let mut min_x_span = x;
     let mut max_x_span = x + node.label.len() as i16 + 2;
 
+    let child_y = y + CHILD_SPACING_Y;
     for child_id in &node.children {
-        let child_y = y + CHILD_SPACING_Y;
         let (branch_max_y, branch_min_x, branch_max_x) = layout_recursive_safe(
             nodes,
             *child_id,
