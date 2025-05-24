@@ -5,7 +5,7 @@ use ratatui::{
     widgets::{Block, Borders, Paragraph},
     text::Line,
 };
-use crate::beamx::{render_beam_logo, render_full_border, style_for_mode};
+use crate::beamx::{render_beamx, render_full_border, style_for_mode, BeamXStyle};
 
 pub fn render_settings<B: Backend>(f: &mut Frame<B>, area: Rect) {
     let style = style_for_mode("settings");
@@ -25,5 +25,5 @@ pub fn render_settings<B: Backend>(f: &mut Frame<B>, area: Rect) {
     let paragraph = Paragraph::new(lines).block(block);
     f.render_widget(paragraph, area);
     render_full_border(f, area, &style);
-    render_beam_logo(f, area, &style);
+    render_beamx(f, area, &style, BeamXStyle::Split);
 }

@@ -1,5 +1,5 @@
 use ratatui::{backend::Backend, layout::Rect, style::Style, widgets::{Block, Borders, Paragraph}, Frame};
-use crate::beamx::{render_beam_logo, render_full_border, style_for_mode};
+use crate::beamx::{render_beamx, render_full_border, style_for_mode, BeamXStyle};
 
 pub fn render_triage<B: Backend>(f: &mut Frame<B>, area: Rect) {
     let style = style_for_mode("triage");
@@ -16,5 +16,5 @@ pub fn render_triage<B: Backend>(f: &mut Frame<B>, area: Rect) {
     f.render_widget(block, area);
     f.render_widget(content, Rect::new(area.x + 2, area.y + 1, area.width - 4, area.height - 2));
     render_full_border(f, area, &style);
-    render_beam_logo(f, area, &style);
+    render_beamx(f, area, &style, BeamXStyle::Split);
 }

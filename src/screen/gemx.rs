@@ -6,7 +6,7 @@ use crate::layout::{
 };
 use crate::node::{NodeID, NodeMap};
 use crate::state::AppState;
-use crate::beamx::{render_beam_logo, render_full_border, style_for_mode};
+use crate::beamx::{render_beamx, render_full_border, style_for_mode, BeamXStyle};
 use std::collections::HashMap;
 
 pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
@@ -166,5 +166,5 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
     }
 
     render_full_border(f, area, &style);
-    render_beam_logo(f, area, &style);
+    render_beamx(f, area, &style, BeamXStyle::Split);
 }
