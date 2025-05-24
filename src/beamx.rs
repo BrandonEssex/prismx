@@ -57,9 +57,9 @@ pub fn render_beamx<B: Backend>(
     style: &BeamStyle,
     variant: BeamXStyle,
 ) {
-    let x_offset = area.width - 6;
+    let x_offset = area.right().saturating_sub(6);
     let base_x = x_offset + 1;
-    let y_offset = area.y;
+    let y_offset = area.top();
 
     let style_border = Style::default().fg(style.border_color);
     let style_status = Style::default().fg(style.status_color);
@@ -97,7 +97,7 @@ pub fn render_full_border<B: Backend>(f: &mut Frame<B>, area: Rect, style: &Beam
 
     let tl = Paragraph::new("┏").style(fg);
     f.render_widget(tl, Rect::new(area.x, area.y, 1, 1));
-    let beam_start = area.width - 6;
+    let beam_start = area.right().saturating_sub(6);
     let beam_end = beam_start + 3;
     for x in area.x + 1..right {
         if x >= beam_start && x <= beam_end {
