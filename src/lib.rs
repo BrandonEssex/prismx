@@ -4,6 +4,7 @@ pub mod screen;
 pub mod bootstrap;
 pub mod config;
 pub mod plugin;
+pub mod plugins;
 pub mod tui;
 pub mod trust;
 pub mod federation;

@@ -7,6 +7,8 @@ use ratatui::{
 };
 use crate::beamx::{render_full_border, style_for_mode};
 use crate::ui::beamx::{BeamX, BeamXStyle, BeamXMode};
+use crate::plugins::pomodoro::{PomodoroPlugin, PomodoroState};
+use crate::plugins::PluginRender;
 
 use std::time::{SystemTime, UNIX_EPOCH};
 
@@ -35,4 +37,11 @@ pub fn render_triage_panel<B: Backend>(f: &mut Frame<B>, area: Rect) {
         style: BeamXStyle::from(BeamXMode::Triage),
     };
     beamx.render(f, area);
+
+    // Temporary plugin render for validation
+    let mut plugin = PomodoroPlugin {
+        state: PomodoroState::Idle,
+        start_time: None,
+    };
+    plugin.render(f, area);
 }
