@@ -91,7 +91,6 @@ fn layout_recursive_safe(
         return (y, x, x);
     }
 
-    out.insert(node_id, Coords { x, y });
     let node = match nodes.get(&node_id) {
         Some(n) => n,
         None => return (y, x, x),
@@ -103,6 +102,7 @@ fn layout_recursive_safe(
     // );
 
     if node.collapsed || node.children.is_empty() {
+        out.insert(node_id, Coords { x, y });
         return (y, x, x + node.label.len() as i16 + 2);
     }
 
@@ -153,12 +153,19 @@ fn layout_recursive_safe(
         }
 
         // Recenter the parent horizontally above its children.
-        let new_x = (min_x_span + max_x_span) / 2;
-        if let Some(pos) = out.get_mut(&node_id) {
-            pos.x = new_x;
+        #[cfg(feature = "manual_coords")]
+        let has_manual = node.manual_coords.is_some();
+        #[cfg(not(feature = "manual_coords"))]
+        let has_manual = false;
+
+        if has_manual {
+            out.insert(node_id, Coords { x, y });
+        } else {
+            let new_x = (min_x_span + max_x_span) / 2;
+            out.insert(node_id, Coords { x: new_x, y });
+            min_x_span = min_x_span.min(new_x);
+            max_x_span = max_x_span.max(new_x + node.label.len() as i16 + 2);
         }
-        min_x_span = min_x_span.min(new_x);
-        max_x_span = max_x_span.max(new_x + node.label.len() as i16 + 2);
     }
 
     (max_y, min_x_span, max_x_span)
