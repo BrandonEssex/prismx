@@ -16,15 +16,28 @@ pub const MAX_LAYOUT_DEPTH: usize = 50;
 pub const BASE_SPACING_X: i16 = 20;
 pub const BASE_SPACING_Y: i16 = 5;
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum LayoutRole {
+    Root,
+    Child,
+    Free,
+    Orphan,
+    Anchor,
+    Ghost,
+    Portal,
+}
+
 pub fn layout_nodes(
     nodes: &NodeMap,
     root_id: NodeID,
     start_y: i16,
     term_width: i16,
-) -> HashMap<NodeID, Coords> {
+    auto_arrange: bool,
+) -> (HashMap<NodeID, Coords>, HashMap<NodeID, LayoutRole>) {
     let start_y = start_y.max(GEMX_HEADER_HEIGHT + 1);
     let start_x = term_width / 2;
     let mut coords = HashMap::new();
+    let mut roles = HashMap::new();
     let mut visited = HashSet::new();
     let _ = layout_recursive_safe(
         nodes,
@@ -33,10 +46,12 @@ pub fn layout_nodes(
         start_y,
         term_width,
         &mut coords,
+        &mut roles,
+        auto_arrange,
         &mut visited,
         0,
     );
-    coords
+    (coords, roles)
 }
 
 fn layout_recursive_safe(
@@ -46,6 +61,8 @@ fn layout_recursive_safe(
     y: i16,
     _term_width: i16,
     out: &mut HashMap<NodeID, Coords>,
+    roles: &mut HashMap<NodeID, LayoutRole>,
+    auto_arrange: bool,
     visited: &mut HashSet<NodeID>,
     depth: usize,
 ) -> (i16, i16, i16) {
@@ -57,6 +74,26 @@ fn layout_recursive_safe(
         Some(n) => n,
         None => return (y, x, x),
     };
+
+    let role = if depth == 0 {
+        if auto_arrange {
+            LayoutRole::Root
+        } else {
+            LayoutRole::Free
+        }
+    } else {
+        match node.parent {
+            Some(pid) => {
+                if nodes.get(&pid).is_some() {
+                    LayoutRole::Child
+                } else {
+                    LayoutRole::Orphan
+                }
+            }
+            None => LayoutRole::Orphan,
+        }
+    };
+    roles.insert(node_id, role);
 
     if node.collapsed || node.children.is_empty() {
         out.insert(node_id, Coords { x, y });
@@ -78,6 +115,8 @@ fn layout_recursive_safe(
             child_y,
             _term_width,
             out,
+            roles,
+            auto_arrange,
             visited,
             depth + 1,
         );

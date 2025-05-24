@@ -48,7 +48,7 @@ pub fn node_at_position(state: &AppState, x: u16, y: u16) -> Option<NodeID> {
         let (tw, _) = crossterm::terminal::size().unwrap_or((80, 20));
         let mut row = GEMX_HEADER_HEIGHT + 1;
         for &root_id in &roots {
-            let l = layout_nodes(&state.nodes, root_id, row, tw as i16);
+            let (l, _roles) = layout_nodes(&state.nodes, root_id, row, tw as i16, state.auto_arrange);
             let max_y = l.values().map(|c| c.y).max().unwrap_or(row);
             layout.extend(l);
             row = max_y.saturating_add(3);
