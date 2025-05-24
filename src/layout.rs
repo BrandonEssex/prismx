@@ -15,6 +15,31 @@ pub const FREE_GRID_COLUMNS: usize = 4;
 pub const GEMX_HEADER_HEIGHT: i16 = 2;
 pub const MAX_LAYOUT_DEPTH: usize = 50;
 
+/// Determine the maximum depth of a node's subtree.
+fn get_subtree_depth(nodes: &NodeMap, node_id: NodeID) -> i16 {
+    fn walk(nodes: &NodeMap, id: NodeID, d: i16, visited: &mut HashSet<NodeID>) -> i16 {
+        if !visited.insert(id) {
+            return d;
+        }
+        match nodes.get(&id) {
+            Some(node) => {
+                if node.collapsed || node.children.is_empty() {
+                    d + 1
+                } else {
+                    node.children
+                        .iter()
+                        .map(|c| walk(nodes, *c, d + 1, visited))
+                        .max()
+                        .unwrap_or(d + 1)
+                }
+            }
+            None => d,
+        }
+    }
+
+    walk(nodes, node_id, 0, &mut HashSet::new())
+}
+
 /// Determine the width and height of a node's subtree.
 /// Width is measured from the start of the leftmost child subtree to the end of
 /// the rightmost child subtree including minimal spacing. Height is the total
@@ -132,7 +157,11 @@ fn layout_recursive_safe(
             .get(child_id)
             .map(|c| c.label.len() as i16)
             .unwrap_or(0);
-        let child_span = subtree_width.max(label_width) + MIN_NODE_GAP;
+        let depth_factor = get_subtree_depth(nodes, *child_id);
+        let child_span = subtree_width
+            .max(label_width)
+            + MIN_NODE_GAP
+            + depth_factor * 1;
         spans.push((*child_id, child_span, branch_min_x, branch_max_x));
         total_width += child_span;
         max_y = max_y.max(branch_max_y);
