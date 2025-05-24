@@ -1,0 +1,15 @@
+name: Delete Merged Patch Branches
+
+on:
+  pull_request:
+    types: [closed]
+
+jobs:
+  cleanup:
+    if: github.event.pull_request.merged == true && startsWith(github.head_ref, 'patch-')
+    runs-on: ubuntu-latest
+    steps:
+      - name: 🔥 Delete Merged Patch Branch
+        uses: dawidd6/action-delete-branch@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
