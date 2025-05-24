@@ -44,8 +44,8 @@ pub fn style_for_mode(mode: &str) -> BeamStyle {
 
 /// Render a beam logo using custom colors.
 pub fn render_beam_logo<B: Backend>(f: &mut Frame<B>, area: Rect, style: &BeamStyle) {
-    let x_offset = area.width.saturating_sub(6);
-    let y_offset = area.y + 1;
+    let x_offset = area.width - 6;
+    let y_offset = area.y;
 
     let style_border = Style::default().fg(style.border_color);
     let style_status = Style::default().fg(style.status_color);
@@ -75,7 +75,12 @@ pub fn render_full_border<B: Backend>(f: &mut Frame<B>, area: Rect, style: &Beam
 
     let tl = Paragraph::new("┏").style(fg);
     f.render_widget(tl, Rect::new(area.x, area.y, 1, 1));
+    let beam_start = area.width - 6;
+    let beam_end = beam_start + 3;
     for x in area.x + 1..right {
+        if x >= beam_start && x <= beam_end {
+            continue;
+        }
         let p = Paragraph::new("━").style(fg);
         f.render_widget(p, Rect::new(x, area.y, 1, 1));
     }
