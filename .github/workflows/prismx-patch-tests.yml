@@ -3,27 +3,39 @@ name: PrismX Patch Tests
 on:
   push:
     branches:
-      - patch/**     # Trigger on all patch branches
+      - patch/**     # Run on all patch branches
   pull_request:
     branches:
       - main
 
 jobs:
+  generate-matrix:
+    name: Generate Patch Matrix
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v3
+
+      - name: 🧮 Find Patch Folders
+        id: set-matrix
+        run: |
+          patches=$(find patches -maxdepth 1 -type d -name 'patch-*' | sed 's|patches/||' | jq -R -s -c 'split("\n") | map(select(length > 0))')
+          echo "matrix=$patches" >> $GITHUB_OUTPUT
+
   patch-test:
     name: Run Patch Tests (${{ matrix.patch }})
+    needs: generate-matrix
     runs-on: ubuntu-latest
 
     strategy:
       fail-fast: false
       matrix:
-        patch: [
-          patch-25.45-zoom-scale-center,
-          patch-25.46-link-editing,
-          patch-25.47-workspace-load
-        ]
+        patch: ${{ fromJson(needs.generate-matrix.outputs.matrix) }}
 
     steps:
-      - name: 📥 Checkout code
+      - name: 📥 Checkout
         uses: actions/checkout@v3
 
       - name: 🦀 Install Rust
@@ -41,7 +53,7 @@ jobs:
         run: cargo build --release
 
       - name: 🧪 Run Patch Test Plan
-        run: ./patches/${{ matrix.patch }}/test_plan.sh || echo "❌ No test_plan.sh or script failed"
+        run: ./patches/${{ matrix.patch }}/test_plan.sh || echo "❌ test_plan.sh failed or missing"
 
       - name: ✅ Run Lint Regression Check
-        run: ./bin/lint-regression-check.sh || echo "⚠️ Lint check skipped or failed"
+        run: ./bin/lint-regression-check.sh || echo "⚠️ Lint check failed or skipped"
