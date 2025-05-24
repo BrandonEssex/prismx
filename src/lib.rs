@@ -17,6 +17,7 @@ pub mod input;
 pub mod dashboard;
 pub mod render;
 pub mod beamx;
+pub mod ui;
 pub mod gemx;
 pub mod routineforge;
 pub mod settings;
