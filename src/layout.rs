@@ -73,33 +73,35 @@ pub fn subtree_depth(nodes: &NodeMap, id: NodeID) -> i16 {
 }
 
 pub struct PackRegion {
-    pub cursor_x: i16,
-    pub cursor_y: i16,
-    pub row_height: i16,
-    pub term_width: i16,
+    pub x: i16,
+    pub y: i16,
+    pub max_height: i16,
+    pub max_width: i16,
 }
 
 impl PackRegion {
-    pub fn new(term_width: i16, start_y: i16) -> Self {
+    pub fn new(max_width: i16, start_y: i16) -> Self {
         Self {
-            cursor_x: 0,
-            cursor_y: start_y,
-            row_height: 0,
-            term_width,
+            x: 0,
+            y: start_y,
+            max_height: 0,
+            max_width,
         }
     }
 
     pub fn insert(&mut self, size: (i16, i16)) -> (i16, i16) {
+        let margin = SIBLING_SPACING_X * 2;
+        let row_padding = CHILD_SPACING_Y * 2;
         let (w, h) = size;
-        if self.cursor_x + w > self.term_width {
-            self.cursor_x = 0;
-            self.cursor_y += self.row_height + CHILD_SPACING_Y * 2;
-            self.row_height = 0;
+        if self.x + w + margin > self.max_width {
+            self.x = 0;
+            self.y += self.max_height + row_padding;
+            self.max_height = 0;
         }
-        let anchor = (self.cursor_x, self.cursor_y);
-        self.cursor_x += w + SIBLING_SPACING_X * 2;
-        if h > self.row_height {
-            self.row_height = h;
+        let anchor = (self.x, self.y);
+        self.x += w + margin;
+        if h > self.max_height {
+            self.max_height = h;
         }
         anchor
     }
@@ -123,8 +125,8 @@ pub fn layout_nodes(
     term_width: i16,
     auto_arrange: bool,
 ) -> (HashMap<NodeID, Coords>, HashMap<NodeID, LayoutRole>) {
-    let start_y = start_y.max(GEMX_HEADER_HEIGHT + 1);
-    let start_x = term_width / 2;
+    let start_y = start_y.max(GEMX_HEADER_HEIGHT);
+    let start_x = if auto_arrange { 0 } else { term_width / 2 };
     let mut coords = HashMap::new();
     let mut roles = HashMap::new();
     let mut visited = HashSet::new();

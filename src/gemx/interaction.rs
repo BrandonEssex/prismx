@@ -1,10 +1,11 @@
 use crate::state::AppState;
 use crate::node::{Node, NodeID, NodeMap};
 use crate::layout::{
-    layout_nodes, Coords, SIBLING_SPACING_X, CHILD_SPACING_Y, FREE_GRID_COLUMNS,
+    layout_nodes, Coords, SIBLING_SPACING_X, CHILD_SPACING_Y,
     GEMX_HEADER_HEIGHT, PackRegion, subtree_span,
     subtree_depth, spacing_for_zoom,
 };
+use crossterm::terminal;
 use std::collections::HashMap;
 
 /// Toggle snap-to-grid mode
@@ -26,10 +27,12 @@ pub fn spawn_free_node(state: &mut AppState) {
 
     if !state.auto_arrange {
         let index = state.root_nodes.len();
-        node.x = ((index % FREE_GRID_COLUMNS) as i16) * SIBLING_SPACING_X * 2 + 1;
-        node.y = ((index / FREE_GRID_COLUMNS) as i16) * CHILD_SPACING_Y * 2
-            + GEMX_HEADER_HEIGHT
-            + 1;
+        let (tw, _) = terminal::size().unwrap_or((80, 20));
+        let margin = SIBLING_SPACING_X * 2;
+        let row_pad = CHILD_SPACING_Y * 2;
+        let cols = (tw as i16 / margin.max(1)).max(1) as usize;
+        node.x = ((index % cols) as i16) * margin + 1;
+        node.y = ((index / cols) as i16) * row_pad + GEMX_HEADER_HEIGHT + 1;
     }
 
     state.nodes.insert(new_id, node);
@@ -46,8 +49,8 @@ pub fn node_at_position(state: &AppState, x: u16, y: u16) -> Option<NodeID> {
         } else {
             state.root_nodes.clone()
         };
-        let (tw, _) = crossterm::terminal::size().unwrap_or((80, 20));
-        let mut pack = PackRegion::new(tw as i16, GEMX_HEADER_HEIGHT + 1);
+        let (tw, _) = terminal::size().unwrap_or((80, 20));
+        let mut pack = PackRegion::new(tw as i16, GEMX_HEADER_HEIGHT);
         for &root_id in &roots {
             let w = subtree_span(&state.nodes, root_id);
             let h = subtree_depth(&state.nodes, root_id) * CHILD_SPACING_Y + 1;

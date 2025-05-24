@@ -34,7 +34,7 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
     let mut drawn_at = HashMap::new();
     let mut node_roles = HashMap::new();
     if state.auto_arrange {
-        let mut pack = PackRegion::new(area.width as i16, GEMX_HEADER_HEIGHT + 1);
+        let mut pack = PackRegion::new(area.width as i16, GEMX_HEADER_HEIGHT);
         for &root_id in &roots {
             let w = subtree_span(&state.nodes, root_id);
             let h = subtree_depth(&state.nodes, root_id) * CHILD_SPACING_Y + 1;
