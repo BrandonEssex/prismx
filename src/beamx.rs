@@ -7,6 +7,14 @@ pub struct BeamStyle {
     pub center_glyph: &'static str,
 }
 
+#[derive(Copy, Clone)]
+pub enum BeamXStyle {
+    /// Beam hits prism then splits out
+    Split,
+    /// Stylized X beam
+    Cross,
+}
+
 pub fn style_for_mode(mode: &str) -> BeamStyle {
     match mode {
         "gemx" => BeamStyle {
@@ -43,29 +51,43 @@ pub fn style_for_mode(mode: &str) -> BeamStyle {
 }
 
 /// Render a beam logo using custom colors.
-pub fn render_beam_logo<B: Backend>(f: &mut Frame<B>, area: Rect, style: &BeamStyle) {
+pub fn render_beamx<B: Backend>(
+    f: &mut Frame<B>,
+    area: Rect,
+    style: &BeamStyle,
+    variant: BeamXStyle,
+) {
     let x_offset = area.width - 6;
+    let base_x = x_offset + 1;
     let y_offset = area.y;
 
     let style_border = Style::default().fg(style.border_color);
     let style_status = Style::default().fg(style.status_color);
     let style_prism = Style::default().fg(style.prism_color);
 
-    // Line 0
-    let para = Paragraph::new("\\").style(style_border);
-    f.render_widget(para, Rect::new(x_offset, y_offset, 1, 1));
-    let para = Paragraph::new("/").style(style_status);
-    f.render_widget(para, Rect::new(x_offset + 3, y_offset, 1, 1));
+    match variant {
+        BeamXStyle::Split => {
+            let left = Paragraph::new("⇆").style(style_status);
+            f.render_widget(left, Rect::new(base_x, y_offset, 1, 1));
+            let prism = Paragraph::new(style.center_glyph).style(style_prism);
+            f.render_widget(prism, Rect::new(base_x + 1, y_offset, 1, 1));
+            let right = Paragraph::new("⇉").style(style_border);
+            f.render_widget(right, Rect::new(base_x + 2, y_offset, 1, 1));
+        }
+        BeamXStyle::Cross => {
+            let left = Paragraph::new("⨯").style(style_status);
+            f.render_widget(left, Rect::new(base_x, y_offset, 1, 1));
+            let prism = Paragraph::new(style.center_glyph).style(style_prism);
+            f.render_widget(prism, Rect::new(base_x + 1, y_offset, 1, 1));
+            let right = Paragraph::new("⨯").style(style_border);
+            f.render_widget(right, Rect::new(base_x + 2, y_offset, 1, 1));
+        }
+    }
+}
 
-    // Line 1 (center glyph)
-    let para = Paragraph::new(style.center_glyph).style(style_prism);
-    f.render_widget(para, Rect::new(x_offset + 2, y_offset + 1, 1, 1));
-
-    // Line 2
-    let para = Paragraph::new("/").style(style_status);
-    f.render_widget(para, Rect::new(x_offset, y_offset + 2, 1, 1));
-    let para = Paragraph::new("\\").style(style_border);
-    f.render_widget(para, Rect::new(x_offset + 3, y_offset + 2, 1, 1));
+/// Legacy alias for default logo
+pub fn render_beam_logo<B: Backend>(f: &mut Frame<B>, area: Rect, style: &BeamStyle) {
+    render_beamx(f, area, style, BeamXStyle::Split);
 }
 
 pub fn render_full_border<B: Backend>(f: &mut Frame<B>, area: Rect, style: &BeamStyle) {
