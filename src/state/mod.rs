@@ -1,8 +1,7 @@
 use std::collections::HashMap;
 use crate::node::{Node, NodeID, NodeMap};
-use crate::layout::{
-    SIBLING_SPACING_X, CHILD_SPACING_Y, FREE_GRID_COLUMNS, GEMX_HEADER_HEIGHT,
-};
+use crate::layout::{ SIBLING_SPACING_X, CHILD_SPACING_Y, GEMX_HEADER_HEIGHT };
+use crossterm::terminal;
 use crate::plugin::PluginHost;
 
 mod hotkeys;
@@ -128,18 +127,15 @@ impl AppState {
 
         let ids: Vec<NodeID> = self.nodes.keys().copied().collect();
         let mut index = 0;
+        let (tw, _) = terminal::size().unwrap_or((80, 20));
+        let margin = SIBLING_SPACING_X * 2;
+        let row_pad = CHILD_SPACING_Y * 2;
+        let cols = (tw as i16 / margin.max(1)).max(1) as usize;
         for id in ids {
             if let Some(node) = self.nodes.get_mut(&id) {
                 if node.x == 0 && node.y == 0 {
-                    node.x = ((index % FREE_GRID_COLUMNS) as i16)
-                        * SIBLING_SPACING_X
-                        * 2
-                        + 1;
-                    node.y = ((index / FREE_GRID_COLUMNS) as i16)
-                        * CHILD_SPACING_Y
-                        * 2
-                        + GEMX_HEADER_HEIGHT
-                        + 1;
+                    node.x = ((index % cols) as i16) * margin + 1;
+                    node.y = ((index / cols) as i16) * row_pad + GEMX_HEADER_HEIGHT + 1;
                     index += 1;
                 }
             }
