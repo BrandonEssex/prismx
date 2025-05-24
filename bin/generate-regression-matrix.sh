@@ -12,4 +12,6 @@ echo "✅ Included patches:"
 echo "$matrix" | jq '.[]'
 
 # Secure GitHub Actions output
-echo "matrix=$matrix" >> $GITHUB_OUTPUT
+echo "matrix<<EOF" >> "$GITHUB_OUTPUT"
+echo "$matrix" >> "$GITHUB_OUTPUT"
+echo "EOF" >> "$GITHUB_OUTPUT"
