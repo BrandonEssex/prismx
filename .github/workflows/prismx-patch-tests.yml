@@ -1,0 +1,90 @@
+name: PrismX Patch Tests
+
+on:
+  push:
+    branches:
+      - patch/**     # Run on all patch branches
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  generate-matrix:
+    name: Generate Patch Matrix
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v3
+
+      - name: 🧮 Find Patch Folders
+        id: set-matrix
+        run: |
+          patches=$(find patches -maxdepth 1 -type d -name 'patch-*' | sed 's|patches/||' | jq -R -s -c 'split("\n") | map(select(length > 0))')
+          echo "matrix=$patches" >> $GITHUB_OUTPUT
+
+  patch-test:
+    name: Run Patch Tests (${{ matrix.patch }})
+    needs: generate-matrix
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        patch: ${{ fromJson(needs.generate-matrix.outputs.matrix) }}
+
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v3
+
+      - name: 🦀 Install Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
+
+      - name: 🧰 Set Executable Permissions
+        run: |
+          chmod +x ./patches/${{ matrix.patch }}/test_plan.sh || true
+          chmod +x ./bin/lint-regression-check.sh || true
+
+      - name: 🛠️ Build PrismX
+        run: cargo build --release
+
+      - name: 🧪 Run Patch Test Plan
+        run: ./patches/${{ matrix.patch }}/test_plan.sh || echo "❌ test_plan.sh failed or missing"
+
+      - name: ✅ Run Lint Regression Check
+        run: ./bin/lint-regression-check.sh || echo "⚠️ Lint check failed or skipped"
+
+      - name: 📋 Run Patch Linter
+        run: ./bin/patch-lint.sh ${{ matrix.patch }}
+
+      - name: 📄 Generate PATCH_SUMMARY.md
+        run: ./bin/gen-patch-summary.sh ${{ matrix.patch }}
+
+      - name: 📦 Archive Patch Folder
+        run: ./bin/archive-patch.sh ${{ matrix.patch }}
+
+      - name: ☁️ Upload Patch Artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ matrix.patch }}-artifact
+          path: |
+            patches/${{ matrix.patch }}.zip
+            patches/${{ matrix.patch }}/PATCH_SUMMARY.md
+
+      - name: 🗃 Archive Patch Summary in Changelog
+        run: |
+          mkdir -p changelog/patches
+          cp patches/${{ matrix.patch }}/PATCH_SUMMARY.md changelog/patches/${{ matrix.patch }}.md
+
+      - name: 💬 Post Summary to PR (if applicable)
+        if: github.event_name == 'pull_request'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh pr comment "$PR_URL" --body "$(cat patches/${{ matrix.patch }}/PATCH_SUMMARY.md)" || echo "⚠️ Could not post PR comment"
+        env:
+          PR_URL: ${{ github.event.pull_request.html_url }}

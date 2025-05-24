@@ -14,7 +14,7 @@ pub struct BeamXStyle {
     pub pulse: &'static [&'static str],
 }
 
-/// Operational mode for [`BeamX`]. Each mode defines glyphs and colors.
+/// Operational mode for [`BeamX`].
 #[derive(Copy, Clone)]
 pub enum BeamXMode {
     Default,
@@ -38,9 +38,7 @@ impl Default for BeamXStyle {
 
 impl From<BeamXMode> for BeamXStyle {
     fn from(mode: BeamXMode) -> Self {
-        const DEFAULT_PULSE: [&str; 12] = [
-            "·", "✦", "◆", "✦", "·", "x", "X", "x", "·", "✦", "◆", "✦",
-        ];
+        const DEFAULT_PULSE: [&str; 12] = ["·", "✦", "◆", "✦", "·", "x", "X", "x", "·", "✦", "◆", "✦"];
         const ZEN_PULSE: [&str; 5] = ["∙", "◦", "●", "◦", "∙"];
 
         match mode {
@@ -116,7 +114,6 @@ impl BeamX {
 
         let pulse = self.style.pulse;
         let prism = pulse[(self.tick as usize) % pulse.len()];
-
         let x = area.right().saturating_sub(7);
         let y = area.top();
 
@@ -124,21 +121,14 @@ impl BeamX {
         let style_status = Style::default().fg(self.style.status_color);
         let style_prism = Style::default().fg(self.style.prism_color);
 
-        let tl = Paragraph::new(self.style.top_left).style(style_border);
-        f.render_widget(tl, Rect::new(x, y, 1, 1));
-        let tr = Paragraph::new(self.style.top_right).style(style_border);
-        f.render_widget(tr, Rect::new(x + 6, y, 1, 1));
+        f.render_widget(Paragraph::new(self.style.top_left).style(style_border), Rect::new(x, y, 1, 1));
+        f.render_widget(Paragraph::new(self.style.top_right).style(style_border), Rect::new(x + 6, y, 1, 1));
 
-        let left = Paragraph::new(self.style.left).style(style_status);
-        f.render_widget(left, Rect::new(x + 1, y + 1, 1, 1));
-        let center = Paragraph::new(prism).style(style_prism);
-        f.render_widget(center, Rect::new(x + 3, y + 1, 1, 1));
-        let right = Paragraph::new(self.style.right).style(style_status);
-        f.render_widget(right, Rect::new(x + 5, y + 1, 1, 1));
+        f.render_widget(Paragraph::new(self.style.left).style(style_status), Rect::new(x + 1, y + 1, 1, 1));
+        f.render_widget(Paragraph::new(prism).style(style_prism), Rect::new(x + 3, y + 1, 1, 1));
+        f.render_widget(Paragraph::new(self.style.right).style(style_status), Rect::new(x + 5, y + 1, 1, 1));
 
-        let bl = Paragraph::new(self.style.bottom_left).style(style_border);
-        f.render_widget(bl, Rect::new(x, y + 2, 1, 1));
-        let br = Paragraph::new(self.style.bottom_right).style(style_border);
-        f.render_widget(br, Rect::new(x + 6, y + 2, 1, 1));
+        f.render_widget(Paragraph::new(self.style.bottom_left).style(style_border), Rect::new(x, y + 2, 1, 1));
+        f.render_widget(Paragraph::new(self.style.bottom_right).style(style_border), Rect::new(x + 6, y + 2, 1, 1));
     }
 }
