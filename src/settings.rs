@@ -28,6 +28,6 @@ pub fn render_settings<B: Backend>(f: &mut Frame<B>, area: Rect) {
     let paragraph = Paragraph::new(lines)
         .alignment(Alignment::Left);
     f.render_widget(paragraph, inner);
-    render_full_border(f, area, &style);
+    render_full_border(f, area, &style, true);
     render_beamx(f, area, &style, BeamXStyle::Split);
 }
