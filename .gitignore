@@ -9,5 +9,4 @@ target/
 Cargo.lock
 scripts/*
 tests/*
-*tests*
 incoming/*

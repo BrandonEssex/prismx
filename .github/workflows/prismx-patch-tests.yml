@@ -1,0 +1,46 @@
+name: PrismX Patch Tests
+
+on:
+  push:
+    branches:
+      - patch/**     # Run on every patch branch
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  patch-test:
+    name: Run Patch Tests (${{ matrix.patch }})
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        patch: [
+          patch-25.45-zoom-scale-center,
+          patch-25.46-link-editing,
+          patch-25.47-workspace-load
+        ]
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v3
+
+      - name: 🦀 Install Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
+
+      - name: ⚙️ Set Executable Permissions
+        run: |
+          chmod +x ./patches/${{ matrix.patch }}/test_plan.sh
+          chmod +x ./bin/lint-regression-check.sh
+
+      - name: 🛠️ Build Project
+        run: cargo build --release
+
+      - name: 🧪 Run Patch Test Plan
+        run: ./patches/${{ matrix.patch }}/test_plan.sh
+
+      - name: ✅ Run Lint Regression Check
+        run: ./bin/lint-regression-check.sh
