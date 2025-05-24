@@ -6,8 +6,7 @@ use ratatui::{
     text::Line,
 };
 use crate::beamx::{render_full_border, style_for_mode};
-use crate::ui::beamx::{BeamX, BeamXStyle};
-use std::time::{SystemTime, UNIX_EPOCH};
+use crate::ui::beamx::{BeamX, BeamXStyle, BeamXMode};
 
 pub fn render_settings<B: Backend>(f: &mut Frame<B>, area: Rect) {
     let style = style_for_mode("settings");
@@ -38,7 +37,7 @@ pub fn render_settings<B: Backend>(f: &mut Frame<B>, area: Rect) {
     let beamx = BeamX {
         tick,
         enabled: true,
-        style: BeamXStyle::default(),
+        style: BeamXStyle::from(BeamXMode::Settings),
     };
     beamx.render(f, area);
 }

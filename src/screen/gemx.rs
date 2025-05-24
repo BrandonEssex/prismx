@@ -7,7 +7,7 @@ use crate::layout::{
 use crate::node::{NodeID, NodeMap};
 use crate::state::AppState;
 use crate::beamx::{render_full_border, style_for_mode};
-use crate::ui::beamx::{BeamX, BeamXStyle};
+use crate::ui::beamx::{BeamX, BeamXStyle, BeamXMode};
 use std::time::{SystemTime, UNIX_EPOCH};
 use std::collections::HashMap;
 
@@ -175,7 +175,7 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
     let beamx = BeamX {
         tick,
         enabled: true,
-        style: BeamXStyle::default(),
+        style: BeamXStyle::from(BeamXMode::Default),
     };
     beamx.render(f, area);
 }

@@ -1,6 +1,6 @@
 use ratatui::{backend::Backend, layout::Rect, style::Style, widgets::{Block, Borders, Paragraph}, Frame};
 use crate::beamx::{render_full_border, style_for_mode};
-use crate::ui::beamx::{BeamX, BeamXStyle};
+use crate::ui::beamx::{BeamX, BeamXStyle, BeamXMode};
 use std::time::{SystemTime, UNIX_EPOCH};
 
 pub fn render_triage<B: Backend>(f: &mut Frame<B>, area: Rect) {
@@ -25,7 +25,7 @@ pub fn render_triage<B: Backend>(f: &mut Frame<B>, area: Rect) {
     let beamx = BeamX {
         tick,
         enabled: true,
-        style: BeamXStyle::default(),
+        style: BeamXStyle::from(BeamXMode::Triage),
     };
     beamx.render(f, area);
 }
