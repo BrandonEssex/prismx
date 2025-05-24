@@ -1,6 +1,6 @@
 use ratatui::prelude::*;
 use ratatui::widgets::{Block, Borders, Paragraph};
-use crate::layout::{layout_nodes, Coords};
+use crate::layout::{layout_nodes, Coords, GEMX_HEADER_HEIGHT};
 use crate::node::{NodeID, NodeMap};
 use crate::state::AppState;
 use std::collections::HashMap;
@@ -25,10 +25,12 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
 
     let mut drawn_at = HashMap::new();
     if state.auto_arrange {
+        let mut row = GEMX_HEADER_HEIGHT + 1;
         for &root_id in &roots {
-            //println!("🔁 layout_nodes(root={})", root_id);
-            let layout = layout_nodes(&state.nodes, root_id, 2, 1); // 🧠 force y=1
+            let layout = layout_nodes(&state.nodes, root_id, row, area.width as i16);
+            let max_y = layout.values().map(|c| c.y).max().unwrap_or(row);
             drawn_at.extend(layout);
+            row = max_y.saturating_add(3);
         }
     } else {
         fn collect(nodes: &NodeMap, id: NodeID, out: &mut HashMap<NodeID, Coords>) {
