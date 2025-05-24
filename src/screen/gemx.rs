@@ -16,8 +16,6 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
         .borders(Borders::NONE);
     f.render_widget(block, area);
 
-    // BeamX logo at the top center
-    render_beam_logo(f, Rect::new(area.x, area.y + 1, area.width, 3), &style);
 
     // // ✅ Always print the structure for diagnostics
     // println!("=== NODES AND CHILDREN ===");
@@ -168,4 +166,5 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
     }
 
     render_full_border(f, area, &style);
+    render_beam_logo(f, area, &style);
 }

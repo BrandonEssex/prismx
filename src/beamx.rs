@@ -12,25 +12,25 @@ pub fn style_for_mode(mode: &str) -> BeamStyle {
         "gemx" => BeamStyle {
             border_color: Color::Magenta,
             beam_left: Color::Cyan,
-            beam_right: Color::Magenta,
-            prism: Color::Yellow,
+            beam_right: Color::White,
+            prism: Color::White,
         },
         "zen" => BeamStyle {
             border_color: Color::White,
-            beam_left: Color::White,
-            beam_right: Color::White,
-            prism: Color::Gray,
+            beam_left: Color::Green,
+            beam_right: Color::Green,
+            prism: Color::White,
         },
         "triage" => BeamStyle {
             border_color: Color::Red,
-            beam_left: Color::Yellow,
-            beam_right: Color::Red,
-            prism: Color::White,
+            beam_left: Color::White,
+            beam_right: Color::White,
+            prism: Color::Cyan,
         },
         "settings" => BeamStyle {
             border_color: Color::Blue,
-            beam_left: Color::Cyan,
-            beam_right: Color::Blue,
+            beam_left: Color::Gray,
+            beam_right: Color::Gray,
             prism: Color::White,
         },
         _ => BeamStyle {
@@ -44,30 +44,28 @@ pub fn style_for_mode(mode: &str) -> BeamStyle {
 
 /// Render a beam logo using custom colors.
 pub fn render_beam_logo<B: Backend>(f: &mut Frame<B>, area: Rect, style: &BeamStyle) {
-    let mid_x = area.x + area.width.saturating_sub(3) / 2;
+    let x_offset = area.width.saturating_sub(6);
+    let y_offset = area.y + 1;
+
     let style_left = Style::default().fg(style.beam_left);
     let style_right = Style::default().fg(style.beam_right);
     let style_prism = Style::default().fg(style.prism);
 
-    // Top row
-    let para = Paragraph::new("╱").style(style_right);
-    f.render_widget(para, Rect::new(mid_x, area.y, 1, 1));
-    let para = Paragraph::new("╲").style(style_left);
-    f.render_widget(para, Rect::new(mid_x + 1, area.y, 1, 1));
+    // Line 0
+    let para = Paragraph::new("\\").style(style_left);
+    f.render_widget(para, Rect::new(x_offset, y_offset, 1, 1));
+    let para = Paragraph::new("/").style(style_right);
+    f.render_widget(para, Rect::new(x_offset + 3, y_offset, 1, 1));
 
-    // Middle row with the prism symbol
-    let para = Paragraph::new("╲").style(style_left);
-    f.render_widget(para, Rect::new(mid_x.saturating_sub(1), area.y + 1, 1, 1));
-    let para = Paragraph::new("◉").style(style_prism);
-    f.render_widget(para, Rect::new(mid_x, area.y + 1, 1, 1));
-    let para = Paragraph::new("╱").style(style_right);
-    f.render_widget(para, Rect::new(mid_x + 1, area.y + 1, 1, 1));
+    // Line 1 (prism center)
+    let para = Paragraph::new("*").style(style_prism);
+    f.render_widget(para, Rect::new(x_offset + 2, y_offset + 1, 1, 1));
 
-    // Bottom row
-    let para = Paragraph::new("╲").style(style_left);
-    f.render_widget(para, Rect::new(mid_x.saturating_sub(1), area.y + 2, 1, 1));
-    let para = Paragraph::new("╱").style(style_right);
-    f.render_widget(para, Rect::new(mid_x, area.y + 2, 1, 1));
+    // Line 2
+    let para = Paragraph::new("/").style(style_left);
+    f.render_widget(para, Rect::new(x_offset, y_offset + 2, 1, 1));
+    let para = Paragraph::new("\\").style(style_right);
+    f.render_widget(para, Rect::new(x_offset + 3, y_offset + 2, 1, 1));
 }
 
 pub fn render_full_border<B: Backend>(f: &mut Frame<B>, area: Rect, style: &BeamStyle) {
