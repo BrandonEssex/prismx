@@ -58,7 +58,7 @@ pub fn layout_nodes(
     let start_x = term_width / 2;
     let mut coords = HashMap::new();
     let mut visited = HashSet::new();
-    layout_recursive_safe(
+    let _ = layout_recursive_safe(
         nodes,
         root_id,
         start_x,
@@ -80,21 +80,21 @@ fn layout_recursive_safe(
     out: &mut HashMap<NodeID, Coords>,
     visited: &mut HashSet<NodeID>,
     depth: usize,
-) -> i16 {
+) -> (i16, i16, i16) {
     if !visited.insert(node_id) {
         println!("⚠️  Cycle detected: {}", node_id);
-        return y;
+        return (y, x, x);
     }
 
     if depth > MAX_LAYOUT_DEPTH {
         println!("🛑 Max layout depth exceeded at node {}", node_id);
-        return y;
+        return (y, x, x);
     }
 
     out.insert(node_id, Coords { x, y });
     let node = match nodes.get(&node_id) {
         Some(n) => n,
-        None => return y,
+        None => return (y, x, x),
     };
 
     // println!(
@@ -103,7 +103,7 @@ fn layout_recursive_safe(
     // );
 
     if node.collapsed || node.children.is_empty() {
-        return y;
+        return (y, x, x + node.label.len() as i16 + 2);
     }
 
     // Compute spans for each child subtree so siblings can be spaced without
@@ -120,6 +120,9 @@ fn layout_recursive_safe(
     }
 
     let mut max_y = y;
+    let mut min_x_span = x;
+    let mut max_x_span = x + node.label.len() as i16 + 2;
+
     if !spans.is_empty() {
         // Start laying out children so the entire cluster is centered around the
         // parent node's x coordinate.
@@ -133,7 +136,7 @@ fn layout_recursive_safe(
         //     child_id, node_id, child_x, child_y
         // );
 
-            let branch_max_y = layout_recursive_safe(
+            let (branch_max_y, branch_min_x, branch_max_x) = layout_recursive_safe(
                 nodes,
                 child_id,
                 child_x,
@@ -144,11 +147,21 @@ fn layout_recursive_safe(
                 depth + 1,
             );
             max_y = max_y.max(branch_max_y);
+            min_x_span = min_x_span.min(branch_min_x);
+            max_x_span = max_x_span.max(branch_max_x);
             cursor_x += span_width + SIBLING_SPACING_X;
         }
+
+        // Recenter the parent horizontally above its children.
+        let new_x = (min_x_span + max_x_span) / 2;
+        if let Some(pos) = out.get_mut(&node_id) {
+            pos.x = new_x;
+        }
+        min_x_span = min_x_span.min(new_x);
+        max_x_span = max_x_span.max(new_x + node.label.len() as i16 + 2);
     }
 
-    max_y
+    (max_y, min_x_span, max_x_span)
 }
 
 #[cfg(test)]
@@ -200,5 +213,53 @@ mod tests {
 
         let (left_span, _) = get_subtree_span(&nodes, 2);
         assert!(right.x >= left.x + left_span + SIBLING_SPACING_X);
+    }
+
+    #[test]
+    fn parent_recenters_above_children() {
+        let mut nodes = NodeMap::new();
+
+        let mut root = Node::new(1, "Root", None);
+        root.children = vec![2, 3];
+
+        let mut left = Node::new(2, "L", Some(1));
+        left.children = vec![4];
+
+        let right = Node::new(3, "R", Some(1));
+        let grand = Node::new(4, "ExtremelyWideLabelHere", Some(2));
+
+        nodes.insert(1, root);
+        nodes.insert(2, left);
+        nodes.insert(3, right);
+        nodes.insert(4, grand);
+
+        let layout = layout_nodes(&nodes, 1, 0, 200);
+
+        let root_x = layout[&1].x;
+
+        fn bounds(nodes: &NodeMap, layout: &HashMap<NodeID, Coords>, id: NodeID, mi: &mut i16, ma: &mut i16) {
+            if let Some(n) = nodes.get(&id) {
+                if let Some(c) = layout.get(&id) {
+                    let w = n.label.len() as i16 + 2;
+                    *mi = (*mi).min(c.x);
+                    *ma = (*ma).max(c.x + w);
+                    if !n.collapsed {
+                        for child in &n.children {
+                            bounds(nodes, layout, *child, mi, ma);
+                        }
+                    }
+                }
+            }
+        }
+
+        let mut min_x = i16::MAX;
+        let mut max_x = i16::MIN;
+        for child in &nodes.get(&1).unwrap().children {
+            bounds(&nodes, &layout, *child, &mut min_x, &mut max_x);
+        }
+
+        let expected = (min_x + max_x) / 2;
+
+        assert_eq!(root_x, expected);
     }
 }
