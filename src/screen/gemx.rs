@@ -76,10 +76,10 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
             continue;
         }
         let zoom = state.zoom_scale as f32;
-        let draw_x = ((x as f32 * BASE_SPACING_X as f32 * zoom) - state.scroll_x as f32)
+        let draw_x = ((x as f32 - state.scroll_x as f32) * BASE_SPACING_X as f32 * zoom)
             .round()
             .max(0.0) as u16;
-        let draw_y = ((y as f32 * BASE_SPACING_Y as f32 * zoom) - state.scroll_y as f32)
+        let draw_y = ((y as f32 - state.scroll_y as f32) * BASE_SPACING_Y as f32 * zoom)
             .round()
             .max(0.0) as u16;
 
@@ -149,9 +149,9 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
             {
                 if sy == ty {
                     let zoom = state.zoom_scale as f32;
-                    let sxp = ((sx as f32 * BASE_SPACING_X as f32 * zoom) - state.scroll_x as f32).round();
-                    let txp = ((tx as f32 * BASE_SPACING_X as f32 * zoom) - state.scroll_x as f32).round();
-                    let syp = ((sy as f32 * BASE_SPACING_Y as f32 * zoom) - state.scroll_y as f32).round();
+                    let sxp = ((sx as f32 - state.scroll_x as f32) * BASE_SPACING_X as f32 * zoom).round();
+                    let txp = ((tx as f32 - state.scroll_x as f32) * BASE_SPACING_X as f32 * zoom).round();
+                    let syp = ((sy as f32 - state.scroll_y as f32) * BASE_SPACING_Y as f32 * zoom).round();
                     let arrow = if sx < tx { "→" } else { "←" };
                     let mid = ((sxp + txp) / 2.0).round().max(0.0) as u16;
                     let draw_sy = syp.max(0.0) as u16;
