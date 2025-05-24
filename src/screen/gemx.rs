@@ -59,7 +59,9 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
             .round()
             .max(0.0) as u16;
 
-        if draw_y >= area.height {
+        if draw_x >= area.width || draw_y >= area.height {
+            #[cfg(debug_assertions)]
+            eprintln!("[debug] clamp node ({},{})", draw_x, draw_y);
             continue;
         }
 
@@ -113,10 +115,13 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
                     let arrow = if sx < tx { "→" } else { "←" };
                     let mid = ((sxp + txp) / 2.0).round().max(0.0) as u16;
                     let draw_sy = syp.max(0.0) as u16;
-                    if draw_sy < area.height && mid < area.width {
-                        let para = Paragraph::new(arrow);
-                        f.render_widget(para, Rect::new(mid, draw_sy, 1, 1));
+                    if mid >= area.width || draw_sy >= area.height {
+                        #[cfg(debug_assertions)]
+                        eprintln!("[debug] clamp arrow ({},{})", mid, draw_sy);
+                        continue;
                     }
+                    let para = Paragraph::new(arrow);
+                    f.render_widget(para, Rect::new(mid, draw_sy, 1, 1));
                 }
             }
         }
