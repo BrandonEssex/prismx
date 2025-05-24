@@ -1,5 +1,5 @@
 use ratatui::{
-    backend::Backend,
+    backend::CrosstermBackend,
     layout::Rect,
     Frame,
     widgets::{Block, Borders, Paragraph},
@@ -7,12 +7,14 @@ use ratatui::{
 };
 use crate::beamx::{render_full_border, style_for_mode};
 use crate::ui::beamx::{BeamX, BeamXStyle, BeamXMode};
-use crate::plugins::pomodoro::{PomodoroPlugin, PomodoroState};
-use crate::plugins::PluginRender;
+use crate::state::AppState;
+use std::io::Stdout;
+
+type PluginFrame<'a> = Frame<'a, CrosstermBackend<Stdout>>;
 
 use std::time::{SystemTime, UNIX_EPOCH};
 
-pub fn render_triage_panel<B: Backend>(f: &mut Frame<B>, area: Rect) {
+pub fn render_triage_panel(f: &mut PluginFrame<'_>, area: Rect, state: &mut AppState) {
     let style = style_for_mode("triage");
     let tasks = vec![
         Line::from("[ ] Design new node engine"),
@@ -38,10 +40,6 @@ pub fn render_triage_panel<B: Backend>(f: &mut Frame<B>, area: Rect) {
     };
     beamx.render(f, area);
 
-    // Temporary plugin render for validation
-    let mut plugin = PomodoroPlugin {
-        state: PomodoroState::Idle,
-        start_time: None,
-    };
-    plugin.render(f, area);
+    let plugin_area = Rect::new(area.x + 1, area.y + 1, area.width - 2, area.height - 4);
+    state.plugin_host.render_all(f, plugin_area);
 }
