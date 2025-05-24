@@ -1,8 +1,10 @@
 use ratatui::{prelude::*, widgets::{Block, Borders, Paragraph, Wrap}};
 use crate::state::AppState;
+use crate::beamx::{render_beam_logo, render_full_border, style_for_mode};
 
 pub fn render_zen_journal<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
     use ratatui::text::{Span, Line};
+    let style = style_for_mode(&state.mode);
 
     let total_height = area.height as usize;
     let total_width = area.width as usize;
@@ -27,11 +29,13 @@ pub fn render_zen_journal<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppS
     }
 
     let widget = Paragraph::new(padded_lines)
-        .block(Block::default().title("Zen").borders(Borders::ALL))
+        .block(Block::default().title("Zen").borders(Borders::NONE))
         .style(Style::default().fg(Color::Green))
         .wrap(Wrap { trim: false });
 
     f.render_widget(widget, area);
+    render_beam_logo(f, Rect::new(area.x, area.y + 1, area.width, 3), &style);
+    render_full_border(f, area, &style);
 }
 
 fn parse_markdown_line(input: &str) -> Line {
