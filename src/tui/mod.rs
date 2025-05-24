@@ -11,7 +11,7 @@ use crate::state::AppState;
 use crate::render::{
     render_status_bar,
     render_zen_journal,
-    render_keymap_overlay,
+    render_shortcuts_overlay,
     render_spotlight,
     render_triage,
     render_module_switcher,
@@ -63,7 +63,7 @@ pub fn draw<B: Backend>(terminal: &mut Terminal<B>, state: &mut AppState, _last_
         }
 
         if state.show_keymap && layout_chunks.len() > 1 {
-            render_keymap_overlay(f, layout_chunks[1]);
+            render_shortcuts_overlay(f, layout_chunks[1]);
         }
 
         if state.module_switcher_open {
