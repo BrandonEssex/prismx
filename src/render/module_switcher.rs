@@ -10,9 +10,9 @@ use ratatui::{
 pub fn render_module_switcher<B: Backend>(f: &mut Frame<B>, area: Rect, index: usize) {
     let modules = [
         ("💭", "Mindmap"),
-        ("✍️", "Zen Mode"),
+        ("🧘", "Zen"),
         ("🧭", "Triage"),
-        ("🔍", "Spotlight"),
+        ("⚙️", "Settings"),
     ];
 
     let lines: Vec<Line> = modules

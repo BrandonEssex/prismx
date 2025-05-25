@@ -3,9 +3,10 @@ use ratatui::{backend::Backend, layout::Rect, style::{Color, Style, Modifier}, w
 pub fn module_icon(mode: &str) -> &'static str {
     match mode {
         "gemx" => "💭",
-        "zen" => "✍️",
+        "zen" => "🧘",
         "triage" => "🧭",
         "spotlight" => "🔍",
+        "settings" => "⚙️",
         _ => "❓",
     }
 }

@@ -602,8 +602,8 @@ impl AppState {
         match self.module_switcher_index % 4 {
             0 => "gemx",
             1 => "zen",
-            2 => "settings",
-            3 => "triage",
+            2 => "triage",
+            3 => "settings",
             _ => "gemx",
         }
     }
