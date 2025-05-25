@@ -21,6 +21,18 @@ pub struct Spotlight {
     pub mode: SpotlightMode,
 }
 
+pub const COMMANDS: [&str; 5] = ["/triage", "/zen", "/settings", "/goto", "/plugin"];
+
+/// Return command suggestions that start with the given input prefix.
+pub fn command_suggestions(input: &str) -> Vec<&'static str> {
+    COMMANDS
+        .iter()
+        .filter(|c| c.starts_with(input))
+        .copied()
+        .take(5)
+        .collect()
+}
+
 /// Return a preview message for the given command input.
 ///
 /// If the input matches a known command, `Some((message, true))` is returned.

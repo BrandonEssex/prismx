@@ -6,8 +6,9 @@ use ratatui::{
     widgets::{Block, Borders, Paragraph},
     Frame,
 };
+
 use crate::state::AppState;
-use crate::spotlight::command_preview;
+use crate::spotlight::{command_preview, command_suggestions};
 
 pub fn render_spotlight<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppState) {
     let input = &state.spotlight_input;
@@ -62,6 +63,15 @@ pub fn render_spotlight<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut Ap
     }
 
     let paragraph = Paragraph::new(lines).block(block);
-
     f.render_widget(paragraph, spotlight_area);
+
+    let matches = command_suggestions(input);
+    for (i, suggestion) in matches.iter().take(5).enumerate() {
+        let y = y_offset + 2 + i as u16;
+        let style = Style::default().fg(Color::Cyan).add_modifier(Modifier::DIM);
+        f.render_widget(
+            Paragraph::new(*suggestion).style(style),
+            Rect::new(x_offset, y, width, 1),
+        );
+    }
 }
