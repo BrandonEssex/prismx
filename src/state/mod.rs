@@ -12,6 +12,7 @@ pub struct AppState {
     pub zen_buffer: Vec<String>,
     pub nodes: NodeMap,
     pub root_nodes: Vec<NodeID>,
+    pub last_promoted_root: Option<NodeID>,
     pub selected: Option<NodeID>,
     pub spotlight_input: String,
     pub show_spotlight: bool,
@@ -57,6 +58,7 @@ impl Default for AppState {
             zen_buffer: vec![String::from(" ")],
             nodes,
             root_nodes: vec![node_a, node_b],
+            last_promoted_root: None,
             selected: Some(node_a),
             spotlight_input: String::new(),
             show_spotlight: false,
@@ -99,6 +101,11 @@ impl AppState {
         self.selected.and_then(|id| self.nodes.get_mut(&id))
     }
 
+    pub fn set_selected(&mut self, id: Option<NodeID>) {
+        self.selected = id;
+        self.last_promoted_root = None;
+    }
+
     pub fn visible_node_order(&self) -> Vec<NodeID> {
         let mut result = Vec::new();
 
@@ -129,8 +136,9 @@ impl AppState {
         self.root_nodes.retain(|id| self.nodes.contains_key(id));
         if self.root_nodes.is_empty() && !self.nodes.is_empty() {
             if let Some((&first_id, _)) = self.nodes.iter().next() {
-                if !self.root_nodes.contains(&first_id) {
+                if Some(first_id) != self.last_promoted_root {
                     self.root_nodes.push(first_id);
+                    self.last_promoted_root = Some(first_id);
                     if self.debug_input_mode {
                         eprintln!(
                             "\u{26a0} root_nodes was empty — promoted Node {} to root",
@@ -172,7 +180,7 @@ impl AppState {
             let order = self.visible_node_order();
             if let Some(pos) = order.iter().position(|&id| id == current) {
                 if pos > 0 {
-                    self.selected = Some(order[pos - 1]);
+                    self.set_selected(Some(order[pos - 1]));
                 }
             }
         }
@@ -183,7 +191,7 @@ impl AppState {
             let order = self.visible_node_order();
             if let Some(pos) = order.iter().position(|&id| id == current) {
                 if pos + 1 < order.len() {
-                    self.selected = Some(order[pos + 1]);
+                    self.set_selected(Some(order[pos + 1]));
                 }
             }
         }
@@ -193,7 +201,7 @@ impl AppState {
         if let Some(current) = self.selected {
             if let Some(node) = self.nodes.get(&current) {
                 if let Some(parent_id) = node.parent {
-                    self.selected = Some(parent_id);
+                    self.set_selected(Some(parent_id));
                 }
             }
         }
@@ -203,7 +211,7 @@ impl AppState {
         if let Some(current) = self.selected {
             if let Some(node) = self.nodes.get(&current) {
                 if !node.children.is_empty() {
-                    self.selected = Some(node.children[0]);
+                    self.set_selected(Some(node.children[0]));
                 }
             }
         }
@@ -240,7 +248,7 @@ impl AppState {
                 self.root_nodes.push(parent_id);
             }
 
-            self.selected = Some(new_id);
+            self.set_selected(Some(new_id));
             self.recalculate_roles();
             self.ensure_valid_roots();
         }
@@ -273,7 +281,7 @@ impl AppState {
             }
 
             self.nodes.insert(new_id, sibling);
-            self.selected = Some(new_id);
+            self.set_selected(Some(new_id));
             self.recalculate_roles();
         }
     }
@@ -299,7 +307,7 @@ impl AppState {
             }
 
             delete_recursive(&mut self.nodes, target_id);
-            self.selected = parent_id.or_else(|| self.root_nodes.first().copied());
+            self.set_selected(parent_id.or_else(|| self.root_nodes.first().copied()));
         }
     }
 
@@ -346,14 +354,14 @@ impl AppState {
         let node = Node::new(new_id, "Free Node", None);
         self.nodes.insert(new_id, node);
         self.root_nodes.push(new_id);
-        self.selected = Some(new_id);
+        self.set_selected(Some(new_id));
         self.recalculate_roles();
     }
 
     pub fn drill_down(&mut self) {
         if let Some(current) = self.get_selected_node() {
             if !current.children.is_empty() {
-                self.selected = Some(current.children[0]);
+                self.set_selected(Some(current.children[0]));
             }
         }
     }

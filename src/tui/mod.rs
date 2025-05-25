@@ -108,7 +108,8 @@ pub fn launch_ui() -> std::io::Result<()> {
 
     loop {
         if state.selected.is_none() && !state.nodes.is_empty() {
-            state.selected = Some(state.nodes.keys().copied().next().unwrap());
+            let first = state.nodes.keys().copied().next().unwrap();
+            state.set_selected(Some(first));
         }
 
         if event::poll(std::time::Duration::from_millis(100))? {
