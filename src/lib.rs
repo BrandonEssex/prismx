@@ -27,3 +27,7 @@ pub mod settings;
 #[path = "state/mod.rs"]
 pub mod state;
 pub mod shortcuts;
+pub mod renderable;
+pub use prismx_macros::Widget;
+mod zen_pane;
+pub use zen_pane::ZenPane;

@@ -18,3 +18,5 @@ ratatui = "0.23"
 # Utilities
 chrono = "0.4"
 dirs = "4.0"
+
+prismx_macros = { path = "prismx_macros" }
