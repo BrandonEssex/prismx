@@ -42,7 +42,7 @@ fn missing_parent_becomes_free() {
     state.nodes.insert(new_id, Node::new(new_id, "Dangling", Some(123)));
     state.nodes.get_mut(&root).unwrap().children.push(new_id);
 
-    let (_c, roles) = layout_nodes(&state.nodes, root, 0, 80, true, state.debug_input_mode);
+    let (_c, roles) = layout_nodes(&state.nodes, root, 0, 80, true);
     assert_eq!(roles.get(&new_id), Some(&LayoutRole::Free));
 }
 

@@ -72,7 +72,6 @@ pub fn node_at_position(state: &AppState, x: u16, y: u16) -> Option<NodeID> {
                 oy,
                 tw as i16,
                 state.auto_arrange,
-                state.debug_input_mode,
             );
             for pos in l.values_mut() {
                 pos.x += ox;

@@ -12,7 +12,7 @@ pub const MIN_NODE_GAP: i16 = 3;
 pub const CHILD_SPACING_Y: i16 = 1;
 pub const FREE_GRID_COLUMNS: usize = 4;
 pub const GEMX_HEADER_HEIGHT: i16 = 2;
-pub const MAX_LAYOUT_DEPTH: usize = 50;
+pub const MAX_DEPTH: usize = 32;
 pub const BASE_SPACING_X: i16 = 20;
 pub const BASE_SPACING_Y: i16 = 5;
 pub const SNAP_GRID_X: i16 = 4;
@@ -126,7 +126,6 @@ pub fn layout_nodes(
     start_y: i16,
     term_width: i16,
     auto_arrange: bool,
-    debug_input_mode: bool,
 ) -> (HashMap<NodeID, Coords>, HashMap<NodeID, LayoutRole>) {
     let start_y = start_y.max(GEMX_HEADER_HEIGHT);
     let start_x = if auto_arrange { 0 } else { term_width / 2 };
@@ -144,7 +143,6 @@ pub fn layout_nodes(
         auto_arrange,
         &mut visited,
         0,
-        debug_input_mode,
     );
 
 
@@ -175,20 +173,13 @@ fn layout_recursive_safe(
     auto_arrange: bool,
     visited: &mut HashSet<NodeID>,
     depth: usize,
-    debug_input_mode: bool,
 ) -> (i16, i16, i16) {
-    let inserted = visited.insert(node_id);
-    if !inserted || depth > MAX_LAYOUT_DEPTH {
-        if debug_input_mode {
-            eprintln!(
-                "⚠️ Recursion halted: Node {} (depth {})",
-                node_id,
-                depth
-            );
-        }
-        if inserted {
-            visited.remove(&node_id);
-        }
+    if !visited.insert(node_id) || depth > MAX_DEPTH {
+        crate::log_warn!(
+            "⚠ Recursion halted: Node {} (depth {})",
+            node_id,
+            depth
+        );
         return (y, x, x);
     }
 
@@ -242,7 +233,6 @@ fn layout_recursive_safe(
             auto_arrange,
             visited,
             depth + 1,
-            debug_input_mode,
         );
         max_y = max_y.max(cy);
         min_x_span = min_x_span.min(mi);
