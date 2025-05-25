@@ -323,6 +323,21 @@ pub fn launch_ui() -> std::io::Result<()> {
                         state.toggle_snap_grid();
                     }
 
+                    KeyCode::Up if state.mode == "settings" => {
+                        if state.settings_focus_index > 0 {
+                            state.settings_focus_index -= 1;
+                        } else {
+                            state.settings_focus_index = crate::settings::SETTING_TOGGLES.len() - 1;
+                        }
+                    }
+                    KeyCode::Down if state.mode == "settings" => {
+                        state.settings_focus_index = (state.settings_focus_index + 1) % crate::settings::SETTING_TOGGLES.len();
+                    }
+                    KeyCode::Enter | KeyCode::Char(' ') if state.mode == "settings" => {
+                        let idx = state.settings_focus_index % crate::settings::SETTING_TOGGLES.len();
+                        (crate::settings::SETTING_TOGGLES[idx].toggle)(&mut state);
+                    }
+
                     KeyCode::Up if state.mode == "gemx" => state.move_focus_up(),
                     KeyCode::Down if state.mode == "gemx" => state.move_focus_down(),
                     KeyCode::Left if state.mode == "gemx" => state.move_focus_left(),

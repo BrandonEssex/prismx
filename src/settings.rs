@@ -1,51 +1,90 @@
-use std::time::{SystemTime, UNIX_EPOCH};
 use ratatui::{
     backend::Backend,
-    layout::{Rect, Alignment},
+    layout::Rect,
+    style::{Color, Modifier, Style},
+    text::{Line, Span},
+    widgets::{Block, Borders, Paragraph, Wrap},
     Frame,
-    widgets::{Block, Borders, Paragraph},
-    text::Line,
 };
-use crate::beamx::{render_full_border, style_for_mode};
-use crate::ui::beamx::{BeamX, BeamXStyle, BeamXMode, BeamXAnimationMode};
 
+use crate::state::{AppState, DockLayout};
 
-use crate::state::AppState;
+pub struct SettingToggle {
+    pub label: &'static str,
+    pub is_enabled: fn(&AppState) -> bool,
+    pub toggle: fn(&mut AppState),
+}
+
+fn is_auto_arrange(s: &AppState) -> bool { s.auto_arrange }
+fn toggle_auto_arrange(s: &mut AppState) { s.auto_arrange = !s.auto_arrange; }
+
+fn is_debug_mode(s: &AppState) -> bool { s.debug_input_mode }
+fn toggle_debug_mode(s: &mut AppState) { s.debug_input_mode = !s.debug_input_mode; }
+
+fn is_vertical_dock(s: &AppState) -> bool {
+    matches!(s.favorite_dock_layout, DockLayout::Vertical)
+}
+fn toggle_dock_layout(s: &mut AppState) {
+    s.favorite_dock_layout = match s.favorite_dock_layout {
+        DockLayout::Vertical => DockLayout::Horizontal,
+        DockLayout::Horizontal => DockLayout::Vertical,
+    };
+}
+
+pub const SETTING_TOGGLES: &[SettingToggle] = &[
+    SettingToggle {
+        label: "Auto-Arrange",
+        is_enabled: is_auto_arrange,
+        toggle: toggle_auto_arrange,
+    },
+    SettingToggle {
+        label: "Debug Mode",
+        is_enabled: is_debug_mode,
+        toggle: toggle_debug_mode,
+    },
+    SettingToggle {
+        label: "Vertical Dock",
+        is_enabled: is_vertical_dock,
+        toggle: toggle_dock_layout,
+    },
+];
 
 pub fn render_settings<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
-    let style = style_for_mode("settings");
-    let debug_label = if state.debug_border { "On" } else { "Off" };
-    let lines = vec![
-        Line::from("PrismX Settings"),
-        Line::from("----------------"),
-        Line::from("Theme: theme.toml"),
-        Line::from("Layout: Ctrl+Arrow resizable"),
-        Line::from("Panels: Toggle w/ Ctrl+D, I, K, Z"),
-        Line::from("Commands: /theme, /triage, /plugin, /journal"),
-        Line::from(format!("Debug Border: {} (Ctrl+Shift+B)", debug_label)),
-    ];
+    let lines: Vec<Line> = SETTING_TOGGLES
+        .iter()
+        .enumerate()
+        .map(|(i, t)| {
+            let enabled = (t.is_enabled)(state);
+            let selected = i == state.settings_focus_index % SETTING_TOGGLES.len();
+            let check = if enabled { "[x]" } else { "[ ]" };
+            let prefix = if selected { "> " } else { "  " };
+            let style = if selected {
+                Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD)
+            } else {
+                Style::default().fg(Color::Gray)
+            };
+            Line::from(vec![
+                Span::styled(prefix.to_string(), style),
+                Span::styled(format!("{} {}", check, t.label), style),
+            ])
+        })
+        .collect();
 
-    let block = Block::default()
-        .title("Settings")
-        .borders(Borders::NONE);
-    // Draw title first so the text area can be precisely positioned
-    f.render_widget(block, area);
+    let content_width = lines
+        .iter()
+        .map(|l| l.width() as u16)
+        .max()
+        .unwrap_or(0)
+        .saturating_add(4);
 
-    let inner = Rect::new(area.x + 1, area.y + 1, area.width.saturating_sub(2), area.height.saturating_sub(2));
-    let paragraph = Paragraph::new(lines)
-        .alignment(Alignment::Left);
-    f.render_widget(paragraph, inner);
-    render_full_border(f, area, &style, true, !state.debug_border);
-    let tick = (SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .unwrap_or_default()
-        .as_millis() / 300) as u64;
-    let beamx = BeamX {
-        tick,
-        enabled: true,
-        mode: BeamXMode::Settings,
-        style: BeamXStyle::from(BeamXMode::Settings),
-        animation: BeamXAnimationMode::PulseEntryRadiate,
-    };
-    beamx.render(f, area);
+    let width = content_width.min(area.width);
+    let height = lines.len() as u16 + 2;
+
+    let x = area.x + (area.width.saturating_sub(width)) / 2;
+    let y = area.y + (area.height.saturating_sub(height)) / 2;
+
+    let block = Block::default().title("Settings").borders(Borders::ALL);
+    let content = Paragraph::new(lines).block(block).wrap(Wrap { trim: false });
+
+    f.render_widget(content, Rect::new(x, y, width, height));
 }
