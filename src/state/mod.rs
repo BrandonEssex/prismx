@@ -328,35 +328,34 @@ impl AppState {
         let new_id = self.nodes.keys().max().copied().unwrap_or(100) + 1;
         let mut sibling = Node::new(new_id, "New Sibling", parent_id);
 
-        if parent_id.is_none() {
-            // Creating a sibling of a root results in another root. Provide a
-            // reasonable default position when manual layout is active so the
-            // node is immediately visible.
-            if !self.auto_arrange {
+        if !self.auto_arrange {
+            if let Some(selected) = self.nodes.get(&selected_id) {
+                sibling.x = selected.x + SIBLING_SPACING_X;
+                sibling.y = selected.y;
+            } else {
                 sibling.x = (self.nodes.len() as i16 % 5) * SIBLING_SPACING_X;
                 sibling.y = GEMX_HEADER_HEIGHT + 2;
             }
+
+            if sibling.x == 0 {
+                sibling.x = ((self.nodes.len() as i16) % 5 + 1) * SIBLING_SPACING_X;
+            }
+        }
+
+        if parent_id.is_none() {
             self.root_nodes.push(new_id);
             self.root_nodes.sort_unstable();
             self.root_nodes.dedup();
-        } else {
-            if !self.auto_arrange {
-                if let Some(selected) = self.nodes.get(&selected_id) {
-                    sibling.x = selected.x + SIBLING_SPACING_X;
-                    sibling.y = selected.y;
-                }
-            }
-            if let Some(parent) = self.nodes.get_mut(&parent_id.unwrap()) {
-                parent.children.push(new_id);
-            }
+        } else if let Some(parent) = self.nodes.get_mut(&parent_id.unwrap()) {
+            parent.children.push(new_id);
         }
 
         if self.debug_input_mode {
             eprintln!(
-                "[INSERT] Node {} \u{2192} label=\"{}\", parent={:?}, x={}, y={}, mode={:?}",
+                "[INSERT] Node {} → label=\"{}\", parent={:?}, x={}, y={}, mode={:?}",
                 new_id,
                 sibling.label,
-                sibling.parent,
+                parent_id,
                 sibling.x,
                 sibling.y,
                 self.mode
