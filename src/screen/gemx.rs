@@ -162,9 +162,9 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppStat
         }
     }
 
-    if state.debug_input_mode {
-        eprintln!("Rendered {} nodes this frame.", drawn_at.len());
-    }
+    // if state.debug_input_mode {
+    //     eprintln!("Rendered {} nodes this frame.", drawn_at.len());
+    // }
 
     // When auto-arrange is active, adjust zoom and scroll to fit all nodes
     if state.auto_arrange && !drawn_at.is_empty() {
