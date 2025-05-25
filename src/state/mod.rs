@@ -7,13 +7,12 @@ use crate::plugin::PluginHost;
 mod hotkeys;
 pub use hotkeys::*;
 
-use ratatui::layout::Rect;
+
 
 #[derive(Clone, Default)]
 pub struct FavoriteEntry {
-    pub label: &'static str,
-    pub mode: &'static str,
-    pub bounds: Rect,
+    pub icon: &'static str,
+    pub command: &'static str,
 }
 
 #[derive(Copy, Clone, PartialEq, Debug)]
@@ -65,7 +64,6 @@ pub struct AppState {
     pub status_message: String,
     pub status_message_last_updated: Option<std::time::Instant>,
     pub plugin_host: PluginHost,
-    pub favorite_entries: Vec<FavoriteEntry>,
     pub plugin_favorites: Vec<FavoriteEntry>,
     pub favorite_dock_limit: usize,
     pub favorite_dock_layout: DockLayout,
@@ -127,7 +125,6 @@ impl Default for AppState {
             status_message: String::new(),
             status_message_last_updated: None,
             plugin_host: PluginHost::new(),
-            favorite_entries: Vec::new(),
             plugin_favorites: Vec::new(),
             favorite_dock_limit: 3,
             favorite_dock_layout: DockLayout::Vertical,
@@ -700,7 +697,7 @@ impl AppState {
         }
     }
 
-    pub fn get_module_by_index(&self) -> &str {
+pub fn get_module_by_index(&self) -> &str {
         match self.module_switcher_index % 4 {
             0 => "gemx",
             1 => "zen",
@@ -708,5 +705,11 @@ impl AppState {
             3 => "settings",
             _ => "gemx",
         }
+    }
+}
+
+pub fn register_plugin_favorite(state: &mut AppState, icon: &'static str, command: &'static str) {
+    if state.plugin_favorites.len() < 5 {
+        state.plugin_favorites.push(FavoriteEntry { icon, command });
     }
 }
