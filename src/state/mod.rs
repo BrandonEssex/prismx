@@ -1,11 +1,14 @@
 use std::collections::HashMap;
 use crate::node::{Node, NodeID, NodeMap};
 use crate::layout::{ SIBLING_SPACING_X, CHILD_SPACING_Y, GEMX_HEADER_HEIGHT };
+use std::sync::atomic::{AtomicBool, Ordering};
 use crossterm::terminal;
 use crate::plugin::PluginHost;
 
 mod hotkeys;
 pub use hotkeys::*;
+
+pub(crate) static PROMOTION_LOGGED: AtomicBool = AtomicBool::new(false);
 
 pub struct AppState {
     pub mode: String,
@@ -128,10 +131,16 @@ impl AppState {
         let was_empty = self.root_nodes.is_empty();
         if was_empty && !self.nodes.is_empty() {
             if let Some((&first_id, _)) = self.nodes.iter().next() {
-                self.root_nodes.push(first_id);
-                eprintln!("\u{26a0} root_nodes was empty — promoted Node {} to root", first_id);
+                if !self.root_nodes.contains(&first_id) {
+                    self.root_nodes.push(first_id);
+                    if !PROMOTION_LOGGED.swap(true, Ordering::Relaxed) {
+                        eprintln!("\u{26a0} root_nodes was empty — promoted Node {} to root", first_id);
+                    }
+                }
             }
         }
+        self.root_nodes.sort_unstable();
+        self.root_nodes.dedup();
     }
 
     /// Ensure nodes have unique positions when auto-arrange is disabled.
