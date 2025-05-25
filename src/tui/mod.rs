@@ -181,7 +181,10 @@ pub fn launch_ui() -> std::io::Result<()> {
                 } else if match_hotkey("toggle_keymap", code, modifiers, &state) {
                     state.show_keymap = !state.show_keymap;
                 } else if match_hotkey("create_child", code, modifiers, &state) && state.mode == "gemx" {
-                    state.push_undo(); state.add_child();
+                    state.ensure_valid_roots();
+                    debug_assert!(!state.root_nodes.is_empty());
+                    state.push_undo();
+                    state.add_child();
                 } else if match_hotkey("create_sibling", code, modifiers, &state) && state.mode == "gemx" {
                     state.push_undo(); state.add_sibling();
                 } else if match_hotkey("add_free_node", code, modifiers, &state) {

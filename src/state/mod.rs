@@ -131,7 +131,12 @@ impl AppState {
             if let Some((&first_id, _)) = self.nodes.iter().next() {
                 if !self.root_nodes.contains(&first_id) {
                     self.root_nodes.push(first_id);
-                    eprintln!("\u{26a0} root_nodes was empty — promoted Node {} to root", first_id);
+                    if self.debug_input_mode {
+                        eprintln!(
+                            "\u{26a0} root_nodes was empty — promoted Node {} to root",
+                            first_id
+                        );
+                    }
                 }
             }
         }
