@@ -169,12 +169,17 @@ fn layout_recursive_safe(
     depth: usize,
     debug_input_mode: bool,
 ) -> (i16, i16, i16) {
-    if !visited.insert(node_id) || depth > MAX_LAYOUT_DEPTH {
+    let inserted = visited.insert(node_id);
+    if !inserted || depth > MAX_LAYOUT_DEPTH {
         if debug_input_mode {
             eprintln!(
-                "⚠️ Recursion halted: Node {} already visited or max depth exceeded.",
-                node_id
+                "⚠️ Recursion halted: Node {} (depth {})",
+                node_id,
+                depth
             );
+        }
+        if inserted {
+            visited.remove(&node_id);
         }
         return (y, x, x);
     }
