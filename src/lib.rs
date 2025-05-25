@@ -1,3 +1,5 @@
+#[macro_use]
+pub mod logging;
 pub mod node;
 pub mod layout;
 pub mod screen;
