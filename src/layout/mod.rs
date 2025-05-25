@@ -164,6 +164,23 @@ pub fn layout_nodes(
         pos.y -= pos.y % SNAP_GRID_Y;
     }
 
+    if auto_arrange {
+        use std::collections::HashSet;
+        let mut used: HashSet<(i16, i16)> = HashSet::new();
+        let mut offset_y: i16 = 0;
+        for pos in coords.values_mut() {
+            let mut key = (pos.x, pos.y);
+            if key == (0, 0) || !used.insert(key) {
+                offset_y += 2;
+                pos.y += offset_y;
+                pos.y = pos.y.max(GEMX_HEADER_HEIGHT);
+                pos.y -= pos.y % SNAP_GRID_Y;
+                key = (pos.x, pos.y);
+                used.insert(key);
+            }
+        }
+    }
+
     (coords, roles)
 }
 
