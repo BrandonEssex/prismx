@@ -357,6 +357,15 @@ pub fn launch_ui() -> std::io::Result<()> {
                         (crate::settings::SETTING_TOGGLES[idx].toggle)(&mut state);
                     }
 
+                    KeyCode::Up if state.favorite_dock_enabled && modifiers == KeyModifiers::NONE => {
+                        state.dock_focus_prev();
+                        if state.mode == "gemx" { state.move_focus_up(); }
+                    }
+                    KeyCode::Down if state.favorite_dock_enabled && modifiers == KeyModifiers::NONE => {
+                        state.dock_focus_next();
+                        if state.mode == "gemx" { state.move_focus_down(); }
+                    }
+
                     KeyCode::Up if state.mode == "gemx" => state.move_focus_up(),
                     KeyCode::Down if state.mode == "gemx" => state.move_focus_down(),
                     KeyCode::Left if state.mode == "gemx" => state.move_focus_left(),
