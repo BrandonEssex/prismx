@@ -35,6 +35,17 @@ pub fn spawn_free_node(state: &mut AppState) {
         node.y = ((index / cols) as i16) * row_pad + GEMX_HEADER_HEIGHT + 1;
     }
 
+    if state.debug_input_mode {
+        eprintln!(
+            "[Node {}] label=\"{}\", parent={:?}, x={}, y={}",
+            new_id,
+            node.label,
+            node.parent,
+            node.x,
+            node.y
+        );
+    }
+
     state.nodes.insert(new_id, node);
     state.root_nodes.push(new_id);
     state.set_selected(Some(new_id));

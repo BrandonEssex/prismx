@@ -111,6 +111,22 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppStat
         }
     }
 
+    if state.debug_input_mode {
+        eprintln!("Render Tree:");
+        for (&id, coords) in &drawn_at {
+            let role = node_roles.get(&id).unwrap_or(&LayoutRole::Free);
+            let label = &state.nodes[&id].label;
+            eprintln!(
+                "Node {} \u{2192} (x: {}, y: {}) | {:?} | {}",
+                id,
+                coords.x,
+                coords.y,
+                role,
+                label
+            );
+        }
+    }
+
     if drawn_at.is_empty() {
         let msg = if state.auto_arrange {
             "⚠ Node exists but layout failed."
@@ -293,6 +309,9 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppStat
 
         let para = Paragraph::new(label).style(style);
         f.render_widget(para, Rect::new(draw_x, draw_y, width as u16, 1));
+        if state.debug_input_mode && std::env::var("PRISMX_TEST").is_err() {
+            f.render_widget(Paragraph::new("■").style(style), Rect::new(draw_x, draw_y, 1, 1));
+        }
     }
 
     // Draw arrows

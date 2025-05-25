@@ -287,6 +287,16 @@ impl AppState {
             child.x = parent.x;
             child.y = parent.y + 1;
         }
+        if self.debug_input_mode {
+            eprintln!(
+                "[Node {}] label=\"{}\", parent={:?}, x={}, y={}",
+                new_id,
+                child.label,
+                child.parent,
+                child.x,
+                child.y
+            );
+        }
 
         self.nodes.insert(new_id, child);
         if let Some(parent) = self.nodes.get_mut(&parent_id) {
@@ -338,6 +348,17 @@ impl AppState {
             if let Some(parent) = self.nodes.get_mut(&parent_id.unwrap()) {
                 parent.children.push(new_id);
             }
+        }
+
+        if self.debug_input_mode {
+            eprintln!(
+                "[Node {}] label=\"{}\", parent={:?}, x={}, y={}",
+                new_id,
+                sibling.label,
+                sibling.parent,
+                sibling.x,
+                sibling.y
+            );
         }
 
         self.nodes.insert(new_id, sibling);
@@ -443,7 +464,11 @@ impl AppState {
 
     pub fn add_free_node(&mut self) {
         let new_id = self.nodes.keys().max().copied().unwrap_or(100) + 1;
-        let node = Node::new(new_id, "Free Node", None);
+        let mut node = Node::new(new_id, "Free Node", None);
+        if !self.auto_arrange {
+            node.x = (self.nodes.len() as i16 % 5) * SIBLING_SPACING_X;
+            node.y = GEMX_HEADER_HEIGHT + 2;
+        }
         self.nodes.insert(new_id, node);
         self.root_nodes.push(new_id);
         self.set_selected(Some(new_id));
