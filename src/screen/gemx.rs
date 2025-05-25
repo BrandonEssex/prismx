@@ -154,8 +154,19 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppStat
             };
 
             if n.x == 0 && n.y == 0 {
-                n.x = 6 + ((id as i16) % 10) * SIBLING_SPACING_X;
-                n.y = GEMX_HEADER_HEIGHT + 3;
+                n.x = state.fallback_next_x;
+                n.y = state.fallback_next_y;
+                state.fallback_next_y += 3;
+                if state.fallback_next_y > area.height as i16 - 4 {
+                    state.fallback_next_y = GEMX_HEADER_HEIGHT + 2;
+                    state.fallback_next_x += 20;
+                }
+                if state.debug_input_mode {
+                    eprintln!(
+                        "\u{1F4D0} Placed Node {} at x={}, y={}",
+                        id, n.x, n.y
+                    );
+                }
             }
 
             drawn_at.insert(id, Coords { x: n.x, y: n.y });
