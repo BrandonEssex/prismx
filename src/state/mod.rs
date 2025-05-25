@@ -240,10 +240,14 @@ impl AppState {
     }
 
     pub fn add_child(&mut self) {
-        let parent_id = match self.selected {
-            Some(id) if self.nodes.contains_key(&id) => id,
-            _ => return,
+        let Some(parent_id) = self.selected else {
+            eprintln!("\u{26a0} Tab insert failed: no selected node.");
+            return;
         };
+        if !self.nodes.contains_key(&parent_id) {
+            eprintln!("\u{26a0} Tab insert failed: selected node is invalid.");
+            return;
+        }
 
         let new_id = self.nodes.keys().max().copied().unwrap_or(100) + 1;
 
@@ -262,7 +266,7 @@ impl AppState {
             self.root_nodes.push(parent_id);
         }
 
-        self.set_selected(Some(new_id));
+        self.selected = Some(new_id);
         if !self.auto_arrange {
             self.ensure_grid_positions();
         }
@@ -300,7 +304,7 @@ impl AppState {
             }
 
             self.nodes.insert(new_id, sibling);
-            self.set_selected(Some(new_id));
+            self.selected = Some(new_id);
             if !self.auto_arrange {
                 self.ensure_grid_positions();
             }
