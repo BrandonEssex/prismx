@@ -289,12 +289,13 @@ impl AppState {
         }
         if self.debug_input_mode {
             eprintln!(
-                "[Node {}] label=\"{}\", parent={:?}, x={}, y={}",
+                "[INSERT] Node {} \u{2192} label=\"{}\", parent={:?}, x={}, y={}, mode={:?}",
                 new_id,
                 child.label,
                 child.parent,
                 child.x,
-                child.y
+                child.y,
+                self.mode
             );
         }
 
@@ -352,12 +353,13 @@ impl AppState {
 
         if self.debug_input_mode {
             eprintln!(
-                "[Node {}] label=\"{}\", parent={:?}, x={}, y={}",
+                "[INSERT] Node {} \u{2192} label=\"{}\", parent={:?}, x={}, y={}, mode={:?}",
                 new_id,
                 sibling.label,
                 sibling.parent,
                 sibling.x,
-                sibling.y
+                sibling.y,
+                self.mode
             );
         }
 
