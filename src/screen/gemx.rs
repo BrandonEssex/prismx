@@ -23,6 +23,9 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppStat
         state.recalculate_roles();
     }
 
+    // Ensure we always have at least one valid root after role recalculation
+    state.ensure_valid_roots();
+
 
     // // ✅ Always print the structure for diagnostics
     // println!("=== NODES AND CHILDREN ===");
@@ -78,8 +81,13 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppStat
     for (id, _node) in &state.nodes {
         if !reachable_ids.contains(id) {
             eprintln!("⚠ Node {} is unreachable from root", id);
+            if !state.root_nodes.contains(id) {
+                state.root_nodes.push(*id);
+            }
         }
     }
+    state.root_nodes.sort_unstable();
+    state.root_nodes.dedup();
 
     if drawn_at.is_empty() {
         f.render_widget(
@@ -175,8 +183,9 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppStat
             label.push_str(" 📎");
         }
 
-        if state.debug_input_mode && !reachable_ids.contains(&node_id) {
-            label = format!("[?] {}", label);
+        let unreachable = !reachable_ids.contains(&node_id);
+        if state.debug_input_mode && unreachable {
+            label = format!("❓ {}", label);
         }
 
         let width = label.len().min((area.width - draw_x) as usize);
@@ -198,6 +207,10 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppStat
                 }
                 _ => {}
             }
+        }
+
+        if unreachable {
+            style = style.fg(Color::DarkGray);
         }
 
         if state.debug_input_mode {
