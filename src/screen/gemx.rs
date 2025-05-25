@@ -124,6 +124,7 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppStat
     use std::collections::HashSet;
     let reachable_ids: HashSet<NodeID> = drawn_at.keys().copied().collect();
     if state.auto_arrange {
+        let mut promoted_id = None;
         for (id, node) in &state.nodes {
             if state.root_nodes.contains(id)
                 || drawn_at.contains_key(&id)
@@ -142,11 +143,23 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppStat
             state.fallback_this_frame = true;
             state.fallback_promoted_this_session.insert(*id);
 
+            drawn_at.insert(*id, Coords { x: 5, y: GEMX_HEADER_HEIGHT + 2 });
+            node_roles.insert(*id, LayoutRole::Root);
+
             if state.debug_input_mode {
                 eprintln!("⚠ Node {} is unreachable — promoting to root", id);
             }
 
+            promoted_id = Some(*id);
             break;
+        }
+
+        if let Some(pid) = promoted_id {
+            if state.debug_input_mode {
+                if let Some(node) = state.nodes.get_mut(&pid) {
+                    node.label = format!("[F] {}", node.label);
+                }
+            }
         }
     }
 
