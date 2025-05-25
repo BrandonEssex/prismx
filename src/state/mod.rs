@@ -472,6 +472,11 @@ impl AppState {
         self.ensure_valid_roots();
     }
 
+    pub fn exit_spotlight(&mut self) {
+        self.spotlight_input.clear();
+        self.show_spotlight = false;
+        self.spotlight_just_opened = false;
+    }
 
     pub fn delete_node(&mut self) {
         if let Some(target_id) = self.selected {
@@ -563,34 +568,29 @@ impl AppState {
                 }
             }
         } else {
-            match input {
-                "/triage" => self.mode = "triage".into(),
-                "/zen" => self.mode = "zen".into(),
-                "/settings" => self.mode = "settings".into(),
-                "/gemx" => self.mode = "gemx".into(),
-                "/toggle triage" => self.show_triage = !self.show_triage,
-                "/toggle keymap" => self.show_keymap = !self.show_keymap,
-                "/toggle spotlight" => self.show_spotlight = !self.show_spotlight,
-                "/mode zen" => self.mode = "zen".into(),
-                "/mode gemx" => self.mode = "gemx".into(),
-                "/arrange" => {
-                    self.auto_arrange = true;
-                }
-            match input.as_str() {
-                "/undo" => self.undo(),
-                "/redo" => self.redo(),
-                "/toolbar" => {
-                    self.zen_toolbar_open = !self.zen_toolbar_open;
-                    self.zen_toolbar_index = 0;
-                },
-                "/clear" => self.zen_buffer = vec![String::new()],
-                _ => {}
+        match input {
+            "/triage" => self.mode = "triage".into(),
+            "/zen" => self.mode = "zen".into(),
+            "/settings" => self.mode = "settings".into(),
+            "/gemx" => self.mode = "gemx".into(),
+            "/toggle triage" => self.show_triage = !self.show_triage,
+            "/toggle keymap" => self.show_keymap = !self.show_keymap,
+            "/toggle spotlight" => self.show_spotlight = !self.show_spotlight,
+            "/mode zen" => self.mode = "zen".into(),
+            "/mode gemx" => self.mode = "gemx".into(),
+            "/arrange" => self.auto_arrange = true,
+            "/undo" => self.undo(),
+            "/redo" => self.redo(),
+            "/toolbar" => {
+                self.zen_toolbar_open = !self.zen_toolbar_open;
+                self.zen_toolbar_index = 0;
             }
+            "/clear" => self.zen_buffer = vec![String::new()],
+            _ => {}
+            }        
         }
-        self.spotlight_input.clear();
-        self.show_spotlight = false;
-        self.spotlight_just_opened = false;
     }
+
 
     pub fn add_free_node(&mut self) {
         let new_id = self.nodes.keys().max().copied().unwrap_or(100) + 1;
@@ -894,6 +894,58 @@ impl AppState {
         }
     }
 
+    pub fn get_module_by_index(&self) -> &str {
+        match self.module_switcher_index % 4 {
+            0 => "gemx",
+            1 => "zen",
+            2 => "triage",
+            3 => "settings",
+            _ => "gemx",
+        }
+    }
+
+    pub fn favorite_entries(&self) -> Vec<FavoriteEntry> {
+        let default_favorites = [
+            ("⚙️", "/settings"),
+            ("📬", "/triage"),
+            ("💭", "/gemx"),
+            ("🧘", "/zen"),
+            ("🔍", "/spotlight"),
+        ];
+
+        let limit = self.favorite_dock_limit.min(5);
+        let mut all: Vec<FavoriteEntry> = self
+            .plugin_favorites
+            .iter()
+            .cloned()
+            .chain(
+                default_favorites
+                    .iter()
+                    .map(|&(icon, cmd)| FavoriteEntry { icon, command: cmd }),
+            )
+            .take(limit)
+            .collect();
+
+        if self.mode == "gemx" && all.len() >= 3 {
+            all[2].icon = "💬";
+        }
+        if (self.mode == "triage" || self.show_triage) && all.len() >= 2 {
+            all[1].icon = "📫";
+        }
+        all
+    }
+
+    pub fn trigger_favorite(&mut self, index: usize) {
+        let entries = self.favorite_entries();
+        if let Some(entry) = entries.get(index) {
+            self.spotlight_input = entry.command.to_string();
+            self.show_spotlight = true;
+            self.favorite_focus_index = Some(index);
+            self.status_message = entry.command.to_string();
+            self.status_message_last_updated = Some(std::time::Instant::now());
+        }
+    }
+
     pub fn start_link(&mut self) {
         self.selected_drag_source = self.selected;
     }
@@ -1001,59 +1053,6 @@ impl AppState {
 
         for &id in &self.root_nodes {
             self.layout_roles.insert(id, LayoutRole::Root);
-        }
-    }
-
-impl AppState {
-    pub fn get_module_by_index(&self) -> &str {
-        match self.module_switcher_index % 4 {
-            0 => "gemx",
-            1 => "zen",
-            2 => "triage",
-            3 => "settings",
-            _ => "gemx",
-        }
-    }
-
-    pub fn favorite_entries(&self) -> Vec<FavoriteEntry> {
-        let default_favorites = [
-            ("⚙️", "/settings"),
-            ("📬", "/triage"),
-            ("💭", "/gemx"),
-            ("🧘", "/zen"),
-            ("🔍", "/spotlight"),
-        ];
-
-        let limit = self.favorite_dock_limit.min(5);
-        let mut all: Vec<FavoriteEntry> = self
-            .plugin_favorites
-            .iter()
-            .cloned()
-            .chain(
-                default_favorites
-                    .iter()
-                    .map(|&(icon, cmd)| FavoriteEntry { icon, command: cmd }),
-            )
-            .take(limit)
-            .collect();
-
-        if self.mode == "gemx" && all.len() >= 3 {
-            all[2].icon = "💬";
-        }
-        if (self.mode == "triage" || self.show_triage) && all.len() >= 2 {
-            all[1].icon = "📫";
-        }
-        all
-    }
-
-    pub fn trigger_favorite(&mut self, index: usize) {
-        let entries = self.favorite_entries();
-        if let Some(entry) = entries.get(index) {
-            self.spotlight_input = entry.command.to_string();
-            self.show_spotlight = true;
-            self.favorite_focus_index = Some(index);
-            self.status_message = entry.command.to_string();
-            self.status_message_last_updated = Some(std::time::Instant::now());
         }
     }
 }
