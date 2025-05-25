@@ -73,6 +73,14 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppStat
 
     }
 
+    if drawn_at.is_empty() {
+        f.render_widget(
+            Paragraph::new("⚠ Layout Error"),
+            Rect::new(area.x + 2, area.y + 2, 30, 1),
+        );
+        eprintln!("⚠ layout_nodes() returned no visible nodes.");
+    }
+
     // When auto-arrange is active, adjust zoom and scroll to fit all nodes
     if state.auto_arrange && !drawn_at.is_empty() {
         let min_x = drawn_at.values().map(|c| c.x).min().unwrap_or(0);
@@ -177,6 +185,13 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppStat
                     style = style.add_modifier(Modifier::DIM | Modifier::UNDERLINED);
                 }
                 _ => {}
+            }
+        }
+
+        if state.debug_input_mode {
+            let has_parent = node.parent.is_some();
+            if !has_parent && !matches!(role, LayoutRole::Root | LayoutRole::Free) {
+                style = style.bg(Color::Red);
             }
         }
 

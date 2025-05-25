@@ -208,12 +208,13 @@ impl AppState {
                 child.y = parent.y + 1;
             }
 
+            self.nodes.insert(new_id, child);
             if let Some(parent) = self.nodes.get_mut(&parent_id) {
                 parent.children.push(new_id);
             }
 
-            self.nodes.insert(new_id, child);
             self.selected = Some(new_id);
+            self.recalculate_roles();
         }
     }
 
