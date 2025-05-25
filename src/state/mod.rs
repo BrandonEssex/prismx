@@ -36,6 +36,7 @@ pub struct AppState {
     pub dragging: Option<NodeID>,
     pub last_mouse: Option<(i16, i16)>,
     pub debug_input_mode: bool,
+    pub debug_border: bool,
     pub status_message: String,
     pub status_message_last_updated: Option<std::time::Instant>,
     pub plugin_host: PluginHost,
@@ -80,6 +81,7 @@ impl Default for AppState {
             dragging: None,
             last_mouse: None,
             debug_input_mode: true,
+            debug_border: std::env::var("PRISMX_DEBUG_BORDER").is_ok(),
             status_message: String::new(),
             status_message_last_updated: None,
             plugin_host: PluginHost::new(),
@@ -390,6 +392,10 @@ impl AppState {
 
     pub fn toggle_snap_grid(&mut self) {
         self.snap_to_grid = !self.snap_to_grid;
+    }
+
+    pub fn toggle_debug_border(&mut self) {
+        self.debug_border = !self.debug_border;
     }
 
     pub fn zoom_in(&mut self) {

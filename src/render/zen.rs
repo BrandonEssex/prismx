@@ -37,7 +37,7 @@ pub fn render_zen_journal<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppS
         .wrap(Wrap { trim: false });
 
     f.render_widget(widget, area);
-    render_full_border(f, area, &style, true);
+    render_full_border(f, area, &style, true, false);
     let tick = (SystemTime::now()
         .duration_since(UNIX_EPOCH)
         .unwrap_or_default()

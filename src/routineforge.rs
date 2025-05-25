@@ -28,7 +28,7 @@ pub fn render_triage_panel(f: &mut PluginFrame<'_>, area: Rect, state: &mut AppS
 
     let paragraph = Paragraph::new(tasks).block(block);
     f.render_widget(paragraph, area);
-    render_full_border(f, area, &style, true);
+    render_full_border(f, area, &style, true, false);
     let tick = (SystemTime::now()
         .duration_since(UNIX_EPOCH)
         .unwrap_or_default()

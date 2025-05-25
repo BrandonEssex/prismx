@@ -262,7 +262,7 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppStat
         f.render_widget(indicator, Rect::new(area.x + 1, area.y + 1, 20, 1));
     }
 
-    render_full_border(f, area, &style, true);
+    render_full_border(f, area, &style, true, !state.debug_border);
     let tick = if std::env::var("PRISMX_TEST").is_ok() {
         0
     } else {
