@@ -15,3 +15,11 @@ fn spotlight_dock_layout_command() {
     state.execute_spotlight_command();
     assert_eq!(state.favorite_dock_layout, DockLayout::Horizontal);
 }
+
+#[test]
+fn spotlight_dock_enabled_command() {
+    let mut state = AppState::default();
+    state.spotlight_input = "/dock_enabled=false".into();
+    state.execute_spotlight_command();
+    assert!(!state.favorite_dock_enabled);
+}
