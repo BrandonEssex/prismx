@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 pub type NodeID = u64;
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct Node {
     pub id: NodeID,
     pub label: String,

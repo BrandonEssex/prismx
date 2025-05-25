@@ -4,8 +4,17 @@ use crate::layout::{ SIBLING_SPACING_X, CHILD_SPACING_Y, GEMX_HEADER_HEIGHT, Lay
 use crossterm::terminal;
 use crate::plugin::PluginHost;
 
+const UNDO_LIMIT: usize = 50;
+
 mod hotkeys;
 pub use hotkeys::*;
+
+#[derive(Clone, PartialEq)]
+pub struct LayoutSnapshot {
+    pub nodes: NodeMap,
+    pub root_nodes: Vec<NodeID>,
+    pub selected: Option<NodeID>,
+}
 
 
 
@@ -53,8 +62,8 @@ pub struct AppState {
     pub hotkeys: HashMap<String, String>,
     pub scroll_offset: usize,
     pub max_visible_lines: usize,
-    pub undo_stack: Vec<NodeMap>,
-    pub redo_stack: Vec<NodeMap>,
+    pub undo_stack: Vec<LayoutSnapshot>,
+    pub redo_stack: Vec<LayoutSnapshot>,
     pub view_stack: Vec<Option<NodeID>>,
     pub selected_drag_source: Option<NodeID>,
     pub link_map: std::collections::HashMap<NodeID, Vec<NodeID>>,
@@ -499,6 +508,8 @@ impl AppState {
                 "/arrange" => {
                     self.auto_arrange = true;
                 }
+                "/undo" => self.undo(),
+                "/redo" => self.redo(),
                 "/clear" => self.zen_buffer = vec![String::new()],
                 _ => {}
             }
@@ -551,21 +562,51 @@ impl AppState {
     }
 
     pub fn push_undo(&mut self) {
-        self.undo_stack.push(self.nodes.clone());
-        self.redo_stack.clear(); // Clear redo on new action
+        let snap = LayoutSnapshot {
+            nodes: self.nodes.clone(),
+            root_nodes: self.root_nodes.clone(),
+            selected: self.selected,
+        };
+        if self.undo_stack.last().map(|s| s == &snap).unwrap_or(false) {
+            return;
+        }
+        self.undo_stack.push(snap);
+        if self.undo_stack.len() > UNDO_LIMIT {
+            let excess = self.undo_stack.len() - UNDO_LIMIT;
+            self.undo_stack.drain(0..excess);
+        }
+        self.redo_stack.clear();
     }
 
     pub fn undo(&mut self) {
         if let Some(prev) = self.undo_stack.pop() {
-            self.redo_stack.push(self.nodes.clone());
-            self.nodes = prev;
+            let current = LayoutSnapshot {
+                nodes: self.nodes.clone(),
+                root_nodes: self.root_nodes.clone(),
+                selected: self.selected,
+            };
+            self.redo_stack.push(current);
+            self.nodes = prev.nodes;
+            self.root_nodes = prev.root_nodes;
+            self.selected = prev.selected;
+            self.recalculate_roles();
+            self.ensure_valid_roots();
         }
     }
 
     pub fn redo(&mut self) {
         if let Some(next) = self.redo_stack.pop() {
-            self.undo_stack.push(self.nodes.clone());
-            self.nodes = next;
+            let current = LayoutSnapshot {
+                nodes: self.nodes.clone(),
+                root_nodes: self.root_nodes.clone(),
+                selected: self.selected,
+            };
+            self.undo_stack.push(current);
+            self.nodes = next.nodes;
+            self.root_nodes = next.root_nodes;
+            self.selected = next.selected;
+            self.recalculate_roles();
+            self.ensure_valid_roots();
         }
     }
 
