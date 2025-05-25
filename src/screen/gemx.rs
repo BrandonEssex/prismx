@@ -345,6 +345,24 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppStat
         }
     }
 
+    if let Some(id) = state.drawing_root {
+        if let Some(coords) = drawn_at.get(&id) {
+            let zoom = state.zoom_scale as f32;
+            let (bsx, bsy) = spacing_for_zoom(state.zoom_scale);
+            let hx = ((coords.x as f32 - state.scroll_x as f32) * bsx as f32 * zoom)
+                .round()
+                .max(0.0) as u16;
+            let hy = ((coords.y as f32 - state.scroll_y as f32) * bsy as f32 * zoom)
+                .round()
+                .max(0.0) as u16;
+            if hx < area.width && hy < area.height {
+                let mark = Paragraph::new("◆").style(Style::default().fg(Color::Magenta));
+                let rect = Rect::new(hx, hy, 1u16.min(area.width), 1u16.min(area.height));
+                f.render_widget(mark, rect);
+            }
+        }
+    }
+
     // Draw arrows
     for (source, targets) in &state.link_map {
         for target in targets {
