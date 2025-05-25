@@ -509,6 +509,7 @@ pub fn launch_ui() -> std::io::Result<()> {
         draw(&mut terminal, &mut state, &last_key)?;
     }
 
+    crate::settings::save_user_settings(&state);
     disable_raw_mode()?;
     execute!(terminal.backend_mut(), LeaveAlternateScreen, DisableMouseCapture)?;
     terminal.show_cursor()?;

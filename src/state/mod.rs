@@ -3,6 +3,7 @@ use crate::node::{Node, NodeID, NodeMap};
 use crate::layout::{ SIBLING_SPACING_X, CHILD_SPACING_Y, GEMX_HEADER_HEIGHT, LayoutRole };
 use crossterm::terminal;
 use crate::plugin::PluginHost;
+use serde::{Serialize, Deserialize};
 
 const UNDO_LIMIT: usize = 50;
 
@@ -24,10 +25,32 @@ pub struct FavoriteEntry {
     pub command: &'static str,
 }
 
-#[derive(Copy, Clone, PartialEq, Debug)]
+#[derive(Copy, Clone, PartialEq, Debug, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
 pub enum DockLayout {
     Vertical,
     Horizontal,
+}
+
+impl std::fmt::Display for DockLayout {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let s = match self {
+            DockLayout::Vertical => "vertical",
+            DockLayout::Horizontal => "horizontal",
+        };
+        write!(f, "{}", s)
+    }
+}
+
+impl std::str::FromStr for DockLayout {
+    type Err = String;
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s.to_ascii_lowercase().as_str() {
+            "vertical" => Ok(DockLayout::Vertical),
+            "horizontal" => Ok(DockLayout::Horizontal),
+            _ => Err(format!("invalid layout: {}", s)),
+        }
+    }
 }
 
 #[derive(Debug)]
@@ -51,11 +74,35 @@ pub enum ZenSyntax {
     None,
 }
 
-#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
 pub enum ZenTheme {
     DarkGray,
     Light,
     HighContrast,
+}
+
+impl std::fmt::Display for ZenTheme {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let s = match self {
+            ZenTheme::DarkGray => "dark_gray",
+            ZenTheme::Light => "light",
+            ZenTheme::HighContrast => "high_contrast",
+        };
+        write!(f, "{}", s)
+    }
+}
+
+impl std::str::FromStr for ZenTheme {
+    type Err = String;
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s.to_ascii_lowercase().as_str() {
+            "dark_gray" | "darkgray" => Ok(ZenTheme::DarkGray),
+            "light" => Ok(ZenTheme::Light),
+            "high_contrast" | "highcontrast" => Ok(ZenTheme::HighContrast),
+            _ => Err(format!("invalid theme: {}", s)),
+        }
+    }
 }
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
@@ -225,10 +272,9 @@ impl Default for AppState {
         let config = crate::settings::load_user_settings();
         state.auto_arrange = config.auto_arrange;
         state.debug_input_mode = config.debug_input_mode;
-        state.favorite_dock_layout = match config.dock_layout.as_str() {
-            "horizontal" => DockLayout::Horizontal,
-            _ => DockLayout::Vertical,
-        };
+        state.favorite_dock_layout = config.dock_layout;
+        state.mode = config.open_module;
+        state.zen_theme = config.zen_theme;
 
         for node in state.nodes.values_mut() {
             if node.label.starts_with("[F]") {
@@ -885,6 +931,7 @@ impl AppState {
             ZenTheme::Light => ZenTheme::HighContrast,
             ZenTheme::HighContrast => ZenTheme::DarkGray,
         };
+        crate::settings::save_user_settings(self);
     }
 
     pub fn syntax_from_extension(path: &str) -> ZenSyntax {

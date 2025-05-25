@@ -8,29 +8,49 @@ use ratatui::{
 };
 
 use serde::{Deserialize, Serialize};
+use crate::serde_with::display_fromstr;
 use std::fs;
 
-use crate::state::{AppState, DockLayout};
+use crate::state::{AppState, DockLayout, ZenTheme};
+
+fn default_dock_layout() -> DockLayout { DockLayout::Vertical }
+fn default_zen_theme() -> ZenTheme { ZenTheme::DarkGray }
 
 #[derive(Serialize, Deserialize)]
 pub struct UserSettings {
+    #[serde(default)]
+    pub version: u8,
+    #[serde(default)]
     pub auto_arrange: bool,
+    #[serde(default)]
     pub debug_input_mode: bool,
-    pub dock_layout: String,
+    #[serde(default = "default_dock_layout", with = "display_fromstr")]
+    pub dock_layout: DockLayout,
+    #[serde(default)]
+    pub open_module: String,
+    #[serde(default = "default_zen_theme", with = "display_fromstr")]
+    pub zen_theme: ZenTheme,
 }
 
 impl Default for UserSettings {
     fn default() -> Self {
         Self {
+            version: 1,
             auto_arrange: true,
             debug_input_mode: true,
-            dock_layout: "vertical".into(),
+            dock_layout: DockLayout::Vertical,
+            open_module: "gemx".into(),
+            zen_theme: ZenTheme::DarkGray,
         }
     }
 }
 
 pub fn load_user_settings() -> UserSettings {
-    fs::read_to_string("config/settings.toml")
+    let path = dirs::config_dir()
+        .unwrap_or_else(|| std::path::PathBuf::from("."))
+        .join("prismx")
+        .join("config.toml");
+    fs::read_to_string(path)
         .ok()
         .and_then(|s| toml::from_str(&s).ok())
         .unwrap_or_default()
@@ -38,13 +58,19 @@ pub fn load_user_settings() -> UserSettings {
 
 pub fn save_user_settings(state: &AppState) {
     let config = UserSettings {
+        version: 1,
         auto_arrange: state.auto_arrange,
         debug_input_mode: state.debug_input_mode,
-        dock_layout: format!("{:?}", state.favorite_dock_layout).to_lowercase(),
+        dock_layout: state.favorite_dock_layout,
+        open_module: state.mode.clone(),
+        zen_theme: state.zen_theme,
     };
     if let Ok(serialized) = toml::to_string(&config) {
-        let _ = fs::create_dir_all("config");
-        let _ = fs::write("config/settings.toml", serialized);
+        let dir = dirs::config_dir()
+            .unwrap_or_else(|| std::path::PathBuf::from("."))
+            .join("prismx");
+        let _ = fs::create_dir_all(&dir);
+        let _ = fs::write(dir.join("config.toml"), serialized);
     }
 }
 
