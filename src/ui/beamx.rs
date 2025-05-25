@@ -1,5 +1,20 @@
 use ratatui::{backend::Backend, layout::Rect, style::{Color, Style, Modifier}, widgets::Paragraph, Frame};
 
+fn bright_color(c: Color) -> Color {
+    use Color::*;
+    match c {
+        Black => DarkGray,
+        Red => LightRed,
+        Green => LightGreen,
+        Yellow => LightYellow,
+        Blue => LightBlue,
+        Magenta => LightMagenta,
+        Cyan => LightCyan,
+        Gray | DarkGray => White,
+        _ => c,
+    }
+}
+
 /// Visual style and glyph configuration for [`BeamX`].
 pub struct BeamXStyle {
     pub border_color: Color,
@@ -145,21 +160,32 @@ impl BeamX {
         let status = Style::default().fg(self.style.status_color);
         let prism = Style::default().fg(self.style.prism_color);
 
-        let entry_glyph = match frame8 {
-            0 | 1 => "⇙",
-            2 | 3 => "⟱",
-            4 | 5 => "⬊",
-            6 | 7 => "⬇",
-            _ => "⇙",
+        let entry_glyph = "⇙";
+        let exit_tl = "⬉";
+        let exit_br = "⬊";
+
+        let bright_status = Style::default()
+            .fg(bright_color(self.style.status_color))
+            .add_modifier(Modifier::BOLD);
+        let entry_style = match frame8 {
+            0 => status.add_modifier(Modifier::DIM),
+            1 => status,
+            2 => status.add_modifier(Modifier::BOLD),
+            3 => bright_status,
+            4 => status,
+            5 => status.add_modifier(Modifier::DIM),
+            _ => status,
         };
 
-        let exit_glyph = match frame8 {
-            0 => "⬉",
-            1 => "⭱",
-            2 => "⟰",
-            3 => "⬆",
-            4 => "⬉",
-            _ => " ",
+        let bright_border = Style::default().fg(bright_color(self.style.border_color));
+        let exit_style = match frame8 {
+            0 => border.add_modifier(Modifier::DIM),
+            1 => border,
+            2 => border.add_modifier(Modifier::BOLD),
+            3 => bright_border.add_modifier(Modifier::BOLD),
+            4 => border,
+            5 => border.add_modifier(Modifier::DIM),
+            _ => border,
         };
 
         let center_glyph = match frame12 {
@@ -184,15 +210,21 @@ impl BeamX {
         };
 
         // Exit beams around the center
-        f.render_widget(Paragraph::new(exit_glyph).style(border), Rect::new(x, y, 1, 1));
-        f.render_widget(Paragraph::new(exit_glyph).style(border), Rect::new(x + 6, y + 2, 1, 1));
-        f.render_widget(Paragraph::new(exit_glyph).style(border), Rect::new(x, y + 2, 1, 1));
-        f.render_widget(Paragraph::new(exit_glyph).style(border), Rect::new(x + 6, y, 1, 1));
+        f.render_widget(Paragraph::new(exit_tl).style(exit_style), Rect::new(x, y, 1, 1));
+        f.render_widget(Paragraph::new(exit_br).style(exit_style), Rect::new(x + 6, y + 2, 1, 1));
+
+        // Pulse border corners when beams brighten
+        if frame8 == 3 || frame8 == 4 {
+            f.render_widget(Paragraph::new("┏").style(bright_border), Rect::new(area.x, area.y, 1, 1));
+            let br_x = area.right() - 1;
+            let br_y = area.bottom() - 1;
+            f.render_widget(Paragraph::new("┛").style(bright_border), Rect::new(br_x, br_y, 1, 1));
+        }
 
         // Center pulse
         f.render_widget(Paragraph::new(center_glyph).style(center_style), Rect::new(x + 3, y + 1, 1, 1));
 
         // Entry beam always appears in the top-right corner
-        f.render_widget(Paragraph::new(entry_glyph).style(status), Rect::new(x + 6, y, 1, 1));
+        f.render_widget(Paragraph::new(entry_glyph).style(entry_style), Rect::new(x + 6, y, 1, 1));
     }
 }
