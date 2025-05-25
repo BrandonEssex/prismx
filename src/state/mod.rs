@@ -86,6 +86,9 @@ pub struct AppState {
     pub dock_focus_index: Option<usize>,
     pub last_mouse_click: Option<(u16, u16)>,
     pub settings_focus_index: usize,
+    pub zen_toolbar_open: bool,
+    pub zen_recent_files: Vec<String>,
+    pub zen_toolbar_index: usize,
 
 }
 
@@ -152,6 +155,9 @@ impl Default for AppState {
             dock_focus_index: None,
             last_mouse_click: None,
             settings_focus_index: 0,
+            zen_toolbar_open: false,
+            zen_recent_files: vec!["README.md".into()],
+            zen_toolbar_index: 0,
 
         };
 
@@ -571,6 +577,10 @@ impl AppState {
                 "/arrange" => {
                     self.auto_arrange = true;
                 }
+                "/toolbar" => {
+                    self.zen_toolbar_open = !self.zen_toolbar_open;
+                    self.zen_toolbar_index = 0;
+                }
                 "/clear" => self.zen_buffer = vec![String::new()],
                 _ => {}
             }
@@ -619,6 +629,79 @@ impl AppState {
 
         if let Ok(mut file) = File::create(&path) {
             let _ = file.write_all(content.as_bytes());
+        }
+    }
+
+    pub fn open_zen_file(&mut self, path: &str) {
+        if let Ok(content) = std::fs::read_to_string(path) {
+            self.zen_buffer = content.lines().map(|l| l.to_string()).collect();
+            self.zen_buffer.push(String::new());
+            self.add_recent_file(path);
+        }
+    }
+
+    pub fn save_zen_file(&mut self, path: &str) {
+        use std::io::Write;
+        if let Some(parent) = std::path::Path::new(path).parent() {
+            let _ = std::fs::create_dir_all(parent);
+        }
+        if let Ok(mut file) = std::fs::File::create(path) {
+            let _ = file.write_all(self.zen_buffer.join("\n").as_bytes());
+            self.add_recent_file(path);
+        }
+    }
+
+    pub fn add_recent_file(&mut self, path: &str) {
+        if let Some(pos) = self.zen_recent_files.iter().position(|p| p == path) {
+            self.zen_recent_files.remove(pos);
+        }
+        self.zen_recent_files.insert(0, path.to_string());
+        while self.zen_recent_files.len() > 5 {
+            self.zen_recent_files.pop();
+        }
+    }
+
+    pub fn zen_toolbar_len(&self) -> usize {
+        3 + self.zen_recent_files.len()
+    }
+
+    pub fn zen_toolbar_handle_key(&mut self, key: crossterm::event::KeyCode) {
+        let len = self.zen_toolbar_len();
+        match key {
+            crossterm::event::KeyCode::Up => {
+                if self.zen_toolbar_index == 0 {
+                    self.zen_toolbar_index = len.saturating_sub(1);
+                } else {
+                    self.zen_toolbar_index -= 1;
+                }
+            }
+            crossterm::event::KeyCode::Down => {
+                self.zen_toolbar_index = (self.zen_toolbar_index + 1) % len;
+            }
+            crossterm::event::KeyCode::Enter => {
+                match self.zen_toolbar_index {
+                    0 => {
+                        self.zen_buffer = vec![String::new()];
+                    }
+                    1 => {
+                        if let Some(path) = self.zen_recent_files.first().cloned() {
+                            self.open_zen_file(&path);
+                        }
+                    }
+                    2 => {
+                        if let Some(path) = self.zen_recent_files.first().cloned() {
+                            self.save_zen_file(&path);
+                        }
+                    }
+                    idx => {
+                        if let Some(path) = self.zen_recent_files.get(idx - 3).cloned() {
+                            self.open_zen_file(&path);
+                        }
+                    }
+                }
+                self.zen_toolbar_open = false;
+            }
+            _ => {}
         }
     }
 
