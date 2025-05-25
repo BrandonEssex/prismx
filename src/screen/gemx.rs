@@ -3,7 +3,7 @@ use ratatui::widgets::{Block, Borders, Paragraph};
 use crate::layout::{
     layout_nodes, Coords, LayoutRole, PackRegion, GEMX_HEADER_HEIGHT,
     CHILD_SPACING_Y, subtree_span, subtree_depth, spacing_for_zoom,
-    BASE_SPACING_X, BASE_SPACING_Y, SIBLING_SPACING_X,
+    BASE_SPACING_X, BASE_SPACING_Y, SIBLING_SPACING_X, SNAP_GRID_X, SNAP_GRID_Y,
 };
 use crate::node::{NodeID, NodeMap};
 use crate::state::AppState;
@@ -18,6 +18,16 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppStat
         .title(if state.auto_arrange { "Gemx [Auto-Arrange]" } else { "Gemx" })
         .borders(Borders::NONE);
     f.render_widget(block, area);
+
+    if state.debug_input_mode && std::env::var("PRISMX_TEST").is_err() {
+        let dot = Paragraph::new("·").style(Style::default().fg(Color::DarkGray));
+        for gx in (0..area.width).step_by(SNAP_GRID_X as usize) {
+            for gy in (0..area.height).step_by(SNAP_GRID_Y as usize) {
+                let rect = Rect::new(area.x + gx, area.y + gy, 1, 1);
+                f.render_widget(dot.clone(), rect);
+            }
+        }
+    }
 
     // Reset unreachable fallback lock for this frame
     state.fallback_this_frame = false;
