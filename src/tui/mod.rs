@@ -227,8 +227,10 @@ pub fn launch_ui() -> std::io::Result<()> {
                     state.toggle_collapse();
                 } else if match_hotkey("drill_down", code, modifiers, &state) {
                     state.drawing_root = state.selected;
+                    state.fallback_this_frame = false;
                 } else if match_hotkey("pop_up", code, modifiers, &state) {
                     state.drawing_root = None;
+                    state.fallback_this_frame = false;
                 } else if match_hotkey("toggle_settings", code, modifiers, &state) {
                     state.mode = "settings".into();
                 } else if code == KeyCode::Char('.') && modifiers == KeyModifiers::CONTROL {
