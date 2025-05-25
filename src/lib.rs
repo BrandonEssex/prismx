@@ -1,5 +1,12 @@
+#![cfg_attr(not(feature = "std"), no_std)]
+
+#[cfg(not(feature = "std"))]
+extern crate alloc;
+
 #[macro_use]
 pub mod logging;
+pub mod collections;
+pub mod io;
 pub mod node;
 pub mod layout;
 pub mod screen;

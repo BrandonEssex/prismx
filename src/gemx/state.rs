@@ -1,5 +1,5 @@
 use super::nodes::MindmapNode;
-use std::fs;
+use crate::io::fs;
 use std::path::Path;
 
 pub fn load() {

@@ -1,4 +1,4 @@
-use std::collections::{HashMap, HashSet, VecDeque};
+use crate::collections::{HashMap, HashSet, VecDeque};
 use crate::node::{Node, NodeID, NodeMap};
 use crate::layout::{ SIBLING_SPACING_X, CHILD_SPACING_Y, GEMX_HEADER_HEIGHT, LayoutRole };
 use crossterm::terminal;
@@ -95,7 +95,7 @@ pub struct AppState {
     pub redo_stack: Vec<LayoutSnapshot>,
     pub view_stack: Vec<Option<NodeID>>,
     pub selected_drag_source: Option<NodeID>,
-    pub link_map: std::collections::HashMap<NodeID, Vec<NodeID>>,
+    pub link_map: HashMap<NodeID, Vec<NodeID>>,
     pub auto_arrange: bool,
     pub zoom_scale: f32,
     pub zoom_locked_by_user: bool,
@@ -176,7 +176,7 @@ impl Default for AppState {
             redo_stack: Vec::new(),
             view_stack: Vec::new(),
             selected_drag_source: None,
-            link_map: std::collections::HashMap::new(),
+            link_map: HashMap::new(),
             auto_arrange: true,
             zoom_scale: 1.0,
             zoom_locked_by_user: false,
@@ -193,7 +193,7 @@ impl Default for AppState {
             layout_roles: HashMap::new(),
             layout_warning_logged: false,
             debug_input_mode: true,
-            debug_border: std::env::var("PRISMX_DEBUG_BORDER").is_ok(),
+            debug_border: crate::io::env::var("PRISMX_DEBUG_BORDER").is_ok(),
             simulate_input_queue: VecDeque::new(),
             status_message: String::new(),
             status_message_last_updated: None,
@@ -665,7 +665,7 @@ impl AppState {
     }
 
     pub fn export_zen_to_file(&self) {
-        use std::fs::{self, File};
+        use crate::io::fs::{self, File};
         use std::io::Write;
         use dirs;
 
@@ -686,7 +686,7 @@ impl AppState {
     }
 
     pub fn open_zen_file(&mut self, path: &str) {
-        if let Ok(content) = std::fs::read_to_string(path) {
+        if let Ok(content) = crate::io::fs::read_to_string(path) {
             self.zen_buffer = content.lines().map(|l| l.to_string()).collect();
             self.zen_buffer.push(String::new());
             self.zen_current_filename = path.to_string();
@@ -703,9 +703,9 @@ impl AppState {
     pub fn save_zen_file(&mut self, path: &str) {
         use std::io::Write;
         if let Some(parent) = std::path::Path::new(path).parent() {
-            let _ = std::fs::create_dir_all(parent);
+            let _ = crate::io::fs::create_dir_all(parent);
         }
-        if let Ok(mut file) = std::fs::File::create(path) {
+        if let Ok(mut file) = crate::io::fs::File::create(path) {
             let _ = file.write_all(self.zen_buffer.join("\n").as_bytes());
             self.add_recent_file(path);
             self.zen_current_filename = path.to_string();
@@ -783,7 +783,7 @@ impl AppState {
                 .zen_last_saved
                 .map_or(true, |t| t.elapsed().as_secs() > 10);
             if should_save {
-                let _ = std::fs::write(
+                let _ = crate::io::fs::write(
                     &self.zen_current_filename,
                     self.zen_buffer.join("\n"),
                 );
@@ -794,7 +794,7 @@ impl AppState {
     }
 
     pub fn load_today_journal(&mut self) {
-        use std::fs;
+        use crate::io::fs;
         let path = format!("journals/{}.prismx", chrono::Local::now().format("%Y-%m-%d"));
         if let Ok(content) = fs::read_to_string(&path) {
             self.zen_journal_entries = content
@@ -810,10 +810,10 @@ impl AppState {
     }
 
     pub fn append_journal_entry(&mut self, entry: &ZenJournalEntry) {
-        use std::fs::{OpenOptions};
+        use crate::io::fs::OpenOptions;
         use std::io::Write;
         let dir = "journals";
-        let _ = std::fs::create_dir_all(dir);
+        let _ = crate::io::fs::create_dir_all(dir);
         let path = format!("{}/{}.prismx", dir, chrono::Local::now().format("%Y-%m-%d"));
         if let Ok(mut file) = OpenOptions::new().create(true).append(true).open(&path) {
             let _ = writeln!(file, "{}|{}", entry.timestamp.to_rfc3339(), entry.text);
@@ -1069,7 +1069,7 @@ impl AppState {
     /// Nodes on the same row become siblings if that row already has a parent.
     /// Otherwise the node is considered free/root.
     pub fn recalculate_roles(&mut self) {
-        use std::collections::HashMap;
+        use crate::collections::HashMap;
 
         self.clear_fallback_promotions();
         self.layout_roles.clear();

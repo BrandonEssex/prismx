@@ -18,3 +18,8 @@ ratatui = "0.23"
 # Utilities
 chrono = "0.4"
 dirs = "4.0"
+hashbrown = { version = "0.14", default-features = false, features = ["alloc"] }
+
+[features]
+default = ["std"]
+std = []

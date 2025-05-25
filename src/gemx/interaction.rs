@@ -6,7 +6,7 @@ use crate::layout::{
     subtree_depth, spacing_for_zoom,
 };
 use crossterm::terminal;
-use std::collections::HashMap;
+use crate::collections::HashMap;
 
 /// Toggle snap-to-grid mode
 pub fn toggle_snap(state: &mut AppState) {

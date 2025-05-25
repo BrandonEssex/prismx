@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use crate::collections::HashMap;
 
 pub fn load_default_hotkeys() -> HashMap<String, String> {
     let mut map = HashMap::new();

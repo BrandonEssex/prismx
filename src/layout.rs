@@ -1,4 +1,4 @@
-use std::collections::{HashMap, HashSet};
+use crate::collections::{HashMap, HashSet};
 use crate::node::{NodeID, NodeMap};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]

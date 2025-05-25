@@ -1,4 +1,4 @@
-use std::fs;
+use crate::io::fs;
 use serde::Deserialize;
 
 #[derive(Deserialize, Debug)]

@@ -1,4 +1,4 @@
-use std::fs;
+use crate::io::fs;
 
 pub fn verify_trust_chains() -> Result<(), Box<dyn std::error::Error>> {
     let seal = fs::read_to_string("trust/seal/gemx.seal.toml")?;

@@ -1,4 +1,4 @@
-use std::fs;
+use crate::io::fs;
 
 pub fn start_sync_if_enabled() {
     match fs::read_to_string("federation/sync_status.json") {

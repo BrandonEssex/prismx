@@ -1,4 +1,4 @@
-use std::fs;
+use crate::io::fs;
 use std::path::Path;
 
 pub fn load_snapshot() -> Result<(), Box<dyn std::error::Error>> {

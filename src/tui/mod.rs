@@ -50,7 +50,7 @@ pub fn draw<B: Backend>(terminal: &mut Terminal<B>, state: &mut AppState, _last_
                 .constraints([Constraint::Min(50), Constraint::Length(30)].as_ref())
                 .split(full)
         } else {
-            std::rc::Rc::from(vec![full])
+            crate::collections::Rc::from(vec![full])
         };
 
         let vertical = Layout::default()

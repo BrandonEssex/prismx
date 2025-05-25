@@ -10,7 +10,7 @@ use crate::state::AppState;
 use crate::beamx::{render_full_border, style_for_mode};
 use crate::ui::beamx::{BeamX, BeamXStyle, BeamXMode, BeamXAnimationMode};
 use std::time::{SystemTime, UNIX_EPOCH};
-use std::collections::HashMap;
+use crate::collections::HashMap;
 
 pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppState) {
     let style = style_for_mode(&state.mode);
@@ -19,7 +19,7 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppStat
         .borders(Borders::NONE);
     f.render_widget(block, area);
 
-    if state.debug_input_mode && std::env::var("PRISMX_TEST").is_err() {
+    if state.debug_input_mode && crate::io::env::var("PRISMX_TEST").is_err() {
         let dot = Paragraph::new("·").style(Style::default().fg(Color::DarkGray));
         for gx in (0..area.width).step_by(SNAP_GRID_X as usize) {
             for gy in (0..area.height).step_by(SNAP_GRID_Y as usize) {
@@ -142,7 +142,7 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppStat
         return;
     }
 
-    use std::collections::HashSet;
+    use crate::collections::HashSet;
     let reachable_ids: HashSet<NodeID> = drawn_at.keys().copied().collect();
     if state.auto_arrange {
         let node_ids: Vec<NodeID> = state.nodes.keys().copied().collect();
@@ -345,7 +345,7 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppStat
             1u16.min(area.height),
         );
         f.render_widget(para, safe_rect);
-        if state.debug_input_mode && std::env::var("PRISMX_TEST").is_err() {
+        if state.debug_input_mode && crate::io::env::var("PRISMX_TEST").is_err() {
             let mark_rect = Rect::new(
                 draw_x.min(area.width.saturating_sub(1)),
                 draw_y.min(area.height.saturating_sub(1)),
@@ -412,7 +412,7 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppStat
     }
 
     render_full_border(f, area, &style, true, !state.debug_border);
-    let tick = if std::env::var("PRISMX_TEST").is_ok() {
+    let tick = if crate::io::env::var("PRISMX_TEST").is_ok() {
         0
     } else {
         (SystemTime::now()

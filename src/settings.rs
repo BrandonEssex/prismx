@@ -8,7 +8,7 @@ use ratatui::{
 };
 
 use serde::{Deserialize, Serialize};
-use std::fs;
+use crate::io::fs;
 
 use crate::state::{AppState, DockLayout};
 

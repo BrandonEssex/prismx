@@ -1,6 +1,6 @@
 use ratatui::style::{Color, Style};
-use std::collections::HashMap;
-use std::fs;
+use crate::collections::HashMap;
+use crate::io::fs;
 
 static mut CURRENT_THEME: &str = "dark";
 
