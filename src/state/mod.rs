@@ -83,6 +83,7 @@ pub struct AppState {
     pub favorite_dock_limit: usize,
     pub favorite_dock_layout: DockLayout,
     pub favorite_dock_enabled: bool,
+    pub dock_focus_index: Option<usize>,
     pub last_mouse_click: Option<(u16, u16)>,
     pub settings_focus_index: usize,
 
@@ -148,6 +149,7 @@ impl Default for AppState {
             favorite_dock_limit: 3,
             favorite_dock_layout: DockLayout::Vertical,
             favorite_dock_enabled: true,
+            dock_focus_index: None,
             last_mouse_click: None,
             settings_focus_index: 0,
 
@@ -175,6 +177,68 @@ impl AppState {
     pub fn set_selected(&mut self, id: Option<NodeID>) {
         self.selected = id;
         self.last_promoted_root = None;
+    }
+
+    pub fn favorite_entries(&self) -> Vec<FavoriteEntry> {
+        let default_favorites = [
+            ("⚙️", "/settings"),
+            ("📬", "/triage"),
+            ("💭", "/gemx"),
+            ("🧘", "/zen"),
+            ("🔍", "/spotlight"),
+        ];
+
+        let mut all: Vec<FavoriteEntry> = default_favorites
+            .iter()
+            .map(|&(icon, cmd)| FavoriteEntry { icon, command: cmd })
+            .chain(self.plugin_favorites.iter().cloned())
+            .take(5)
+            .collect();
+
+        if self.mode == "gemx" && all.len() >= 3 {
+            all[2].icon = "💬";
+        }
+        if (self.mode == "triage" || self.show_triage) && all.len() >= 2 {
+            all[1].icon = "📫";
+        }
+
+        all
+    }
+
+    pub fn dock_focus_prev(&mut self) {
+        let len = self.favorite_entries().len();
+        if len == 0 {
+            self.dock_focus_index = None;
+            return;
+        }
+        self.dock_focus_index = Some(match self.dock_focus_index.unwrap_or(0) {
+            0 => len - 1,
+            i => i - 1,
+        });
+        if let Some(idx) = self.dock_focus_index {
+            if let Some(entry) = self.favorite_entries().get(idx) {
+                self.status_message = entry.command.to_string();
+                self.status_message_last_updated = Some(std::time::Instant::now());
+            }
+        }
+    }
+
+    pub fn dock_focus_next(&mut self) {
+        let len = self.favorite_entries().len();
+        if len == 0 {
+            self.dock_focus_index = None;
+            return;
+        }
+        self.dock_focus_index = Some(match self.dock_focus_index.unwrap_or(len - 1) {
+            i if i + 1 >= len => 0,
+            i => i + 1,
+        });
+        if let Some(idx) = self.dock_focus_index {
+            if let Some(entry) = self.favorite_entries().get(idx) {
+                self.status_message = entry.command.to_string();
+                self.status_message_last_updated = Some(std::time::Instant::now());
+            }
+        }
     }
 
     pub fn visible_node_order(&self) -> Vec<NodeID> {
@@ -454,6 +518,9 @@ impl AppState {
             } else if layout.eq_ignore_ascii_case("vertical") {
                 self.favorite_dock_layout = DockLayout::Vertical;
             }
+            self.dock_focus_index = None;
+            self.status_message.clear();
+            self.status_message_last_updated = None;
         } else if input.starts_with("/dock_limit=") {
             let value = &input["/dock_limit=".len()..];
             if let Ok(num) = value.parse::<usize>() {
@@ -463,6 +530,11 @@ impl AppState {
             let value = &input["/dock_enabled=".len()..];
             if let Ok(flag) = value.parse::<bool>() {
                 self.favorite_dock_enabled = flag;
+            }
+            if !self.favorite_dock_enabled {
+                self.dock_focus_index = None;
+                self.status_message.clear();
+                self.status_message_last_updated = None;
             }
         } else if input.starts_with("/simulate") {
             for token in input.split_whitespace().skip(1) {
