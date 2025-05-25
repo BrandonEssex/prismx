@@ -121,6 +121,18 @@ impl AppState {
         result
     }
 
+    /// Ensure at least one valid root exists. Promotes the first node if roots
+    /// are empty or invalid.
+    pub fn ensure_valid_roots(&mut self) {
+        self.root_nodes.retain(|id| self.nodes.contains_key(id));
+        if self.root_nodes.is_empty() && !self.nodes.is_empty() {
+            if let Some((&first_id, _)) = self.nodes.iter().next() {
+                self.root_nodes.push(first_id);
+                eprintln!("\u{26a0} root_nodes was empty — promoted Node {} to root", first_id);
+            }
+        }
+    }
+
     /// Ensure nodes have unique positions when auto-arrange is disabled.
     pub fn ensure_grid_positions(&mut self) {
         if self.auto_arrange {
