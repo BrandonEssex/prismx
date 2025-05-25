@@ -58,6 +58,18 @@ pub enum ZenTheme {
     HighContrast,
 }
 
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+pub enum ZenJournalView {
+    Compose,
+    Review,
+}
+
+#[derive(Clone)]
+pub struct ZenJournalEntry {
+    pub timestamp: chrono::DateTime<chrono::Local>,
+    pub text: String,
+}
+
 pub struct AppState {
     pub mode: String,
     pub zen_buffer: Vec<String>,
@@ -123,6 +135,9 @@ pub struct AppState {
     pub zen_word_count: usize,
     pub zen_current_syntax: ZenSyntax,
     pub zen_theme: ZenTheme,
+    pub zen_journal_view: ZenJournalView,
+    pub zen_compose_input: String,
+    pub zen_journal_entries: Vec<ZenJournalEntry>,
 
 
 }
@@ -201,6 +216,9 @@ impl Default for AppState {
             zen_word_count: 0,
             zen_current_syntax: ZenSyntax::Markdown,
             zen_theme: ZenTheme::DarkGray,
+            zen_journal_view: ZenJournalView::Compose,
+            zen_compose_input: String::new(),
+            zen_journal_entries: Vec::new(),
 
         };
 
@@ -219,6 +237,7 @@ impl Default for AppState {
         }
 
         state.update_zen_word_count();
+        state.load_today_journal();
 
         state
     }
@@ -771,6 +790,33 @@ impl AppState {
                 self.zen_last_saved = Some(std::time::Instant::now());
                 self.zen_dirty = false;
             }
+        }
+    }
+
+    pub fn load_today_journal(&mut self) {
+        use std::fs;
+        let path = format!("journals/{}.prismx", chrono::Local::now().format("%Y-%m-%d"));
+        if let Ok(content) = fs::read_to_string(&path) {
+            self.zen_journal_entries = content
+                .lines()
+                .filter_map(|line| {
+                    let (ts, text) = line.split_once('|')?;
+                    chrono::DateTime::parse_from_rfc3339(ts)
+                        .ok()
+                        .map(|dt| ZenJournalEntry { timestamp: dt.with_timezone(&chrono::Local), text: text.to_string() })
+                })
+                .collect();
+        }
+    }
+
+    pub fn append_journal_entry(&mut self, entry: &ZenJournalEntry) {
+        use std::fs::{OpenOptions};
+        use std::io::Write;
+        let dir = "journals";
+        let _ = std::fs::create_dir_all(dir);
+        let path = format!("{}/{}.prismx", dir, chrono::Local::now().format("%Y-%m-%d"));
+        if let Ok(mut file) = OpenOptions::new().create(true).append(true).open(&path) {
+            let _ = writeln!(file, "{}|{}", entry.timestamp.to_rfc3339(), entry.text);
         }
     }
 

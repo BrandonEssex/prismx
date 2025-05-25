@@ -1,5 +1,5 @@
 use ratatui::{prelude::*, widgets::{Block, Borders, Paragraph}};
-use crate::state::{AppState, ZenSyntax, ZenTheme};
+use crate::state::{AppState, ZenSyntax, ZenTheme, ZenJournalView};
 use crate::beamx::{render_full_border, style_for_mode};
 use crate::ui::beamx::{BeamX, BeamXStyle, BeamXMode, BeamXAnimationMode};
 
@@ -40,111 +40,38 @@ pub fn render_zen_journal<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppS
     let bg = Block::default().style(Style::default().bg(bg_color));
     f.render_widget(bg, area);
 
+    match state.zen_journal_view {
+        ZenJournalView::Compose => render_compose(f, area, state, tick),
+        ZenJournalView::Review => render_review(f, area, state),
+    }
+}
+
+fn render_compose<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState, tick: u64) {
+    use ratatui::text::Span;
     let padding = area.width / 4;
-    let usable_width = area.width - (padding * 2);
-
-    let zen_snapshot: Vec<String> = state.zen_buffer.clone();
-    let input_text = zen_snapshot.last().cloned().unwrap_or_default();
-
-    // Build lines without current input
-    let raw_lines: Vec<Line> = zen_snapshot
-        .iter()
-        .take(zen_snapshot.len().saturating_sub(1))
-        .map(|s| parse_zen_line(s, state.zen_current_syntax))
-        .collect();
-    let top_padding = 3;
-    let usable_height = total_height.saturating_sub(top_padding);
-    let start_line = raw_lines.len().saturating_sub(usable_height);
-    let visible_lines = &raw_lines[start_line..];
-
-    // Render faded previous lines centered within the padded width
-    for (i, line) in visible_lines.iter().enumerate() {
-        let mut spans = line.spans.clone();
-        for span in &mut spans {
-            span.patch_style(Style::default().fg(Color::DarkGray));
-        }
-        let y = area.y + top_padding as u16 + i as u16;
-        let rect = Rect::new(area.x + padding, y, usable_width, 1);
-        let widget = Paragraph::new(Line::from(spans))
-            .block(Block::default().borders(Borders::NONE))
-            .alignment(Alignment::Center);
-        f.render_widget(widget, rect);
-    }
-
-    // Animated caret for input line
+    let usable_width = area.width - padding * 2;
     let caret = if tick % 2 == 0 { "|" } else { " " };
-    let mut line = parse_zen_line(&input_text, state.zen_current_syntax);
-    line.spans.push(Span::raw(caret));
-    let input_rect = Rect::new(area.x + padding, area.y + area.height / 2, usable_width, 1);
-    let input_widget = Paragraph::new(line)
-        .style(Style::default().bg(Color::DarkGray))
-        .alignment(Alignment::Center);
-    f.render_widget(input_widget, input_rect);
+    let timestamp = chrono::Local::now().format("%H:%M").to_string();
+    let input = format!("{} {}{}", timestamp, state.zen_compose_input, caret);
+    let input_rect = Rect::new(area.x + padding, area.bottom().saturating_sub(2), usable_width, 1);
+    let widget = Paragraph::new(input).block(Block::default().borders(Borders::NONE));
+    f.render_widget(widget, input_rect);
+    render_full_border(f, area, &style_for_mode(&state.mode), true, false);
+}
 
-    // Hidden side labels
-    f.render_widget(
-        Paragraph::new("Recent Files").style(Style::default().fg(Color::DarkGray)),
-        Rect::new(area.x + 1, area.y + 2, padding - 2, 1),
-    );
-    f.render_widget(
-        Paragraph::new("Open File").style(Style::default().fg(Color::DarkGray)),
-        Rect::new(area.x + 1, area.y + 3, padding - 2, 1),
-    );
-    f.render_widget(
-        Paragraph::new("Font").style(Style::default().fg(Color::DarkGray)),
-        Rect::new(area.right() - padding + 1, area.y + 2, 6, 1),
-    );
-    let mode_label = match state.zen_current_syntax {
-        ZenSyntax::Markdown => "Markdown",
-        ZenSyntax::Rust => "Rust",
-        ZenSyntax::Shell => "Shell",
-        ZenSyntax::Yaml => "YAML",
-        ZenSyntax::Json => "JSON",
-        ZenSyntax::None => "Plain",
-    };
-    f.render_widget(
-        Paragraph::new("Theme").style(Style::default().fg(Color::DarkGray)),
-        Rect::new(area.right() - padding + 1, area.y + 3, 6, 1),
-    );
-    f.render_widget(
-        Paragraph::new(mode_label).style(Style::default().fg(Color::DarkGray)),
-        Rect::new(area.right() - padding + 1, area.y + 4, 10, 1),
-    );
-
-    if state.zen_toolbar_open {
-        let mut entries = vec!["+ New".to_string(), "Open".into(), "Save".into()];
-        entries.extend(state.zen_recent_files.clone());
-        for (i, item) in entries.iter().enumerate() {
-            let style = if i == state.zen_toolbar_index {
-                Style::default().add_modifier(Modifier::REVERSED)
-            } else {
-                Style::default()
-            };
-            f.render_widget(
-                Paragraph::new(item.as_str()).style(style),
-                Rect::new(area.x + 1, area.y + 3 + i as u16, padding - 2, 1),
-            );
-        }
+fn render_review<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
+    let padding = area.width / 4;
+    let usable_width = area.width - padding * 2;
+    let mut y = area.y + 1;
+    for entry in state.zen_journal_entries.iter().rev() {
+        let text = format!("\u{1F551} {}\n{}", entry.timestamp.format("%I:%M %p"), entry.text);
+        let rect = Rect::new(area.x + padding, y, usable_width, 3);
+        let p = Paragraph::new(text).block(Block::default().borders(Borders::BOTTOM));
+        f.render_widget(p, rect);
+        y = y.saturating_add(3);
+        if y > area.bottom() { break; }
     }
-
-    let unsaved_marker = if state.zen_dirty { " \u{270E}" } else { "" };
-    let footer_text = format!("\u{1F4C4} {}   \u{270D} {} words{}", state.zen_current_filename, state.zen_word_count, unsaved_marker);
-    let x_offset = area.width.saturating_sub(footer_text.len() as u16 + 2);
-    let footer_rect = Rect::new(area.x + x_offset, area.y + area.height - 1, footer_text.len() as u16, 1);
-    f.render_widget(
-        Paragraph::new(footer_text).style(Style::default().fg(Color::DarkGray)),
-        footer_rect,
-    );
-
-    render_full_border(f, area, &style, true, false);
-    let beamx = BeamX {
-        tick,
-        enabled: true,
-        mode: BeamXMode::Zen,
-        style: BeamXStyle::from(BeamXMode::Zen),
-        animation: BeamXAnimationMode::PulseEntryRadiate,
-    };
-    beamx.render(f, area);
+    render_full_border(f, area, &style_for_mode(&state.mode), true, false);
 }
 
 fn parse_markdown_line(input: &str) -> Line {
