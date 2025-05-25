@@ -113,7 +113,12 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppStat
     }
 
     if drawn_at.is_empty() {
-        f.render_widget(Paragraph::new("⚠ No valid root nodes."), area);
+        let msg = if state.auto_arrange {
+            "⚠ Node exists but layout failed."
+        } else {
+            "⚠ No valid root nodes."
+        };
+        f.render_widget(Paragraph::new(msg), area);
         return;
     }
 
@@ -121,24 +126,29 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppStat
     let reachable_ids: HashSet<NodeID> = drawn_at.keys().copied().collect();
     if state.auto_arrange {
         for (id, node) in &state.nodes {
-            if !reachable_ids.contains(id)
-                && !state.root_nodes.contains(id)
-                && !state.fallback_this_frame
-                && !node.children.is_empty()
-                && !state.fallback_promoted_this_session.contains(id)
+            if reachable_ids.contains(id)
+                || state.root_nodes.contains(id)
+                || drawn_at.contains_key(&id)
+                || state.fallback_this_frame
+                || state.fallback_promoted_this_session.contains(id)
             {
-                state.root_nodes.push(*id);
-                state.root_nodes.sort_unstable();
-                state.root_nodes.dedup();
-                state.fallback_this_frame = true;
-                state.fallback_promoted_this_session.insert(*id);
-
-                if state.debug_input_mode {
-                    eprintln!("⚠ Node {} is unreachable — promoting to root", id);
-                }
-
-                break;
+                continue;
             }
+            if node.children.is_empty() {
+                continue;
+            }
+
+            state.root_nodes.push(*id);
+            state.root_nodes.sort_unstable();
+            state.root_nodes.dedup();
+            state.fallback_this_frame = true;
+            state.fallback_promoted_this_session.insert(*id);
+
+            if state.debug_input_mode {
+                eprintln!("⚠ Node {} is unreachable — promoting to root", id);
+            }
+
+            break;
         }
     }
 
