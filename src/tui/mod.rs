@@ -377,17 +377,7 @@ pub fn launch_ui() -> std::io::Result<()> {
                     match me.kind {
                         MouseEventKind::Down(MouseButton::Left) => {
                             state.last_mouse_click = Some((me.column, me.row));
-                            let mut handled = false;
-                            for entry in &state.favorite_entries {
-                                if me.column >= entry.bounds.x && me.column < entry.bounds.x + entry.bounds.width &&
-                                   me.row >= entry.bounds.y && me.row < entry.bounds.y + entry.bounds.height {
-                                    state.mode = entry.mode.to_string();
-                                    state.show_spotlight = false;
-                                    handled = true;
-                                    break;
-                                }
-                            }
-                            if !handled && state.mode == "gemx" {
+                            if state.mode == "gemx" {
                                 if let Some(id) = crate::gemx::interaction::node_at_position(&state, me.column, me.row) {
                                     crate::gemx::interaction::start_drag(&mut state, id, me.column, me.row);
                                 }
