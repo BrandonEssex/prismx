@@ -18,6 +18,10 @@ use crate::render::{
     render_module_icon,
     render_favorites_dock,
 };
+
+fn rect_contains(rect: ratatui::layout::Rect, x: u16, y: u16) -> bool {
+    x >= rect.x && x < rect.x + rect.width && y >= rect.y && y < rect.y + rect.height
+}
 use crate::screen::render_gemx;
 use crate::settings::render_settings;
 
@@ -330,6 +334,17 @@ pub fn launch_ui() -> std::io::Result<()> {
                     continue;
                 }
 
+                if modifiers.contains(KeyModifiers::CONTROL) {
+                    if let KeyCode::Char(digit) = code {
+                        if ('1'..='5').contains(&digit) {
+                            let idx = digit as usize - '1' as usize;
+                            state.trigger_favorite(idx);
+                            draw(&mut terminal, &mut state, &last_key)?;
+                            continue;
+                        }
+                    }
+                }
+
                 // ⌨️ Navigation + Typing
                 match code {
                     KeyCode::Esc => {
@@ -432,7 +447,15 @@ pub fn launch_ui() -> std::io::Result<()> {
                     match me.kind {
                         MouseEventKind::Down(MouseButton::Left) => {
                             state.last_mouse_click = Some((me.column, me.row));
-                            if state.mode == "gemx" {
+                            let mut handled = false;
+                            for (idx, (rect, _cmd)) in state.dock_entry_bounds.iter().enumerate() {
+                                if rect_contains(*rect, me.column, me.row) {
+                                    state.trigger_favorite(idx);
+                                    handled = true;
+                                    break;
+                                }
+                            }
+                            if !handled && state.mode == "gemx" {
                                 if let Some(id) = crate::gemx::interaction::node_at_position(&state, me.column, me.row) {
                                     crate::gemx::interaction::start_drag(&mut state, id, me.column, me.row);
                                 }
