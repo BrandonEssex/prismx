@@ -35,16 +35,15 @@ pub fn spawn_free_node(state: &mut AppState) {
         node.y = ((index / cols) as i16) * row_pad + GEMX_HEADER_HEIGHT + 1;
     }
 
-    if state.debug_input_mode {
-        eprintln!(
-            "[Node {}] label=\"{}\", parent={:?}, x={}, y={}",
-            new_id,
-            node.label,
-            node.parent,
-            node.x,
-            node.y
-        );
-    }
+    crate::log_debug!(
+        state,
+        "[Node {}] label=\"{}\", parent={:?}, x={}, y={}",
+        new_id,
+        node.label,
+        node.parent,
+        node.x,
+        node.y
+    );
 
     state.nodes.insert(new_id, node);
     state.root_nodes.push(new_id);
@@ -135,7 +134,7 @@ pub fn drag_update(state: &mut AppState, x: u16, y: u16) {
 pub fn end_drag(state: &mut AppState) {
     state.dragging = None;
     state.last_mouse = None;
-    state.recalculate_roles();
+    crate::layout::roles::recalculate_roles(state);
 }
 
 /// Drag a node and its children recursively.

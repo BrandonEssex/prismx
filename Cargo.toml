@@ -19,3 +19,6 @@ ratatui = "0.23"
 chrono = "0.4"
 dirs = "4.0"
 libloading = "0.8"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["fmt", "env-filter"] }
+tracing-appender = "0.2"

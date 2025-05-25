@@ -161,9 +161,9 @@ pub fn launch_ui() -> std::io::Result<()> {
             }
 
             if state.debug_input_mode {
-                eprintln!("\u{1F9EA} Simulated input: {:?}", sim_input);
+                tracing::debug!("\u{1F9EA} Simulated input: {:?}", sim_input);
                 if state.simulate_input_queue.is_empty() {
-                    eprintln!("\u{1F9EA} Simulation complete.");
+                    tracing::debug!("\u{1F9EA} Simulation complete.");
                 }
             }
         }

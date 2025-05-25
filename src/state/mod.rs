@@ -329,12 +329,11 @@ impl AppState {
                 if Some(first_id) != self.last_promoted_root {
                     self.root_nodes.push(first_id);
                     self.last_promoted_root = Some(first_id);
-                    if self.debug_input_mode {
-                        eprintln!(
-                            "\u{26a0} root_nodes was empty — promoted Node {} to root",
-                            first_id
-                        );
-                    }
+                    crate::log_debug!(
+                        self,
+                        "\u{26a0} root_nodes was empty — promoted Node {} to root",
+                        first_id
+                    );
                 }
             }
         }
@@ -428,13 +427,13 @@ impl AppState {
         let new_id = self.nodes.keys().max().copied().unwrap_or(100) + 1;
 
         if parent_id == new_id {
-            eprintln!("❌ Invalid insert: node cannot parent itself.");
+            tracing::warn!("❌ Invalid insert: node cannot parent itself.");
             return;
         }
 
         if let Some(parent) = self.nodes.get(&parent_id) {
             if parent.children.contains(&parent_id) {
-                eprintln!("❌ Cycle detected: parent already linked to self.");
+                tracing::warn!("❌ Cycle detected: parent already linked to self.");
                 return;
             }
         }
@@ -469,7 +468,7 @@ impl AppState {
         if !self.auto_arrange {
             self.ensure_grid_positions();
         }
-        self.recalculate_roles();
+        crate::layout::roles::recalculate_roles(self);
         self.ensure_valid_roots();
     }
 
@@ -512,7 +511,7 @@ impl AppState {
         if !self.auto_arrange {
             self.ensure_grid_positions();
         }
-        self.recalculate_roles();
+        crate::layout::roles::recalculate_roles(self);
         self.ensure_valid_roots();
     }
 
@@ -656,7 +655,7 @@ impl AppState {
         self.nodes.insert(new_id, node);
         self.root_nodes.push(new_id);
         self.set_selected(Some(new_id));
-        self.recalculate_roles();
+        crate::layout::roles::recalculate_roles(self);
     }
 
     pub fn drill_down(&mut self) {
@@ -852,7 +851,7 @@ impl AppState {
             self.nodes = prev.nodes;
             self.root_nodes = prev.root_nodes;
             self.selected = prev.selected;
-            self.recalculate_roles();
+            crate::layout::roles::recalculate_roles(self);
             self.ensure_valid_roots();
         }
     }
@@ -869,7 +868,7 @@ impl AppState {
             self.nodes = next.nodes;
             self.root_nodes = next.root_nodes;
             self.selected = next.selected;
-            self.recalculate_roles();
+            crate::layout::roles::recalculate_roles(self);
             self.ensure_valid_roots();
         }
     }
@@ -939,7 +938,7 @@ impl AppState {
                 self.scroll_y = 0;
                 self.zoom_scale = 1.0;
             } else {
-                eprintln!("❌ Drill failed: selected node not found.");
+                tracing::warn!("❌ Drill failed: selected node not found.");
             }
         }
         self.fallback_this_frame = false;
@@ -1067,107 +1066,6 @@ impl AppState {
         }
     }
 
-    /// Recalculate parent/child relationships based on node positions.
-    /// Nodes directly beneath another (±1 cell) become children of that node.
-    /// Nodes on the same row become siblings if that row already has a parent.
-    /// Otherwise the node is considered free/root.
-    pub fn recalculate_roles(&mut self) {
-        use std::collections::HashMap;
-
-        self.clear_fallback_promotions();
-        self.layout_roles.clear();
-
-        let ids: Vec<NodeID> = self.nodes.keys().copied().collect();
-
-        // Clear current structure
-        for node in self.nodes.values_mut() {
-            node.children.clear();
-            node.parent = None;
-        }
-        self.root_nodes.clear();
-
-        // Pass 1: detect direct parent above
-        let mut new_parents: HashMap<NodeID, Option<NodeID>> = HashMap::new();
-        for &id in &ids {
-            let (x, y) = {
-                let n = &self.nodes[&id];
-                (n.x, n.y)
-            };
-            let mut parent_id = None;
-            for &other in &ids {
-                if other == id {
-                    continue;
-                }
-                let op = &self.nodes[&other];
-                if y > op.y
-                    && (y - op.y) <= crate::layout::CHILD_SPACING_Y + 1
-                    && (x - op.x).abs() <= 1
-                {
-                    parent_id = Some(other);
-                    break;
-                }
-            }
-            new_parents.insert(id, parent_id);
-        }
-
-        // Pass 2: siblings on same row inherit existing parent
-        for &id in &ids {
-            if new_parents[&id].is_some() {
-                continue;
-            }
-            let y = self.nodes[&id].y;
-            for &other in &ids {
-                if other == id {
-                    continue;
-                }
-                if (self.nodes[&other].y - y).abs() <= 1 {
-                    if let Some(pid) = new_parents[&other] {
-                        new_parents.insert(id, Some(pid));
-                        break;
-                    }
-                }
-            }
-        }
-
-        // Apply structure and lock child positions
-        for &id in &ids {
-            if let Some(parent_id) = new_parents[&id] {
-                if parent_id == id {
-                    continue;
-                }
-                crate::log_debug!(self, "Assigning parent {:?} \u{2192} {}", parent_id, id);
-                let (px, py) = {
-                    let p = &self.nodes[&parent_id];
-                    (p.x, p.y)
-                };
-                if let Some(node) = self.nodes.get_mut(&id) {
-                    node.parent = Some(parent_id);
-                    node.x = px;
-                    node.y = py + crate::layout::CHILD_SPACING_Y;
-                }
-                if let Some(parent) = self.nodes.get_mut(&parent_id) {
-                    parent.children.push(id);
-                }
-            } else {
-                if let Some(node) = self.nodes.get_mut(&id) {
-                    node.parent = None;
-                }
-                self.root_nodes.push(id);
-            }
-        }
-
-        // Deduplicate lists
-        self.root_nodes.sort_unstable();
-        self.root_nodes.dedup();
-        for node in self.nodes.values_mut() {
-            node.children.sort_unstable();
-            node.children.dedup();
-        }
-
-        for &id in &self.root_nodes {
-            self.layout_roles.insert(id, LayoutRole::Root);
-        }
-    }
 }
 
 // Outside impl block:
