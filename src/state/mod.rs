@@ -155,6 +155,14 @@ impl Default for AppState {
 
         };
 
+        let config = crate::settings::load_user_settings();
+        state.auto_arrange = config.auto_arrange;
+        state.debug_input_mode = config.debug_input_mode;
+        state.favorite_dock_layout = match config.dock_layout.as_str() {
+            "horizontal" => DockLayout::Horizontal,
+            _ => DockLayout::Vertical,
+        };
+
         for node in state.nodes.values_mut() {
             if node.label.starts_with("[F]") {
                 node.label = node.label.replacen("[F] ", "", 1);
