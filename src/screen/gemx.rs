@@ -69,8 +69,14 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppStat
             let h = subtree_depth(&state.nodes, root_id) * CHILD_SPACING_Y + 1;
             let (ox, oy) = pack.insert((w, h));
 
-            let (mut layout, roles) =
-                layout_nodes(&state.nodes, root_id, oy, area.width as i16, state.auto_arrange);
+            let (mut layout, roles) = layout_nodes(
+                &state.nodes,
+                root_id,
+                oy,
+                area.width as i16,
+                state.auto_arrange,
+                state.debug_input_mode,
+            );
             for pos in layout.values_mut() {
                 pos.x += ox;
             }
@@ -90,8 +96,14 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppStat
         }
         for &root_id in &roots {
             collect(&state.nodes, root_id, &mut drawn_at);
-            let (_, roles) =
-                layout_nodes(&state.nodes, root_id, 0, area.width as i16, state.auto_arrange);
+            let (_, roles) = layout_nodes(
+                &state.nodes,
+                root_id,
+                0,
+                area.width as i16,
+                state.auto_arrange,
+                state.debug_input_mode,
+            );
             node_roles.extend(roles);
         }
 
