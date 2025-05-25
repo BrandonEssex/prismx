@@ -1,4 +1,4 @@
-use ratatui::{prelude::*, widgets::{Block, Borders, Paragraph, Wrap}};
+use ratatui::{prelude::*, widgets::{Block, Borders, Paragraph}};
 use crate::state::AppState;
 use crate::beamx::{render_full_border, style_for_mode};
 use crate::ui::beamx::{BeamX, BeamXStyle, BeamXMode, BeamXAnimationMode};
@@ -6,13 +6,12 @@ use crate::ui::beamx::{BeamX, BeamXStyle, BeamXMode, BeamXAnimationMode};
 use std::time::{SystemTime, UNIX_EPOCH};
 
 pub fn render_zen_journal<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
-    use ratatui::text::{Span, Line};
+    use ratatui::text::Line;
     let style = style_for_mode(&state.mode);
 
     let total_height = area.height as usize;
-    let total_width = area.width as usize;
 
-    if total_height < 4 || total_width < 10 {
+    if total_height < 4 || area.width < 10 {
         return;
     }
 
@@ -31,6 +30,9 @@ pub fn render_zen_journal<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppS
     let bg = Block::default().style(Style::default().bg(bg_color));
     f.render_widget(bg, area);
 
+    let padding = area.width / 4;
+    let usable_width = area.width - (padding * 2);
+
     let zen_snapshot: Vec<String> = state.zen_buffer.clone();
     let input_text = zen_snapshot.last().cloned().unwrap_or_default();
 
@@ -44,39 +46,39 @@ pub fn render_zen_journal<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppS
     let usable_height = total_height.saturating_sub(top_padding);
     let start_line = raw_lines.len().saturating_sub(usable_height);
     let visible_lines = &raw_lines[start_line..];
-    let h_margin = (total_width as f32 * 0.20) as usize;
 
-    let mut padded_lines = std::iter::repeat(Line::from(""))
-        .take(top_padding)
-        .collect::<Vec<_>>();
+    // Render faded previous lines centered within the padded width
     for (i, line) in visible_lines.iter().enumerate() {
-        let style = if visible_lines.len().saturating_sub(1) - i == 0 {
-            Style::default().fg(Color::White)
-        } else {
-            Style::default().fg(Color::DarkGray)
-        };
-        let mut padded = vec![Span::raw(" ".repeat(h_margin))];
         let mut spans = line.spans.clone();
         for span in &mut spans {
-            span.patch_style(style);
+            span.patch_style(Style::default().fg(Color::DarkGray));
         }
-        padded.extend(spans);
-        padded_lines.push(Line::from(padded));
+        let y = area.y + top_padding as u16 + i as u16;
+        let rect = Rect::new(area.x + padding, y, usable_width, 1);
+        let widget = Paragraph::new(Line::from(spans))
+            .block(Block::default().borders(Borders::NONE))
+            .alignment(Alignment::Center);
+        f.render_widget(widget, rect);
     }
-
-    let widget = Paragraph::new(padded_lines)
-        .block(Block::default().title("Zen").borders(Borders::NONE))
-        .wrap(Wrap { trim: false });
-
-    f.render_widget(widget, area);
 
     // Animated caret for input line
     let caret = if tick % 2 == 0 { "|" } else { " " };
     let input_line = format!("> {}{}", input_text, caret);
-    let x_offset = (area.width.saturating_sub(input_line.len() as u16)) / 2;
-    let centered = Rect::new(area.x + x_offset, area.y + area.height / 2, area.width, 1);
-    let input_widget = Paragraph::new(input_line).style(Style::default().fg(Color::White));
-    f.render_widget(input_widget, centered);
+    let input_rect = Rect::new(area.x + padding, area.y + area.height / 2, usable_width, 1);
+    let input_widget = Paragraph::new(input_line)
+        .style(Style::default().fg(Color::White).add_modifier(Modifier::BOLD))
+        .alignment(Alignment::Center);
+    f.render_widget(input_widget, input_rect);
+
+    // Hidden side labels
+    f.render_widget(
+        Paragraph::new("Recent").style(Style::default().fg(Color::DarkGray)),
+        Rect::new(area.x + 1, area.y + 2, padding - 2, 1),
+    );
+    f.render_widget(
+        Paragraph::new("Aa").style(Style::default().fg(Color::DarkGray)),
+        Rect::new(area.right() - padding + 1, area.y + 2, 3, 1),
+    );
 
     render_full_border(f, area, &style, true, false);
     let beamx = BeamX {
