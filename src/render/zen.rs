@@ -96,6 +96,15 @@ pub fn render_zen_journal<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppS
         }
     }
 
+    let unsaved_marker = if state.zen_dirty { " \u{270E}" } else { "" };
+    let footer_text = format!("\u{1F4C4} {}   \u{270D} {} words{}", state.zen_current_filename, state.zen_word_count, unsaved_marker);
+    let x_offset = area.width.saturating_sub(footer_text.len() as u16 + 2);
+    let footer_rect = Rect::new(area.x + x_offset, area.y + area.height - 1, footer_text.len() as u16, 1);
+    f.render_widget(
+        Paragraph::new(footer_text).style(Style::default().fg(Color::DarkGray)),
+        footer_rect,
+    );
+
     render_full_border(f, area, &style, true, false);
     let beamx = BeamX {
         tick,
