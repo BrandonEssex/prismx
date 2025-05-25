@@ -130,6 +130,7 @@ pub fn layout_nodes(
     root_id: NodeID,
     start_y: i16,
     term_width: i16,
+    term_height: i16,
     auto_arrange: bool,
 ) -> (HashMap<NodeID, Coords>, HashMap<NodeID, LayoutRole>) {
     let start_y = start_y.max(GEMX_HEADER_HEIGHT);
@@ -143,6 +144,7 @@ pub fn layout_nodes(
         start_x,
         start_y,
         term_width,
+        term_height,
         &mut coords,
         &mut roles,
         auto_arrange,
@@ -190,6 +192,7 @@ fn layout_recursive_safe(
     x: i16,
     y: i16,
     _term_width: i16,
+    term_height: i16,
     out: &mut HashMap<NodeID, Coords>,
     roles: &mut HashMap<NodeID, LayoutRole>,
     auto_arrange: bool,
@@ -241,15 +244,30 @@ fn layout_recursive_safe(
     let mut min_x_span = x;
     let mut max_x_span = x + label_width;
 
-    let mut offset = 0;
+    let mut col_x = x;
+    let mut col_y = child_y;
+    let mut column_width = 0;
     for child_id in node.children.iter() {
-        let child_x = x + offset;
+        let child_h = subtree_depth(nodes, *child_id) * CHILD_SPACING_Y + 1;
+        let child_w = subtree_span(nodes, *child_id);
+        if col_y + child_h > term_height {
+            tracing::debug!("wrap column for node {}", child_id);
+            col_y = child_y;
+            col_x += column_width + SIBLING_SPACING_X;
+            column_width = 0;
+        }
+
+        if col_y + child_h > term_height {
+            tracing::debug!("overflow node {} beyond height {}", child_id, term_height);
+        }
+
         let (cy, mi, ma) = layout_recursive_safe(
             nodes,
             *child_id,
-            child_x,
-            child_y,
+            col_x,
+            col_y,
             _term_width,
+            term_height,
             out,
             roles,
             auto_arrange,
@@ -259,7 +277,9 @@ fn layout_recursive_safe(
         max_y = max_y.max(cy);
         min_x_span = min_x_span.min(mi);
         max_x_span = max_x_span.max(ma);
-        offset += BASE_SPACING_X;
+
+        col_y = cy + CHILD_SPACING_Y;
+        column_width = column_width.max(child_w);
     }
 
     (max_y, min_x_span.min(x), max_x_span.max(x + label_width))

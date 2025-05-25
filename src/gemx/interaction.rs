@@ -59,7 +59,7 @@ pub fn node_at_position(state: &AppState, x: u16, y: u16) -> Option<NodeID> {
         } else {
             state.root_nodes.clone()
         };
-        let (tw, _) = terminal::size().unwrap_or((80, 20));
+        let (tw, th) = terminal::size().unwrap_or((80, 20));
         let mut pack = PackRegion::new(tw as i16, GEMX_HEADER_HEIGHT);
         for &root_id in &roots {
             let w = subtree_span(&state.nodes, root_id);
@@ -70,6 +70,7 @@ pub fn node_at_position(state: &AppState, x: u16, y: u16) -> Option<NodeID> {
                 root_id,
                 oy,
                 tw as i16,
+                th as i16,
                 state.auto_arrange,
             );
             for pos in l.values_mut() {

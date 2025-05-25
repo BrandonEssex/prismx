@@ -466,6 +466,14 @@ impl AppState {
             self.ensure_grid_positions();
         }
         crate::layout::roles::recalculate_roles(self);
+        if self.nodes.get(&new_id).and_then(|n| n.parent).is_none() {
+            if let Some(n) = self.nodes.get_mut(&new_id) {
+                n.parent = Some(parent_id);
+            }
+            if let Some(p) = self.nodes.get_mut(&parent_id) {
+                p.children.push(new_id);
+            }
+        }
         self.ensure_valid_roots();
     }
 
