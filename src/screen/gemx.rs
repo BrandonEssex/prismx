@@ -130,6 +130,7 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppStat
                 || drawn_at.contains_key(&id)
                 || reachable_ids.contains(id)
                 || state.fallback_promoted_this_session.contains(id)
+                || node.label.starts_with("[F]")
             {
                 continue;
             }
@@ -146,18 +147,22 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppStat
             drawn_at.insert(*id, Coords { x: 5, y: GEMX_HEADER_HEIGHT + 2 });
             node_roles.insert(*id, LayoutRole::Root);
 
+            promoted_id = Some(*id);
+
             if state.debug_input_mode {
-                eprintln!("⚠ Node {} is unreachable — promoting to root", id);
+                eprintln!("⚠ Promoted Node {} to root (label-safe)", id);
             }
 
-            promoted_id = Some(*id);
             break;
         }
 
         if let Some(pid) = promoted_id {
-            if state.debug_input_mode {
-                if let Some(node) = state.nodes.get_mut(&pid) {
-                    node.label = format!("[F] {}", node.label);
+            if let Some(n) = state.nodes.get_mut(&pid) {
+                if !n.label.starts_with("[F]") {
+                    n.label = format!("[F] {}", n.label);
+                }
+                if n.label.len() > 32 {
+                    n.label.truncate(32);
                 }
             }
         }
