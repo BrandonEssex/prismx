@@ -57,6 +57,8 @@ pub struct AppState {
     pub last_mouse: Option<(i16, i16)>,
     pub fallback_this_frame: bool,
     pub fallback_promoted_this_session: HashSet<NodeID>,
+    pub fallback_next_x: i16,
+    pub fallback_next_y: i16,
     pub layout_roles: HashMap<NodeID, LayoutRole>,
     pub layout_warning_logged: bool,
     pub debug_input_mode: bool,
@@ -118,6 +120,8 @@ impl Default for AppState {
             last_mouse: None,
             fallback_this_frame: false,
             fallback_promoted_this_session: HashSet::new(),
+            fallback_next_x: 6,
+            fallback_next_y: GEMX_HEADER_HEIGHT + 2,
             layout_roles: HashMap::new(),
             layout_warning_logged: false,
             debug_input_mode: true,
@@ -543,6 +547,8 @@ impl AppState {
 
     pub fn clear_fallback_promotions(&mut self) {
         self.fallback_promoted_this_session.clear();
+        self.fallback_next_x = 6;
+        self.fallback_next_y = GEMX_HEADER_HEIGHT + 2;
     }
 
     pub fn start_drag(&mut self) {
