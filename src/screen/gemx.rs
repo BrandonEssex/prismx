@@ -98,17 +98,8 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppStat
     }
 
     if drawn_at.is_empty() {
-        f.render_widget(
-            Paragraph::new("⚠ layout_nodes() returned no visible nodes."),
-            Rect::new(area.x + 2, area.y + 2, 40, 1),
-        );
-        if !state.layout_warning_logged {
-            eprintln!("⚠ layout_nodes() failed to render any nodes.");
-            state.layout_warning_logged = true;
-        }
+        f.render_widget(Paragraph::new("⚠ No valid root nodes."), area);
         return;
-    } else {
-        state.layout_warning_logged = false;
     }
 
     use std::collections::HashSet;
