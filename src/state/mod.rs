@@ -1,14 +1,11 @@
 use std::collections::HashMap;
 use crate::node::{Node, NodeID, NodeMap};
 use crate::layout::{ SIBLING_SPACING_X, CHILD_SPACING_Y, GEMX_HEADER_HEIGHT };
-use std::sync::atomic::{AtomicBool, Ordering};
 use crossterm::terminal;
 use crate::plugin::PluginHost;
 
 mod hotkeys;
 pub use hotkeys::*;
-
-pub(crate) static PROMOTION_LOGGED: AtomicBool = AtomicBool::new(false);
 
 pub struct AppState {
     pub mode: String,
@@ -128,14 +125,11 @@ impl AppState {
     /// are empty or invalid.
     pub fn ensure_valid_roots(&mut self) {
         self.root_nodes.retain(|id| self.nodes.contains_key(id));
-        let was_empty = self.root_nodes.is_empty();
-        if was_empty && !self.nodes.is_empty() {
+        if self.root_nodes.is_empty() && !self.nodes.is_empty() {
             if let Some((&first_id, _)) = self.nodes.iter().next() {
                 if !self.root_nodes.contains(&first_id) {
                     self.root_nodes.push(first_id);
-                    if !PROMOTION_LOGGED.swap(true, Ordering::Relaxed) {
-                        eprintln!("\u{26a0} root_nodes was empty — promoted Node {} to root", first_id);
-                    }
+                    eprintln!("\u{26a0} root_nodes was empty — promoted Node {} to root", first_id);
                 }
             }
         }
