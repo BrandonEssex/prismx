@@ -1,11 +1,11 @@
 pub fn copy_node(text: &str) {
-    println!("[CLIPBOARD] Copied: {}", text);
+    tracing::debug!("[CLIPBOARD] Copied: {}", text);
 }
 
 pub fn paste_node() {
-    println!("[CLIPBOARD] Pasted: <not implemented>");
+    tracing::debug!("[CLIPBOARD] Pasted: <not implemented>");
 }
 
 pub fn switch_workspace(name: &str) {
-    println!("[WORKSPACE] Switched to: {}", name);
+    tracing::debug!("[WORKSPACE] Switched to: {}", name);
 }

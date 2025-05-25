@@ -326,12 +326,11 @@ impl AppState {
                 if Some(first_id) != self.last_promoted_root {
                     self.root_nodes.push(first_id);
                     self.last_promoted_root = Some(first_id);
-                    if self.debug_input_mode {
-                        eprintln!(
-                            "\u{26a0} root_nodes was empty — promoted Node {} to root",
-                            first_id
-                        );
-                    }
+                    crate::log_debug!(
+                        self,
+                        "\u{26a0} root_nodes was empty — promoted Node {} to root",
+                        first_id
+                    );
                 }
             }
         }
@@ -425,13 +424,13 @@ impl AppState {
         let new_id = self.nodes.keys().max().copied().unwrap_or(100) + 1;
 
         if parent_id == new_id {
-            eprintln!("❌ Invalid insert: node cannot parent itself.");
+            tracing::warn!("❌ Invalid insert: node cannot parent itself.");
             return;
         }
 
         if let Some(parent) = self.nodes.get(&parent_id) {
             if parent.children.contains(&parent_id) {
-                eprintln!("❌ Cycle detected: parent already linked to self.");
+                tracing::warn!("❌ Cycle detected: parent already linked to self.");
                 return;
             }
         }
@@ -936,7 +935,7 @@ impl AppState {
                 self.scroll_y = 0;
                 self.zoom_scale = 1.0;
             } else {
-                eprintln!("❌ Drill failed: selected node not found.");
+                tracing::warn!("❌ Drill failed: selected node not found.");
             }
         }
         self.fallback_this_frame = false;

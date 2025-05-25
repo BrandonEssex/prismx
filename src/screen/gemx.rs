@@ -172,7 +172,7 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppStat
             state.fallback_promoted_this_session.insert(id);
 
             let Some(n) = state.nodes.get_mut(&id) else {
-                eprintln!("❌ Fallback failed: Node {} not found.", id);
+                tracing::warn!("❌ Fallback failed: Node {} not found.", id);
                 return;
             };
 
@@ -184,12 +184,7 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppStat
                     state.fallback_next_y = GEMX_HEADER_HEIGHT + 2;
                     state.fallback_next_x += 20;
                 }
-                if state.debug_input_mode {
-                    eprintln!(
-                        "\u{1F4D0} Placed Node {} at x={}, y={}",
-                        id, n.x, n.y
-                    );
-                }
+                crate::log_debug!(state, "\u{1F4D0} Placed Node {} at x={}, y={}", id, n.x, n.y);
             }
 
             drawn_at.insert(id, Coords { x: n.x, y: n.y });
@@ -268,7 +263,7 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppStat
 
         if draw_x >= area.width || draw_y >= area.height {
             #[cfg(debug_assertions)]
-            eprintln!("[debug] clamp node ({},{})", draw_x, draw_y);
+            tracing::debug!("clamp node ({},{})", draw_x, draw_y);
             continue;
         }
 
@@ -395,7 +390,7 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppStat
                     let draw_sy = syp.max(0.0) as u16;
                     if mid >= area.width || draw_sy >= area.height {
                         #[cfg(debug_assertions)]
-                        eprintln!("[debug] clamp arrow ({},{})", mid, draw_sy);
+                        tracing::debug!("clamp arrow ({},{})", mid, draw_sy);
                         continue;
                     }
                     let para = Paragraph::new(arrow);
@@ -434,7 +429,7 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppStat
 
     for &id in &state.root_nodes {
         if !drawn_at.contains_key(&id) {
-            eprintln!("❌ Layout failed to render root node {}", id);
+            tracing::warn!("❌ Layout failed to render root node {}", id);
         }
     }
 

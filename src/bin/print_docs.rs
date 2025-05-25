@@ -1,6 +1,6 @@
 fn main() {
     match dirs::document_dir() {
-        Some(path) => println!("🗂 macOS resolved document path: {:?}", path),
-        None => println!("❌ Could not resolve Documents directory"),
+        Some(path) => tracing::info!("🗂 macOS resolved document path: {:?}", path),
+        None => tracing::info!("❌ Could not resolve Documents directory"),
     }
 }
