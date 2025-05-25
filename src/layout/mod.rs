@@ -1,6 +1,11 @@
 use std::collections::{HashMap, HashSet};
 use crate::node::{NodeID, NodeMap};
 
+pub mod roles;
+pub mod fallback;
+
+pub use roles::recalculate_roles;
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct Coords {
     pub x: i16,
