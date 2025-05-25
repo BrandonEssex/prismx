@@ -43,6 +43,7 @@ pub struct AppState {
     pub last_mouse: Option<(i16, i16)>,
     pub fallback_this_frame: bool,
     pub fallback_promoted_this_session: HashSet<NodeID>,
+    pub layout_warning_logged: bool,
     pub debug_input_mode: bool,
     pub debug_border: bool,
     pub status_message: String,
@@ -96,6 +97,7 @@ impl Default for AppState {
             last_mouse: None,
             fallback_this_frame: false,
             fallback_promoted_this_session: HashSet::new(),
+            layout_warning_logged: false,
             debug_input_mode: true,
             debug_border: std::env::var("PRISMX_DEBUG_BORDER").is_ok(),
             status_message: String::new(),
@@ -244,14 +246,16 @@ impl AppState {
     }
 
     pub fn add_child(&mut self) {
-        let Some(parent_id) = self.selected else {
-            eprintln!("\u{26a0} Tab insert failed: no selected node.");
+        let parent_id = if let Some(id) = self.selected {
+            if !self.nodes.contains_key(&id) {
+                eprintln!("\u{26a0} Tab failed: invalid selection.");
+                return;
+            }
+            id
+        } else {
+            eprintln!("\u{26a0} Tab failed: no selected node.");
             return;
         };
-        if !self.nodes.contains_key(&parent_id) {
-            eprintln!("\u{26a0} Tab insert failed: selected node is invalid.");
-            return;
-        }
 
         let new_id = self.nodes.keys().max().copied().unwrap_or(100) + 1;
 
@@ -268,6 +272,8 @@ impl AppState {
 
         if !self.root_nodes.contains(&parent_id) {
             self.root_nodes.push(parent_id);
+            self.root_nodes.sort_unstable();
+            self.root_nodes.dedup();
         }
 
         self.selected = Some(new_id);
@@ -285,35 +291,35 @@ impl AppState {
         };
         let parent_id = self.nodes.get(&selected_id).and_then(|n| n.parent);
 
-            let new_id = self.nodes.keys().max().copied().unwrap_or(100) + 1;
-            let mut sibling = Node::new(new_id, "New Sibling", parent_id);
+        let new_id = self.nodes.keys().max().copied().unwrap_or(100) + 1;
+        let mut sibling = Node::new(new_id, "New Sibling", parent_id);
 
-            if !self.auto_arrange {
-                if let Some(selected) = self.nodes.get(&selected_id) {
-                    sibling.x = selected.x + SIBLING_SPACING_X;
-                    sibling.y = selected.y;
-                }
+        if !self.auto_arrange {
+            if let Some(selected) = self.nodes.get(&selected_id) {
+                sibling.x = selected.x + SIBLING_SPACING_X;
+                sibling.y = selected.y;
             }
-
-            match parent_id {
-                Some(p_id) => {
-                    if let Some(parent) = self.nodes.get_mut(&p_id) {
-                        parent.children.push(new_id);
-                    }
-                }
-                None => {
-                    // Top-level node: must be added to root_nodes
-                    self.root_nodes.push(new_id);
-                }
-            }
-
-            self.nodes.insert(new_id, sibling);
-            self.selected = Some(new_id);
-            if !self.auto_arrange {
-                self.ensure_grid_positions();
-            }
-            self.recalculate_roles();
         }
+
+        if let Some(pid) = parent_id {
+            if let Some(parent) = self.nodes.get_mut(&pid) {
+                parent.children.push(new_id);
+            }
+        }
+
+        if parent_id.is_none() && !self.root_nodes.contains(&new_id) {
+            self.root_nodes.push(new_id);
+            self.root_nodes.sort_unstable();
+            self.root_nodes.dedup();
+        }
+
+        self.nodes.insert(new_id, sibling);
+        self.selected = Some(new_id);
+        if !self.auto_arrange {
+            self.ensure_grid_positions();
+        }
+        self.recalculate_roles();
+    }
 
 
     pub fn delete_node(&mut self) {
