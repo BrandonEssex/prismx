@@ -91,9 +91,11 @@ pub struct AppState {
     pub zen_toolbar_open: bool,
     pub zen_recent_files: Vec<String>,
     pub zen_toolbar_index: usize,
+    pub zen_dirty: bool,
+    pub zen_last_saved: Option<std::time::Instant>,
     pub zen_current_filename: String,
     pub zen_word_count: usize,
-    pub zen_dirty: bool,
+
 
 }
 
@@ -165,9 +167,11 @@ impl Default for AppState {
             zen_toolbar_open: false,
             zen_recent_files: vec!["README.md".into()],
             zen_toolbar_index: 0,
-            zen_current_filename: "Untitled".into(),
-            zen_word_count: 0,
             zen_dirty: false,
+            zen_last_saved: None,
+            zen_current_filename: "draft.prismx".into(),
+            zen_word_count: 0,
+
 
         };
 
@@ -630,6 +634,9 @@ impl AppState {
             self.update_zen_word_count();
             self.zen_dirty = false;
             self.add_recent_file(path);
+            self.zen_current_filename = path.to_string();
+            self.zen_dirty = false;
+            self.zen_last_saved = Some(std::time::Instant::now());
         }
     }
 
@@ -643,6 +650,7 @@ impl AppState {
             self.add_recent_file(path);
             self.zen_current_filename = path.to_string();
             self.zen_dirty = false;
+            self.zen_last_saved = Some(std::time::Instant::now());
         }
     }
 
@@ -705,6 +713,22 @@ impl AppState {
                 self.zen_toolbar_open = false;
             }
             _ => {}
+        }
+    }
+
+    pub fn auto_save_zen(&mut self) {
+        if self.zen_dirty {
+            let should_save = self
+                .zen_last_saved
+                .map_or(true, |t| t.elapsed().as_secs() > 10);
+            if should_save {
+                let _ = std::fs::write(
+                    &self.zen_current_filename,
+                    self.zen_buffer.join("\n"),
+                );
+                self.zen_last_saved = Some(std::time::Instant::now());
+                self.zen_dirty = false;
+            }
         }
     }
 

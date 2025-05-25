@@ -88,13 +88,27 @@ pub fn draw<B: Backend>(terminal: &mut Terminal<B>, state: &mut AppState, _last_
             }
         }
 
-        let default_status = format!(
-            "Mode: {} | Triage: {} | Spotlight: {} | Help: {}",
-            state.mode,
-            state.show_triage,
-            state.show_spotlight,
-            state.show_keymap,
-        );
+        let default_status = if state.mode == "zen" {
+            let name = &state.zen_current_filename;
+            let word_count: usize = state
+                .zen_buffer
+                .iter()
+                .map(|l| l.split_whitespace().count())
+                .sum();
+            if state.zen_dirty {
+                format!("📄 {} ✍️ {} words ✎", name, word_count)
+            } else {
+                format!("📄 {} ✍️ {} words", name, word_count)
+            }
+        } else {
+            format!(
+                "Mode: {} | Triage: {} | Spotlight: {} | Help: {}",
+                state.mode,
+                state.show_triage,
+                state.show_spotlight,
+                state.show_keymap,
+            )
+        };
         let display_string = if state.status_message.is_empty() {
             default_status
         } else {
@@ -131,6 +145,8 @@ pub fn launch_ui() -> std::io::Result<()> {
             let first = state.nodes.keys().copied().next().unwrap();
             state.set_selected(Some(first));
         }
+
+        state.auto_save_zen();
 
         if let Some(sim_input) = state.simulate_input_queue.pop_front() {
             match sim_input {
@@ -436,6 +452,7 @@ pub fn launch_ui() -> std::io::Result<()> {
                             last.pop();
                         }
                         state.update_zen_word_count();
+
                         state.zen_dirty = true;
                     }
 
