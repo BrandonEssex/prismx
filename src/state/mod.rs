@@ -1004,7 +1004,8 @@ impl AppState {
         }
     }
 
-pub fn get_module_by_index(&self) -> &str {
+impl AppState {
+    pub fn get_module_by_index(&self) -> &str {
         match self.module_switcher_index % 4 {
             0 => "gemx",
             1 => "zen",
@@ -1013,15 +1014,7 @@ pub fn get_module_by_index(&self) -> &str {
             _ => "gemx",
         }
     }
-}
 
-pub fn register_plugin_favorite(state: &mut AppState, icon: &'static str, command: &'static str) {
-    if state.plugin_favorites.len() < 5 {
-        state.plugin_favorites.push(FavoriteEntry { icon, command });
-    }
-}
-
-impl AppState {
     pub fn favorite_entries(&self) -> Vec<FavoriteEntry> {
         let default_favorites = [
             ("⚙️", "/settings"),
@@ -1062,5 +1055,12 @@ impl AppState {
             self.status_message = entry.command.to_string();
             self.status_message_last_updated = Some(std::time::Instant::now());
         }
+    }
+}
+
+// Outside impl block:
+pub fn register_plugin_favorite(state: &mut AppState, icon: &'static str, command: &'static str) {
+    if state.plugin_favorites.len() < 5 {
+        state.plugin_favorites.push(FavoriteEntry { icon, command });
     }
 }
