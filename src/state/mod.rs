@@ -85,6 +85,8 @@ pub struct AppState {
     pub favorite_dock_enabled: bool,
     pub last_mouse_click: Option<(u16, u16)>,
     pub settings_focus_index: usize,
+    pub dock_entry_bounds: Vec<(ratatui::layout::Rect, String)>,
+    pub favorite_focus_index: Option<usize>,
 
 }
 
@@ -150,6 +152,8 @@ impl Default for AppState {
             favorite_dock_enabled: true,
             last_mouse_click: None,
             settings_focus_index: 0,
+            dock_entry_bounds: Vec::new(),
+            favorite_focus_index: None,
 
         };
 
@@ -798,5 +802,49 @@ pub fn get_module_by_index(&self) -> &str {
 pub fn register_plugin_favorite(state: &mut AppState, icon: &'static str, command: &'static str) {
     if state.plugin_favorites.len() < 5 {
         state.plugin_favorites.push(FavoriteEntry { icon, command });
+    }
+}
+
+impl AppState {
+    pub fn favorite_entries(&self) -> Vec<FavoriteEntry> {
+        let default_favorites = [
+            ("⚙️", "/settings"),
+            ("📬", "/triage"),
+            ("💭", "/gemx"),
+            ("🧘", "/zen"),
+            ("🔍", "/spotlight"),
+        ];
+
+        let limit = self.favorite_dock_limit.min(5);
+        let mut all: Vec<FavoriteEntry> = self
+            .plugin_favorites
+            .iter()
+            .cloned()
+            .chain(
+                default_favorites
+                    .iter()
+                    .map(|&(icon, cmd)| FavoriteEntry { icon, command: cmd }),
+            )
+            .take(limit)
+            .collect();
+
+        if self.mode == "gemx" && all.len() >= 3 {
+            all[2].icon = "💬";
+        }
+        if (self.mode == "triage" || self.show_triage) && all.len() >= 2 {
+            all[1].icon = "📫";
+        }
+        all
+    }
+
+    pub fn trigger_favorite(&mut self, index: usize) {
+        let entries = self.favorite_entries();
+        if let Some(entry) = entries.get(index) {
+            self.spotlight_input = entry.command.to_string();
+            self.show_spotlight = true;
+            self.favorite_focus_index = Some(index);
+            self.status_message = entry.command.to_string();
+            self.status_message_last_updated = Some(std::time::Instant::now());
+        }
     }
 }
