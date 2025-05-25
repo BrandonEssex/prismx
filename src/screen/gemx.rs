@@ -3,6 +3,7 @@ use ratatui::widgets::{Block, Borders, Paragraph};
 use crate::layout::{
     layout_nodes, Coords, LayoutRole, PackRegion, GEMX_HEADER_HEIGHT,
     CHILD_SPACING_Y, subtree_span, subtree_depth, spacing_for_zoom,
+    BASE_SPACING_X, BASE_SPACING_Y,
 };
 use crate::node::{NodeID, NodeMap};
 use crate::state::AppState;
@@ -38,7 +39,7 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppStat
     let mut drawn_at = HashMap::new();
     let mut node_roles = HashMap::new();
     if state.auto_arrange {
-        let mut pack = PackRegion::new(area.width as i16, GEMX_HEADER_HEIGHT);
+        let mut pack = PackRegion::new(i16::MAX, GEMX_HEADER_HEIGHT);
         for &root_id in &roots {
             let w = subtree_span(&state.nodes, root_id);
             let h = subtree_depth(&state.nodes, root_id) * CHILD_SPACING_Y + 1;
@@ -79,15 +80,19 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppStat
         let min_y = drawn_at.values().map(|c| c.y).min().unwrap_or(0);
         let max_y = drawn_at.values().map(|c| c.y).max().unwrap_or(0);
 
-        let total_w = (max_x - min_x + 1) as f32;
-        let total_h = (max_y - min_y + 1) as f32;
+        let layout_width = (max_x - min_x + 1) as f32 * BASE_SPACING_X as f32;
+        let layout_height = (max_y - min_y + 1) as f32 * BASE_SPACING_Y as f32;
 
-        let mut zoom = (area.width as f32 / total_w)
-            .min(area.height as f32 / total_h);
-        zoom = zoom.clamp(0.5, 2.0);
-        state.zoom_scale = zoom;
+        let mut zoom = (area.width as f32 / layout_width)
+            .min(area.height as f32 / layout_height)
+            .min(2.0);
+        if !state.zoom_locked_by_user {
+            state.zoom_scale = zoom.max(0.5);
+        } else {
+            zoom = state.zoom_scale;
+        }
 
-        let (bsx, bsy) = spacing_for_zoom(state.zoom_scale);
+        let (bsx, bsy) = spacing_for_zoom(zoom);
         let center_x = (min_x + max_x) as f32 / 2.0;
         let center_y = (min_y + max_y) as f32 / 2.0;
 

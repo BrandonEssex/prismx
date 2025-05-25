@@ -28,6 +28,7 @@ pub struct AppState {
     pub link_map: std::collections::HashMap<NodeID, Vec<NodeID>>,
     pub auto_arrange: bool,
     pub zoom_scale: f32,
+    pub zoom_locked_by_user: bool,
     pub scroll_x: i16,
     pub scroll_y: i16,
     pub snap_to_grid: bool,
@@ -71,6 +72,7 @@ impl Default for AppState {
             link_map: std::collections::HashMap::new(),
             auto_arrange: true,
             zoom_scale: 1.0,
+            zoom_locked_by_user: false,
             scroll_x: 0,
             scroll_y: 0,
             snap_to_grid: false,
@@ -201,12 +203,9 @@ impl AppState {
             let new_id = self.nodes.keys().max().copied().unwrap_or(100) + 1;
 
             let mut child = Node::new(new_id, "New Child", Some(parent_id));
-
-            if !self.auto_arrange {
-                if let Some(parent) = self.nodes.get(&parent_id) {
-                    child.x = parent.x;
-                    child.y = parent.y + CHILD_SPACING_Y;
-                }
+            if let Some(parent) = self.nodes.get(&parent_id) {
+                child.x = parent.x;
+                child.y = parent.y + 1;
             }
 
             if let Some(parent) = self.nodes.get_mut(&parent_id) {
@@ -215,7 +214,6 @@ impl AppState {
 
             self.nodes.insert(new_id, child);
             self.selected = Some(new_id);
-            self.recalculate_roles();
         }
     }
 
@@ -377,6 +375,7 @@ impl AppState {
 
     pub fn zoom_in(&mut self) {
         self.zoom_scale = (self.zoom_scale + 0.1).min(1.5);
+        self.zoom_locked_by_user = true;
         if let Some(id) = self.selected {
             crate::layout::zoom_to_anchor(self, id);
         }
@@ -384,6 +383,7 @@ impl AppState {
 
     pub fn zoom_out(&mut self) {
         self.zoom_scale = (self.zoom_scale - 0.1).max(0.5);
+        self.zoom_locked_by_user = true;
         if let Some(id) = self.selected {
             crate::layout::zoom_to_anchor(self, id);
         }
@@ -391,6 +391,7 @@ impl AppState {
 
     pub fn zoom_reset(&mut self) {
         self.zoom_scale = 1.0;
+        self.zoom_locked_by_user = false;
         if let Some(id) = self.selected {
             crate::layout::zoom_to_anchor(self, id);
         }
