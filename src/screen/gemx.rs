@@ -25,6 +25,13 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppStat
 
     // Ensure we always have at least one valid root after role recalculation
     state.ensure_valid_roots();
+    if state.root_nodes.is_empty() {
+        f.render_widget(
+            Paragraph::new("⚠ No valid root nodes."),
+            Rect::new(area.x + 2, area.y + 2, 40, 1),
+        );
+        return;
+    }
 
 
     // // ✅ Always print the structure for diagnostics
@@ -79,11 +86,9 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppStat
     use std::collections::HashSet;
     let reachable_ids: HashSet<NodeID> = drawn_at.keys().copied().collect();
     for (id, _node) in &state.nodes {
-        if !reachable_ids.contains(id) {
+        if !reachable_ids.contains(id) && !state.root_nodes.contains(id) {
             eprintln!("⚠ Node {} is unreachable from root", id);
-            if !state.root_nodes.contains(id) {
-                state.root_nodes.push(*id);
-            }
+            state.root_nodes.push(*id);
         }
     }
     state.root_nodes.sort_unstable();

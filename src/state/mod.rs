@@ -125,7 +125,8 @@ impl AppState {
     /// are empty or invalid.
     pub fn ensure_valid_roots(&mut self) {
         self.root_nodes.retain(|id| self.nodes.contains_key(id));
-        if self.root_nodes.is_empty() && !self.nodes.is_empty() {
+        let was_empty = self.root_nodes.is_empty();
+        if was_empty && !self.nodes.is_empty() {
             if let Some((&first_id, _)) = self.nodes.iter().next() {
                 self.root_nodes.push(first_id);
                 eprintln!("\u{26a0} root_nodes was empty — promoted Node {} to root", first_id);
@@ -231,6 +232,7 @@ impl AppState {
 
             self.selected = Some(new_id);
             self.recalculate_roles();
+            self.ensure_valid_roots();
         }
     }
 
