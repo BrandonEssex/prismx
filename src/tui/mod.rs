@@ -7,7 +7,7 @@ use crossterm::{
 };
 use std::io::stdout;
 
-use crate::state::AppState;
+use crate::state::{AppState, SimInput};
 use crate::render::{
     render_status_bar,
     render_zen_journal,
@@ -126,6 +126,25 @@ pub fn launch_ui() -> std::io::Result<()> {
         if state.selected.is_none() && !state.nodes.is_empty() {
             let first = state.nodes.keys().copied().next().unwrap();
             state.set_selected(Some(first));
+        }
+
+        if let Some(sim_input) = state.simulate_input_queue.pop_front() {
+            match sim_input {
+                SimInput::Enter => state.add_sibling(),
+                SimInput::Tab => state.add_child(),
+                SimInput::Delete => state.delete_node(),
+                SimInput::Drill => state.drill_selected(),
+                SimInput::Pop => state.pop_stack(),
+                SimInput::Undo => state.undo(),
+                SimInput::Redo => state.redo(),
+            }
+
+            if state.debug_input_mode {
+                eprintln!("\u{1F9EA} Simulated input: {:?}", sim_input);
+                if state.simulate_input_queue.is_empty() {
+                    eprintln!("\u{1F9EA} Simulation complete.");
+                }
+            }
         }
 
         if event::poll(std::time::Duration::from_millis(100))? {
