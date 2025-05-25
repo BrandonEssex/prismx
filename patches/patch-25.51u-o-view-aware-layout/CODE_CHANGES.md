@@ -1,13 +1,10 @@
 ## Code Changes
 
-1. `layout/mod.rs`
-   - `layout_nodes()` accepts `(term_width, term_height)` to define the layout area.
-   - `layout_recursive_safe()` stacks child nodes vertically until the given
-     height is exceeded, then shifts to the next column using
-     `SIBLING_SPACING_X`.
-   - Added `tracing::debug!` logs indicating when clusters wrap or overflow.
-
-2. Call Sites
-   - Updated `screen/gemx.rs`, `gemx/interaction.rs` and tests to pass the new
-     height argument when invoking `layout_nodes()`.
-
+- In `layout_nodes()` or layout system:
+  - Read terminal frame size (frame.size())
+  - Set a dynamic bounding box for layout
+  - When placing children, prefer vertical stacking (Y-axis) until bounds are hit
+  - Then shift to the right (X-axis) and continue stacking
+- Add a basic cluster logic: if multiple children, stack downward within view first
+- Gracefully degrade if canvas is larger than screen — fallback to current layout
+- Log layout decisions if debug mode is enabled
