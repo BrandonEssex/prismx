@@ -80,6 +80,22 @@ pub fn render_zen_journal<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppS
         Rect::new(area.right() - padding + 1, area.y + 2, 3, 1),
     );
 
+    if state.zen_toolbar_open {
+        let mut entries = vec!["+ New".to_string(), "Open".into(), "Save".into()];
+        entries.extend(state.zen_recent_files.clone());
+        for (i, item) in entries.iter().enumerate() {
+            let style = if i == state.zen_toolbar_index {
+                Style::default().add_modifier(Modifier::REVERSED)
+            } else {
+                Style::default()
+            };
+            f.render_widget(
+                Paragraph::new(item.as_str()).style(style),
+                Rect::new(area.x + 1, area.y + 3 + i as u16, padding - 2, 1),
+            );
+        }
+    }
+
     render_full_border(f, area, &style, true, false);
     let beamx = BeamX {
         tick,

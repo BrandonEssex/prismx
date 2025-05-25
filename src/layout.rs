@@ -15,6 +15,8 @@ pub const GEMX_HEADER_HEIGHT: i16 = 2;
 pub const MAX_LAYOUT_DEPTH: usize = 50;
 pub const BASE_SPACING_X: i16 = 20;
 pub const BASE_SPACING_Y: i16 = 5;
+pub const SNAP_GRID_X: i16 = 4;
+pub const SNAP_GRID_Y: i16 = 2;
 
 pub fn spacing_for_zoom(zoom: f32) -> (i16, i16) {
     if zoom < 0.7 {
@@ -145,12 +147,18 @@ pub fn layout_nodes(
         debug_input_mode,
     );
 
+
     if let Some(min_x) = coords.values().map(|c| c.x).min() {
         if min_x < 0 {
             for pos in coords.values_mut() {
                 pos.x -= min_x;
             }
         }
+    }
+
+    for pos in coords.values_mut() {
+        pos.x -= pos.x % SNAP_GRID_X;
+        pos.y -= pos.y % SNAP_GRID_Y;
     }
 
     (coords, roles)
@@ -169,12 +177,17 @@ fn layout_recursive_safe(
     depth: usize,
     debug_input_mode: bool,
 ) -> (i16, i16, i16) {
-    if !visited.insert(node_id) || depth > MAX_LAYOUT_DEPTH {
+    let inserted = visited.insert(node_id);
+    if !inserted || depth > MAX_LAYOUT_DEPTH {
         if debug_input_mode {
             eprintln!(
-                "⚠️ Recursion halted: Node {} already visited or max depth exceeded.",
-                node_id
+                "⚠️ Recursion halted: Node {} (depth {})",
+                node_id,
+                depth
             );
+        }
+        if inserted {
+            visited.remove(&node_id);
         }
         return (y, x, x);
     }
