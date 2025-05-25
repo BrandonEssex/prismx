@@ -82,7 +82,7 @@ impl Default for AppState {
         nodes.insert(node_a, Node::new(node_a, "Node A", None));
         nodes.insert(node_b, Node::new(node_b, "Node B", None));
 
-        Self {
+        let mut state = Self {
             mode: "gemx".into(),
             zen_buffer: vec![String::from(" ")],
             nodes,
@@ -132,7 +132,15 @@ impl Default for AppState {
             last_mouse_click: None,
             settings_focus_index: 0,
 
+        };
+
+        for node in state.nodes.values_mut() {
+            if node.label.starts_with("[F]") {
+                node.label = node.label.replacen("[F] ", "", 1);
+            }
         }
+
+        state
     }
 }
 
@@ -286,17 +294,6 @@ impl AppState {
             child.x = parent.x;
             child.y = parent.y + 1;
         }
-        if self.debug_input_mode {
-            eprintln!(
-                "[INSERT] Node {} \u{2192} label=\"{}\", parent={:?}, x={}, y={}, mode={:?}",
-                new_id,
-                child.label,
-                child.parent,
-                child.x,
-                child.y,
-                self.mode
-            );
-        }
 
         self.nodes.insert(new_id, child);
         if let Some(parent) = self.nodes.get_mut(&parent_id) {
@@ -349,17 +346,6 @@ impl AppState {
             parent.children.push(new_id);
         }
 
-        if self.debug_input_mode {
-            eprintln!(
-                "[INSERT] Node {} → label=\"{}\", parent={:?}, x={}, y={}, mode={:?}",
-                new_id,
-                sibling.label,
-                parent_id,
-                sibling.x,
-                sibling.y,
-                self.mode
-            );
-        }
 
         self.nodes.insert(new_id, sibling);
         self.selected = Some(new_id);

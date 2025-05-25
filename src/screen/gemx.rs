@@ -125,13 +125,11 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppStat
     use std::collections::HashSet;
     let reachable_ids: HashSet<NodeID> = drawn_at.keys().copied().collect();
     if state.auto_arrange {
-        let mut promoted_id = None;
         for (id, node) in &state.nodes {
             if state.root_nodes.contains(id)
                 || drawn_at.contains_key(&id)
                 || reachable_ids.contains(id)
                 || state.fallback_promoted_this_session.contains(id)
-                || node.label.starts_with("[F]")
             {
                 continue;
             }
@@ -148,8 +146,6 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppStat
             drawn_at.insert(*id, Coords { x: 5, y: GEMX_HEADER_HEIGHT + 2 });
             node_roles.insert(*id, LayoutRole::Root);
 
-            promoted_id = Some(*id);
-
             if state.debug_input_mode {
                 eprintln!("⚠ Promoted Node {} to root (label-safe)", id);
             }
@@ -157,16 +153,6 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppStat
             break;
         }
 
-        if let Some(pid) = promoted_id {
-            if let Some(n) = state.nodes.get_mut(&pid) {
-                if !n.label.starts_with("[F]") {
-                    n.label = format!("[F] {}", n.label);
-                }
-                if n.label.len() > 32 {
-                    n.label.truncate(32);
-                }
-            }
-        }
     }
 
     for (&id, _) in &state.nodes {
@@ -177,15 +163,7 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppStat
     }
 
     if state.debug_input_mode {
-        eprintln!("[RENDER TREE]");
-        for (&id, coords) in &drawn_at {
-            let label = &state.nodes[&id].label;
-            let role = node_roles.get(&id).unwrap_or(&LayoutRole::Free);
-            eprintln!(
-                "Node {} \u{2192} ({}, {}) | {:?} | {}",
-                id, coords.x, coords.y, role, label
-            );
-        }
+        eprintln!("Rendered {} nodes this frame.", drawn_at.len());
     }
 
     // When auto-arrange is active, adjust zoom and scroll to fit all nodes
