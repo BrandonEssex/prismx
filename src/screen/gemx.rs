@@ -6,8 +6,7 @@ use crate::layout::{
     BASE_SPACING_X, BASE_SPACING_Y,
 };
 use crate::node::{NodeID, NodeMap};
-use crate::state::{AppState, PROMOTION_LOGGED};
-use std::sync::atomic::Ordering;
+use crate::state::AppState;
 use crate::beamx::{render_full_border, style_for_mode};
 use crate::ui::beamx::{BeamX, BeamXStyle, BeamXMode, BeamXAnimationMode};
 use std::time::{SystemTime, UNIX_EPOCH};
@@ -19,9 +18,6 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppStat
         .title(if state.auto_arrange { "Gemx [Auto-Arrange]" } else { "Gemx" })
         .borders(Borders::NONE);
     f.render_widget(block, area);
-
-    // reset log flag for this frame
-    PROMOTION_LOGGED.store(false, Ordering::Relaxed);
 
     if state.auto_arrange {
         state.recalculate_roles();
@@ -91,8 +87,10 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppStat
     let reachable_ids: HashSet<NodeID> = drawn_at.keys().copied().collect();
     for (id, _node) in &state.nodes {
         if !reachable_ids.contains(id) && !state.root_nodes.contains(id) {
-            eprintln!("⚠ Node {} is unreachable from root", id);
             state.root_nodes.push(*id);
+            if state.debug_input_mode {
+                eprintln!("⚠ Node {} is unreachable — promoting to root", id);
+            }
         }
     }
     state.root_nodes.sort_unstable();
