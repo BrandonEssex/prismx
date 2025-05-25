@@ -7,7 +7,46 @@ use ratatui::{
     Frame,
 };
 
+use serde::{Deserialize, Serialize};
+use std::fs;
+
 use crate::state::{AppState, DockLayout};
+
+#[derive(Serialize, Deserialize)]
+pub struct UserSettings {
+    pub auto_arrange: bool,
+    pub debug_input_mode: bool,
+    pub dock_layout: String,
+}
+
+impl Default for UserSettings {
+    fn default() -> Self {
+        Self {
+            auto_arrange: true,
+            debug_input_mode: true,
+            dock_layout: "vertical".into(),
+        }
+    }
+}
+
+pub fn load_user_settings() -> UserSettings {
+    fs::read_to_string("config/settings.toml")
+        .ok()
+        .and_then(|s| toml::from_str(&s).ok())
+        .unwrap_or_default()
+}
+
+pub fn save_user_settings(state: &AppState) {
+    let config = UserSettings {
+        auto_arrange: state.auto_arrange,
+        debug_input_mode: state.debug_input_mode,
+        dock_layout: format!("{:?}", state.favorite_dock_layout).to_lowercase(),
+    };
+    if let Ok(serialized) = toml::to_string(&config) {
+        let _ = fs::create_dir_all("config");
+        let _ = fs::write("config/settings.toml", serialized);
+    }
+}
 
 pub struct SettingToggle {
     pub label: &'static str,
@@ -16,10 +55,16 @@ pub struct SettingToggle {
 }
 
 fn is_auto_arrange(s: &AppState) -> bool { s.auto_arrange }
-fn toggle_auto_arrange(s: &mut AppState) { s.auto_arrange = !s.auto_arrange; }
+fn toggle_auto_arrange(s: &mut AppState) {
+    s.auto_arrange = !s.auto_arrange;
+    save_user_settings(s);
+}
 
 fn is_debug_mode(s: &AppState) -> bool { s.debug_input_mode }
-fn toggle_debug_mode(s: &mut AppState) { s.debug_input_mode = !s.debug_input_mode; }
+fn toggle_debug_mode(s: &mut AppState) {
+    s.debug_input_mode = !s.debug_input_mode;
+    save_user_settings(s);
+}
 
 fn is_vertical_dock(s: &AppState) -> bool {
     matches!(s.favorite_dock_layout, DockLayout::Vertical)
@@ -29,6 +74,7 @@ fn toggle_dock_layout(s: &mut AppState) {
         DockLayout::Vertical => DockLayout::Horizontal,
         DockLayout::Horizontal => DockLayout::Vertical,
     };
+    save_user_settings(s);
 }
 
 pub const SETTING_TOGGLES: &[SettingToggle] = &[
