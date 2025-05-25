@@ -33,6 +33,11 @@ pub fn draw<B: Backend>(terminal: &mut Terminal<B>, state: &mut AppState, _last_
         state.ensure_grid_positions();
     }
 
+    if state.show_spotlight && !state.prev_show_spotlight {
+        state.spotlight_just_opened = true;
+        state.spotlight_animation_frame = 0;
+    }
+
     terminal.draw(|f| {
         let full = f.size();
         let layout_chunks = if state.show_keymap {
@@ -60,7 +65,7 @@ pub fn draw<B: Backend>(terminal: &mut Terminal<B>, state: &mut AppState, _last_
         }
 
         if state.show_spotlight {
-            render_spotlight(f, vertical[0], &state.spotlight_input);
+            render_spotlight(f, vertical[0], state);
         }
 
         if state.show_keymap && layout_chunks.len() > 1 {
@@ -93,6 +98,13 @@ pub fn draw<B: Backend>(terminal: &mut Terminal<B>, state: &mut AppState, _last_
         render_module_icon(f, full, &state.mode);
         render_status_bar(f, vertical[1], display);
     })?;
+    if state.spotlight_just_opened {
+        state.spotlight_animation_frame += 1;
+        if state.spotlight_animation_frame >= 3 {
+            state.spotlight_just_opened = false;
+        }
+    }
+    state.prev_show_spotlight = state.show_spotlight;
     Ok(())
 }
 
