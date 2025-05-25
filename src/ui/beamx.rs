@@ -15,6 +15,10 @@ fn bright_color(c: Color) -> Color {
     }
 }
 
+fn render_glyph<B: Backend>(f: &mut Frame<B>, x: u16, y: u16, glyph: &str, style: Style) {
+    f.render_widget(Paragraph::new(glyph).style(style), Rect::new(x, y, 1, 1));
+}
+
 /// Visual style and glyph configuration for [`BeamX`].
 pub struct BeamXStyle {
     pub border_color: Color,
@@ -154,7 +158,7 @@ impl BeamX {
         let frame = tick % 12;
         let beam_phase = frame % 4;
         let center_phase = tick % 8;
-        let x = area.right().saturating_sub(7);
+        let x = area.right().saturating_sub(12);
         let y = area.top();
 
         let border = Style::default().fg(self.style.border_color);
@@ -208,10 +212,10 @@ impl BeamX {
         };
 
         // Exit beams around the center
-        f.render_widget(Paragraph::new(exit_tl).style(exit_style), Rect::new(x, y, 1, 1));
-        f.render_widget(Paragraph::new(exit_tl).style(exit_style), Rect::new(x + 1, y + 1, 1, 1));
-        f.render_widget(Paragraph::new(exit_br).style(exit_style), Rect::new(x + 5, y + 3, 1, 1));
-        f.render_widget(Paragraph::new(exit_br).style(exit_style), Rect::new(x + 6, y + 4, 1, 1));
+        render_glyph(f, x + 0, y + 0, exit_tl, exit_style);
+        render_glyph(f, x + 3, y + 1, exit_tl, exit_style);
+        render_glyph(f, x + 9, y + 3, exit_br, exit_style);
+        render_glyph(f, x + 11, y + 4, exit_br, exit_style);
 
         // Pulse border corners when beams brighten
         if beam_phase == 2 {
@@ -222,10 +226,10 @@ impl BeamX {
         }
 
         // Center pulse
-        f.render_widget(Paragraph::new(center_glyph).style(center_style), Rect::new(x + 3, y + 2, 1, 1));
+        render_glyph(f, x + 6, y + 2, center_glyph, center_style);
 
         // Entry beams stacked in the top-right corner
-        f.render_widget(Paragraph::new(entry_glyph).style(entry_style), Rect::new(x + 6, y, 1, 1));
-        f.render_widget(Paragraph::new(entry_glyph).style(entry_style), Rect::new(x + 6, y + 1, 1, 1));
+        render_glyph(f, x + 11, y + 0, entry_glyph, entry_style);
+        render_glyph(f, x + 9, y + 1, entry_glyph, entry_style);
     }
 }
