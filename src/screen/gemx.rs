@@ -87,6 +87,18 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppStat
                 area.height as i16,
                 state.auto_arrange,
             );
+            if layout.is_empty() {
+                crate::log_debug!(state, "skipping root {} - incomplete tree", root_id);
+                state.layout_fail_count += 1;
+                if state.layout_fail_count >= 3 {
+                    state.auto_arrange = false;
+                    state.layout_fail_count = 0;
+                    crate::log_debug!(state, "\u{274c} auto-arrange disabled due to failures");
+                }
+                continue;
+            } else {
+                state.layout_fail_count = 0;
+            }
             for pos in layout.values_mut() {
                 pos.x += ox;
             }
