@@ -1,6 +1,6 @@
 use std::collections::{HashMap, HashSet, VecDeque};
 use crate::node::{Node, NodeID, NodeMap};
-use crate::layout::{ SIBLING_SPACING_X, CHILD_SPACING_Y, GEMX_HEADER_HEIGHT };
+use crate::layout::{ SIBLING_SPACING_X, CHILD_SPACING_Y, GEMX_HEADER_HEIGHT, LayoutRole };
 use crossterm::terminal;
 use crate::plugin::PluginHost;
 
@@ -58,6 +58,7 @@ pub struct AppState {
     pub last_mouse: Option<(i16, i16)>,
     pub fallback_this_frame: bool,
     pub fallback_promoted_this_session: HashSet<NodeID>,
+    pub layout_roles: HashMap<NodeID, LayoutRole>,
     pub layout_warning_logged: bool,
     pub debug_input_mode: bool,
     pub debug_border: bool,
@@ -117,6 +118,7 @@ impl Default for AppState {
             last_mouse: None,
             fallback_this_frame: false,
             fallback_promoted_this_session: HashSet::new(),
+            layout_roles: HashMap::new(),
             layout_warning_logged: false,
             debug_input_mode: true,
             debug_border: std::env::var("PRISMX_DEBUG_BORDER").is_ok(),
@@ -573,6 +575,7 @@ impl AppState {
         use std::collections::HashMap;
 
         self.clear_fallback_promotions();
+        self.layout_roles.clear();
 
         let ids: Vec<NodeID> = self.nodes.keys().copied().collect();
 
@@ -655,6 +658,10 @@ impl AppState {
         for node in self.nodes.values_mut() {
             node.children.sort_unstable();
             node.children.dedup();
+        }
+
+        for &id in &self.root_nodes {
+            self.layout_roles.insert(id, LayoutRole::Root);
         }
     }
 
