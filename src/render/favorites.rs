@@ -9,6 +9,9 @@ use crate::state::{AppState, FavoriteEntry, DockLayout};
 use crate::beamx::style_for_mode;
 
 pub fn render_favorites_dock<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppState) {
+    if !state.favorite_dock_enabled {
+        return;
+    }
     let mut all = vec![
         FavoriteEntry { label: "⚙️", mode: "settings", bounds: Rect::default() },
         FavoriteEntry { label: "📬", mode: "triage", bounds: Rect::default() },
@@ -40,24 +43,34 @@ pub fn render_favorites_dock<B: Backend>(f: &mut Frame<B>, area: Rect, state: &m
         6
     };
 
-    let x = area.x + 1;
-    let y = area.height.saturating_sub(height + 3);
-
-    let border = Block::default().borders(Borders::ALL).style(style);
-    f.render_widget(border, Rect::new(x - 1, y - 1, width, height));
-
     if horizontal {
+        let x = area.x + 1;
+        let y = area.height.saturating_sub(height + 3);
+
+        let border = Block::default().borders(Borders::ALL).style(style);
+        f.render_widget(border, Rect::new(x - 1, y - 1, width, height));
+
         let line: String = favorites.iter().map(|e| e.label).collect::<Vec<_>>().join("  ");
         f.render_widget(Paragraph::new(line).style(style), Rect::new(x, y, width - 2, 1));
         for (i, entry) in favorites.iter_mut().enumerate() {
             entry.bounds = Rect::new(x + (i as u16 * 3), y, 2, 1);
         }
     } else {
-        for (i, entry) in favorites.iter_mut().enumerate() {
-            let gy = y + i as u16;
-            f.render_widget(Paragraph::new(entry.label).style(style), Rect::new(x, gy, 4, 1));
-            entry.bounds = Rect::new(x, gy, 2, 1);
+        if favorites.is_empty() {
+            return;
         }
+        let base_y = area.height.saturating_sub(favorites.len() as u16 + 2);
+        f.render_widget(Paragraph::new("\\__").style(style), Rect::new(0, base_y - 1, 3, 1));
+        for (i, entry) in favorites.iter_mut().enumerate() {
+            let gy = base_y + i as u16;
+            let line = format!("{} |", entry.label);
+            f.render_widget(Paragraph::new(line).style(style), Rect::new(0, gy, 5, 1));
+            entry.bounds = Rect::new(0, gy, 2, 1);
+        }
+        let bottom_y = base_y + favorites.len() as u16;
+        let underscore_len = area.width.saturating_sub(3) as usize;
+        let bottom_line = format!("  |{}", "_".repeat(underscore_len));
+        f.render_widget(Paragraph::new(bottom_line).style(style), Rect::new(0, bottom_y, area.width, 1));
     }
 
     state.favorite_entries = favorites.to_vec();

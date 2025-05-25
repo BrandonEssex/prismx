@@ -69,6 +69,7 @@ pub struct AppState {
     pub plugin_favorites: Vec<FavoriteEntry>,
     pub favorite_dock_limit: usize,
     pub favorite_dock_layout: DockLayout,
+    pub favorite_dock_enabled: bool,
     pub last_mouse_click: Option<(u16, u16)>,
 
 }
@@ -129,6 +130,7 @@ impl Default for AppState {
             plugin_favorites: Vec::new(),
             favorite_dock_limit: 3,
             favorite_dock_layout: DockLayout::Vertical,
+            favorite_dock_enabled: true,
             last_mouse_click: None,
 
         }
@@ -410,6 +412,11 @@ impl AppState {
             let value = &input["/dock_limit=".len()..];
             if let Ok(num) = value.parse::<usize>() {
                 self.favorite_dock_limit = num.min(5);
+            }
+        } else if input.starts_with("/dock_enabled=") {
+            let value = &input["/dock_enabled=".len()..];
+            if let Ok(flag) = value.parse::<bool>() {
+                self.favorite_dock_enabled = flag;
             }
         } else {
             match input {
