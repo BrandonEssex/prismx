@@ -96,11 +96,13 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppStat
                 && !state.root_nodes.contains(id)
                 && !state.fallback_this_frame
                 && !node.children.is_empty()
+                && !state.fallback_promoted_this_session.contains(id)
             {
                 state.root_nodes.push(*id);
                 state.root_nodes.sort_unstable();
                 state.root_nodes.dedup();
                 state.fallback_this_frame = true;
+                state.fallback_promoted_this_session.insert(*id);
 
                 if state.debug_input_mode {
                     eprintln!("⚠ Node {} is unreachable — promoting to root", id);

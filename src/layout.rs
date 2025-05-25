@@ -187,10 +187,10 @@ fn layout_recursive_safe(
                 if nodes.get(&pid).is_some() {
                     LayoutRole::Child
                 } else {
-                    LayoutRole::Orphan
+                    LayoutRole::Free
                 }
             }
-            None => LayoutRole::Orphan,
+            None => LayoutRole::Free,
         }
     };
     roles.insert(node_id, role);
