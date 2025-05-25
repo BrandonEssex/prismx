@@ -133,6 +133,27 @@ pub fn layout_nodes(
     term_height: i16,
     auto_arrange: bool,
 ) -> (HashMap<NodeID, Coords>, HashMap<NodeID, LayoutRole>) {
+    if nodes.is_empty() {
+        tracing::debug!("layout_nodes: skip -- empty node map");
+        return (HashMap::new(), HashMap::new());
+    }
+
+    let Some(root_node) = nodes.get(&root_id) else {
+        tracing::debug!("layout_nodes: skip -- root {} missing", root_id);
+        return (HashMap::new(), HashMap::new());
+    };
+
+    if let Some(pid) = root_node.parent {
+        if !nodes.contains_key(&pid) {
+            tracing::debug!(
+                "layout_nodes: skip -- root {} has invalid parent {}",
+                root_id,
+                pid
+            );
+            return (HashMap::new(), HashMap::new());
+        }
+    }
+
     let start_y = start_y.max(GEMX_HEADER_HEIGHT);
     let start_x = if auto_arrange { 0 } else { term_width / 2 };
     let mut coords = HashMap::new();
