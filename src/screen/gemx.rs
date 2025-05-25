@@ -97,6 +97,20 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppStat
 
     }
 
+    if drawn_at.is_empty() {
+        f.render_widget(
+            Paragraph::new("⚠ layout_nodes() returned no visible nodes."),
+            Rect::new(area.x + 2, area.y + 2, 40, 1),
+        );
+        if !state.layout_warning_logged {
+            eprintln!("⚠ layout_nodes() failed to render any nodes.");
+            state.layout_warning_logged = true;
+        }
+        return;
+    } else {
+        state.layout_warning_logged = false;
+    }
+
     use std::collections::HashSet;
     let reachable_ids: HashSet<NodeID> = drawn_at.keys().copied().collect();
     if state.auto_arrange {
@@ -120,14 +134,6 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppStat
                 break;
             }
         }
-    }
-
-    if drawn_at.is_empty() {
-        f.render_widget(
-            Paragraph::new("⚠ layout_nodes() returned no visible nodes."),
-            Rect::new(area.x + 2, area.y + 2, 40, 1),
-        );
-        eprintln!("⚠ layout_nodes() failed to render any nodes.");
     }
 
     // When auto-arrange is active, adjust zoom and scroll to fit all nodes
