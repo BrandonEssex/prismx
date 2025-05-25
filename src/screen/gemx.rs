@@ -97,6 +97,21 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppStat
 
     }
 
+    // Ensure that every declared root node is represented in the drawn layout.
+    for &root_id in &state.root_nodes {
+        if !drawn_at.contains_key(&root_id) {
+            if state.auto_arrange {
+                let (layout, roles) =
+                    layout_nodes(&state.nodes, root_id, GEMX_HEADER_HEIGHT, area.width as i16, state.auto_arrange);
+                drawn_at.extend(layout);
+                node_roles.extend(roles);
+            } else if let Some(n) = state.nodes.get(&root_id) {
+                drawn_at.insert(root_id, Coords { x: n.x, y: n.y });
+                node_roles.insert(root_id, LayoutRole::Root);
+            }
+        }
+    }
+
     if drawn_at.is_empty() {
         f.render_widget(Paragraph::new("⚠ No valid root nodes."), area);
         return;

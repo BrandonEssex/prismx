@@ -288,23 +288,27 @@ impl AppState {
         let new_id = self.nodes.keys().max().copied().unwrap_or(100) + 1;
         let mut sibling = Node::new(new_id, "New Sibling", parent_id);
 
-        if !self.auto_arrange {
-            if let Some(selected) = self.nodes.get(&selected_id) {
-                sibling.x = selected.x + SIBLING_SPACING_X;
-                sibling.y = selected.y;
+        if parent_id.is_none() {
+            // Creating a sibling of a root results in another root. Provide a
+            // reasonable default position when manual layout is active so the
+            // node is immediately visible.
+            if !self.auto_arrange {
+                sibling.x = (self.nodes.len() as i16 % 5) * SIBLING_SPACING_X;
+                sibling.y = GEMX_HEADER_HEIGHT + 2;
             }
-        }
-
-        if let Some(pid) = parent_id {
-            if let Some(parent) = self.nodes.get_mut(&pid) {
-                parent.children.push(new_id);
-            }
-        }
-
-        if parent_id.is_none() && !self.root_nodes.contains(&new_id) {
             self.root_nodes.push(new_id);
             self.root_nodes.sort_unstable();
             self.root_nodes.dedup();
+        } else {
+            if !self.auto_arrange {
+                if let Some(selected) = self.nodes.get(&selected_id) {
+                    sibling.x = selected.x + SIBLING_SPACING_X;
+                    sibling.y = selected.y;
+                }
+            }
+            if let Some(parent) = self.nodes.get_mut(&parent_id.unwrap()) {
+                parent.children.push(new_id);
+            }
         }
 
         self.nodes.insert(new_id, sibling);
