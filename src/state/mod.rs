@@ -412,6 +412,7 @@ impl AppState {
         }
 
         self.nodes.insert(new_id, child);
+        crate::log_debug!(self, "Inserted node {} → parent {:?}", new_id, parent_id);
         if let Some(parent) = self.nodes.get_mut(&parent_id) {
             parent.children.push(new_id);
         }
@@ -464,6 +465,7 @@ impl AppState {
 
 
         self.nodes.insert(new_id, sibling);
+        crate::log_debug!(self, "Inserted node {} → parent {:?}", new_id, parent_id);
         self.selected = Some(new_id);
         if !self.auto_arrange {
             self.ensure_grid_positions();
@@ -510,6 +512,7 @@ impl AppState {
 
     pub fn execute_spotlight_command(&mut self) {
         let input = self.spotlight_input.trim();
+        crate::log_debug!(self, "Executing spotlight: {}", input);
         if !input.is_empty() {
             self.spotlight_history.push_front(input.to_string());
             while self.spotlight_history.len() > 10 {
@@ -587,8 +590,9 @@ impl AppState {
             }
             "/clear" => self.zen_buffer = vec![String::new()],
             _ => {}
-            }        
+            }
         }
+        self.exit_spotlight();
     }
 
 
@@ -665,6 +669,7 @@ impl AppState {
     pub fn update_zen_word_count(&mut self) {
         let text = self.zen_buffer.join(" ");
         self.zen_word_count = text.split_whitespace().count();
+        crate::log_debug!(self, "Word count updated: {}", self.zen_word_count);
     }
 
     pub fn add_recent_file(&mut self, path: &str) {
@@ -759,6 +764,7 @@ impl AppState {
 
     pub fn undo(&mut self) {
         if let Some(prev) = self.undo_stack.pop() {
+            crate::log_debug!(self, "UNDO triggered: stack now = {}", self.undo_stack.len());
             let current = LayoutSnapshot {
                 nodes: self.nodes.clone(),
                 root_nodes: self.root_nodes.clone(),
@@ -775,6 +781,7 @@ impl AppState {
 
     pub fn redo(&mut self) {
         if let Some(next) = self.redo_stack.pop() {
+            crate::log_debug!(self, "REDO triggered: stack now = {}", self.redo_stack.len());
             let current = LayoutSnapshot {
                 nodes: self.nodes.clone(),
                 root_nodes: self.root_nodes.clone(),
@@ -1023,6 +1030,7 @@ impl AppState {
         // Apply structure and lock child positions
         for &id in &ids {
             if let Some(parent_id) = new_parents[&id] {
+                crate::log_debug!(self, "Assigning parent {:?} to node {}", parent_id, id);
                 let (px, py) = {
                     let p = &self.nodes[&parent_id];
                     (p.x, p.y)
