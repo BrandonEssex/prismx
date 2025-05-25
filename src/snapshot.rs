@@ -20,6 +20,6 @@ pub fn load_snapshot() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     let data = fs::read_to_string(path)?;
-    println!("[SNAPSHOT] Loaded snapshot: {} bytes", data.len());
+    tracing::info!("[SNAPSHOT] Loaded snapshot: {} bytes", data.len());
     Ok(())
 }

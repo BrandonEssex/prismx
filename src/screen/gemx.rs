@@ -142,9 +142,18 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppStat
         return;
     }
 
-    use std::collections::HashSet;
-    let reachable_ids: HashSet<NodeID> = drawn_at.keys().copied().collect();
-        crate::layout::fallback::promote_unreachable(state, &reachable_ids, &mut drawn_at, &mut node_roles, area.height as i16);
+   use std::collections::HashSet;
+  let reachable_ids: HashSet<NodeID> = drawn_at.keys().copied().collect();
+
+  if state.auto_arrange {
+      crate::layout::fallback::promote_unreachable(
+          state,
+          &reachable_ids,
+          &mut drawn_at,
+          &mut node_roles,
+          area.height as i16,
+      );
+  }
 
     for (&id, _) in &state.nodes {
         if !drawn_at.contains_key(&id) {
@@ -212,7 +221,7 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppStat
 
         if draw_x >= area.width || draw_y >= area.height {
             #[cfg(debug_assertions)]
-            eprintln!("[debug] clamp node ({},{})", draw_x, draw_y);
+            tracing::debug!("clamp node ({},{})", draw_x, draw_y);
             continue;
         }
 
@@ -339,7 +348,7 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppStat
                     let draw_sy = syp.max(0.0) as u16;
                     if mid >= area.width || draw_sy >= area.height {
                         #[cfg(debug_assertions)]
-                        eprintln!("[debug] clamp arrow ({},{})", mid, draw_sy);
+                        tracing::debug!("clamp arrow ({},{})", mid, draw_sy);
                         continue;
                     }
                     let para = Paragraph::new(arrow);
@@ -378,7 +387,7 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppStat
 
     for &id in &state.root_nodes {
         if !drawn_at.contains_key(&id) {
-            eprintln!("❌ Layout failed to render root node {}", id);
+            tracing::warn!("❌ Layout failed to render root node {}", id);
         }
     }
 

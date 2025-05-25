@@ -163,7 +163,7 @@ impl BeamX {
         }
 
         if matches!(self.mode, BeamXMode::Debug) {
-            eprintln!("Shimmer bounds: {} \u{2192} {}", area.x, area.x + area.width);
+            tracing::debug!("Shimmer bounds: {} -> {}", area.x, area.x + area.width);
         }
 
         match self.animation {

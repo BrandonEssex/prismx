@@ -12,13 +12,13 @@ pub fn load() {
     match fs::read_to_string(&path) {
         Ok(data) => {
             if let Ok(root) = serde_json::from_str::<MindmapNode>(&data) {
-                println!("[GEMX] Loaded mindmap: {}", root.title);
+                tracing::info!("[GEMX] Loaded mindmap: {}", root.title);
             } else {
-                eprintln!("[GEMX] Invalid mindmap format.");
+                tracing::warn!("[GEMX] Invalid mindmap format.");
             }
         }
         Err(_) => {
-            println!("[GEMX] No mindmap found. Creating default.");
+            tracing::info!("[GEMX] No mindmap found. Creating default.");
             let root = MindmapNode::new("root", "Welcome to PrismX");
             let json = serde_json::to_string_pretty(&root).unwrap();
             let _ = fs::write(&path, json);
