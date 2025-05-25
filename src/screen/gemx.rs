@@ -84,6 +84,7 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppStat
                 root_id,
                 oy,
                 area.width as i16,
+                area.height as i16,
                 state.auto_arrange,
             );
             for pos in layout.values_mut() {
@@ -110,6 +111,7 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppStat
                 root_id,
                 0,
                 area.width as i16,
+                area.height as i16,
                 state.auto_arrange,
             );
             node_roles.extend(roles);
