@@ -148,22 +148,27 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppStat
             state.fallback_this_frame = true;
             state.fallback_promoted_this_session.insert(id);
 
-            let fallback_x =
-                5 + (state.root_nodes.len() as i16 % 10) * SIBLING_SPACING_X;
-            let fallback_y = GEMX_HEADER_HEIGHT + 2;
+            let Some(n) = state.nodes.get_mut(&id) else {
+                eprintln!("❌ Fallback failed: Node {} not found.", id);
+                return;
+            };
 
-            if let Some(n) = state.nodes.get_mut(&id) {
-                if n.x == 0 && n.y == 0 {
-                    n.x = fallback_x;
-                    n.y = fallback_y;
-                }
+            if n.x == 0 && n.y == 0 {
+                n.x = 6 + ((id as i16) % 10) * SIBLING_SPACING_X;
+                n.y = GEMX_HEADER_HEIGHT + 3;
             }
 
-            drawn_at.insert(id, Coords { x: fallback_x, y: fallback_y });
+            drawn_at.insert(id, Coords { x: n.x, y: n.y });
             node_roles.insert(id, LayoutRole::Root);
 
             if state.debug_input_mode {
-                eprintln!("⚠ Promoted Node {} to root (label-safe)", id);
+                eprintln!(
+                    "✅ Promoted Node {}: x={}, y={}, role={:?}",
+                    id,
+                    n.x,
+                    n.y,
+                    node_roles.get(&id)
+                );
             }
 
             break;
@@ -381,5 +386,15 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppStat
     beamx.render(f, area);
     if !drawn_at.is_empty() && !state.root_nodes.is_empty() {
         state.last_promoted_root = None;
+    }
+
+    for &id in &state.root_nodes {
+        if !drawn_at.contains_key(&id) {
+            eprintln!("❌ Layout failed to render root node {}", id);
+        }
+    }
+
+    if drawn_at.is_empty() {
+        panic!("❌ Layout aborted: No root nodes rendered. Fallback failed.");
     }
 }
