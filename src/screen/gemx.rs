@@ -73,12 +73,20 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppStat
 
     }
 
+    use std::collections::HashSet;
+    let reachable_ids: HashSet<NodeID> = drawn_at.keys().copied().collect();
+    for (id, _node) in &state.nodes {
+        if !reachable_ids.contains(id) {
+            eprintln!("⚠ Node {} is unreachable from root", id);
+        }
+    }
+
     if drawn_at.is_empty() {
         f.render_widget(
-            Paragraph::new("⚠ Layout Error"),
-            Rect::new(area.x + 2, area.y + 2, 30, 1),
+            Paragraph::new("⚠ layout_nodes() returned no visible nodes."),
+            Rect::new(area.x + 2, area.y + 2, 40, 1),
         );
-        eprintln!("⚠ layout_nodes() returned no visible nodes.");
+        eprintln!("⚠ layout_nodes() failed to render any nodes.");
     }
 
     // When auto-arrange is active, adjust zoom and scroll to fit all nodes
@@ -165,6 +173,10 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppStat
         }
         if state.link_map.get(&node_id).and_then(|v| v.first()).is_some() {
             label.push_str(" 📎");
+        }
+
+        if state.debug_input_mode && !reachable_ids.contains(&node_id) {
+            label = format!("[?] {}", label);
         }
 
         let width = label.len().min((area.width - draw_x) as usize);
