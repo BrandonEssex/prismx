@@ -101,11 +101,18 @@ impl PackRegion {
         let row_padding = CHILD_SPACING_Y * 2;
         let (w, h) = size;
         if self.x + w + margin > self.max_width {
+            tracing::debug!(
+                "wrap pack column x={} size={:?} max_width={}",
+                self.x,
+                size,
+                self.max_width
+            );
             self.x = 0;
             self.y += self.max_height + row_padding;
             self.max_height = 0;
         }
         let anchor = (self.x, self.y);
+        tracing::debug!("pack insert size {:?} at {:?}", size, anchor);
         self.x += w + margin;
         if h > self.max_height {
             self.max_height = h;

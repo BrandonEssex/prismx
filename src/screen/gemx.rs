@@ -3,7 +3,7 @@ use ratatui::widgets::{Block, Borders, Paragraph};
 use crate::layout::{
     layout_nodes, Coords, LayoutRole, PackRegion, GEMX_HEADER_HEIGHT,
     CHILD_SPACING_Y, subtree_span, subtree_depth, spacing_for_zoom,
-    BASE_SPACING_X, BASE_SPACING_Y, SIBLING_SPACING_X, SNAP_GRID_X, SNAP_GRID_Y,
+    BASE_SPACING_X, BASE_SPACING_Y, SNAP_GRID_X, SNAP_GRID_Y,
 };
 use crate::node::{NodeID, NodeMap};
 use crate::state::AppState;
@@ -73,7 +73,7 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppStat
     let mut drawn_at = HashMap::new();
     let mut node_roles = HashMap::new();
     if state.auto_arrange {
-        let mut pack = PackRegion::new(i16::MAX, GEMX_HEADER_HEIGHT);
+        let mut pack = PackRegion::new(area.width as i16, GEMX_HEADER_HEIGHT);
         for &root_id in &roots {
             let w = subtree_span(&state.nodes, root_id);
             let h = subtree_depth(&state.nodes, root_id) * CHILD_SPACING_Y + 1;
