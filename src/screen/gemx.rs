@@ -19,11 +19,13 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppStat
         .borders(Borders::NONE);
     f.render_widget(block, area);
 
+    // Ensure we always have valid root nodes before any layout logic
+    state.ensure_valid_roots();
     if state.auto_arrange {
         state.recalculate_roles();
     }
 
-    // Ensure we always have at least one valid root after role recalculation
+    // Validate again in case role recalculation removed all roots
     state.ensure_valid_roots();
     if state.root_nodes.is_empty() {
         f.render_widget(
