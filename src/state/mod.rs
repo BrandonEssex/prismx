@@ -246,16 +246,10 @@ impl AppState {
     }
 
     pub fn add_child(&mut self) {
-        let parent_id = if let Some(id) = self.selected {
-            if !self.nodes.contains_key(&id) {
-                eprintln!("\u{26a0} Tab failed: invalid selection.");
-                return;
-            }
-            id
-        } else {
-            eprintln!("\u{26a0} Tab failed: no selected node.");
+        let Some(parent_id) = self.selected else { return };
+        if !self.nodes.contains_key(&parent_id) {
             return;
-        };
+        }
 
         let new_id = self.nodes.keys().max().copied().unwrap_or(100) + 1;
 
@@ -319,6 +313,7 @@ impl AppState {
             self.ensure_grid_positions();
         }
         self.recalculate_roles();
+        self.ensure_valid_roots();
     }
 
 
