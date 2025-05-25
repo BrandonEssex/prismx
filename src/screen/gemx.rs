@@ -283,4 +283,7 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppStat
         animation: BeamXAnimationMode::PulseEntryRadiate,
     };
     beamx.render(f, area);
+    if !drawn_at.is_empty() && !state.root_nodes.is_empty() {
+        state.last_promoted_root = None;
+    }
 }

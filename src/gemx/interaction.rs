@@ -37,7 +37,7 @@ pub fn spawn_free_node(state: &mut AppState) {
 
     state.nodes.insert(new_id, node);
     state.root_nodes.push(new_id);
-    state.selected = Some(new_id);
+    state.set_selected(Some(new_id));
 }
 
 /// Determine which node is at the given coordinates considering current layout.
@@ -97,7 +97,7 @@ pub fn start_drag(state: &mut AppState, id: NodeID, x: u16, y: u16) {
     let wx = (state.scroll_x as f32 + (x as f32 / (bsx as f32 * zoom))).round() as i16;
     let wy = (state.scroll_y as f32 + (y as f32 / (bsy as f32 * zoom))).round() as i16;
     state.last_mouse = Some((wx, wy));
-    state.selected = Some(id);
+    state.set_selected(Some(id));
 }
 
 /// Update dragging node position based on new mouse coords.
