@@ -100,13 +100,12 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppStat
     // Ensure that every declared root node is represented in the drawn layout.
     for &root_id in &state.root_nodes {
         if !drawn_at.contains_key(&root_id) {
-            if state.auto_arrange {
-                let (layout, roles) =
-                    layout_nodes(&state.nodes, root_id, GEMX_HEADER_HEIGHT, area.width as i16, state.auto_arrange);
-                drawn_at.extend(layout);
-                node_roles.extend(roles);
-            } else if let Some(n) = state.nodes.get(&root_id) {
-                drawn_at.insert(root_id, Coords { x: n.x, y: n.y });
+            if let Some(n) = state.nodes.get(&root_id) {
+                let mut pos = Coords { x: n.x, y: n.y };
+                if pos.x == 0 && pos.y == 0 {
+                    pos = Coords { x: 5, y: 5 };
+                }
+                drawn_at.insert(root_id, pos);
                 node_roles.insert(root_id, LayoutRole::Root);
             }
         }
@@ -126,10 +125,9 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppStat
     let reachable_ids: HashSet<NodeID> = drawn_at.keys().copied().collect();
     if state.auto_arrange {
         for (id, node) in &state.nodes {
-            if reachable_ids.contains(id)
-                || state.root_nodes.contains(id)
+            if state.root_nodes.contains(id)
                 || drawn_at.contains_key(&id)
-                || state.fallback_this_frame
+                || reachable_ids.contains(id)
                 || state.fallback_promoted_this_session.contains(id)
             {
                 continue;
