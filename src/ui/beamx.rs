@@ -136,7 +136,8 @@ impl BeamX {
     }
 
     fn render_frame<B: Backend>(&self, f: &mut Frame<B>, area: Rect, tick: u64) {
-        let frame = tick % 24;
+        let frame8 = tick % 8;
+        let frame12 = tick % 12;
         let x = area.right().saturating_sub(7);
         let y = area.top();
 
@@ -144,39 +145,54 @@ impl BeamX {
         let status = Style::default().fg(self.style.status_color);
         let prism = Style::default().fg(self.style.prism_color);
 
-        match frame {
-            0..=2 => {
-                // Entry arrow
-                f.render_widget(Paragraph::new("⇙").style(status), Rect::new(x + 6, y, 1, 1));
-            }
-            3..=4 => {
-                f.render_widget(Paragraph::new("✦").style(prism), Rect::new(x + 3, y + 1, 1, 1));
-            }
-            5..=7 => {
-                f.render_widget(Paragraph::new("X").style(prism.add_modifier(Modifier::BOLD)), Rect::new(x + 3, y + 1, 1, 1));
-            }
-            8..=10 => {
-                f.render_widget(Paragraph::new("X").style(prism.add_modifier(Modifier::BOLD)), Rect::new(x + 3, y + 1, 1, 1));
-                f.render_widget(Paragraph::new("⬉").style(border), Rect::new(x, y, 1, 1));
-                f.render_widget(Paragraph::new("⬊").style(border), Rect::new(x + 6, y + 2, 1, 1));
-            }
-            11..=14 => {
-                let b = border.add_modifier(Modifier::BOLD);
-                f.render_widget(Paragraph::new("X").style(prism.add_modifier(Modifier::BOLD)), Rect::new(x + 3, y + 1, 1, 1));
-                f.render_widget(Paragraph::new("⬉").style(b), Rect::new(x, y, 1, 1));
-                f.render_widget(Paragraph::new("⬊").style(b), Rect::new(x + 6, y + 2, 1, 1));
-            }
-            15..=19 => {
-                let dim_border = border.add_modifier(Modifier::DIM);
-                let dim_status = status.add_modifier(Modifier::DIM);
-                f.render_widget(Paragraph::new("⇙").style(dim_status), Rect::new(x + 6, y, 1, 1));
-                f.render_widget(Paragraph::new("⬉").style(dim_border), Rect::new(x, y, 1, 1));
-                f.render_widget(Paragraph::new("⬊").style(dim_border), Rect::new(x + 6, y + 2, 1, 1));
-            }
-            _ => {
-                // Idle / reset
-                f.render_widget(Paragraph::new("X").style(prism), Rect::new(x + 3, y + 1, 1, 1));
-            }
-        }
+        let entry_glyph = match frame8 {
+            0 | 1 => "⇙",
+            2 | 3 => "⟱",
+            4 | 5 => "⬊",
+            6 | 7 => "⬇",
+            _ => "⇙",
+        };
+
+        let exit_glyph = match frame8 {
+            0 => "⬉",
+            1 => "⭱",
+            2 => "⟰",
+            3 => "⬆",
+            4 => "⬉",
+            _ => " ",
+        };
+
+        let center_glyph = match frame12 {
+            0 => "·",
+            1 => "✦",
+            2 => "◆",
+            3 => "✷",
+            4 => "✸",
+            5 => "x",
+            6 => "X",
+            7 => "✸",
+            8 => "✷",
+            9 => "◆",
+            10 => "✦",
+            _ => "·",
+        };
+
+        let center_style = if center_glyph == "X" {
+            prism.add_modifier(Modifier::BOLD)
+        } else {
+            prism
+        };
+
+        // Exit beams around the center
+        f.render_widget(Paragraph::new(exit_glyph).style(border), Rect::new(x, y, 1, 1));
+        f.render_widget(Paragraph::new(exit_glyph).style(border), Rect::new(x + 6, y + 2, 1, 1));
+        f.render_widget(Paragraph::new(exit_glyph).style(border), Rect::new(x, y + 2, 1, 1));
+        f.render_widget(Paragraph::new(exit_glyph).style(border), Rect::new(x + 6, y, 1, 1));
+
+        // Center pulse
+        f.render_widget(Paragraph::new(center_glyph).style(center_style), Rect::new(x + 3, y + 1, 1, 1));
+
+        // Entry beam always appears in the top-right corner
+        f.render_widget(Paragraph::new(entry_glyph).style(status), Rect::new(x + 6, y, 1, 1));
     }
 }
