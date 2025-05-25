@@ -39,6 +39,7 @@ pub fn render_settings<B: Backend>(f: &mut Frame<B>, area: Rect) {
     let beamx = BeamX {
         tick,
         enabled: true,
+        mode: BeamXMode::Settings,
         style: BeamXStyle::from(BeamXMode::Settings),
         animation: BeamXAnimationMode::PulseEntryRadiate,
     };

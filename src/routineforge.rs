@@ -36,6 +36,7 @@ pub fn render_triage_panel(f: &mut PluginFrame<'_>, area: Rect, state: &mut AppS
     let beamx = BeamX {
         tick,
         enabled: true,
+        mode: BeamXMode::Triage,
         style: BeamXStyle::from(BeamXMode::Triage),
         animation: BeamXAnimationMode::PulseEntryRadiate,
     };

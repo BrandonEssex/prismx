@@ -25,6 +25,7 @@ pub fn render_triage<B: Backend>(f: &mut Frame<B>, area: Rect) {
     let beamx = BeamX {
         tick,
         enabled: true,
+        mode: BeamXMode::Triage,
         style: BeamXStyle::from(BeamXMode::Triage),
         animation: BeamXAnimationMode::PulseEntryRadiate,
     };
