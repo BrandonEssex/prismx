@@ -37,7 +37,7 @@ pub fn render_favorites_dock<B: Backend>(f: &mut Frame<B>, area: Rect, state: &m
         for (i, entry) in favorites.iter().enumerate() {
             let gx = x + i as u16 * 3;
             let rect = Rect::new(gx, y, 2, 1);
-            f.render_widget(Paragraph::new(entry.icon).style(style), rect);
+            f.render_widget(Paragraph::new(entry.icon).style(base_style), rect);
             state.dock_entry_bounds.push((rect, entry.command.to_string()));
         }
 

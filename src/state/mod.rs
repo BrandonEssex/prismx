@@ -205,32 +205,6 @@ impl AppState {
         self.last_promoted_root = None;
     }
 
-    pub fn favorite_entries(&self) -> Vec<FavoriteEntry> {
-        let default_favorites = [
-            ("⚙️", "/settings"),
-            ("📬", "/triage"),
-            ("💭", "/gemx"),
-            ("🧘", "/zen"),
-            ("🔍", "/spotlight"),
-        ];
-
-        let mut all: Vec<FavoriteEntry> = default_favorites
-            .iter()
-            .map(|&(icon, cmd)| FavoriteEntry { icon, command: cmd })
-            .chain(self.plugin_favorites.iter().cloned())
-            .take(5)
-            .collect();
-
-        if self.mode == "gemx" && all.len() >= 3 {
-            all[2].icon = "💬";
-        }
-        if (self.mode == "triage" || self.show_triage) && all.len() >= 2 {
-            all[1].icon = "📫";
-        }
-
-        all
-    }
-
     pub fn dock_focus_prev(&mut self) {
         let len = self.favorite_entries().len();
         if len == 0 {
