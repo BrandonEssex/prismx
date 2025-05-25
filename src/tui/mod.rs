@@ -247,6 +247,12 @@ pub fn launch_ui() -> std::io::Result<()> {
                     continue;
                 }
 
+                if state.zen_toolbar_open {
+                    state.zen_toolbar_handle_key(code);
+                    draw(&mut terminal, &mut state, &last_key)?;
+                    continue;
+                }
+
                 // 🎯 Hotkeys
                 if match_hotkey("quit", code, modifiers, &state) {
                     break;
@@ -296,6 +302,12 @@ pub fn launch_ui() -> std::io::Result<()> {
                     state.export_zen_to_file();
                 } else if match_hotkey("mode_zen", code, modifiers, &state) {
                     state.mode = "zen".into();
+                } else if code == KeyCode::Char('t')
+                    && modifiers == KeyModifiers::CONTROL
+                    && state.mode == "zen"
+                {
+                    state.zen_toolbar_open = !state.zen_toolbar_open;
+                    state.zen_toolbar_index = 0;
                 } else if match_hotkey("toggle_collapsed", code, modifiers, &state) && state.mode == "gemx" {
                     state.toggle_collapse();
                 } else if match_hotkey("drill_down", code, modifiers, &state) {
