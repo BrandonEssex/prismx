@@ -126,8 +126,8 @@ pub fn render_full_border<B: Backend>(
     beamx_enabled: bool,
 ) {
     let fg = Style::default().fg(style.border_color);
-    let right = area.x + area.width - 1;
-    let bottom = area.y + area.height - 1;
+    let right = area.x + area.width.saturating_sub(1);
+    let bottom = area.y + area.height.saturating_sub(1);
 
     let tl = Paragraph::new("┏").style(fg);
     f.render_widget(tl, Rect::new(area.x, area.y, 1, 1));
@@ -164,8 +164,11 @@ pub fn render_full_border<B: Backend>(
         let p = Paragraph::new("━").style(fg);
         f.render_widget(p, Rect::new(x, bottom, 1, 1));
     }
-    let br = Paragraph::new("┛").style(fg);
-    f.render_widget(br, Rect::new(right, bottom, 1, 1));
+    // Skip lower-right corner artifact if outside bounds
+    if right >= area.x && bottom >= area.y {
+        let br = Paragraph::new("┛").style(fg);
+        f.render_widget(br, Rect::new(right, bottom, 1, 1));
+    }
 }
 
 

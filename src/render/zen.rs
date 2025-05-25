@@ -45,6 +45,7 @@ pub fn render_zen_journal<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppS
     let beamx = BeamX {
         tick,
         enabled: true,
+        mode: BeamXMode::Zen,
         style: BeamXStyle::from(BeamXMode::Zen),
         animation: BeamXAnimationMode::PulseEntryRadiate,
     };

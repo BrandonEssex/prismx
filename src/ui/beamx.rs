@@ -41,12 +41,14 @@ pub enum BeamXMode {
     Triage,
     Spotlight,
     Settings,
+    Debug,
 }
 
 /// Animation themes for [`BeamX`].
 #[derive(Copy, Clone)]
 pub enum BeamXAnimationMode {
     PulseEntryRadiate,
+    FadeOut,
     // Future: ZenFade,
     // Future: SpotlightBlink,
     // Future: DebugFlash,
@@ -61,6 +63,7 @@ impl Default for BeamXAnimationMode {
 pub struct BeamX {
     pub tick: u64,
     pub enabled: bool,
+    pub mode: BeamXMode,
     pub style: BeamXStyle,
     pub animation: BeamXAnimationMode,
 }
@@ -125,6 +128,18 @@ impl From<BeamXMode> for BeamXStyle {
                 bottom_right: "-",
                 pulse: &DEFAULT_PULSE,
             },
+            BeamXMode::Debug => Self {
+                border_color: Color::Yellow,
+                status_color: Color::Yellow,
+                prism_color: Color::White,
+                top_left: "⬊",
+                bottom_left: "⬈",
+                left: "⥤",
+                right: "⥢",
+                top_right: "⬋",
+                bottom_right: "⬉",
+                pulse: &DEFAULT_PULSE,
+            },
             BeamXMode::Default => Self {
                 border_color: Color::Magenta,
                 status_color: Color::Cyan,
@@ -147,9 +162,17 @@ impl BeamX {
             return;
         }
 
+        if matches!(self.mode, BeamXMode::Debug) {
+            eprintln!("Shimmer bounds: {} \u{2192} {}", area.x, area.x + area.width);
+        }
+
         match self.animation {
             BeamXAnimationMode::PulseEntryRadiate => {
                 self.render_frame(f, area, self.tick);
+            }
+            BeamXAnimationMode::FadeOut => {
+                self.render_frame(f, area, self.tick);
+                self.render_shimmer(f, area);
             }
         }
     }
@@ -231,5 +254,21 @@ impl BeamX {
         // Entry beams stacked in the top-right corner
         render_glyph(f, x + 11, y + 0, entry_glyph, entry_style);
         render_glyph(f, x + 9, y + 1, entry_glyph, entry_style);
+    }
+
+    fn render_shimmer<B: Backend>(&self, f: &mut Frame<B>, area: Rect) {
+        let start_x = area.right().saturating_sub(12);
+        let end_x = area.x + area.width;
+        let y = area.y;
+        for sx in start_x..end_x {
+            if sx == area.x + area.width - 1 && y == area.y + area.height - 1 {
+                continue; // Prevent corner glyph artifact
+            }
+            let mut style = Style::default().fg(self.style.status_color);
+            if sx + 1 >= end_x {
+                style = style.add_modifier(Modifier::DIM);
+            }
+            render_glyph(f, sx, y, "━", style);
+        }
     }
 }

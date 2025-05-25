@@ -269,6 +269,7 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppStat
     let beamx = BeamX {
         tick,
         enabled: true,
+        mode: BeamXMode::Default,
         style: BeamXStyle::from(BeamXMode::Default),
         animation: BeamXAnimationMode::PulseEntryRadiate,
     };
