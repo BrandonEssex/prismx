@@ -1,0 +1,8 @@
+{
+  "id": "root",
+  "title": "PrismX",
+  "children": [
+    { "id": "n1", "title": "Welcome", "children": [] },
+    { "id": "n2", "title": "Docs", "children": [] }
+  ]
+}
