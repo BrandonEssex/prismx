@@ -21,6 +21,17 @@ pub enum DockLayout {
     Horizontal,
 }
 
+#[derive(Debug)]
+pub enum SimInput {
+    Enter,
+    Tab,
+    Delete,
+    Drill,
+    Pop,
+    Undo,
+    Redo,
+}
+
 pub struct AppState {
     pub mode: String,
     pub zen_buffer: Vec<String>,
@@ -61,6 +72,7 @@ pub struct AppState {
     pub layout_warning_logged: bool,
     pub debug_input_mode: bool,
     pub debug_border: bool,
+    pub simulate_input_queue: VecDeque<SimInput>,
     pub status_message: String,
     pub status_message_last_updated: Option<std::time::Instant>,
     pub plugin_host: PluginHost,
@@ -122,6 +134,7 @@ impl Default for AppState {
             layout_warning_logged: false,
             debug_input_mode: true,
             debug_border: std::env::var("PRISMX_DEBUG_BORDER").is_ok(),
+            simulate_input_queue: VecDeque::new(),
             status_message: String::new(),
             status_message_last_updated: None,
             plugin_host: PluginHost::new(),
@@ -425,6 +438,19 @@ impl AppState {
             if let Ok(flag) = value.parse::<bool>() {
                 self.favorite_dock_enabled = flag;
             }
+        } else if input.starts_with("/simulate") {
+            for token in input.split_whitespace().skip(1) {
+                match token.to_lowercase().as_str() {
+                    "enter" => self.simulate_input_queue.push_back(SimInput::Enter),
+                    "tab" => self.simulate_input_queue.push_back(SimInput::Tab),
+                    "delete" => self.simulate_input_queue.push_back(SimInput::Delete),
+                    "drill" => self.simulate_input_queue.push_back(SimInput::Drill),
+                    "pop" => self.simulate_input_queue.push_back(SimInput::Pop),
+                    "undo" => self.simulate_input_queue.push_back(SimInput::Undo),
+                    "redo" => self.simulate_input_queue.push_back(SimInput::Redo),
+                    _ => continue,
+                }
+            }
         } else {
             match input {
                 "/triage" => self.mode = "triage".into(),
@@ -539,6 +565,18 @@ impl AppState {
         if let Some(id) = self.selected {
             crate::layout::zoom_to_anchor(self, id);
         }
+    }
+
+    pub fn drill_selected(&mut self) {
+        self.drawing_root = self.selected;
+        self.fallback_this_frame = false;
+        self.clear_fallback_promotions();
+    }
+
+    pub fn pop_stack(&mut self) {
+        self.drawing_root = None;
+        self.fallback_this_frame = false;
+        self.clear_fallback_promotions();
     }
 
     pub fn clear_fallback_promotions(&mut self) {
