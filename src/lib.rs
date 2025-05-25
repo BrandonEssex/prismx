@@ -27,3 +27,4 @@ pub mod settings;
 #[path = "state/mod.rs"]
 pub mod state;
 pub mod shortcuts;
+pub mod spotlight_task;

@@ -138,6 +138,9 @@ pub struct AppState {
     pub zen_journal_view: ZenJournalView,
     pub zen_compose_input: String,
     pub zen_journal_entries: Vec<ZenJournalEntry>,
+    pub spotlight_results: Vec<crate::spotlight::SpotlightResult>,
+    #[allow(clippy::option_option)]
+    pub spotlight_task: Option<crate::spotlight_task::SpotlightTask>,
 
 
 }
@@ -219,6 +222,8 @@ impl Default for AppState {
             zen_journal_view: ZenJournalView::Compose,
             zen_compose_input: String::new(),
             zen_journal_entries: Vec::new(),
+            spotlight_results: Vec::new(),
+            spotlight_task: None,
 
         };
 
@@ -255,6 +260,26 @@ impl AppState {
     pub fn set_selected(&mut self, id: Option<NodeID>) {
         self.selected = id;
         self.last_promoted_root = None;
+    }
+
+    pub fn start_spotlight_index(&mut self) {
+        if let Some(task) = self.spotlight_task.take() {
+            task.cancel();
+        }
+        let nodes = self.nodes.clone();
+        let query = self.spotlight_input.clone();
+        let task = crate::spotlight_task::SpotlightTask::spawn(nodes, query);
+        self.spotlight_results.clear();
+        self.spotlight_task = Some(task);
+    }
+
+    pub fn poll_spotlight_results(&mut self) {
+        if let Some(task) = &self.spotlight_task {
+            if let Ok(results) = task.result_rx.try_recv() {
+                self.spotlight_results = results;
+                self.spotlight_task.take();
+            }
+        }
     }
 
     pub fn dock_focus_prev(&mut self) {

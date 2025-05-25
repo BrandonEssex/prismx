@@ -74,4 +74,24 @@ pub fn render_spotlight<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut Ap
             Rect::new(x_offset, y, width, 1),
         );
     }
+
+    let start_y = y_offset + 2 + matches.len() as u16;
+    for (idx, result) in state.spotlight_results.iter().take(5).enumerate() {
+        let y = start_y + idx as u16;
+        let label = match result {
+            crate::spotlight::SpotlightResult::Node(id) => {
+                state.nodes.get(id).map(|n| n.label.as_str()).unwrap_or("")
+            }
+            crate::spotlight::SpotlightResult::Command(cmd) => cmd.as_str(),
+            crate::spotlight::SpotlightResult::Tag(tag) => tag.as_str(),
+            crate::spotlight::SpotlightResult::Jump(id) => {
+                state.nodes.get(id).map(|n| n.label.as_str()).unwrap_or("")
+            }
+        };
+        let style = Style::default().fg(Color::Yellow);
+        f.render_widget(
+            Paragraph::new(label).style(style),
+            Rect::new(x_offset, y, width, 1),
+        );
+    }
 }

@@ -146,6 +146,8 @@ pub fn launch_ui() -> std::io::Result<()> {
             state.set_selected(Some(first));
         }
 
+        state.poll_spotlight_results();
+
         state.auto_save_zen();
 
         if let Some(sim_input) = state.simulate_input_queue.pop_front() {
@@ -197,10 +199,12 @@ pub fn launch_ui() -> std::io::Result<()> {
                         KeyCode::Char(c) => {
                             state.spotlight_input.push(c);
                             state.spotlight_history_index = None;
+                            state.start_spotlight_index();
                         }
                         KeyCode::Backspace => {
                             state.spotlight_input.pop();
                             state.spotlight_history_index = None;
+                            state.start_spotlight_index();
                         }
                         KeyCode::Up => {
                             if state.spotlight_history.is_empty() {
@@ -212,9 +216,11 @@ pub fn launch_ui() -> std::io::Result<()> {
                                 if let Some(idx) = state.spotlight_history_index {
                                     state.spotlight_input = state.spotlight_history[idx].clone();
                                 }
+                                state.start_spotlight_index();
                             } else {
                                 state.spotlight_history_index = Some(0);
                                 state.spotlight_input = state.spotlight_history[0].clone();
+                                state.start_spotlight_index();
                             }
                         }
                         KeyCode::Down => {
@@ -224,9 +230,11 @@ pub fn launch_ui() -> std::io::Result<()> {
                                     if let Some(idx) = state.spotlight_history_index {
                                         state.spotlight_input = state.spotlight_history[idx].clone();
                                     }
+                                    state.start_spotlight_index();
                                 } else {
                                     state.spotlight_history_index = None;
                                     state.spotlight_input.clear();
+                                    state.start_spotlight_index();
                                 }
                             }
                         }
@@ -244,6 +252,9 @@ pub fn launch_ui() -> std::io::Result<()> {
                 {
                     state.show_spotlight = !state.show_spotlight;
                     state.spotlight_history_index = None;
+                    if state.show_spotlight {
+                        state.start_spotlight_index();
+                    }
                     draw(&mut terminal, &mut state, &last_key)?;
                     continue;
                 }
