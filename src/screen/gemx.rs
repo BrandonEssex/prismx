@@ -38,6 +38,15 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppStat
         return;
     }
 
+    if let Some(sel) = state.selected {
+        if !state.nodes.contains_key(&sel) {
+            state.selected = None;
+        }
+    }
+    if state.selected.is_none() {
+        return;
+    }
+
 
     // // ✅ Always print the structure for diagnostics
     // println!("=== NODES AND CHILDREN ===");

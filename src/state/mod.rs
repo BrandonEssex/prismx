@@ -240,43 +240,42 @@ impl AppState {
     }
 
     pub fn add_child(&mut self) {
-        if let Some(parent_id) = self.selected {
-            if !self.nodes.contains_key(&parent_id) {
-                return;
-            }
+        let parent_id = match self.selected {
+            Some(id) if self.nodes.contains_key(&id) => id,
+            _ => return,
+        };
 
-            let new_id = self.nodes.keys().max().copied().unwrap_or(100) + 1;
+        let new_id = self.nodes.keys().max().copied().unwrap_or(100) + 1;
 
-            let mut child = Node::new(new_id, "New Child", Some(parent_id));
-            if let Some(parent) = self.nodes.get(&parent_id) {
-                child.x = parent.x;
-                child.y = parent.y + 1;
-            }
-
-            self.nodes.insert(new_id, child);
-            if let Some(parent) = self.nodes.get_mut(&parent_id) {
-                parent.children.push(new_id);
-            }
-
-            if !self.root_nodes.contains(&parent_id) {
-                self.root_nodes.push(parent_id);
-            }
-
-            self.set_selected(Some(new_id));
-            if !self.auto_arrange {
-                self.ensure_grid_positions();
-            }
-            self.recalculate_roles();
-            self.ensure_valid_roots();
+        let mut child = Node::new(new_id, "New Child", Some(parent_id));
+        if let Some(parent) = self.nodes.get(&parent_id) {
+            child.x = parent.x;
+            child.y = parent.y + 1;
         }
+
+        self.nodes.insert(new_id, child);
+        if let Some(parent) = self.nodes.get_mut(&parent_id) {
+            parent.children.push(new_id);
+        }
+
+        if !self.root_nodes.contains(&parent_id) {
+            self.root_nodes.push(parent_id);
+        }
+
+        self.set_selected(Some(new_id));
+        if !self.auto_arrange {
+            self.ensure_grid_positions();
+        }
+        self.recalculate_roles();
+        self.ensure_valid_roots();
     }
 
     pub fn add_sibling(&mut self) {
-        if let Some(selected_id) = self.selected {
-            if !self.nodes.contains_key(&selected_id) {
-                return;
-            }
-            let parent_id = self.nodes.get(&selected_id).and_then(|n| n.parent);
+        let selected_id = match self.selected {
+            Some(id) if self.nodes.contains_key(&id) => id,
+            _ => return,
+        };
+        let parent_id = self.nodes.get(&selected_id).and_then(|n| n.parent);
 
             let new_id = self.nodes.keys().max().copied().unwrap_or(100) + 1;
             let mut sibling = Node::new(new_id, "New Sibling", parent_id);
@@ -307,7 +306,6 @@ impl AppState {
             }
             self.recalculate_roles();
         }
-    }
 
 
     pub fn delete_node(&mut self) {

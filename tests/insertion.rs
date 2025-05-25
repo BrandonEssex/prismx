@@ -45,3 +45,25 @@ fn missing_parent_becomes_free() {
     let (_c, roles) = layout_nodes(&state.nodes, root, 0, 80, true);
     assert_eq!(roles.get(&new_id), Some(&LayoutRole::Free));
 }
+
+#[test]
+fn tab_requires_valid_selection() {
+    let mut state = AppState::default();
+    state.selected = Some(999);
+    let count = state.nodes.len();
+    state.add_child();
+    assert_eq!(state.nodes.len(), count);
+}
+
+#[test]
+fn tab_after_enter_keeps_child_reachable() {
+    let mut state = AppState::default();
+    if let Some(b) = state.nodes.get_mut(&2) { b.x = 10; }
+    state.add_sibling();
+    let sibling = state.selected.unwrap();
+    state.add_child();
+    let child = state.selected.unwrap();
+    let parent = state.nodes.get(&child).unwrap().parent;
+    assert!(parent.is_some());
+    assert!(state.nodes.get(&parent.unwrap()).unwrap().children.contains(&child));
+}
