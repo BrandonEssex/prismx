@@ -176,11 +176,9 @@ fn layout_recursive_safe(
     };
 
     let role = if depth == 0 {
-        if auto_arrange {
-            LayoutRole::Root
-        } else {
-            LayoutRole::Free
-        }
+        // Always treat the initial node as a root regardless of mode so that
+        // fallback-promoted nodes remain visible.
+        LayoutRole::Root
     } else {
         match node.parent {
             Some(pid) => {
