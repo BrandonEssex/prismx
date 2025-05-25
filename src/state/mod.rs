@@ -1050,9 +1050,9 @@ impl AppState {
                     continue;
                 }
                 let op = &self.nodes[&other];
-                if (y - (op.y + crate::layout::CHILD_SPACING_Y)).abs() <= 1
+                if y > op.y
+                    && (y - op.y) <= crate::layout::CHILD_SPACING_Y + 1
                     && (x - op.x).abs() <= 1
-                    && y > op.y
                 {
                     parent_id = Some(other);
                     break;
@@ -1083,7 +1083,10 @@ impl AppState {
         // Apply structure and lock child positions
         for &id in &ids {
             if let Some(parent_id) = new_parents[&id] {
-                crate::log_debug!(self, "Assigning parent {:?} to node {}", parent_id, id);
+                if parent_id == id {
+                    continue;
+                }
+                crate::log_debug!(self, "Assigning parent {:?} \u{2192} {}", parent_id, id);
                 let (px, py) = {
                     let p = &self.nodes[&parent_id];
                     (p.x, p.y)

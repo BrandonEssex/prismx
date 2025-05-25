@@ -85,7 +85,6 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppStat
                 oy,
                 area.width as i16,
                 state.auto_arrange,
-                state.debug_input_mode,
             );
             for pos in layout.values_mut() {
                 pos.x += ox;
@@ -112,7 +111,6 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppStat
                 0,
                 area.width as i16,
                 state.auto_arrange,
-                state.debug_input_mode,
             );
             node_roles.extend(roles);
         }
@@ -149,6 +147,9 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppStat
     if state.auto_arrange {
         let node_ids: Vec<NodeID> = state.nodes.keys().copied().collect();
         for id in node_ids {
+            if state.fallback_this_frame {
+                continue;
+            }
             let node = match state.nodes.get(&id) {
                 Some(n) => n,
                 None => continue,
@@ -194,15 +195,7 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppStat
             drawn_at.insert(id, Coords { x: n.x, y: n.y });
             node_roles.insert(id, LayoutRole::Root);
 
-            if state.debug_input_mode {
-                eprintln!(
-                    "✅ Promoted Node {}: x={}, y={}, role={:?}",
-                    id,
-                    n.x,
-                    n.y,
-                    node_roles.get(&id)
-                );
-            }
+            crate::log_debug!(state, "\u{26a0} Promoted Node {} to root (label-safe)", id);
 
             break;
         }
