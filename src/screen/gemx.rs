@@ -3,7 +3,7 @@ use ratatui::widgets::{Block, Borders, Paragraph};
 use crate::layout::{
     layout_nodes, Coords, LayoutRole, PackRegion, GEMX_HEADER_HEIGHT,
     CHILD_SPACING_Y, subtree_span, subtree_depth, spacing_for_zoom,
-    BASE_SPACING_X, BASE_SPACING_Y,
+    BASE_SPACING_X, BASE_SPACING_Y, SIBLING_SPACING_X,
 };
 use crate::node::{NodeID, NodeMap};
 use crate::state::AppState;
@@ -125,11 +125,16 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppStat
     use std::collections::HashSet;
     let reachable_ids: HashSet<NodeID> = drawn_at.keys().copied().collect();
     if state.auto_arrange {
-        for (id, node) in &state.nodes {
-            if state.root_nodes.contains(id)
+        let node_ids: Vec<NodeID> = state.nodes.keys().copied().collect();
+        for id in node_ids {
+            let node = match state.nodes.get(&id) {
+                Some(n) => n,
+                None => continue,
+            };
+            if state.root_nodes.contains(&id)
                 || drawn_at.contains_key(&id)
-                || reachable_ids.contains(id)
-                || state.fallback_promoted_this_session.contains(id)
+                || reachable_ids.contains(&id)
+                || state.fallback_promoted_this_session.contains(&id)
             {
                 continue;
             }
@@ -137,14 +142,25 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppStat
                 continue;
             }
 
-            state.root_nodes.push(*id);
+            state.root_nodes.push(id);
             state.root_nodes.sort_unstable();
             state.root_nodes.dedup();
             state.fallback_this_frame = true;
-            state.fallback_promoted_this_session.insert(*id);
+            state.fallback_promoted_this_session.insert(id);
 
-            drawn_at.insert(*id, Coords { x: 5, y: GEMX_HEADER_HEIGHT + 2 });
-            node_roles.insert(*id, LayoutRole::Root);
+            let fallback_x =
+                5 + (state.root_nodes.len() as i16 % 10) * SIBLING_SPACING_X;
+            let fallback_y = GEMX_HEADER_HEIGHT + 2;
+
+            if let Some(n) = state.nodes.get_mut(&id) {
+                if n.x == 0 && n.y == 0 {
+                    n.x = fallback_x;
+                    n.y = fallback_y;
+                }
+            }
+
+            drawn_at.insert(id, Coords { x: fallback_x, y: fallback_y });
+            node_roles.insert(id, LayoutRole::Root);
 
             if state.debug_input_mode {
                 eprintln!("⚠ Promoted Node {} to root (label-safe)", id);
@@ -290,11 +306,25 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppStat
         }
 
         let para = Paragraph::new(label).style(style);
-        f.render_widget(para, Rect::new(draw_x, draw_y, width as u16, 1));
+        let safe_width = std::cmp::min(width as u16, area.width);
+        let safe_rect = Rect::new(
+            draw_x.min(area.width.saturating_sub(1)),
+            draw_y.min(area.height.saturating_sub(1)),
+            safe_width,
+            1u16.min(area.height),
+        );
+        f.render_widget(para, safe_rect);
         if state.debug_input_mode && std::env::var("PRISMX_TEST").is_err() {
-            f.render_widget(Paragraph::new("■").style(style), Rect::new(draw_x, draw_y, 1, 1));
+            let mark_rect = Rect::new(
+                draw_x.min(area.width.saturating_sub(1)),
+                draw_y.min(area.height.saturating_sub(1)),
+                1u16.min(area.width),
+                1u16.min(area.height),
+            );
+            f.render_widget(Paragraph::new("■").style(style), mark_rect);
             if x == 0 {
-                f.render_widget(Paragraph::new("■"), Rect::new(1, draw_y, 1, 1));
+                let r = Rect::new(1, draw_y.min(area.height.saturating_sub(1)), 1, 1);
+                f.render_widget(Paragraph::new("■"), r);
             }
         }
     }
