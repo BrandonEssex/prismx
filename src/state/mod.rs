@@ -308,10 +308,30 @@ impl AppState {
 
         let new_id = self.nodes.keys().max().copied().unwrap_or(100) + 1;
 
-        let mut child = Node::new(new_id, "New Child", Some(parent_id));
+        if parent_id == new_id {
+            eprintln!("❌ Invalid insert: node cannot parent itself.");
+            return;
+        }
+
         if let Some(parent) = self.nodes.get(&parent_id) {
-            child.x = parent.x;
-            child.y = parent.y + 1;
+            if parent.children.contains(&parent_id) {
+                eprintln!("❌ Cycle detected: parent already linked to self.");
+                return;
+            }
+        }
+
+        let mut child = Node::new(new_id, "New Child", Some(parent_id));
+        if self.auto_arrange {
+            if let Some(parent) = self.nodes.get(&parent_id) {
+                child.x = parent.x;
+                child.y = parent.y + 1;
+            }
+        } else {
+            let base_x = 6 + ((self.nodes.len() as i16) % 10) * SIBLING_SPACING_X;
+            let base_y =
+                GEMX_HEADER_HEIGHT + 2 + ((self.nodes.len() as i16) / 10) * CHILD_SPACING_Y;
+            child.x = base_x;
+            child.y = base_y;
         }
 
         self.nodes.insert(new_id, child);

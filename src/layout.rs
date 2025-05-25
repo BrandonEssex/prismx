@@ -124,6 +124,7 @@ pub fn layout_nodes(
     start_y: i16,
     term_width: i16,
     auto_arrange: bool,
+    debug_input_mode: bool,
 ) -> (HashMap<NodeID, Coords>, HashMap<NodeID, LayoutRole>) {
     let start_y = start_y.max(GEMX_HEADER_HEIGHT);
     let start_x = if auto_arrange { 0 } else { term_width / 2 };
@@ -141,6 +142,7 @@ pub fn layout_nodes(
         auto_arrange,
         &mut visited,
         0,
+        debug_input_mode,
     );
 
     if let Some(min_x) = coords.values().map(|c| c.x).min() {
@@ -165,8 +167,15 @@ fn layout_recursive_safe(
     auto_arrange: bool,
     visited: &mut HashSet<NodeID>,
     depth: usize,
+    debug_input_mode: bool,
 ) -> (i16, i16, i16) {
     if !visited.insert(node_id) || depth > MAX_LAYOUT_DEPTH {
+        if debug_input_mode {
+            eprintln!(
+                "⚠️ Recursion halted: Node {} already visited or max depth exceeded.",
+                node_id
+            );
+        }
         return (y, x, x);
     }
 
@@ -220,6 +229,7 @@ fn layout_recursive_safe(
             auto_arrange,
             visited,
             depth + 1,
+            debug_input_mode,
         );
         max_y = max_y.max(cy);
         min_x_span = min_x_span.min(mi);

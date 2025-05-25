@@ -66,7 +66,14 @@ pub fn node_at_position(state: &AppState, x: u16, y: u16) -> Option<NodeID> {
             let w = subtree_span(&state.nodes, root_id);
             let h = subtree_depth(&state.nodes, root_id) * CHILD_SPACING_Y + 1;
             let (ox, oy) = pack.insert((w, h));
-            let (mut l, _roles) = layout_nodes(&state.nodes, root_id, oy, tw as i16, state.auto_arrange);
+            let (mut l, _roles) = layout_nodes(
+                &state.nodes,
+                root_id,
+                oy,
+                tw as i16,
+                state.auto_arrange,
+                state.debug_input_mode,
+            );
             for pos in l.values_mut() {
                 pos.x += ox;
             }
