@@ -322,6 +322,8 @@ pub fn launch_ui() -> std::io::Result<()> {
                     state.export_zen_to_file();
                 } else if match_hotkey("mode_zen", code, modifiers, &state) {
                     state.mode = "zen".into();
+                } else if match_hotkey("zen_toggle_theme", code, modifiers, &state) && state.mode == "zen" {
+                    state.cycle_zen_theme();
                 } else if code == KeyCode::Char('t')
                     && modifiers == KeyModifiers::CONTROL
                     && state.mode == "zen"

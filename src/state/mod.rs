@@ -41,6 +41,23 @@ pub enum SimInput {
     Redo,
 }
 
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+pub enum ZenSyntax {
+    Markdown,
+    Rust,
+    Shell,
+    Yaml,
+    Json,
+    None,
+}
+
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+pub enum ZenTheme {
+    DarkGray,
+    Light,
+    HighContrast,
+}
+
 pub struct AppState {
     pub mode: String,
     pub zen_buffer: Vec<String>,
@@ -104,6 +121,8 @@ pub struct AppState {
     pub zen_last_saved: Option<std::time::Instant>,
     pub zen_current_filename: String,
     pub zen_word_count: usize,
+    pub zen_current_syntax: ZenSyntax,
+    pub zen_theme: ZenTheme,
 
 
 }
@@ -180,7 +199,8 @@ impl Default for AppState {
             zen_last_saved: None,
             zen_current_filename: "draft.prismx".into(),
             zen_word_count: 0,
-
+            zen_current_syntax: ZenSyntax::Markdown,
+            zen_theme: ZenTheme::DarkGray,
 
         };
 
@@ -511,7 +531,8 @@ impl AppState {
     }
 
     pub fn execute_spotlight_command(&mut self) {
-        let input = self.spotlight_input.trim();
+        let command = self.spotlight_input.clone();
+        let input = command.trim();
         crate::log_debug!(self, "Executing spotlight: {}", input);
         if !input.is_empty() {
             self.spotlight_history.push_front(input.to_string());
@@ -588,6 +609,13 @@ impl AppState {
                 self.zen_toolbar_open = !self.zen_toolbar_open;
                 self.zen_toolbar_index = 0;
             }
+            _ if input.starts_with("/open ") => {
+                let path = input.trim_start_matches("/open ").trim();
+                if !path.is_empty() {
+                    self.open_zen_file(path);
+                    self.mode = "zen".into();
+                }
+            }
             "/clear" => self.zen_buffer = vec![String::new()],
             _ => {}
             }
@@ -643,6 +671,7 @@ impl AppState {
             self.zen_buffer = content.lines().map(|l| l.to_string()).collect();
             self.zen_buffer.push(String::new());
             self.zen_current_filename = path.to_string();
+            self.zen_current_syntax = Self::syntax_from_extension(path);
             self.update_zen_word_count();
             self.zen_dirty = false;
             self.add_recent_file(path);
@@ -802,6 +831,30 @@ impl AppState {
 
     pub fn toggle_debug_border(&mut self) {
         self.debug_border = !self.debug_border;
+    }
+
+    pub fn cycle_zen_theme(&mut self) {
+        self.zen_theme = match self.zen_theme {
+            ZenTheme::DarkGray => ZenTheme::Light,
+            ZenTheme::Light => ZenTheme::HighContrast,
+            ZenTheme::HighContrast => ZenTheme::DarkGray,
+        };
+    }
+
+    pub fn syntax_from_extension(path: &str) -> ZenSyntax {
+        let ext = std::path::Path::new(path)
+            .extension()
+            .and_then(|s| s.to_str())
+            .unwrap_or("")
+            .to_ascii_lowercase();
+        match ext.as_str() {
+            "md" | "markdown" => ZenSyntax::Markdown,
+            "rs" => ZenSyntax::Rust,
+            "sh" | "bash" => ZenSyntax::Shell,
+            "yml" | "yaml" => ZenSyntax::Yaml,
+            "json" => ZenSyntax::Json,
+            _ => ZenSyntax::None,
+        }
     }
 
     pub fn zoom_in(&mut self) {

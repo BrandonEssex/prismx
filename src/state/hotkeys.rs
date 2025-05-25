@@ -25,6 +25,7 @@ pub fn load_default_hotkeys() -> HashMap<String, String> {
     map.insert("start_link".into(), "ctrl-l".into());
     map.insert("redo".into(), "ctrl-shift-z".into());
     map.insert("toggle_snap_grid".into(), "ctrl-g".into());
+    map.insert("zen_toggle_theme".into(), "ctrl-a".into());
 
 
     map
