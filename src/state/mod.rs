@@ -92,8 +92,17 @@ pub struct AppState {
     pub favorite_dock_limit: usize,
     pub favorite_dock_layout: DockLayout,
     pub favorite_dock_enabled: bool,
+    pub dock_focus_index: Option<usize>,
     pub last_mouse_click: Option<(u16, u16)>,
     pub settings_focus_index: usize,
+    pub dock_entry_bounds: Vec<(ratatui::layout::Rect, String)>,
+    pub favorite_focus_index: Option<usize>,
+    pub zen_toolbar_open: bool,
+    pub zen_recent_files: Vec<String>,
+    pub zen_toolbar_index: usize,
+    pub zen_current_filename: String,
+    pub zen_word_count: usize,
+    pub zen_dirty: bool,
 
 }
 
@@ -157,8 +166,17 @@ impl Default for AppState {
             favorite_dock_limit: 3,
             favorite_dock_layout: DockLayout::Vertical,
             favorite_dock_enabled: true,
+            dock_focus_index: None,
             last_mouse_click: None,
             settings_focus_index: 0,
+            dock_entry_bounds: Vec::new(),
+            favorite_focus_index: None,
+            zen_toolbar_open: false,
+            zen_recent_files: vec!["README.md".into()],
+            zen_toolbar_index: 0,
+            zen_current_filename: "Untitled".into(),
+            zen_word_count: 0,
+            zen_dirty: false,
 
         };
 
@@ -176,6 +194,8 @@ impl Default for AppState {
             }
         }
 
+        state.update_zen_word_count();
+
         state
     }
 }
@@ -192,6 +212,68 @@ impl AppState {
     pub fn set_selected(&mut self, id: Option<NodeID>) {
         self.selected = id;
         self.last_promoted_root = None;
+    }
+
+    pub fn favorite_entries(&self) -> Vec<FavoriteEntry> {
+        let default_favorites = [
+            ("⚙️", "/settings"),
+            ("📬", "/triage"),
+            ("💭", "/gemx"),
+            ("🧘", "/zen"),
+            ("🔍", "/spotlight"),
+        ];
+
+        let mut all: Vec<FavoriteEntry> = default_favorites
+            .iter()
+            .map(|&(icon, cmd)| FavoriteEntry { icon, command: cmd })
+            .chain(self.plugin_favorites.iter().cloned())
+            .take(5)
+            .collect();
+
+        if self.mode == "gemx" && all.len() >= 3 {
+            all[2].icon = "💬";
+        }
+        if (self.mode == "triage" || self.show_triage) && all.len() >= 2 {
+            all[1].icon = "📫";
+        }
+
+        all
+    }
+
+    pub fn dock_focus_prev(&mut self) {
+        let len = self.favorite_entries().len();
+        if len == 0 {
+            self.dock_focus_index = None;
+            return;
+        }
+        self.dock_focus_index = Some(match self.dock_focus_index.unwrap_or(0) {
+            0 => len - 1,
+            i => i - 1,
+        });
+        if let Some(idx) = self.dock_focus_index {
+            if let Some(entry) = self.favorite_entries().get(idx) {
+                self.status_message = entry.command.to_string();
+                self.status_message_last_updated = Some(std::time::Instant::now());
+            }
+        }
+    }
+
+    pub fn dock_focus_next(&mut self) {
+        let len = self.favorite_entries().len();
+        if len == 0 {
+            self.dock_focus_index = None;
+            return;
+        }
+        self.dock_focus_index = Some(match self.dock_focus_index.unwrap_or(len - 1) {
+            i if i + 1 >= len => 0,
+            i => i + 1,
+        });
+        if let Some(idx) = self.dock_focus_index {
+            if let Some(entry) = self.favorite_entries().get(idx) {
+                self.status_message = entry.command.to_string();
+                self.status_message_last_updated = Some(std::time::Instant::now());
+            }
+        }
     }
 
     pub fn visible_node_order(&self) -> Vec<NodeID> {
@@ -471,6 +553,9 @@ impl AppState {
             } else if layout.eq_ignore_ascii_case("vertical") {
                 self.favorite_dock_layout = DockLayout::Vertical;
             }
+            self.dock_focus_index = None;
+            self.status_message.clear();
+            self.status_message_last_updated = None;
         } else if input.starts_with("/dock_limit=") {
             let value = &input["/dock_limit=".len()..];
             if let Ok(num) = value.parse::<usize>() {
@@ -480,6 +565,11 @@ impl AppState {
             let value = &input["/dock_enabled=".len()..];
             if let Ok(flag) = value.parse::<bool>() {
                 self.favorite_dock_enabled = flag;
+            }
+            if !self.favorite_dock_enabled {
+                self.dock_focus_index = None;
+                self.status_message.clear();
+                self.status_message_last_updated = None;
             }
         } else if input.starts_with("/simulate") {
             for token in input.split_whitespace().skip(1) {
@@ -508,8 +598,13 @@ impl AppState {
                 "/arrange" => {
                     self.auto_arrange = true;
                 }
+            match input.as_str() {
                 "/undo" => self.undo(),
                 "/redo" => self.redo(),
+                "/toolbar" => {
+                    self.zen_toolbar_open = !self.zen_toolbar_open;
+                    self.zen_toolbar_index = 0;
+                },
                 "/clear" => self.zen_buffer = vec![String::new()],
                 _ => {}
             }
@@ -558,6 +653,92 @@ impl AppState {
 
         if let Ok(mut file) = File::create(&path) {
             let _ = file.write_all(content.as_bytes());
+        }
+    }
+
+    pub fn open_zen_file(&mut self, path: &str) {
+        if let Ok(content) = std::fs::read_to_string(path) {
+            self.zen_buffer = content.lines().map(|l| l.to_string()).collect();
+            self.zen_buffer.push(String::new());
+            self.zen_current_filename = path.to_string();
+            self.update_zen_word_count();
+            self.zen_dirty = false;
+            self.add_recent_file(path);
+        }
+    }
+
+    pub fn save_zen_file(&mut self, path: &str) {
+        use std::io::Write;
+        if let Some(parent) = std::path::Path::new(path).parent() {
+            let _ = std::fs::create_dir_all(parent);
+        }
+        if let Ok(mut file) = std::fs::File::create(path) {
+            let _ = file.write_all(self.zen_buffer.join("\n").as_bytes());
+            self.add_recent_file(path);
+            self.zen_current_filename = path.to_string();
+            self.zen_dirty = false;
+        }
+    }
+
+    pub fn update_zen_word_count(&mut self) {
+        let text = self.zen_buffer.join(" ");
+        self.zen_word_count = text.split_whitespace().count();
+    }
+
+    pub fn add_recent_file(&mut self, path: &str) {
+        if let Some(pos) = self.zen_recent_files.iter().position(|p| p == path) {
+            self.zen_recent_files.remove(pos);
+        }
+        self.zen_recent_files.insert(0, path.to_string());
+        while self.zen_recent_files.len() > 5 {
+            self.zen_recent_files.pop();
+        }
+    }
+
+    pub fn zen_toolbar_len(&self) -> usize {
+        3 + self.zen_recent_files.len()
+    }
+
+    pub fn zen_toolbar_handle_key(&mut self, key: crossterm::event::KeyCode) {
+        let len = self.zen_toolbar_len();
+        match key {
+            crossterm::event::KeyCode::Up => {
+                if self.zen_toolbar_index == 0 {
+                    self.zen_toolbar_index = len.saturating_sub(1);
+                } else {
+                    self.zen_toolbar_index -= 1;
+                }
+            }
+            crossterm::event::KeyCode::Down => {
+                self.zen_toolbar_index = (self.zen_toolbar_index + 1) % len;
+            }
+            crossterm::event::KeyCode::Enter => {
+                match self.zen_toolbar_index {
+                    0 => {
+                        self.zen_buffer = vec![String::new()];
+                        self.zen_current_filename = "Untitled".into();
+                        self.update_zen_word_count();
+                        self.zen_dirty = false;
+                    }
+                    1 => {
+                        if let Some(path) = self.zen_recent_files.first().cloned() {
+                            self.open_zen_file(&path);
+                        }
+                    }
+                    2 => {
+                        if let Some(path) = self.zen_recent_files.first().cloned() {
+                            self.save_zen_file(&path);
+                        }
+                    }
+                    idx => {
+                        if let Some(path) = self.zen_recent_files.get(idx - 3).cloned() {
+                            self.open_zen_file(&path);
+                        }
+                    }
+                }
+                self.zen_toolbar_open = false;
+            }
+            _ => {}
         }
     }
 
@@ -839,5 +1020,49 @@ pub fn get_module_by_index(&self) -> &str {
 pub fn register_plugin_favorite(state: &mut AppState, icon: &'static str, command: &'static str) {
     if state.plugin_favorites.len() < 5 {
         state.plugin_favorites.push(FavoriteEntry { icon, command });
+    }
+}
+
+impl AppState {
+    pub fn favorite_entries(&self) -> Vec<FavoriteEntry> {
+        let default_favorites = [
+            ("⚙️", "/settings"),
+            ("📬", "/triage"),
+            ("💭", "/gemx"),
+            ("🧘", "/zen"),
+            ("🔍", "/spotlight"),
+        ];
+
+        let limit = self.favorite_dock_limit.min(5);
+        let mut all: Vec<FavoriteEntry> = self
+            .plugin_favorites
+            .iter()
+            .cloned()
+            .chain(
+                default_favorites
+                    .iter()
+                    .map(|&(icon, cmd)| FavoriteEntry { icon, command: cmd }),
+            )
+            .take(limit)
+            .collect();
+
+        if self.mode == "gemx" && all.len() >= 3 {
+            all[2].icon = "💬";
+        }
+        if (self.mode == "triage" || self.show_triage) && all.len() >= 2 {
+            all[1].icon = "📫";
+        }
+        all
+    }
+
+    pub fn trigger_favorite(&mut self, index: usize) {
+        let entries = self.favorite_entries();
+        if let Some(entry) = entries.get(index) {
+            self.spotlight_input = entry.command.to_string();
+            self.show_spotlight = true;
+            self.favorite_focus_index = Some(index);
+            self.status_message = entry.command.to_string();
+            self.status_message_last_updated = Some(std::time::Instant::now());
+        }
     }
 }

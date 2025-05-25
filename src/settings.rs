@@ -74,6 +74,9 @@ fn toggle_dock_layout(s: &mut AppState) {
         DockLayout::Vertical => DockLayout::Horizontal,
         DockLayout::Horizontal => DockLayout::Vertical,
     };
+    s.dock_focus_index = None;
+    s.status_message.clear();
+    s.status_message_last_updated = None;
     save_user_settings(s);
 }
 

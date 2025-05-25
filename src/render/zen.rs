@@ -80,6 +80,31 @@ pub fn render_zen_journal<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppS
         Rect::new(area.right() - padding + 1, area.y + 2, 3, 1),
     );
 
+    if state.zen_toolbar_open {
+        let mut entries = vec!["+ New".to_string(), "Open".into(), "Save".into()];
+        entries.extend(state.zen_recent_files.clone());
+        for (i, item) in entries.iter().enumerate() {
+            let style = if i == state.zen_toolbar_index {
+                Style::default().add_modifier(Modifier::REVERSED)
+            } else {
+                Style::default()
+            };
+            f.render_widget(
+                Paragraph::new(item.as_str()).style(style),
+                Rect::new(area.x + 1, area.y + 3 + i as u16, padding - 2, 1),
+            );
+        }
+    }
+
+    let unsaved_marker = if state.zen_dirty { " \u{270E}" } else { "" };
+    let footer_text = format!("\u{1F4C4} {}   \u{270D} {} words{}", state.zen_current_filename, state.zen_word_count, unsaved_marker);
+    let x_offset = area.width.saturating_sub(footer_text.len() as u16 + 2);
+    let footer_rect = Rect::new(area.x + x_offset, area.y + area.height - 1, footer_text.len() as u16, 1);
+    f.render_widget(
+        Paragraph::new(footer_text).style(Style::default().fg(Color::DarkGray)),
+        footer_rect,
+    );
+
     render_full_border(f, area, &style, true, false);
     let beamx = BeamX {
         tick,

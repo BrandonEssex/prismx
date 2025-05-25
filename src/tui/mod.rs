@@ -18,6 +18,10 @@ use crate::render::{
     render_module_icon,
     render_favorites_dock,
 };
+
+fn rect_contains(rect: ratatui::layout::Rect, x: u16, y: u16) -> bool {
+    x >= rect.x && x < rect.x + rect.width && y >= rect.y && y < rect.y + rect.height
+}
 use crate::screen::render_gemx;
 use crate::settings::render_settings;
 
@@ -247,6 +251,12 @@ pub fn launch_ui() -> std::io::Result<()> {
                     continue;
                 }
 
+                if state.zen_toolbar_open {
+                    state.zen_toolbar_handle_key(code);
+                    draw(&mut terminal, &mut state, &last_key)?;
+                    continue;
+                }
+
                 // 🎯 Hotkeys
                 if match_hotkey("quit", code, modifiers, &state) {
                     break;
@@ -296,6 +306,12 @@ pub fn launch_ui() -> std::io::Result<()> {
                     state.export_zen_to_file();
                 } else if match_hotkey("mode_zen", code, modifiers, &state) {
                     state.mode = "zen".into();
+                } else if code == KeyCode::Char('t')
+                    && modifiers == KeyModifiers::CONTROL
+                    && state.mode == "zen"
+                {
+                    state.zen_toolbar_open = !state.zen_toolbar_open;
+                    state.zen_toolbar_index = 0;
                 } else if match_hotkey("toggle_collapsed", code, modifiers, &state) && state.mode == "gemx" {
                     state.toggle_collapse();
                 } else if match_hotkey("drill_down", code, modifiers, &state) {
@@ -316,6 +332,17 @@ pub fn launch_ui() -> std::io::Result<()> {
                 if crate::input::mac_fallback::handle_cmd_arrows(code, modifiers, &mut state) {
                     draw(&mut terminal, &mut state, &last_key)?;
                     continue;
+                }
+
+                if modifiers.contains(KeyModifiers::CONTROL) {
+                    if let KeyCode::Char(digit) = code {
+                        if ('1'..='5').contains(&digit) {
+                            let idx = digit as usize - '1' as usize;
+                            state.trigger_favorite(idx);
+                            draw(&mut terminal, &mut state, &last_key)?;
+                            continue;
+                        }
+                    }
                 }
 
                 // ⌨️ Navigation + Typing
@@ -357,6 +384,15 @@ pub fn launch_ui() -> std::io::Result<()> {
                         (crate::settings::SETTING_TOGGLES[idx].toggle)(&mut state);
                     }
 
+                    KeyCode::Up if state.favorite_dock_enabled && modifiers == KeyModifiers::NONE => {
+                        state.dock_focus_prev();
+                        if state.mode == "gemx" { state.move_focus_up(); }
+                    }
+                    KeyCode::Down if state.favorite_dock_enabled && modifiers == KeyModifiers::NONE => {
+                        state.dock_focus_next();
+                        if state.mode == "gemx" { state.move_focus_down(); }
+                    }
+
                     KeyCode::Up if state.mode == "gemx" => state.move_focus_up(),
                     KeyCode::Down if state.mode == "gemx" => state.move_focus_down(),
                     KeyCode::Left if state.mode == "gemx" => state.move_focus_left(),
@@ -391,16 +427,22 @@ pub fn launch_ui() -> std::io::Result<()> {
                         if let Some(last) = state.zen_buffer.last_mut() {
                             last.push(c);
                         }
+                        state.update_zen_word_count();
+                        state.zen_dirty = true;
                     }
 
                     KeyCode::Backspace if state.mode == "zen" => {
                         if let Some(last) = state.zen_buffer.last_mut() {
                             last.pop();
                         }
+                        state.update_zen_word_count();
+                        state.zen_dirty = true;
                     }
 
                     KeyCode::Enter if state.mode == "zen" => {
                         state.zen_buffer.push(String::new());
+                        state.update_zen_word_count();
+                        state.zen_dirty = true;
                     }
 
                     _ => {}
@@ -411,7 +453,15 @@ pub fn launch_ui() -> std::io::Result<()> {
                     match me.kind {
                         MouseEventKind::Down(MouseButton::Left) => {
                             state.last_mouse_click = Some((me.column, me.row));
-                            if state.mode == "gemx" {
+                            let mut handled = false;
+                            for (idx, (rect, _cmd)) in state.dock_entry_bounds.iter().enumerate() {
+                                if rect_contains(*rect, me.column, me.row) {
+                                    state.trigger_favorite(idx);
+                                    handled = true;
+                                    break;
+                                }
+                            }
+                            if !handled && state.mode == "gemx" {
                                 if let Some(id) = crate::gemx::interaction::node_at_position(&state, me.column, me.row) {
                                     crate::gemx::interaction::start_drag(&mut state, id, me.column, me.row);
                                 }

@@ -1,45 +1,24 @@
 use ratatui::{
     backend::Backend,
     layout::Rect,
-    style::Style,
+    style::{Color, Modifier, Style},
     widgets::{Block, Borders, Paragraph},
+    text::{Line, Span},
     Frame,
 };
-use crate::state::{AppState, FavoriteEntry, DockLayout};
+use crate::state::{AppState, DockLayout};
 use crate::beamx::style_for_mode;
 
 pub fn render_favorites_dock<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppState) {
     if !state.favorite_dock_enabled {
         return;
     }
-    let default_favorites = [
-        ("⚙️", "/settings"),
-        ("📬", "/triage"),
-        ("💭", "/gemx"),
-        ("🧘", "/zen"),
-        ("🔍", "/spotlight"),
-    ];
 
-    let mut all: Vec<FavoriteEntry> = default_favorites
-        .iter()
-        .map(|&(icon, cmd)| FavoriteEntry { icon, command: cmd })
-        .chain(state.plugin_favorites.iter().cloned())
-        .take(5)
-        .collect();
-
-    if state.mode == "gemx" && all.len() >= 3 {
-        all[2].icon = "💬";
-    }
-    if state.mode == "triage" || state.show_triage {
-        if all.len() >= 2 {
-            all[1].icon = "📫";
-        }
-    }
-
-    let favorites = &mut all[..];
+    let mut favorites = state.favorite_entries();
+    state.dock_entry_bounds.clear();
 
     let theme = style_for_mode(&state.mode);
-    let style = Style::default().fg(theme.border_color);
+    let base_style = Style::default().fg(theme.border_color);
 
     let horizontal = state.favorite_dock_layout == DockLayout::Horizontal;
     let height = if horizontal { 3 } else { favorites.len() as u16 + 2 };
@@ -53,25 +32,41 @@ pub fn render_favorites_dock<B: Backend>(f: &mut Frame<B>, area: Rect, state: &m
         let x = area.x + 1;
         let y = area.height.saturating_sub(height + 3);
 
-        let border = Block::default().borders(Borders::ALL).style(style);
+        let border = Block::default().borders(Borders::ALL).style(base_style);
         f.render_widget(border, Rect::new(x - 1, y - 1, width, height));
+        for (i, entry) in favorites.iter().enumerate() {
+            let gx = x + i as u16 * 3;
+            let rect = Rect::new(gx, y, 2, 1);
+            f.render_widget(Paragraph::new(entry.icon).style(style), rect);
+            state.dock_entry_bounds.push((rect, entry.command.to_string()));
+        }
 
-        let line: String = favorites.iter().map(|e| e.icon).collect::<Vec<_>>().join("  ");
-        f.render_widget(Paragraph::new(line).style(style), Rect::new(x, y, width - 2, 1));
     } else {
         if favorites.is_empty() {
             return;
         }
         let base_y = area.height.saturating_sub(favorites.len() as u16 + 2);
-        f.render_widget(Paragraph::new("\\__").style(style), Rect::new(0, base_y - 1, 3, 1));
+        f.render_widget(Paragraph::new("\\__").style(base_style), Rect::new(0, base_y - 1, 3, 1));
         for (i, entry) in favorites.iter().enumerate() {
             let gy = base_y + i as u16;
+            let style = if Some(i) == state.dock_focus_index {
+                Style::default().fg(Color::LightCyan).add_modifier(Modifier::REVERSED)
+            } else {
+                base_style
+            };
             let line = format!("{} |", entry.icon);
-            f.render_widget(Paragraph::new(line).style(style), Rect::new(0, gy, 5, 1));
+            let rect = Rect::new(0, gy, 5, 1);
+            let style_entry = if state.favorite_focus_index == Some(i) {
+                style.add_modifier(ratatui::style::Modifier::REVERSED)
+            } else {
+                style
+            };
+            f.render_widget(Paragraph::new(line).style(style_entry), rect);
+            state.dock_entry_bounds.push((rect, entry.command.to_string()));
         }
         let bottom_y = base_y + favorites.len() as u16;
         let underscore_len = area.width.saturating_sub(3) as usize;
         let bottom_line = format!("  |{}", "_".repeat(underscore_len));
-        f.render_widget(Paragraph::new(bottom_line).style(style), Rect::new(0, bottom_y, area.width, 1));
+        f.render_widget(Paragraph::new(bottom_line).style(base_style), Rect::new(0, bottom_y, area.width, 1));
     }
 }
