@@ -136,6 +136,7 @@ pub fn launch_ui() -> std::io::Result<()> {
     let mut terminal = Terminal::new(backend)?;
 
     let mut state = AppState::default();
+    state.dynamic_plugins = crate::dynamic_plugin::load_dynamic_plugins(&mut state);
     let mut last_key = String::new();
 
     draw(&mut terminal, &mut state, &last_key)?;

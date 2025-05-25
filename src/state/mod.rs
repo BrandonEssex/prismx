@@ -3,6 +3,7 @@ use crate::node::{Node, NodeID, NodeMap};
 use crate::layout::{ SIBLING_SPACING_X, CHILD_SPACING_Y, GEMX_HEADER_HEIGHT, LayoutRole };
 use crossterm::terminal;
 use crate::plugin::PluginHost;
+use crate::dynamic_plugin::DynamicPlugin;
 
 const UNDO_LIMIT: usize = 50;
 
@@ -118,6 +119,7 @@ pub struct AppState {
     pub status_message_last_updated: Option<std::time::Instant>,
     pub plugin_host: PluginHost,
     pub plugin_favorites: Vec<FavoriteEntry>,
+    pub dynamic_plugins: Vec<DynamicPlugin>,
     pub favorite_dock_limit: usize,
     pub favorite_dock_layout: DockLayout,
     pub favorite_dock_enabled: bool,
@@ -199,6 +201,7 @@ impl Default for AppState {
             status_message_last_updated: None,
             plugin_host: PluginHost::new(),
             plugin_favorites: Vec::new(),
+            dynamic_plugins: Vec::new(),
             favorite_dock_limit: 3,
             favorite_dock_layout: DockLayout::Vertical,
             favorite_dock_enabled: true,
