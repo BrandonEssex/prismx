@@ -15,6 +15,7 @@ use crate::render::{
     render_spotlight,
     render_triage,
     render_module_switcher,
+    render_module_icon,
 };
 use crate::screen::render_gemx;
 use crate::settings::render_settings;
@@ -89,6 +90,7 @@ pub fn draw<B: Backend>(terminal: &mut Terminal<B>, state: &mut AppState, _last_
         } else {
             state.status_message.as_str()
         };
+        render_module_icon(f, full, &state.mode);
         render_status_bar(f, vertical[1], display);
     })?;
     Ok(())
