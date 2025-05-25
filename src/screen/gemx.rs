@@ -100,32 +100,17 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppStat
     // Ensure that every declared root node is represented in the drawn layout.
     for &root_id in &state.root_nodes {
         if !drawn_at.contains_key(&root_id) {
-            if let Some(n) = state.nodes.get(&root_id) {
-                let mut pos = Coords { x: n.x, y: n.y };
-                if pos.x == 0 && pos.y == 0 {
-                    pos = Coords { x: 5, y: 5 };
+            if let Some(n) = state.nodes.get_mut(&root_id) {
+                if n.x == 0 && n.y == 0 {
+                    n.x = 6;
+                    n.y = GEMX_HEADER_HEIGHT + 3;
                 }
-                drawn_at.insert(root_id, pos);
+                drawn_at.insert(root_id, Coords { x: n.x, y: n.y });
                 node_roles.insert(root_id, LayoutRole::Root);
             }
         }
     }
 
-    if state.debug_input_mode {
-        eprintln!("Render Tree:");
-        for (&id, coords) in &drawn_at {
-            let role = node_roles.get(&id).unwrap_or(&LayoutRole::Free);
-            let label = &state.nodes[&id].label;
-            eprintln!(
-                "Node {} \u{2192} (x: {}, y: {}) | {:?} | {}",
-                id,
-                coords.x,
-                coords.y,
-                role,
-                label
-            );
-        }
-    }
 
     if drawn_at.is_empty() {
         let msg = if state.auto_arrange {
@@ -181,6 +166,25 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppStat
                     n.label.truncate(32);
                 }
             }
+        }
+    }
+
+    for (&id, _) in &state.nodes {
+        if !drawn_at.contains_key(&id) {
+            drawn_at.insert(id, Coords { x: 3, y: GEMX_HEADER_HEIGHT + 2 });
+            node_roles.insert(id, LayoutRole::Free);
+        }
+    }
+
+    if state.debug_input_mode {
+        eprintln!("[RENDER TREE]");
+        for (&id, coords) in &drawn_at {
+            let label = &state.nodes[&id].label;
+            let role = node_roles.get(&id).unwrap_or(&LayoutRole::Free);
+            eprintln!(
+                "Node {} \u{2192} ({}, {}) | {:?} | {}",
+                id, coords.x, coords.y, role, label
+            );
         }
     }
 
