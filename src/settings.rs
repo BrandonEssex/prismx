@@ -127,7 +127,9 @@ pub fn render_settings<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppStat
         .saturating_add(4);
 
     let width = content_width.min(area.width);
-    let height = lines.len() as u16 + 2;
+    let mut height = lines.len() as u16 + 2;
+    // Clamp box height so it never overlaps the status bar
+    height = height.min(area.height.saturating_sub(1));
 
     let x = area.x + (area.width.saturating_sub(width)) / 2;
     let y = area.y + (area.height.saturating_sub(height)) / 2;

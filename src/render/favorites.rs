@@ -30,7 +30,8 @@ pub fn render_favorites_dock<B: Backend>(f: &mut Frame<B>, area: Rect, state: &m
 
     if horizontal {
         let x = area.x + 1;
-        let y = area.height.saturating_sub(height + 3);
+        // shift dock up slightly so icons never overlap the status bar
+        let y = area.height.saturating_sub(height + 4);
 
         let border = Block::default().borders(Borders::ALL).style(base_style);
         f.render_widget(border, Rect::new(x - 1, y - 1, width, height));
@@ -45,7 +46,8 @@ pub fn render_favorites_dock<B: Backend>(f: &mut Frame<B>, area: Rect, state: &m
         if favorites.is_empty() {
             return;
         }
-        let base_y = area.height.saturating_sub(favorites.len() as u16 + 2);
+        // leave extra padding above the footer
+        let base_y = area.height.saturating_sub(favorites.len() as u16 + 3);
         f.render_widget(Paragraph::new("\\__").style(base_style), Rect::new(0, base_y - 1, 3, 1));
         for (i, entry) in favorites.iter().enumerate() {
             let gy = base_y + i as u16;
