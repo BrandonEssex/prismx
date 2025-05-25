@@ -375,6 +375,10 @@ impl AppState {
             }
         } else {
             match input {
+                "/triage" => self.mode = "triage".into(),
+                "/zen" => self.mode = "zen".into(),
+                "/settings" => self.mode = "settings".into(),
+                "/gemx" => self.mode = "gemx".into(),
                 "/toggle triage" => self.show_triage = !self.show_triage,
                 "/toggle keymap" => self.show_keymap = !self.show_keymap,
                 "/toggle spotlight" => self.show_spotlight = !self.show_spotlight,
@@ -389,6 +393,7 @@ impl AppState {
         }
         self.spotlight_input.clear();
         self.show_spotlight = false;
+        self.spotlight_just_opened = false;
     }
 
     pub fn add_free_node(&mut self) {
