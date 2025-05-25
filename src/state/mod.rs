@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use crate::node::{Node, NodeID, NodeMap};
 use crate::layout::{ SIBLING_SPACING_X, CHILD_SPACING_Y, GEMX_HEADER_HEIGHT };
 use crossterm::terminal;
@@ -40,6 +40,7 @@ pub struct AppState {
     pub dragging: Option<NodeID>,
     pub last_mouse: Option<(i16, i16)>,
     pub fallback_this_frame: bool,
+    pub fallback_promoted_this_session: HashSet<NodeID>,
     pub debug_input_mode: bool,
     pub debug_border: bool,
     pub status_message: String,
@@ -90,6 +91,7 @@ impl Default for AppState {
             dragging: None,
             last_mouse: None,
             fallback_this_frame: false,
+            fallback_promoted_this_session: HashSet::new(),
             debug_input_mode: true,
             debug_border: std::env::var("PRISMX_DEBUG_BORDER").is_ok(),
             status_message: String::new(),
@@ -239,6 +241,10 @@ impl AppState {
 
     pub fn add_child(&mut self) {
         if let Some(parent_id) = self.selected {
+            if !self.nodes.contains_key(&parent_id) {
+                return;
+            }
+
             let new_id = self.nodes.keys().max().copied().unwrap_or(100) + 1;
 
             let mut child = Node::new(new_id, "New Child", Some(parent_id));
@@ -257,6 +263,9 @@ impl AppState {
             }
 
             self.set_selected(Some(new_id));
+            if !self.auto_arrange {
+                self.ensure_grid_positions();
+            }
             self.recalculate_roles();
             self.ensure_valid_roots();
         }
@@ -264,6 +273,9 @@ impl AppState {
 
     pub fn add_sibling(&mut self) {
         if let Some(selected_id) = self.selected {
+            if !self.nodes.contains_key(&selected_id) {
+                return;
+            }
             let parent_id = self.nodes.get(&selected_id).and_then(|n| n.parent);
 
             let new_id = self.nodes.keys().max().copied().unwrap_or(100) + 1;
@@ -290,6 +302,9 @@ impl AppState {
 
             self.nodes.insert(new_id, sibling);
             self.set_selected(Some(new_id));
+            if !self.auto_arrange {
+                self.ensure_grid_positions();
+            }
             self.recalculate_roles();
         }
     }
@@ -446,6 +461,10 @@ impl AppState {
         }
     }
 
+    pub fn clear_fallback_promotions(&mut self) {
+        self.fallback_promoted_this_session.clear();
+    }
+
     pub fn start_drag(&mut self) {
         self.selected_drag_source = self.selected;
     }
@@ -492,6 +511,8 @@ impl AppState {
     /// Otherwise the node is considered free/root.
     pub fn recalculate_roles(&mut self) {
         use std::collections::HashMap;
+
+        self.clear_fallback_promotions();
 
         let ids: Vec<NodeID> = self.nodes.keys().copied().collect();
 
