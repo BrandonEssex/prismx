@@ -91,6 +91,9 @@ pub struct AppState {
     pub zen_toolbar_open: bool,
     pub zen_recent_files: Vec<String>,
     pub zen_toolbar_index: usize,
+    pub zen_current_filename: String,
+    pub zen_word_count: usize,
+    pub zen_dirty: bool,
 
 }
 
@@ -162,6 +165,9 @@ impl Default for AppState {
             zen_toolbar_open: false,
             zen_recent_files: vec!["README.md".into()],
             zen_toolbar_index: 0,
+            zen_current_filename: "Untitled".into(),
+            zen_word_count: 0,
+            zen_dirty: false,
 
         };
 
@@ -178,6 +184,8 @@ impl Default for AppState {
                 node.label = node.label.replacen("[F] ", "", 1);
             }
         }
+
+        state.update_zen_word_count();
 
         state
     }
@@ -585,7 +593,11 @@ impl AppState {
                     self.zen_toolbar_open = !self.zen_toolbar_open;
                     self.zen_toolbar_index = 0;
                 }
-                "/clear" => self.zen_buffer = vec![String::new()],
+                "/clear" => {
+                    self.zen_buffer = vec![String::new()];
+                    self.update_zen_word_count();
+                    self.zen_dirty = true;
+                }
                 _ => {}
             }
         }
@@ -640,6 +652,9 @@ impl AppState {
         if let Ok(content) = std::fs::read_to_string(path) {
             self.zen_buffer = content.lines().map(|l| l.to_string()).collect();
             self.zen_buffer.push(String::new());
+            self.zen_current_filename = path.to_string();
+            self.update_zen_word_count();
+            self.zen_dirty = false;
             self.add_recent_file(path);
         }
     }
@@ -652,7 +667,14 @@ impl AppState {
         if let Ok(mut file) = std::fs::File::create(path) {
             let _ = file.write_all(self.zen_buffer.join("\n").as_bytes());
             self.add_recent_file(path);
+            self.zen_current_filename = path.to_string();
+            self.zen_dirty = false;
         }
+    }
+
+    pub fn update_zen_word_count(&mut self) {
+        let text = self.zen_buffer.join(" ");
+        self.zen_word_count = text.split_whitespace().count();
     }
 
     pub fn add_recent_file(&mut self, path: &str) {
@@ -686,6 +708,9 @@ impl AppState {
                 match self.zen_toolbar_index {
                     0 => {
                         self.zen_buffer = vec![String::new()];
+                        self.zen_current_filename = "Untitled".into();
+                        self.update_zen_word_count();
+                        self.zen_dirty = false;
                     }
                     1 => {
                         if let Some(path) = self.zen_recent_files.first().cloned() {

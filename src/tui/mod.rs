@@ -427,16 +427,22 @@ pub fn launch_ui() -> std::io::Result<()> {
                         if let Some(last) = state.zen_buffer.last_mut() {
                             last.push(c);
                         }
+                        state.update_zen_word_count();
+                        state.zen_dirty = true;
                     }
 
                     KeyCode::Backspace if state.mode == "zen" => {
                         if let Some(last) = state.zen_buffer.last_mut() {
                             last.pop();
                         }
+                        state.update_zen_word_count();
+                        state.zen_dirty = true;
                     }
 
                     KeyCode::Enter if state.mode == "zen" => {
                         state.zen_buffer.push(String::new());
+                        state.update_zen_word_count();
+                        state.zen_dirty = true;
                     }
 
                     _ => {}
