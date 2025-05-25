@@ -50,7 +50,7 @@ pub fn draw<B: Backend>(terminal: &mut Terminal<B>, state: &mut AppState, _last_
         match state.mode.as_str() {
             "zen" => render_zen_journal(f, vertical[0], state),
             "gemx" => render_gemx(f, vertical[0], state),
-            "settings" => render_settings(f, vertical[0]),
+            "settings" => render_settings(f, vertical[0], state),
             "triage" => render_triage(f, vertical[0]),
             _ => {
                 let fallback = Paragraph::new("Unknown mode");
@@ -125,6 +125,9 @@ pub fn launch_ui() -> std::io::Result<()> {
                             }
                             Shortcut::ZoomIn => state.zoom_in(),
                             Shortcut::ZoomOut => state.zoom_out(),
+                            Shortcut::ToggleDebugBorder => {
+                                state.toggle_debug_border();
+                            }
                         }
                     }
 

@@ -124,6 +124,7 @@ pub fn render_full_border<B: Backend>(
     area: Rect,
     style: &BeamStyle,
     beamx_enabled: bool,
+    trim_right: bool,
 ) {
     let fg = Style::default().fg(style.border_color);
     let right = area.x + area.width.saturating_sub(1);
@@ -140,7 +141,7 @@ pub fn render_full_border<B: Backend>(
         let p = Paragraph::new("━").style(fg);
         f.render_widget(p, Rect::new(x, area.y, 1, 1));
     }
-    if !beamx_enabled {
+    if !beamx_enabled && !trim_right {
         let tr = Paragraph::new("┓").style(fg);
         f.render_widget(tr, Rect::new(right, area.y, 1, 1));
     }
@@ -151,6 +152,9 @@ pub fn render_full_border<B: Backend>(
     for y in area.y + 1..bottom {
         let p = Paragraph::new("┃").style(fg);
         f.render_widget(p, Rect::new(area.x, y, 1, 1));
+        if trim_right {
+            continue;
+        }
         if beamx_enabled && right == beam_x && (y == beam_y1 || y == beam_y2) {
             continue;
         }
@@ -165,7 +169,7 @@ pub fn render_full_border<B: Backend>(
         f.render_widget(p, Rect::new(x, bottom, 1, 1));
     }
     // Skip lower-right corner artifact if outside bounds
-    if right >= area.x && bottom >= area.y {
+    if !trim_right && right >= area.x && bottom >= area.y {
         let br = Paragraph::new("┛").style(fg);
         f.render_widget(br, Rect::new(right, bottom, 1, 1));
     }

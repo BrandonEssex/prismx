@@ -10,8 +10,11 @@ use crate::beamx::{render_full_border, style_for_mode};
 use crate::ui::beamx::{BeamX, BeamXStyle, BeamXMode, BeamXAnimationMode};
 
 
-pub fn render_settings<B: Backend>(f: &mut Frame<B>, area: Rect) {
+use crate::state::AppState;
+
+pub fn render_settings<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
     let style = style_for_mode("settings");
+    let debug_label = if state.debug_border { "On" } else { "Off" };
     let lines = vec![
         Line::from("PrismX Settings"),
         Line::from("----------------"),
@@ -19,6 +22,7 @@ pub fn render_settings<B: Backend>(f: &mut Frame<B>, area: Rect) {
         Line::from("Layout: Ctrl+Arrow resizable"),
         Line::from("Panels: Toggle w/ Ctrl+D, I, K, Z"),
         Line::from("Commands: /theme, /triage, /plugin, /journal"),
+        Line::from(format!("Debug Border: {} (Ctrl+Shift+B)", debug_label)),
     ];
 
     let block = Block::default()
@@ -31,7 +35,7 @@ pub fn render_settings<B: Backend>(f: &mut Frame<B>, area: Rect) {
     let paragraph = Paragraph::new(lines)
         .alignment(Alignment::Left);
     f.render_widget(paragraph, inner);
-    render_full_border(f, area, &style, true);
+    render_full_border(f, area, &style, true, !state.debug_border);
     let tick = (SystemTime::now()
         .duration_since(UNIX_EPOCH)
         .unwrap_or_default()
