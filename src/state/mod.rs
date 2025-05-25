@@ -7,6 +7,15 @@ use crate::plugin::PluginHost;
 mod hotkeys;
 pub use hotkeys::*;
 
+use ratatui::layout::Rect;
+
+#[derive(Clone, Default)]
+pub struct FavoriteEntry {
+    pub label: &'static str,
+    pub mode: &'static str,
+    pub bounds: Rect,
+}
+
 pub struct AppState {
     pub mode: String,
     pub zen_buffer: Vec<String>,
@@ -49,6 +58,9 @@ pub struct AppState {
     pub status_message: String,
     pub status_message_last_updated: Option<std::time::Instant>,
     pub plugin_host: PluginHost,
+    pub favorite_entries: Vec<FavoriteEntry>,
+    pub plugin_favorites: Vec<FavoriteEntry>,
+    pub last_mouse_click: Option<(u16, u16)>,
 
 }
 
@@ -103,6 +115,9 @@ impl Default for AppState {
             status_message: String::new(),
             status_message_last_updated: None,
             plugin_host: PluginHost::new(),
+            favorite_entries: Vec::new(),
+            plugin_favorites: Vec::new(),
+            last_mouse_click: None,
 
         }
     }

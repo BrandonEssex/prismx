@@ -16,6 +16,7 @@ use crate::render::{
     render_triage,
     render_module_switcher,
     render_module_icon,
+    render_favorites_dock,
 };
 use crate::screen::render_gemx;
 use crate::settings::render_settings;
@@ -90,13 +91,14 @@ pub fn draw<B: Backend>(terminal: &mut Terminal<B>, state: &mut AppState, _last_
             state.show_spotlight,
             state.show_keymap,
         );
-        let display = if state.status_message.is_empty() {
-            default_status.as_str()
+        let display_string = if state.status_message.is_empty() {
+            default_status
         } else {
-            state.status_message.as_str()
+            state.status_message.clone()
         };
         render_module_icon(f, full, &state.mode);
-        render_status_bar(f, vertical[1], display);
+        render_favorites_dock(f, full, state);
+        render_status_bar(f, vertical[1], display_string.as_str());
     })?;
     if state.spotlight_just_opened {
         state.spotlight_animation_frame += 1;
@@ -372,21 +374,36 @@ pub fn launch_ui() -> std::io::Result<()> {
                 }
                 Event::Mouse(me) => {
                     use crossterm::event::{MouseButton, MouseEventKind};
-                    if state.mode == "gemx" {
-                        match me.kind {
-                            MouseEventKind::Down(MouseButton::Left) => {
+                    match me.kind {
+                        MouseEventKind::Down(MouseButton::Left) => {
+                            state.last_mouse_click = Some((me.column, me.row));
+                            let mut handled = false;
+                            for entry in &state.favorite_entries {
+                                if me.column >= entry.bounds.x && me.column < entry.bounds.x + entry.bounds.width &&
+                                   me.row >= entry.bounds.y && me.row < entry.bounds.y + entry.bounds.height {
+                                    state.mode = entry.mode.to_string();
+                                    state.show_spotlight = false;
+                                    handled = true;
+                                    break;
+                                }
+                            }
+                            if !handled && state.mode == "gemx" {
                                 if let Some(id) = crate::gemx::interaction::node_at_position(&state, me.column, me.row) {
                                     crate::gemx::interaction::start_drag(&mut state, id, me.column, me.row);
                                 }
                             }
-                            MouseEventKind::Drag(MouseButton::Left) => {
+                        }
+                        MouseEventKind::Drag(MouseButton::Left) => {
+                            if state.mode == "gemx" {
                                 crate::gemx::interaction::drag_update(&mut state, me.column, me.row);
                             }
-                            MouseEventKind::Up(MouseButton::Left) => {
+                        }
+                        MouseEventKind::Up(MouseButton::Left) => {
+                            if state.mode == "gemx" {
                                 crate::gemx::interaction::end_drag(&mut state);
                             }
-                            _ => {}
                         }
+                        _ => {}
                     }
                 }
                 _ => {}
