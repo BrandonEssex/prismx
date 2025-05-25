@@ -311,6 +311,9 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppStat
         f.render_widget(para, Rect::new(draw_x, draw_y, width as u16, 1));
         if state.debug_input_mode && std::env::var("PRISMX_TEST").is_err() {
             f.render_widget(Paragraph::new("■").style(style), Rect::new(draw_x, draw_y, 1, 1));
+            if x == 0 {
+                f.render_widget(Paragraph::new("■"), Rect::new(1, draw_y, 1, 1));
+            }
         }
     }
 
