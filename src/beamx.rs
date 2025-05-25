@@ -131,8 +131,8 @@ pub fn render_full_border<B: Backend>(
 
     let tl = Paragraph::new("┏").style(fg);
     f.render_widget(tl, Rect::new(area.x, area.y, 1, 1));
-    let beam_start = area.right().saturating_sub(7);
-    let beam_end = beam_start + 6;
+    let beam_start = area.right().saturating_sub(12);
+    let beam_end = beam_start + 11;
     for x in area.x + 1..right {
         if beamx_enabled && x >= beam_start && x <= beam_end {
             continue;
@@ -147,7 +147,7 @@ pub fn render_full_border<B: Backend>(
 
     let beam_x = area.right() - 1;
     let beam_y1 = area.top() + 1;
-    let beam_y2 = area.top() + 2;
+    let beam_y2 = area.top() + 4;
     for y in area.y + 1..bottom {
         let p = Paragraph::new("┃").style(fg);
         f.render_widget(p, Rect::new(area.x, y, 1, 1));
