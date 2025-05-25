@@ -213,6 +213,10 @@ impl AppState {
                 parent.children.push(new_id);
             }
 
+            if !self.root_nodes.contains(&parent_id) {
+                self.root_nodes.push(parent_id);
+            }
+
             self.selected = Some(new_id);
             self.recalculate_roles();
         }
