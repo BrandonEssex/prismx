@@ -9,8 +9,33 @@ use ratatui::{
 
 use crate::state::AppState;
 use crate::spotlight::{command_preview, command_suggestions};
+use crate::render::Renderable;
+use std::cell::RefCell;
+use std::marker::PhantomData;
+
+pub struct Spotlight<'a> {
+    state: RefCell<&'a mut AppState>,
+    _marker: PhantomData<&'a mut AppState>,
+}
+
+impl<'a> Spotlight<'a> {
+    pub fn new(state: &'a mut AppState) -> Self {
+        Self { state: RefCell::new(state), _marker: PhantomData }
+    }
+}
+
+impl<'a> Renderable for Spotlight<'a> {
+    fn draw<B: Backend>(&self, f: &mut Frame<B>, area: Rect) {
+        let mut state = self.state.borrow_mut();
+        render_spotlight_impl(f, area, &mut *state);
+    }
+}
 
 pub fn render_spotlight<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppState) {
+    Spotlight::new(state).draw(f, area);
+}
+
+fn render_spotlight_impl<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppState) {
     let input = &state.spotlight_input;
     let width = area.width.min(60);
     let x_offset = area.x + (area.width.saturating_sub(width)) / 2;

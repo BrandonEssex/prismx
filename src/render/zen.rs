@@ -2,10 +2,32 @@ use ratatui::{prelude::*, widgets::{Block, Borders, Paragraph}};
 use crate::state::{AppState, ZenSyntax, ZenTheme, ZenJournalView};
 use crate::beamx::{render_full_border, style_for_mode};
 use crate::ui::beamx::{BeamX, BeamXStyle, BeamXMode, BeamXAnimationMode};
+use crate::render::Renderable;
+use std::cell::RefCell;
 
 use std::time::{SystemTime, UNIX_EPOCH};
 
+pub struct Zen<'a> {
+    state: &'a AppState,
+}
+
+impl<'a> Zen<'a> {
+    pub fn new(state: &'a AppState) -> Self {
+        Self { state }
+    }
+}
+
+impl<'a> Renderable for Zen<'a> {
+    fn draw<B: Backend>(&self, f: &mut Frame<B>, area: Rect) {
+        render_zen_journal_impl(f, area, self.state);
+    }
+}
+
 pub fn render_zen_journal<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
+    Zen::new(state).draw(f, area);
+}
+
+fn render_zen_journal_impl<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
     use ratatui::text::{Line, Span};
     let mut style = style_for_mode(&state.mode);
     if let ZenTheme::DarkGray = state.zen_theme {

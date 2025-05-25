@@ -11,8 +11,31 @@ use crate::beamx::{render_full_border, style_for_mode};
 use crate::ui::beamx::{BeamX, BeamXStyle, BeamXMode, BeamXAnimationMode};
 use std::time::{SystemTime, UNIX_EPOCH};
 use std::collections::HashMap;
+use crate::render::Renderable;
+use std::cell::RefCell;
+
+pub struct GemX<'a> {
+    state: RefCell<&'a mut AppState>,
+}
+
+impl<'a> GemX<'a> {
+    pub fn new(state: &'a mut AppState) -> Self {
+        Self { state: RefCell::new(state) }
+    }
+}
+
+impl<'a> Renderable for GemX<'a> {
+    fn draw<B: Backend>(&self, f: &mut Frame<B>, area: Rect) {
+        let mut state = self.state.borrow_mut();
+        gemx_impl(f, area, &mut *state);
+    }
+}
 
 pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppState) {
+    GemX::new(state).draw(f, area);
+}
+
+fn gemx_impl<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppState) {
     let style = style_for_mode(&state.mode);
     let block = Block::default()
         .title(if state.auto_arrange { "Gemx [Auto-Arrange]" } else { "Gemx" })
