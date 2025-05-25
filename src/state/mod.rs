@@ -71,6 +71,7 @@ pub struct AppState {
     pub favorite_dock_layout: DockLayout,
     pub favorite_dock_enabled: bool,
     pub last_mouse_click: Option<(u16, u16)>,
+    pub settings_focus_index: usize,
 
 }
 
@@ -132,6 +133,7 @@ impl Default for AppState {
             favorite_dock_layout: DockLayout::Vertical,
             favorite_dock_enabled: true,
             last_mouse_click: None,
+            settings_focus_index: 0,
 
         }
     }
