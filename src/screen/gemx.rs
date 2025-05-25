@@ -22,6 +22,15 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppStat
     // Reset unreachable fallback lock for this frame
     state.fallback_this_frame = false;
 
+    if let Some(sel) = state.selected {
+        if !state.nodes.contains_key(&sel) {
+            state.selected = None;
+        }
+    }
+    if state.selected.is_none() {
+        return;
+    }
+
     // Ensure we always have valid root nodes before any layout logic
     state.ensure_valid_roots();
     if state.auto_arrange {
@@ -35,15 +44,6 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppStat
             Paragraph::new("⚠ No valid root nodes."),
             Rect::new(area.x + 2, area.y + 2, 40, 1),
         );
-        return;
-    }
-
-    if let Some(sel) = state.selected {
-        if !state.nodes.contains_key(&sel) {
-            state.selected = None;
-        }
-    }
-    if state.selected.is_none() {
         return;
     }
 

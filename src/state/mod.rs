@@ -1,4 +1,4 @@
-use std::collections::{HashMap, HashSet};
+use std::collections::{HashMap, HashSet, VecDeque};
 use crate::node::{Node, NodeID, NodeMap};
 use crate::layout::{ SIBLING_SPACING_X, CHILD_SPACING_Y, GEMX_HEADER_HEIGHT };
 use crossterm::terminal;
@@ -19,6 +19,8 @@ pub struct AppState {
     pub prev_show_spotlight: bool,
     pub spotlight_just_opened: bool,
     pub spotlight_animation_frame: u8,
+    pub spotlight_history: VecDeque<String>,
+    pub spotlight_history_index: Option<usize>,
     pub show_triage: bool,
     pub show_keymap: bool,
     pub module_switcher_open: bool,
@@ -70,6 +72,8 @@ impl Default for AppState {
             prev_show_spotlight: false,
             spotlight_just_opened: false,
             spotlight_animation_frame: 0,
+            spotlight_history: VecDeque::new(),
+            spotlight_history_index: None,
             show_triage: false,
             show_keymap: false,
             module_switcher_open: false,
@@ -240,10 +244,14 @@ impl AppState {
     }
 
     pub fn add_child(&mut self) {
-        let parent_id = match self.selected {
-            Some(id) if self.nodes.contains_key(&id) => id,
-            _ => return,
+        let Some(parent_id) = self.selected else {
+            eprintln!("\u{26a0} Tab insert failed: no selected node.");
+            return;
         };
+        if !self.nodes.contains_key(&parent_id) {
+            eprintln!("\u{26a0} Tab insert failed: selected node is invalid.");
+            return;
+        }
 
         let new_id = self.nodes.keys().max().copied().unwrap_or(100) + 1;
 
@@ -262,7 +270,7 @@ impl AppState {
             self.root_nodes.push(parent_id);
         }
 
-        self.set_selected(Some(new_id));
+        self.selected = Some(new_id);
         if !self.auto_arrange {
             self.ensure_grid_positions();
         }
@@ -300,7 +308,7 @@ impl AppState {
             }
 
             self.nodes.insert(new_id, sibling);
-            self.set_selected(Some(new_id));
+            self.selected = Some(new_id);
             if !self.auto_arrange {
                 self.ensure_grid_positions();
             }
@@ -340,6 +348,13 @@ impl AppState {
 
     pub fn execute_spotlight_command(&mut self) {
         let input = self.spotlight_input.trim();
+        if !input.is_empty() {
+            self.spotlight_history.push_front(input.to_string());
+            while self.spotlight_history.len() > 10 {
+                self.spotlight_history.pop_back();
+            }
+        }
+        self.spotlight_history_index = None;
         if input == "/start pomodoro" {
             self.plugin_host.start_pomodoro();
         } else if input.starts_with("/countdown ") {

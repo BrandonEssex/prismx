@@ -149,9 +149,46 @@ pub fn launch_ui() -> std::io::Result<()> {
                 // 🌟 Spotlight
                 if state.show_spotlight {
                     match code {
-                        KeyCode::Esc => state.show_spotlight = false,
-                        KeyCode::Char(c) => state.spotlight_input.push(c),
-                        KeyCode::Backspace => { state.spotlight_input.pop(); }
+                        KeyCode::Esc => {
+                            state.show_spotlight = false;
+                            state.spotlight_history_index = None;
+                        }
+                        KeyCode::Char(c) => {
+                            state.spotlight_input.push(c);
+                            state.spotlight_history_index = None;
+                        }
+                        KeyCode::Backspace => {
+                            state.spotlight_input.pop();
+                            state.spotlight_history_index = None;
+                        }
+                        KeyCode::Up => {
+                            if state.spotlight_history.is_empty() {
+                                // nothing
+                            } else if let Some(i) = state.spotlight_history_index {
+                                if i + 1 < state.spotlight_history.len() {
+                                    state.spotlight_history_index = Some(i + 1);
+                                }
+                                if let Some(idx) = state.spotlight_history_index {
+                                    state.spotlight_input = state.spotlight_history[idx].clone();
+                                }
+                            } else {
+                                state.spotlight_history_index = Some(0);
+                                state.spotlight_input = state.spotlight_history[0].clone();
+                            }
+                        }
+                        KeyCode::Down => {
+                            if let Some(i) = state.spotlight_history_index {
+                                if i > 0 {
+                                    state.spotlight_history_index = Some(i - 1);
+                                    if let Some(idx) = state.spotlight_history_index {
+                                        state.spotlight_input = state.spotlight_history[idx].clone();
+                                    }
+                                } else {
+                                    state.spotlight_history_index = None;
+                                    state.spotlight_input.clear();
+                                }
+                            }
+                        }
                         KeyCode::Enter => state.execute_spotlight_command(),
                         _ => {}
                     }
@@ -165,6 +202,7 @@ pub fn launch_ui() -> std::io::Result<()> {
                     && modifiers.contains(KeyModifiers::SHIFT)
                 {
                     state.show_spotlight = !state.show_spotlight;
+                    state.spotlight_history_index = None;
                     draw(&mut terminal, &mut state, &last_key)?;
                     continue;
                 }
