@@ -324,6 +324,15 @@ pub fn launch_ui() -> std::io::Result<()> {
                     state.mode = "zen".into();
                 } else if match_hotkey("zen_toggle_theme", code, modifiers, &state) && state.mode == "zen" {
                     state.cycle_zen_theme();
+                } else if code == KeyCode::Char('v')
+                    && modifiers.contains(KeyModifiers::CONTROL)
+                    && modifiers.contains(KeyModifiers::SHIFT)
+                    && state.mode == "zen"
+                {
+                    state.zen_journal_view = match state.zen_journal_view {
+                        crate::state::ZenJournalView::Compose => crate::state::ZenJournalView::Review,
+                        crate::state::ZenJournalView::Review => crate::state::ZenJournalView::Compose,
+                    };
                 } else if code == KeyCode::Char('t')
                     && modifiers == KeyModifiers::CONTROL
                     && state.mode == "zen"
@@ -440,28 +449,22 @@ pub fn launch_ui() -> std::io::Result<()> {
                         }
                     }
 
-                    KeyCode::Char(c) if state.mode == "zen" => {
-                        state.push_undo();
-                        if let Some(last) = state.zen_buffer.last_mut() {
-                            last.push(c);
-                        }
-                        state.update_zen_word_count();
-                        state.zen_dirty = true;
+                    KeyCode::Char(c) if state.mode == "zen" && state.zen_journal_view == crate::state::ZenJournalView::Compose => {
+                        state.zen_compose_input.push(c);
                     }
 
-                    KeyCode::Backspace if state.mode == "zen" => {
-                        if let Some(last) = state.zen_buffer.last_mut() {
-                            last.pop();
-                        }
-                        state.update_zen_word_count();
-
-                        state.zen_dirty = true;
+                    KeyCode::Backspace if state.mode == "zen" && state.zen_journal_view == crate::state::ZenJournalView::Compose => {
+                        state.zen_compose_input.pop();
                     }
 
-                    KeyCode::Enter if state.mode == "zen" => {
-                        state.zen_buffer.push(String::new());
-                        state.update_zen_word_count();
-                        state.zen_dirty = true;
+                    KeyCode::Enter if state.mode == "zen" && state.zen_journal_view == crate::state::ZenJournalView::Compose => {
+                        let text = state.zen_compose_input.trim().to_string();
+                        if !text.is_empty() {
+                            let entry = crate::state::ZenJournalEntry { timestamp: chrono::Local::now(), text: text.clone() };
+                            state.zen_journal_entries.push(entry.clone());
+                            state.append_journal_entry(&entry);
+                        }
+                        state.zen_compose_input.clear();
                     }
 
                     _ => {}
