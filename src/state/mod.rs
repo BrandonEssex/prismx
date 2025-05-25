@@ -55,6 +55,7 @@ pub struct AppState {
     pub max_visible_lines: usize,
     pub undo_stack: Vec<NodeMap>,
     pub redo_stack: Vec<NodeMap>,
+    pub view_stack: Vec<Option<NodeID>>,
     pub selected_drag_source: Option<NodeID>,
     pub link_map: std::collections::HashMap<NodeID, Vec<NodeID>>,
     pub auto_arrange: bool,
@@ -119,6 +120,7 @@ impl Default for AppState {
             max_visible_lines: 20,
             undo_stack: Vec::new(),
             redo_stack: Vec::new(),
+            view_stack: Vec::new(),
             selected_drag_source: None,
             link_map: std::collections::HashMap::new(),
             auto_arrange: true,
@@ -572,13 +574,40 @@ impl AppState {
     }
 
     pub fn drill_selected(&mut self) {
-        self.drawing_root = self.selected;
+        if let Some(id) = self.selected {
+            if self.nodes.contains_key(&id) {
+                self.view_stack.push(self.drawing_root.take());
+                self.drawing_root = Some(id);
+                self.scroll_x = 0;
+                self.scroll_y = 0;
+                self.zoom_scale = 1.0;
+            } else {
+                eprintln!("❌ Drill failed: selected node not found.");
+            }
+        }
         self.fallback_this_frame = false;
         self.clear_fallback_promotions();
     }
 
     pub fn pop_stack(&mut self) {
+        if let Some(prev) = self.view_stack.pop() {
+            if let Some(id) = prev {
+                if self.nodes.contains_key(&id) {
+                    self.drawing_root = Some(id);
+                    self.scroll_x = 0;
+                    self.scroll_y = 0;
+                    self.zoom_scale = 1.0;
+                    self.fallback_this_frame = false;
+                    self.clear_fallback_promotions();
+                    return;
+                }
+            }
+        }
+
         self.drawing_root = None;
+        self.scroll_x = 0;
+        self.scroll_y = 0;
+        self.zoom_scale = 1.0;
         self.fallback_this_frame = false;
         self.clear_fallback_promotions();
     }
