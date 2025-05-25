@@ -142,18 +142,59 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppStat
         return;
     }
 
-   use std::collections::HashSet;
-  let reachable_ids: HashSet<NodeID> = drawn_at.keys().copied().collect();
+    use std::collections::HashSet;
+    let reachable_ids: HashSet<NodeID> = drawn_at.keys().copied().collect();
 
-  if state.auto_arrange {
-      crate::layout::fallback::promote_unreachable(
-          state,
-          &reachable_ids,
-          &mut drawn_at,
-          &mut node_roles,
-          area.height as i16,
-      );
-  }
+    if state.auto_arrange {
+        let node_ids: Vec<NodeID> = state.nodes.keys().copied().collect();
+        for id in node_ids {
+            if state.fallback_this_frame {
+                continue;
+            }
+            let node = match state.nodes.get(&id) {
+                Some(n) => n,
+                None => continue,
+            };
+            if state.root_nodes.contains(&id)
+                || drawn_at.contains_key(&id)
+                || reachable_ids.contains(&id)
+                || state.fallback_promoted_this_session.contains(&id)
+            {
+                continue;
+            }
+            if node.children.is_empty() {
+                continue;
+            }
+
+            state.root_nodes.push(id);
+            state.root_nodes.sort_unstable();
+            state.root_nodes.dedup();
+            state.fallback_this_frame = true;
+            state.fallback_promoted_this_session.insert(id);
+
+            let Some(n) = state.nodes.get_mut(&id) else {
+                crate::log_debug!(state, "❌ Fallback failed: Node {} not found.", id);
+                return;
+            };
+
+            if n.x == 0 && n.y == 0 {
+                n.x = state.fallback_next_x;
+                n.y = state.fallback_next_y;
+                state.fallback_next_y += 3;
+                if state.fallback_next_y > area.height as i16 - 4 {
+                    state.fallback_next_y = GEMX_HEADER_HEIGHT + 2;
+                    state.fallback_next_x += 20;
+                }
+                crate::log_debug!(state, "📦 Placed Node {} at x={}, y={}", id, n.x, n.y);
+            }
+
+            drawn_at.insert(id, Coords { x: n.x, y: n.y });
+            node_roles.insert(id, LayoutRole::Root);
+
+            crate::log_debug!(state, "🚨 Promoted Node {} to root (label-safe)", id);
+            break;
+        }
+    }
 
     for (&id, _) in &state.nodes {
         if !drawn_at.contains_key(&id) {
