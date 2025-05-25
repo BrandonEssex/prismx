@@ -19,6 +19,9 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppStat
         .borders(Borders::NONE);
     f.render_widget(block, area);
 
+    // Reset unreachable fallback lock for this frame
+    state.fallback_this_frame = false;
+
     // Ensure we always have valid root nodes before any layout logic
     state.ensure_valid_roots();
     if state.auto_arrange {
@@ -87,16 +90,26 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppStat
 
     use std::collections::HashSet;
     let reachable_ids: HashSet<NodeID> = drawn_at.keys().copied().collect();
-    for (id, _node) in &state.nodes {
-        if !reachable_ids.contains(id) && !state.root_nodes.contains(id) {
-            state.root_nodes.push(*id);
-            if state.debug_input_mode {
-                eprintln!("⚠ Node {} is unreachable — promoting to root", id);
+    if state.auto_arrange {
+        for (id, node) in &state.nodes {
+            if !reachable_ids.contains(id)
+                && !state.root_nodes.contains(id)
+                && !state.fallback_this_frame
+                && !node.children.is_empty()
+            {
+                state.root_nodes.push(*id);
+                state.root_nodes.sort_unstable();
+                state.root_nodes.dedup();
+                state.fallback_this_frame = true;
+
+                if state.debug_input_mode {
+                    eprintln!("⚠ Node {} is unreachable — promoting to root", id);
+                }
+
+                break;
             }
         }
     }
-    state.root_nodes.sort_unstable();
-    state.root_nodes.dedup();
 
     if drawn_at.is_empty() {
         f.render_widget(
