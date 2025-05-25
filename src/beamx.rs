@@ -141,21 +141,21 @@ pub fn render_full_border<B: Backend>(
         let p = Paragraph::new("━").style(fg);
         f.render_widget(p, Rect::new(x, area.y, 1, 1));
     }
-    if !beamx_enabled && !trim_right {
-        let tr = Paragraph::new("┓").style(fg);
-        f.render_widget(tr, Rect::new(right, area.y, 1, 1));
-    }
+    let tr = Paragraph::new("┓").style(fg);
+    f.render_widget(tr, Rect::new(right, area.y, 1, 1));
 
     let beam_x = area.right() - 1;
-    let beam_y1 = area.top() + 1;
-    let beam_y2 = area.top() + 4;
+    let arrow_top_y = area.top();
+    let arrow_bottom_y = area.top() + 4;
+    let skip_y_range = (arrow_top_y + 1)..arrow_bottom_y;
     for y in area.y + 1..bottom {
         let p = Paragraph::new("┃").style(fg);
         f.render_widget(p, Rect::new(area.x, y, 1, 1));
         if trim_right {
-            continue;
-        }
-        if beamx_enabled && right == beam_x && (y == beam_y1 || y == beam_y2) {
+            if beamx_enabled && skip_y_range.contains(&y) {
+                continue;
+            }
+        } else if beamx_enabled && right == beam_x && (y == arrow_top_y + 1 || y == arrow_bottom_y) {
             continue;
         }
         let p2 = Paragraph::new("┃").style(fg);
@@ -169,7 +169,7 @@ pub fn render_full_border<B: Backend>(
         f.render_widget(p, Rect::new(x, bottom, 1, 1));
     }
     // Skip lower-right corner artifact if outside bounds
-    if !trim_right && right >= area.x && bottom >= area.y {
+    if right >= area.x && bottom >= area.y {
         let br = Paragraph::new("┛").style(fg);
         f.render_widget(br, Rect::new(right, bottom, 1, 1));
     }
