@@ -16,6 +16,12 @@ pub struct FavoriteEntry {
     pub bounds: Rect,
 }
 
+#[derive(Copy, Clone, PartialEq, Debug)]
+pub enum DockLayout {
+    Vertical,
+    Horizontal,
+}
+
 pub struct AppState {
     pub mode: String,
     pub zen_buffer: Vec<String>,
@@ -60,6 +66,8 @@ pub struct AppState {
     pub plugin_host: PluginHost,
     pub favorite_entries: Vec<FavoriteEntry>,
     pub plugin_favorites: Vec<FavoriteEntry>,
+    pub favorite_dock_limit: usize,
+    pub favorite_dock_layout: DockLayout,
     pub last_mouse_click: Option<(u16, u16)>,
 
 }
@@ -117,6 +125,8 @@ impl Default for AppState {
             plugin_host: PluginHost::new(),
             favorite_entries: Vec::new(),
             plugin_favorites: Vec::new(),
+            favorite_dock_limit: 3,
+            favorite_dock_layout: DockLayout::Vertical,
             last_mouse_click: None,
 
         }
@@ -386,6 +396,18 @@ impl AppState {
                 if let Ok(days) = num.parse::<u64>() {
                     self.plugin_host.add_countdown(label, days);
                 }
+            }
+        } else if input.starts_with("/dock_layout=") {
+            let layout = &input["/dock_layout=".len()..];
+            if layout.eq_ignore_ascii_case("horizontal") {
+                self.favorite_dock_layout = DockLayout::Horizontal;
+            } else if layout.eq_ignore_ascii_case("vertical") {
+                self.favorite_dock_layout = DockLayout::Vertical;
+            }
+        } else if input.starts_with("/dock_limit=") {
+            let value = &input["/dock_limit=".len()..];
+            if let Ok(num) = value.parse::<usize>() {
+                self.favorite_dock_limit = num.min(5);
             }
         } else {
             match input {
