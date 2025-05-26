@@ -395,6 +395,8 @@ pub fn launch_ui() -> std::io::Result<()> {
                     state.mode = "zen".into();
                 } else if match_hotkey("zen_toggle_theme", code, modifiers, &state) && state.mode == "zen" {
                     state.cycle_zen_theme();
+                } else if match_hotkey("debug_snapshot", code, modifiers, &state) {
+                    crate::ui::components::debug::write_debug_snapshot(&mut state);
                 } else if match_hotkey("debug_overlay", code, modifiers, &state) {
                     state.debug_overlay = !state.debug_overlay;
                 } else if match_hotkey("debug_overlay_sticky", code, modifiers, &state) {

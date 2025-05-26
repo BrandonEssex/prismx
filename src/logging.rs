@@ -1,4 +1,7 @@
 use tracing_subscriber::{fmt, prelude::*, EnvFilter};
+use chrono::Local;
+use serde::Serialize;
+use std::path::PathBuf;
 
 /// Initialize global logger for PrismX.
 ///
@@ -22,6 +25,17 @@ pub fn init_logger() {
         .with(EnvFilter::new(filter))
         .with(fmt::Layer::default().with_writer(non_blocking))
         .init();
+}
+
+/// Write a serialized snapshot to `logs/snapshots/` with a timestamped filename.
+pub fn write_snapshot<T: Serialize>(snapshot: &T) -> std::io::Result<PathBuf> {
+    use std::fs;
+    let _ = fs::create_dir_all("logs/snapshots");
+    let filename = format!("{}.json", Local::now().format("%Y%m%d-%H%M"));
+    let path = PathBuf::from("logs/snapshots").join(filename);
+    let json = serde_json::to_string_pretty(snapshot).unwrap();
+    fs::write(&path, json)?;
+    Ok(path)
 }
 
 

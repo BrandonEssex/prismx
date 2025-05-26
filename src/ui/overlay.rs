@@ -18,7 +18,7 @@ pub fn render_dynamic_overlay<B: Backend>(
     let mut pairs: Vec<(String, String)> = state
         .hotkeys
         .iter()
-        .map(|(act, key)| (key.clone(), act.clone()))
+        .map(|(act, key)| (key.clone(), act.replace('_', " ")))
         .collect();
 
     pairs.extend_from_slice(plugin_keys);
