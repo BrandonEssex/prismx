@@ -33,6 +33,7 @@ pub fn load_default_hotkeys() -> HashMap<String, String> {
 
     map.insert("debug_overlay".into(), "alt-d".into());
     map.insert("debug_overlay_sticky".into(), "alt-shift-d".into());
+    map.insert("reload_plugins".into(), "alt-r".into());
 
 
     map
