@@ -10,8 +10,9 @@ use ratatui::{
 use serde::{Deserialize, Serialize};
 use std::fs;
 
-use crate::state::{AppState, DockLayout};
+use crate::state::AppState;
 use crate::beam_color::BeamColor;
+use std::sync::atomic::{AtomicBool, AtomicU8, Ordering};
 
 #[derive(Serialize, Deserialize)]
 #[serde(default)]
@@ -62,6 +63,16 @@ pub fn save_user_settings(state: &AppState) {
     }
 }
 
+static BEAMX_ENABLED: AtomicBool = AtomicBool::new(false);
+static THEME_INDEX: AtomicU8 = AtomicU8::new(0);
+const THEME_PRESETS: [BeamColor; 5] = [
+    BeamColor::Prism,
+    BeamColor::Infrared,
+    BeamColor::Ice,
+    BeamColor::Aqua,
+    BeamColor::Emerald,
+];
+
 pub struct SettingToggle {
     pub label: &'static str,
     pub is_enabled: fn(&AppState) -> bool,
@@ -80,72 +91,60 @@ fn toggle_debug_mode(s: &mut AppState) {
     save_user_settings(s);
 }
 
-fn is_vertical_dock(s: &AppState) -> bool {
-    matches!(s.favorite_dock_layout, DockLayout::Vertical)
+
+fn is_beamx_enabled(_: &AppState) -> bool {
+    BEAMX_ENABLED.load(Ordering::Relaxed)
 }
-fn toggle_dock_layout(s: &mut AppState) {
-    s.favorite_dock_layout = match s.favorite_dock_layout {
-        DockLayout::Vertical => DockLayout::Horizontal,
-        DockLayout::Horizontal => DockLayout::Vertical,
-    };
-    s.dock_focus_index = None;
-    s.status_message.clear();
-    s.status_message_last_updated = None;
+fn toggle_beamx(_: &mut AppState) {
+    let new = !BEAMX_ENABLED.load(Ordering::Relaxed);
+    BEAMX_ENABLED.store(new, Ordering::Relaxed);
+}
+
+fn is_zoom_locked(s: &AppState) -> bool { s.zoom_locked_by_user }
+fn toggle_zoom_lock(s: &mut AppState) {
+    s.zoom_locked_by_user = !s.zoom_locked_by_user;
     save_user_settings(s);
 }
 
-fn toggle_gemx_color(s: &mut AppState) {
-    s.cycle_beam_color("gemx");
-    save_user_settings(s);
+fn theme_label() -> BeamColor {
+    THEME_PRESETS[THEME_INDEX.load(Ordering::Relaxed) as usize]
 }
-fn toggle_zen_color(s: &mut AppState) {
-    s.cycle_beam_color("zen");
-    save_user_settings(s);
-}
-fn toggle_triage_color(s: &mut AppState) {
-    s.cycle_beam_color("triage");
-    save_user_settings(s);
-}
-fn toggle_settings_color(s: &mut AppState) {
-    s.cycle_beam_color("settings");
-    save_user_settings(s);
+fn toggle_theme(state: &mut AppState) {
+    let next = (THEME_INDEX.load(Ordering::Relaxed) + 1) % THEME_PRESETS.len() as u8;
+    THEME_INDEX.store(next, Ordering::Relaxed);
+    let color = theme_label();
+    state.gemx_beam_color = color;
+    state.zen_beam_color = color;
+    state.triage_beam_color = color;
+    state.settings_beam_color = color;
+    save_user_settings(state);
 }
 
 pub const SETTING_TOGGLES: &[SettingToggle] = &[
+    SettingToggle {
+        label: "BeamX Panel",
+        is_enabled: is_beamx_enabled,
+        toggle: toggle_beamx,
+    },
+    SettingToggle {
+        label: "Debug Input Mode",
+        is_enabled: is_debug_mode,
+        toggle: toggle_debug_mode,
+    },
     SettingToggle {
         label: "Auto-Arrange",
         is_enabled: is_auto_arrange,
         toggle: toggle_auto_arrange,
     },
     SettingToggle {
-        label: "Debug Mode",
-        is_enabled: is_debug_mode,
-        toggle: toggle_debug_mode,
+        label: "Lock Zoom Scale",
+        is_enabled: is_zoom_locked,
+        toggle: toggle_zoom_lock,
     },
     SettingToggle {
-        label: "Vertical Dock",
-        is_enabled: is_vertical_dock,
-        toggle: toggle_dock_layout,
-    },
-    SettingToggle {
-        label: "Gemx Color",
+        label: "Theme Preset",
         is_enabled: |_| true,
-        toggle: toggle_gemx_color,
-    },
-    SettingToggle {
-        label: "Zen Color",
-        is_enabled: |_| true,
-        toggle: toggle_zen_color,
-    },
-    SettingToggle {
-        label: "Triage Color",
-        is_enabled: |_| true,
-        toggle: toggle_triage_color,
-    },
-    SettingToggle {
-        label: "Settings Color",
-        is_enabled: |_| true,
-        toggle: toggle_settings_color,
+        toggle: toggle_theme,
     },
 ];
 
@@ -161,14 +160,8 @@ pub fn render_settings<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppStat
             let enabled = (t.is_enabled)(state);
             let selected = i == state.settings_focus_index % SETTING_TOGGLES.len();
             let mut label = t.label.to_string();
-            if t.label.starts_with("Gemx Color") {
-                label = format!("Gemx Color: {}", state.gemx_beam_color);
-            } else if t.label.starts_with("Zen Color") {
-                label = format!("Zen Color: {}", state.zen_beam_color);
-            } else if t.label.starts_with("Triage Color") {
-                label = format!("Triage Color: {}", state.triage_beam_color);
-            } else if t.label.starts_with("Settings Color") {
-                label = format!("Settings Color: {}", state.settings_beam_color);
+            if t.label.starts_with("Theme Preset") {
+                label = format!("Theme Preset: {}", theme_label());
             }
             let check = if enabled { "[x]" } else { "[ ]" };
             let prefix = if selected { "> " } else { "  " };
