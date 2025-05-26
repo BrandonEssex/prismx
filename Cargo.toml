@@ -1,3 +1,14 @@
+[package]
+name = "prismx"
+version = "10.2.0"
+edition = "2021"
+authors = ["Brandon Essex"]
+description = "PrismX: Offline-first planning engine with trust, federation, and plugin runtime."
+
+[[bin]]
+name = "prismx"
+path = "src/main.rs"
+
 [dependencies]
 # Serialization and config
 serde = { version = "1.0", features = ["derive"] }
