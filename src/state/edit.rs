@@ -5,7 +5,6 @@ use crate::layout::{SIBLING_SPACING_X, CHILD_SPACING_Y, GEMX_HEADER_HEIGHT};
 impl AppState {
     pub fn add_child(&mut self) { self.add_child_node(); }
     pub fn add_sibling(&mut self) { self.add_sibling_node(); }
-    pub fn handle_enter_key(&mut self) { self.add_sibling_node(); }
 
     pub fn add_child_node(&mut self) {
         let Some(parent_id) = self.selected else { return };
