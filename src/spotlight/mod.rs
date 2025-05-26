@@ -33,7 +33,10 @@ fn fuzzy_score(candidate: &str, query: &str) -> Option<usize> {
 
 /// Return command suggestions using the predictive ranking parser.
 pub fn command_suggestions(input: &str) -> Vec<&'static str> {
-    parser::rank(input, &COMMANDS).into_iter().take(5).collect()
+    parser::rank(input.trim_start_matches('/'), &COMMANDS)
+        .into_iter()
+        .take(5)
+        .collect()
 }
 
 #[cfg(test)]

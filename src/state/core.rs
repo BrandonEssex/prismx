@@ -4,7 +4,7 @@ use crate::node::{Node, NodeID, NodeMap};
 use crate::layout::{GEMX_HEADER_HEIGHT, LayoutRole};
 use crate::plugin::PluginHost;
 
-use super::hotkeys::load_default_hotkeys;
+use super::hotkeys::load_hotkeys;
 
 #[derive(Clone, PartialEq)]
 pub struct LayoutSnapshot {
@@ -149,6 +149,7 @@ pub struct AppState {
     pub beamx_panel_theme: crate::beam_color::BeamColor,
     pub beamx_panel_visible: bool,
     pub triage_view_mode: crate::state::TriageViewMode,
+    pub plugin_view_mode: crate::state::PluginViewMode,
 }
 
 pub fn default_beamx_panel_visible() -> bool {
@@ -191,7 +192,7 @@ impl Default for AppState {
             show_keymap: false,
             module_switcher_open: false,
             module_switcher_index: 0,
-            hotkeys: load_default_hotkeys(),
+            hotkeys: load_hotkeys(),
             scroll_offset: 0,
             max_visible_lines: 20,
             undo_stack: Vec::new(),
@@ -256,6 +257,7 @@ impl Default for AppState {
             beamx_panel_theme: crate::beam_color::BeamColor::Prism,
             beamx_panel_visible: default_beamx_panel_visible(),
             triage_view_mode: crate::state::TriageViewMode::default(),
+            plugin_view_mode: crate::state::PluginViewMode::default(),
         };
 
         let config = crate::settings::load_user_settings();
@@ -283,6 +285,10 @@ impl Default for AppState {
         state.update_zen_word_count();
         state.load_today_journal();
         state.audit_node_graph();
+
+        if let Some(layout) = crate::config::load_config().layout {
+            crate::state::serialize::apply(&mut state, layout);
+        }
 
         state
     }

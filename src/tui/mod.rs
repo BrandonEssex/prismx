@@ -24,6 +24,7 @@ fn rect_contains(rect: ratatui::layout::Rect, x: u16, y: u16) -> bool {
 }
 use crate::screen::render_gemx;
 use crate::settings::render_settings;
+use crate::ui::components::plugin::render_plugin;
 
 mod hotkeys;
 use hotkeys::match_hotkey;
@@ -63,6 +64,7 @@ pub fn draw<B: Backend>(terminal: &mut Terminal<B>, state: &mut AppState, _last_
             "gemx" => render_gemx(f, vertical[0], state),
             "settings" => render_settings(f, vertical[0], state),
             "triage" => render_triage(f, vertical[0], state),
+            "plugin" => render_plugin(f, vertical[0], state),
             _ => {
                 let fallback = Paragraph::new("Unknown mode");
                 f.render_widget(fallback, vertical[0]);
@@ -266,10 +268,9 @@ pub fn launch_ui() -> std::io::Result<()> {
                     continue;
                 }
 
-                // Alt+Shift+S toggles Spotlight
-                if code == KeyCode::Char('S')
-                    && modifiers.contains(KeyModifiers::ALT)
-                    && modifiers.contains(KeyModifiers::SHIFT)
+                // Alt+Space or Alt+/ toggles Spotlight
+                if (code == KeyCode::Char(' ') || code == KeyCode::Char('/'))
+                    && modifiers == KeyModifiers::ALT
                 {
                     state.show_spotlight = !state.show_spotlight;
                     state.spotlight_history_index = None;
@@ -307,6 +308,8 @@ pub fn launch_ui() -> std::io::Result<()> {
                     break;
                 } else if match_hotkey("toggle_triage", code, modifiers, &state) {
                     state.mode = "triage".into();
+                } else if match_hotkey("toggle_plugin", code, modifiers, &state) {
+                    state.mode = "plugin".into();
                 } else if match_hotkey("toggle_keymap", code, modifiers, &state) {
                     state.show_keymap = !state.show_keymap;
                 } else if match_hotkey("create_child", code, modifiers, &state) && state.mode == "gemx" {

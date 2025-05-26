@@ -1,0 +1,4 @@
+- plugin/panel.rs
+- plugin/registry.rs
+- ui/components/plugin.rs
+- state/view.rs

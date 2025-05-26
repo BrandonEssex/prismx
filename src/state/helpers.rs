@@ -389,3 +389,12 @@ pub fn register_plugin_favorite(state: &mut AppState, icon: &'static str, comman
         state.plugin_favorites.push(FavoriteEntry { icon, command });
     }
 }
+
+impl AppState {
+    pub fn save_layout_config(&self) {
+        let layout = crate::state::serialize::capture(self);
+        let mut cfg = crate::config::load_config();
+        cfg.layout = Some(layout);
+        crate::config::save_config(&cfg);
+    }
+}

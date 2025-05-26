@@ -20,7 +20,7 @@ pub fn render_triage<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState)
     bx_style.prism_color = p;
     let beamx = BeamX {
         tick,
-        enabled: state.beamx_panel_visible,
+        enabled: false,
         mode: BeamXMode::Triage,
         style: bx_style,
         animation: BeamXAnimationMode::PulseEntryRadiate,

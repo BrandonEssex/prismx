@@ -28,3 +28,12 @@ pub fn breath(tick: u64) -> f32 {
         (1.0 - phase) * 2.0
     }
 }
+
+/// Return a style that dims and brightens with a breathing rhythm.
+pub fn breath_style(color: Color, tick: u64) -> Style {
+    if tick % 20 < 10 {
+        Style::default().fg(color).add_modifier(ratatui::style::Modifier::DIM)
+    } else {
+        Style::default().fg(color)
+    }
+}

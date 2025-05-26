@@ -78,6 +78,7 @@ impl AppState {
                 "zen" => self.mode = "zen".into(),
                 "settings" => self.mode = "settings".into(),
                 "gemx" => self.mode = "gemx".into(),
+                "plugin" => self.mode = "plugin".into(),
                 "toggle triage" => self.show_triage = !self.show_triage,
                 "toggle keymap" => self.show_keymap = !self.show_keymap,
                 "toggle spotlight" => self.show_spotlight = !self.show_spotlight,
