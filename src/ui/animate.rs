@@ -47,3 +47,26 @@ pub fn cursor_blink(tick: u64) -> &'static str {
 pub fn cursor_fade(tick: u64) -> Style {
     breath_style(Color::White, tick)
 }
+
+/// Scale factor for a short bounce animation.
+/// `tick` should increment each frame up to 3.
+pub fn soft_bounce(tick: u8, closing: bool) -> f32 {
+    match tick {
+        0 => {
+            if closing {
+                1.0
+            } else {
+                0.9
+            }
+        }
+        1 => 1.05,
+        2 => {
+            if closing {
+                0.9
+            } else {
+                1.0
+            }
+        }
+        _ => 1.0,
+    }
+}
