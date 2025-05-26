@@ -144,7 +144,20 @@ pub struct AppState {
     pub zen_beam_color: crate::beam_color::BeamColor,
     pub triage_beam_color: crate::beam_color::BeamColor,
     pub settings_beam_color: crate::beam_color::BeamColor,
+    pub beamx_panel_theme: crate::beam_color::BeamColor,
+    pub beamx_panel_visible: bool,
+}
 
+pub fn default_beamx_panel_visible() -> bool {
+    #[cfg(target_os = "macos")]
+    {
+        if let Ok(term) = std::env::var("TERM_PROGRAM") {
+            if term.to_lowercase().contains("iterm") {
+                return true;
+            }
+        }
+    }
+    false
 }
 
 impl Default for AppState {
@@ -230,6 +243,8 @@ impl Default for AppState {
             zen_beam_color: crate::beam_color::BeamColor::Prism,
             triage_beam_color: crate::beam_color::BeamColor::Prism,
             settings_beam_color: crate::beam_color::BeamColor::Prism,
+            beamx_panel_theme: crate::beam_color::BeamColor::Prism,
+            beamx_panel_visible: default_beamx_panel_visible(),
 
         };
 
@@ -244,6 +259,8 @@ impl Default for AppState {
         state.zen_beam_color = config.zen_beam_color;
         state.triage_beam_color = config.triage_beam_color;
         state.settings_beam_color = config.settings_beam_color;
+        state.beamx_panel_theme = config.beamx_panel_theme;
+        state.beamx_panel_visible = config.beamx_panel_visible;
 
         for node in state.nodes.values_mut() {
             if node.label.starts_with("[F]") {
@@ -361,6 +378,17 @@ impl AppState {
         }
     }
 
+    pub fn cycle_beamx_panel_theme(&mut self) {
+        use crate::beam_color::BeamColor::*;
+        self.beamx_panel_theme = match self.beamx_panel_theme {
+            Prism => Infrared,
+            Infrared => Aqua,
+            Aqua => Emerald,
+            Emerald => Ice,
+            Ice => Prism,
+        };
+    }
+
     pub fn beam_style_for_mode(&self, mode: &str) -> crate::beamx::BeamStyle {
         let mut style = crate::beamx::style_for_mode(mode);
         let (border, status, prism) = self.beam_color_for_mode(mode).palette();
@@ -391,81 +419,81 @@ impl AppState {
         self.root_nodes.dedup();
     }
 
-    /// Audit node graph for structural issues.
-    pub fn audit_node_graph(&mut self) {
-        use std::collections::{HashSet, VecDeque};
+pub fn audit_node_graph(&mut self) {
+    use std::collections::{HashSet, VecDeque};
 
-        for (id, node) in &self.nodes {
-            if node.label.trim().is_empty() {
-                crate::log_debug!(self, "\u{26a0} Node {} has no label", id);
-            }
-
-            if let Some(pid) = node.parent {
-                if !self.nodes.contains_key(&pid) {
-                    crate::log_debug!(
-                        self,
-                        "\u{26a0} Node {} has missing parent {}",
-                        id,
-                        pid
-                    );
-                } else if !self.nodes[&pid].children.contains(id) {
-                    crate::log_debug!(
-                        self,
-                        "\u{26a0} Parent {} missing child link {}",
-                        pid,
-                        id
-                    );
-                }
-            } else if !self.root_nodes.contains(id) {
-                crate::log_debug!(self, "\u{26a0} Node {} orphaned with no root", id);
-            }
-
-            // cycle detection
-            let mut seen = HashSet::new();
-            let mut current = node.parent;
-            while let Some(pid) = current {
-                if pid == *id {
-                    crate::log_debug!(self, "\u{267b} Cycle detected at node {}", id);
-                    break;
-                }
-                if !seen.insert(pid) {
-                    break;
-                }
-                current = self.nodes.get(&pid).and_then(|n| n.parent);
-            }
+    for (&id, node) in &self.nodes {
+        if node.label.trim().is_empty() {
+            crate::log_debug!(self, "⚠ Node {} has no label", id);
         }
 
-        // find unreachable nodes
-        let mut reachable = HashSet::new();
-        let mut stack: VecDeque<NodeID> = self.root_nodes.iter().copied().collect();
-        while let Some(id) = stack.pop_front() {
-            if reachable.insert(id) {
-                if let Some(n) = self.nodes.get(&id) {
-                    for child in &n.children {
-                        stack.push_back(*child);
-                    }
-                }
+        if let Some(pid) = node.parent {
+            if !self.nodes.contains_key(&pid) {
+                crate::log_debug!(self, "⚠ Node {} has missing parent {}", id, pid);
+            } else if !self.nodes[&pid].children.contains(&id) {
+                crate::log_debug!(self, "⚠ Parent {} missing child link {}", pid, id);
             }
-        }
-        for id in self.nodes.keys() {
-            if !reachable.contains(id) {
-                crate::log_debug!(self, "\u{26a0} Node {} unreachable from roots", id);
-            }
+        } else if !self.root_nodes.contains(&id) {
+            crate::log_debug!(self, "⚠ Node {} orphaned with no root", id);
         }
 
-        // dedup children
-        for (id, node) in self.nodes.iter_mut() {
-            let before = node.children.len();
-            node.children.sort_unstable();
-            node.children.dedup();
-            if node.children.len() != before {
-                crate::log_debug!(self, "\u{26a0} Node {} had duplicate children", id);
+        // Cycle & ancestry loop detection
+        let mut seen = HashSet::new();
+        let mut current = node.parent;
+        let mut depth = 0;
+        while let Some(pid) = current {
+            if pid == id {
+                crate::log_debug!(self, "♻ Cycle detected at node {}", id);
+                #[cfg(not(debug_assertions))]
+                panic!("❌ Node {} is its own ancestor", id);
+                break;
+            }
+            if !seen.insert(pid) {
+                break;
+            }
+            current = self.nodes.get(&pid).and_then(|n| n.parent);
+            depth += 1;
+            if depth > self.nodes.len() {
+                crate::log_debug!(self, "♻ Cycle detected by depth overflow at {}", id);
+                #[cfg(not(debug_assertions))]
+                panic!("❌ Cycle detected at node {}", id);
+                break;
             }
         }
-
-        self.root_nodes.sort_unstable();
-        self.root_nodes.dedup();
     }
+
+    // Reachability from roots
+    let mut reachable = HashSet::new();
+    let mut stack: VecDeque<NodeID> = self.root_nodes.iter().copied().collect();
+    while let Some(id) = stack.pop_front() {
+        if reachable.insert(id) {
+            if let Some(n) = self.nodes.get(&id) {
+                for child in &n.children {
+                    stack.push_back(*child);
+                }
+            }
+        }
+    }
+
+    for id in self.nodes.keys() {
+        if !reachable.contains(id) {
+            crate::log_debug!(self, "⚠ Node {} unreachable from roots", id);
+        }
+    }
+
+    // Dedup children
+    for (id, node) in self.nodes.iter_mut() {
+        let before = node.children.len();
+        node.children.sort_unstable();
+        node.children.dedup();
+        if node.children.len() != before {
+            crate::log_debug!(self, "⚠ Node {} had duplicate children", id);
+        }
+    }
+
+    self.root_nodes.sort_unstable();
+    self.root_nodes.dedup();
+}
 
     /// Ensure nodes have unique positions when auto-arrange is disabled.
     pub fn ensure_grid_positions(&mut self) {
@@ -566,7 +594,7 @@ impl AppState {
         }
     }
 
-    pub fn add_child(&mut self) {
+    pub fn add_child_node(&mut self) {
         let Some(parent_id) = self.selected else { return };
         if !self.nodes.contains_key(&parent_id) {
             return;
@@ -626,9 +654,10 @@ impl AppState {
             }
         }
         self.ensure_valid_roots();
+        self.audit_ancestry();
     }
 
-    pub fn add_sibling(&mut self) {
+    pub fn add_sibling_node(&mut self) {
         let selected_id = match self.selected {
             Some(id) if self.nodes.contains_key(&id) => id,
             _ => return,
@@ -664,13 +693,18 @@ impl AppState {
         self.nodes.insert(new_id, sibling);
         crate::log_debug!(self, "Inserted node {} → parent {:?}", new_id, parent_id);
         self.selected = Some(new_id);
+
         if !self.auto_arrange {
             self.ensure_grid_positions();
         }
+
         crate::layout::roles::recalculate_roles(self);
         self.ensure_valid_roots();
+
+        // Run both audits: structure and ancestry
         self.audit_node_graph();
-    }
+        self.audit_ancestry();
+
 
     pub fn exit_spotlight(&mut self) {
         self.spotlight_input.clear();

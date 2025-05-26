@@ -8,7 +8,7 @@ fn enter_adds_sibling_with_same_parent() {
     }
     let original = state.selected.unwrap();
     let orig_parent = state.nodes.get(&original).unwrap().parent;
-    state.add_sibling();
+    state.add_sibling_node();
     let new_id = state.selected.unwrap();
     assert_ne!(original, new_id);
     assert_eq!(state.nodes.get(&new_id).unwrap().parent, orig_parent);
@@ -27,7 +27,7 @@ fn tab_adds_child_under_selection() {
         b.x = 10;
     }
     let parent = state.selected.unwrap();
-    state.add_child();
+    state.add_child_node();
     let new_id = state.selected.unwrap();
     assert_eq!(state.nodes.get(&new_id).unwrap().parent, Some(parent));
     assert!(state.nodes.get(&parent).unwrap().children.contains(&new_id));
@@ -51,7 +51,7 @@ fn tab_requires_valid_selection() {
     let mut state = AppState::default();
     state.selected = Some(999);
     let count = state.nodes.len();
-    state.add_child();
+    state.add_child_node();
     assert_eq!(state.nodes.len(), count);
 }
 
@@ -59,11 +59,28 @@ fn tab_requires_valid_selection() {
 fn tab_after_enter_keeps_child_reachable() {
     let mut state = AppState::default();
     if let Some(b) = state.nodes.get_mut(&2) { b.x = 10; }
-    state.add_sibling();
+    state.add_sibling_node();
     let sibling = state.selected.unwrap();
-    state.add_child();
+    state.add_child_node();
     let child = state.selected.unwrap();
     let parent = state.nodes.get(&child).unwrap().parent;
     assert!(parent.is_some());
     assert!(state.nodes.get(&parent.unwrap()).unwrap().children.contains(&child));
+}
+
+#[test]
+fn handle_enter_creates_sibling() {
+    let mut state = AppState::default();
+    if let Some(b) = state.nodes.get_mut(&2) { b.x = 10; }
+    let original = state.selected.unwrap();
+    let orig_parent = state.nodes.get(&original).unwrap().parent;
+    state.handle_enter_key();
+    let new_id = state.selected.unwrap();
+    assert_ne!(original, new_id);
+    assert_eq!(state.nodes.get(&new_id).unwrap().parent, orig_parent);
+    if let Some(pid) = orig_parent {
+        assert!(state.nodes.get(&pid).unwrap().children.contains(&new_id));
+    } else {
+        assert!(state.root_nodes.contains(&new_id));
+    }
 }
