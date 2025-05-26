@@ -4,6 +4,8 @@ use serde::{Deserialize, Serialize};
 use serde_json;
 use crate::state::serialize::PersistedLayout;
 
+pub mod theme;
+
 pub const CONFIG_VERSION: u32 = 1;
 
 #[derive(Serialize, Deserialize, Default, Clone)]
