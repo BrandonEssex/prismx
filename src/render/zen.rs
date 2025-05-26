@@ -1,5 +1,6 @@
 use ratatui::{prelude::*, widgets::{Block, Borders, Paragraph}, style::Modifier};
-use crate::state::{AppState, ZenSyntax, ZenTheme, ZenViewMode, ZenMode};
+use crate::state::{AppState, ZenSyntax, ZenTheme, ZenViewMode, ZenJournalView, ZenMode};
+use chrono::Datelike;
 use crate::zen::journal::extract_tags;
 use crate::beamx::render_full_border;
 use crate::ui::beamx::{BeamX, BeamXStyle, BeamXMode, BeamXAnimationMode};
@@ -99,13 +100,26 @@ fn render_history<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
 
     let entries = state.filtered_journal_entries();
     let mut blocks: Vec<Vec<Line>> = Vec::new();
-    let mut current_date = String::new();
+    let mut current_label = String::new();
     for entry in entries.iter() {
         if matches!(state.zen_view_mode, ZenViewMode::Summary) {
-            let d = entry.timestamp.format("%b %d, %Y").to_string();
-            if current_date != d {
-                blocks.push(vec![Line::from(Span::styled(d.clone(), Style::default().fg(Color::Magenta)))]);
-                current_date = d;
+            let label = match state.zen_summary_mode {
+                crate::state::ZenSummaryMode::Weekly => {
+                    format!("Week {}", entry.timestamp.iso_week().week())
+                }
+                crate::state::ZenSummaryMode::Daily => {
+                    let today = chrono::Local::now().date_naive();
+                    let edate = entry.timestamp.date_naive();
+                    if edate == today {
+                        "Today".to_string()
+                    } else {
+                        entry.timestamp.format("%A").to_string()
+                    }
+                }
+            };
+            if current_label != label {
+                blocks.push(vec![Line::from(Span::styled(label.clone(), Style::default().fg(Color::Magenta)))]);
+                current_label = label;
             }
         }
 

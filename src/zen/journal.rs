@@ -89,11 +89,23 @@ impl AppState {
         self.zen_tag_filter = tag.map(|t| t.to_string());
     }
 
-    /// Toggle between Summary and Journal view modes in Zen.
+    /// Toggle between Journal, Daily summary, and Weekly summary modes.
     pub fn toggle_summary_view(&mut self) {
-        self.zen_view_mode = match self.zen_view_mode {
-            crate::state::ZenViewMode::Summary => crate::state::ZenViewMode::Journal,
-            _ => crate::state::ZenViewMode::Summary,
-        };
+        use crate::state::{ZenSummaryMode, ZenViewMode};
+        match self.zen_view_mode {
+            ZenViewMode::Summary => {
+                self.zen_summary_mode = match self.zen_summary_mode {
+                    ZenSummaryMode::Daily => ZenSummaryMode::Weekly,
+                    ZenSummaryMode::Weekly => {
+                        self.zen_view_mode = ZenViewMode::Journal;
+                        ZenSummaryMode::Daily
+                    }
+                };
+            }
+            _ => {
+                self.zen_view_mode = ZenViewMode::Summary;
+                self.zen_summary_mode = ZenSummaryMode::Daily;
+            }
+        }
     }
 }
