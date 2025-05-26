@@ -114,6 +114,5 @@ pub fn render_triage_panel<B: Backend>(f: &mut Frame<B>, area: Rect, state: &App
         .block(Block::default().borders(Borders::NONE).style(block_style));
     f.render_widget(stats, body[1]);
 
-    f.render_widget(para, area);
     render_full_border(f, area, &style, true, false);
 }
