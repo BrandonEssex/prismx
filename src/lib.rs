@@ -26,6 +26,7 @@ pub mod beam_color;
 pub mod ui;
 pub mod gemx;
 pub mod routineforge;
+pub mod triage;
 pub mod settings;
 #[path = "state/mod.rs"]
 pub mod state;

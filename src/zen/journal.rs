@@ -37,4 +37,13 @@ impl AppState {
             self.scroll_offset = index;
         }
     }
+
+    /// Return journal entries containing any of the provided tags.
+    pub fn tagged_journal_entries(&self, tags: &[&str]) -> Vec<ZenJournalEntry> {
+        self.zen_journal_entries
+            .iter()
+            .filter(|e| tags.iter().any(|t| e.text.contains(t)))
+            .cloned()
+            .collect()
+    }
 }
