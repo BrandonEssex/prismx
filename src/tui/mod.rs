@@ -14,10 +14,10 @@ use crate::render::{
     render_shortcuts_overlay,
     render_spotlight,
     render_triage,
-    render_module_switcher,
     render_module_icon,
     render_favorites_dock,
 };
+use crate::ui::components::module::render_module_switcher;
 
 fn rect_contains(rect: ratatui::layout::Rect, x: u16, y: u16) -> bool {
     x >= rect.x && x < rect.x + rect.width && y >= rect.y && y < rect.y + rect.height
@@ -45,6 +45,14 @@ pub fn draw<B: Backend>(terminal: &mut Terminal<B>, state: &mut AppState, _last_
     if state.show_spotlight && !state.prev_show_spotlight {
         state.spotlight_just_opened = true;
         state.spotlight_animation_frame = 0;
+    }
+
+    if state.module_switcher_open && !state.prev_module_switcher_open {
+        state.module_switcher_animation_frame = 0;
+    }
+    if !state.module_switcher_open && state.prev_module_switcher_open {
+        state.module_switcher_closing = true;
+        state.module_switcher_animation_frame = 0;
     }
 
     terminal.draw(|f| {
@@ -78,8 +86,8 @@ pub fn draw<B: Backend>(terminal: &mut Terminal<B>, state: &mut AppState, _last_
             render_shortcuts_overlay(f, layout_chunks[1]);
         }
 
-        if state.module_switcher_open {
-            render_module_switcher(f, vertical[0], state.module_switcher_index);
+        if state.module_switcher_open || state.module_switcher_closing {
+            render_module_switcher(f, vertical[0], &state);
         }
 
         if state.show_spotlight {
@@ -148,6 +156,15 @@ pub fn draw<B: Backend>(terminal: &mut Terminal<B>, state: &mut AppState, _last_
             state.spotlight_just_opened = false;
         }
     }
+    if state.module_switcher_open && state.module_switcher_animation_frame < 3 {
+        state.module_switcher_animation_frame += 1;
+    } else if state.module_switcher_closing {
+        state.module_switcher_animation_frame += 1;
+        if state.module_switcher_animation_frame >= 3 {
+            state.module_switcher_closing = false;
+        }
+    }
+    state.prev_module_switcher_open = state.module_switcher_open;
     state.prev_show_spotlight = state.show_spotlight;
     Ok(())
 }

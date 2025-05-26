@@ -3,7 +3,6 @@ use ratatui::style::Color;
 use std::fs;
 use ratatui::style::{Color, Style};
 
-
 #[derive(Debug, Deserialize, Clone)]
 pub struct ThemeConfig {
     pub dark_mode: bool,
@@ -43,6 +42,15 @@ impl ThemeConfig {
         self.zen_breathe
     }
 
+    /// Accent color used for highlights
+    pub fn accent_color(&self) -> Color {
+        if self.dark_mode {
+            Color::LightCyan
+        } else {
+            Color::Blue
+        }
+    }
+
     /// Accent color used for focused selections.
     pub fn focus_outline(&self) -> Color {
         if self.dark_mode {
@@ -51,11 +59,14 @@ impl ThemeConfig {
             Color::Blue
         }
     }
+
     pub fn dock_pulse(&self) -> bool {
         self.dock_pulse
+    }
 
     pub fn dim_color(&self) -> Color {
         if self.dark_mode { Color::DarkGray } else { Color::Gray }
+    }
 
     pub fn layout_mode(&self) -> crate::gemx::layout::LayoutMode {
         match self.layout_mode.as_deref() {
@@ -64,6 +75,7 @@ impl ThemeConfig {
             _ => crate::gemx::layout::LayoutMode::Tree,
         }
     }
+
     /// Style used to highlight selected rows with good contrast
     pub fn highlight_style(&self) -> Style {
         if self.dark_mode {
@@ -77,4 +89,3 @@ impl ThemeConfig {
     pub fn input_fg(&self) -> Color {
         if self.dark_mode { Color::White } else { Color::Black }
     }
-}
