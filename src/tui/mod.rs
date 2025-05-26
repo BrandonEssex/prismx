@@ -459,9 +459,13 @@ pub fn launch_ui() -> std::io::Result<()> {
                 // ⌨️ Navigation + Typing
                 match code {
                     KeyCode::Esc => {
-                        state.mode = "gemx".into();
-                        state.show_keymap = false;
-                        state.show_spotlight = false;
+                        if state.mode == "plugin" && state.show_plugin_preview {
+                            state.show_plugin_preview = false;
+                        } else {
+                            state.mode = "gemx".into();
+                            state.show_keymap = false;
+                            state.show_spotlight = false;
+                        }
                     }
 
                     KeyCode::Left if state.mode == "gemx" && modifiers == KeyModifiers::CONTROL => {
@@ -493,6 +497,26 @@ pub fn launch_ui() -> std::io::Result<()> {
                     KeyCode::Enter | KeyCode::Char(' ') if state.mode == "settings" => {
                         let idx = state.settings_focus_index % crate::settings::settings_len();
                         (crate::settings::SETTING_TOGGLES[idx].toggle)(&mut state);
+                    }
+
+                    KeyCode::Up if state.mode == "plugin" && !state.show_plugin_preview => {
+                        let len = crate::plugin::registry::registry().len();
+                        if len > 0 {
+                            if state.plugin_registry_index == 0 {
+                                state.plugin_registry_index = len - 1;
+                            } else {
+                                state.plugin_registry_index -= 1;
+                            }
+                        }
+                    }
+                    KeyCode::Down if state.mode == "plugin" && !state.show_plugin_preview => {
+                        let len = crate::plugin::registry::registry().len();
+                        if len > 0 {
+                            state.plugin_registry_index = (state.plugin_registry_index + 1) % len;
+                        }
+                    }
+                    KeyCode::Enter if state.mode == "plugin" && !state.show_plugin_preview => {
+                        state.show_plugin_preview = true;
                     }
 
                     KeyCode::Up if state.favorite_dock_enabled && modifiers == KeyModifiers::NONE => {
