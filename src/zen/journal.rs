@@ -37,6 +37,7 @@ impl AppState {
     pub fn add_journal_text(&mut self, text: &str) {
         for block in split_blocks(text) {
             if block.trim().is_empty() { continue; }
+            self.triage_capture_text(&block, crate::triage::logic::TriageSource::Zen);
             let entry = ZenJournalEntry { timestamp: Local::now(), text: block };
             self.zen_journal_entries.push(entry);
         }

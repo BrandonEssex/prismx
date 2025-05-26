@@ -1,6 +1,7 @@
 use ratatui::prelude::*;
 use crate::state::{AppState, ZenViewMode};
-use crate::render::zen::{render_zen_journal};
+use crate::render::zen::render_zen_journal;
+use crate::canvas::prism::render_prism;
 
 pub fn render_zen<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
     match state.zen_view_mode {
@@ -15,6 +16,7 @@ pub fn render_zen<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
             render_zen_journal(f, right, state);
         }
     }
+    render_prism(f, area);
 }
 
 fn render_classic<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
@@ -30,4 +32,5 @@ fn render_classic<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
         .block(Block::default().borders(Borders::ALL))
         .style(Style::default());
     f.render_widget(para, area);
+    render_prism(f, area);
 }

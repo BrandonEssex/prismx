@@ -1,4 +1,4 @@
-pub const COMMANDS: [&str; 5] = ["triage", "zen", "settings", "goto", "plugin"];
+pub const COMMANDS: [&str; 6] = ["gemx", "triage", "zen", "settings", "goto", "plugin"];
 
 pub fn command_preview(input: &str) -> Option<(&'static str, bool)> {
     let trimmed = input.trim().trim_start_matches('/');
