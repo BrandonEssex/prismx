@@ -5,7 +5,7 @@ use crate::ui::beamx::{BeamX, BeamXStyle, BeamXMode, BeamXAnimationMode};
 use crate::triage::render_triage_panel as render_panel;
 use std::time::{SystemTime, UNIX_EPOCH};
 
-pub fn render_triage<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
+pub fn render_triage<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppState) {
     let style = state.beam_style_for_mode("triage");
     render_panel(f, area, state);
     render_full_border(f, area, &style, true, false);
