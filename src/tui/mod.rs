@@ -283,16 +283,7 @@ pub fn launch_ui() -> std::io::Result<()> {
                 } else if match_hotkey("create_child", code, modifiers, &state) && state.mode == "gemx" {
                     state.ensure_valid_roots();
                     debug_assert!(!state.root_nodes.is_empty());
-                    SimInput::Tab => {
-                        state.push_undo();
-                        state.add_child_node();
-                    }
-
                 } else if match_hotkey("create_sibling", code, modifiers, &state) && state.mode == "gemx" {
-                    SimInput::Enter => {
-                        state.push_undo();
-                        state.add_sibling_node();
-                    }
                 } else if match_hotkey("add_free_node", code, modifiers, &state) {
                     state.push_undo();
                     crate::gemx::interaction::spawn_free_node(&mut state);
