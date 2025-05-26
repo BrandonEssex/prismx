@@ -82,7 +82,7 @@ pub fn spawn_free_node(state: &mut AppState) {
     crate::layout::roles::recalculate_roles(state);
     state.ensure_valid_roots();
     state.audit_node_graph();
-
+}
 
 /// Determine which node is at the given coordinates considering current layout.
 pub fn node_at_position(state: &AppState, x: u16, y: u16) -> Option<NodeID> {
