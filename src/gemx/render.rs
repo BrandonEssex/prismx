@@ -3,6 +3,8 @@ use ratatui::{prelude::*, Frame};
 use crate::state::AppState;
 use crate::render::traits::Renderable;
 use crate::screen::gemx::render_gemx;
+use crate::gemx::layout::{apply_layout, set_mode};
+use crate::config::theme::ThemeConfig;
 
 /// Wrapper implementing [`Renderable`] for the GemX screen.
 pub struct GemxRenderer<'a> {
@@ -11,12 +13,16 @@ pub struct GemxRenderer<'a> {
 
 impl<'a> GemxRenderer<'a> {
     pub fn new(state: &'a mut AppState) -> Self {
+        let cfg = ThemeConfig::load();
+        set_mode(cfg.layout_mode());
         Self { state }
     }
 }
 
 impl<'a> Renderable for GemxRenderer<'a> {
     fn render_frame<B: Backend>(&mut self, f: &mut Frame<B>, area: Rect) {
+        // Apply layout before rendering
+        apply_layout(&mut self.state.nodes, &self.state.root_nodes);
         // Render main GemX view
         render_gemx(f, area, self.state);
     }

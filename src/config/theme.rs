@@ -8,6 +8,7 @@ pub struct ThemeConfig {
     pub opacity: f32,
     pub zen_peaceful: bool,
     pub zen_breathe: bool,
+    pub layout_mode: Option<String>,
 }
 
 impl Default for ThemeConfig {
@@ -17,6 +18,7 @@ impl Default for ThemeConfig {
             opacity: 1.0,
             zen_peaceful: false,
             zen_breathe: false,
+            layout_mode: Some("tree".into()),
         }
     }
 }
@@ -37,6 +39,13 @@ impl ThemeConfig {
         self.zen_breathe
     }
 
+    pub fn layout_mode(&self) -> crate::gemx::layout::LayoutMode {
+        match self.layout_mode.as_deref() {
+            Some("grid") => crate::gemx::layout::LayoutMode::Grid,
+            Some("hybrid") => crate::gemx::layout::LayoutMode::Hybrid,
+            _ => crate::gemx::layout::LayoutMode::Tree,
+        }
+    }
     /// Style used to highlight selected rows with good contrast
     pub fn highlight_style(&self) -> Style {
         if self.dark_mode {
