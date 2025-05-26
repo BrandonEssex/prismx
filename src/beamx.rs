@@ -126,7 +126,13 @@ pub fn render_full_border<B: Backend>(
     beamx_enabled: bool,
     trim_right: bool,
 ) {
-    let fg = Style::default().fg(style.border_color);
+    use crate::ui::animate::breath_style;
+    use std::time::{SystemTime, UNIX_EPOCH};
+    let tick = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap_or_default()
+        .as_millis() / 300;
+    let fg = breath_style(style.border_color, tick as u64);
     let right = area.x + area.width.saturating_sub(1);
     let bottom = area.y + area.height.saturating_sub(1);
 

@@ -1,4 +1,4 @@
-use ratatui::{prelude::*, widgets::{Block, Borders, Paragraph}};
+use ratatui::{prelude::*, widgets::{Block, Borders, Paragraph}, style::Modifier};
 use crate::state::{AppState, ZenSyntax, ZenTheme, ZenJournalView, ZenViewMode};
 use crate::zen::journal::extract_tags;
 use crate::beamx::render_full_border;
@@ -109,12 +109,13 @@ fn render_history<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
         let tags = extract_tags(&entry.text);
         let tag_line = if tags.is_empty() { None } else { Some(tags.join(" ")) };
         let mut lines: Vec<Line> = Vec::new();
-        lines.push(Line::from(entry.timestamp.format("%b %d, %Y – %-I:%M%p").to_string()));
+        let ts = entry.timestamp.format("%b %d, %Y – %-I:%M%p").to_string();
+        lines.push(Line::from(Span::styled(ts, Style::default().fg(Color::Gray).add_modifier(Modifier::DIM))));
         if let Some(t) = tag_line {
             lines.push(highlight_tags_line(&t));
         }
         for l in entry.text.lines() { lines.push(highlight_tags_line(l)); }
-        lines.push(Line::from("────────────"));
+        lines.push(Line::from(Span::styled("────────────", Style::default().fg(Color::Gray).add_modifier(Modifier::DIM))));
         blocks.push(lines);
     }
 
@@ -141,13 +142,23 @@ fn render_input<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState, tick
 }
 
 fn render_review<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
+    use ratatui::text::{Span, Line};
     let padding = area.width / 4;
     let usable_width = area.width - padding * 2;
     let mut y = area.y + TOP_BAR_HEIGHT;
     for entry in state.filtered_journal_entries().into_iter().rev() {
-        let text = format!("\u{1F551} {}\n{}", entry.timestamp.format("%I:%M %p"), entry.text);
-        let rect = Rect::new(area.x + padding, y, usable_width, 3);
-        let p = Paragraph::new(text).block(Block::default().borders(Borders::BOTTOM));
+        let mut lines = vec![];
+        let ts = entry.timestamp.format("%I:%M %p").to_string();
+        lines.push(Line::from(vec![
+            Span::raw("\u{1F551} "),
+            Span::styled(ts, Style::default().fg(Color::Gray).add_modifier(Modifier::DIM)),
+        ]));
+        for l in entry.text.lines() {
+            lines.push(highlight_tags_line(l));
+        }
+        lines.push(Line::from(Span::styled("────────────", Style::default().fg(Color::Gray).add_modifier(Modifier::DIM))));
+        let rect = Rect::new(area.x + padding, y, usable_width, lines.len() as u16);
+        let p = Paragraph::new(lines).block(Block::default().borders(Borders::NONE));
         f.render_widget(p, rect);
         y = y.saturating_add(3);
         if y > area.bottom() { break; }
@@ -166,7 +177,7 @@ fn render_top_icon<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState, t
     }
 
     if let Some(glyph) = &state.zen_icon_glyph {
-        let style = Style::default().fg(Color::Magenta).add_modifier(Modifier::BOLD);
+        let style = Style::default().fg(Color::Magenta);
         let x = area.right().saturating_sub(glyph.len() as u16 + 1);
         f.render_widget(Paragraph::new(glyph.as_str()).style(style), Rect::new(x, area.y + 1, glyph.len() as u16, 1));
     } else {
@@ -193,12 +204,12 @@ fn parse_markdown_line(input: &str) -> Line {
     if input.starts_with("### ") {
         return Line::from(Span::styled(&input[4..], Style::default().add_modifier(Modifier::ITALIC)));
     } else if input.starts_with("## ") {
-        return Line::from(Span::styled(&input[3..], Style::default().add_modifier(Modifier::BOLD)));
+        return Line::from(Span::from(&input[3..]));
     } else if input.starts_with("# ") {
-        return Line::from(Span::styled(&input[2..], Style::default().add_modifier(Modifier::BOLD | Modifier::UNDERLINED)));
+        return Line::from(Span::from(&input[2..]));
     } else if input.starts_with("- ") || input.starts_with("* ") {
         return Line::from(vec![
-            Span::styled("• ", Style::default().add_modifier(Modifier::BOLD)),
+            Span::raw("• "),
             Span::raw(&input[2..]),
         ]);
     }
@@ -220,7 +231,7 @@ fn parse_markdown_line(input: &str) -> Line {
                 bold.push(next);
                 chars.next();
             }
-            spans.push(Span::styled(bold, Style::default().add_modifier(Modifier::BOLD)));
+            spans.push(Span::raw(bold));
         } else if c == '_' {
             let mut italic = String::new();
             while let Some(&next) = chars.peek() {
