@@ -200,32 +200,55 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppStat
             state.fallback_this_frame = true;
             state.fallback_promoted_this_session.insert(id);
 
+            use std::collections::HashSet;
+            let filled: HashSet<(i16, i16)> =
+                state.nodes.values().map(|n| (n.x, n.y)).collect();
+
             let Some(n) = state.nodes.get_mut(&id) else {
                 crate::log_debug!(state, "❌ Fallback failed: Node {} not found.", id);
                 return;
             };
 
-            if n.x == 0 && n.y == 0 {
-                n.x = state.fallback_next_x;
-                n.y = state.fallback_next_y;
-                state.fallback_next_y += 3;
-                if state.fallback_next_y > area.height as i16 - 4 {
-                    state.fallback_next_y = GEMX_HEADER_HEIGHT + 2;
-                    state.fallback_next_x += 20;
-                    if state.fallback_next_x > area.width as i16 - RESERVED_ZONE_W - 1 {
-                        state.fallback_next_x = 6;
-                    }
-                }
-                crate::log_debug!(state, "📦 Placed Node {} at x={}, y={}", id, n.x, n.y);
+    if n.x == 0 && n.y == 0 {
+        let step_x = 20;
+        let step_y = 3;
+        let base_y = GEMX_HEADER_HEIGHT + 2;
+        let max_y = area.height as i16 - 4;
+        let max_x = area.width as i16 - RESERVED_ZONE_W - 1;
+
+        let mut x = state.fallback_next_x;
+        let mut y = state.fallback_next_y;
+
+        while filled.contains(&(x, y)) {
+            if state.debug_input_mode {
+                crate::log_debug!(state, "↪ collision at {},{}", x, y);
             }
-
-            drawn_at.insert(id, Coords { x: n.x, y: n.y });
-            node_roles.insert(id, LayoutRole::Root);
-
-            crate::log_debug!(state, "🚨 Promoted Node {} to root (label-safe)", id);
-            break;
+            y += step_y;
+            if y > max_y {
+                y = base_y;
+                x += step_x;
+            }
+            if x > max_x {
+                x = 6;
+            }
         }
+
+        n.x = x;
+        n.y = y;
+
+        // Update fallback tracker
+        state.fallback_next_x = x;
+        state.fallback_next_y = y + step_y;
     }
+
+    crate::log_debug!(state, "📦 Placed Node {} at x={}, y={}", id, n.x, n.y);
+
+    drawn_at.insert(id, Coords { x: n.x, y: n.y });
+    node_roles.insert(id, LayoutRole::Root);
+
+    crate::log_debug!(state, "🚨 Promoted Node {} to root (label-safe)", id);
+    break;
+
 
     for (&id, _) in &state.nodes {
         if !drawn_at.contains_key(&id) {
