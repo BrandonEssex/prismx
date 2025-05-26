@@ -1,0 +1,4 @@
+- triage/panel.rs
+- triage/logic.rs
+- zen/journal.rs
+- state/view.rs

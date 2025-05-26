@@ -1,17 +1,49 @@
 use ratatui::prelude::*;
-use ratatui::widgets::{Block, Borders};
+use ratatui::widgets::{Block, Borders, Paragraph};
+use ratatui::text::{Line, Span};
 
-use crate::ui::components::feed::render_feed;
 use crate::state::AppState;
-use super::logic;
+use crate::triage::logic::{TriageSource, TriageEntry};
 use crate::beamx::render_full_border;
 
-pub fn render_panel<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
+pub fn render_triage_panel<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
     let style = state.beam_style_for_mode("triage");
-    let entries = logic::collect(&state.zen_journal_entries);
-    let block = Block::default().title("Triage").borders(Borders::NONE);
-    f.render_widget(block, area);
-    let inner = Rect::new(area.x + 1, area.y + 1, area.width - 2, area.height - 2);
-    render_feed(f, inner, &entries);
+
+    let mut lines = Vec::new();
+    for entry in &state.triage_entries {
+        if entry.archived { continue; }
+
+        let mut entry_style = Style::default();
+        if entry.resolved {
+            entry_style = entry_style.fg(Color::DarkGray);
+        }
+
+        let src = match entry.source {
+            TriageSource::Zen => "Zen",
+            TriageSource::Gemx => "GemX",
+            TriageSource::Spotlight => "Spotlight",
+        };
+
+        lines.push(Line::from(vec![
+            Span::styled(format!("[{}] {}", entry.id, src), entry_style),
+            Span::raw(" "),
+            Span::styled(&entry.text, entry_style),
+        ]));
+
+        lines.push(Line::from(
+            Span::styled("[r]esolve [d]ismiss [a]rchive", Style::default().fg(Color::Blue)),
+        ));
+
+        lines.push(Line::from(""));
+    }
+
+    if lines.is_empty() {
+        lines.push(Line::from("No triage entries"));
+    }
+
+    let para = Paragraph::new(lines)
+        .block(Block::default().title("Triage").borders(Borders::NONE));
+
+    f.render_widget(para, area);
     render_full_border(f, area, &style, true, false);
 }

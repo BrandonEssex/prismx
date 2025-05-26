@@ -3,6 +3,7 @@ pub enum ZenViewMode {
     Journal,
     Classic,
     Split,
+    Summary,
 }
 
 impl Default for ZenViewMode {
@@ -12,6 +13,7 @@ impl Default for ZenViewMode {
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub enum TriageViewMode {
     Feed,
+    Actions,
 }
 
 impl Default for TriageViewMode {

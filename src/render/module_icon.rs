@@ -6,6 +6,7 @@ use ratatui::{
     Frame,
 };
 use crate::beamx;
+use unicode_width::UnicodeWidthStr;
 
 pub fn module_icon(mode: &str) -> &'static str {
     match mode {
@@ -40,7 +41,7 @@ pub fn render_module_icon<B: Backend>(f: &mut Frame<B>, area: Rect, mode: &str) 
         .fg(theme.border_color)
         .add_modifier(Modifier::BOLD);
 
-    let text_width = content.chars().count() as u16;
+    let text_width = UnicodeWidthStr::width(content.as_str()) as u16;
     let block_width = text_width + 2;
     let height = 3u16;
 

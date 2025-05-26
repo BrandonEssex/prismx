@@ -365,7 +365,8 @@ pub fn launch_ui() -> std::io::Result<()> {
                     state.zen_view_mode = match state.zen_view_mode {
                         crate::state::ZenViewMode::Journal => crate::state::ZenViewMode::Classic,
                         crate::state::ZenViewMode::Classic => crate::state::ZenViewMode::Split,
-                        crate::state::ZenViewMode::Split => crate::state::ZenViewMode::Journal,
+                        crate::state::ZenViewMode::Split => crate::state::ZenViewMode::Summary,
+                        crate::state::ZenViewMode::Summary => crate::state::ZenViewMode::Journal,
                     };
                 } else if code == KeyCode::Char('t')
                     && modifiers == KeyModifiers::CONTROL

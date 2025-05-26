@@ -1,5 +1,6 @@
 use ratatui::{prelude::*, widgets::{Block, Borders, Paragraph}};
-use crate::state::{AppState, ZenSyntax, ZenTheme, ZenJournalView};
+use crate::state::{AppState, ZenSyntax, ZenTheme, ZenJournalView, ZenViewMode};
+use crate::zen::journal::extract_tags;
 use crate::beamx::render_full_border;
 use crate::ui::beamx::{BeamX, BeamXStyle, BeamXMode, BeamXAnimationMode};
 use crate::render::traits::Renderable;
@@ -93,32 +94,37 @@ fn render_history<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
         return;
     }
 
-    let mut y = area.bottom();
-    for entry in state.zen_journal_entries.iter().rev() {
-        let tags: Vec<&str> = entry
-            .text
-            .split_whitespace()
-            .filter(|t| t.starts_with('#'))
-            .collect();
-        let tag_line = if tags.is_empty() { None } else { Some(tags.join(" ")) };
+    let entries = state.filtered_journal_entries();
+    let mut blocks: Vec<Vec<Line>> = Vec::new();
+    let mut current_date = String::new();
+    for entry in entries.iter() {
+        if matches!(state.zen_view_mode, ZenViewMode::Summary) {
+            let d = entry.timestamp.format("%b %d, %Y").to_string();
+            if current_date != d {
+                blocks.push(vec![Line::from(Span::styled(d.clone(), Style::default().fg(Color::Magenta)))]);
+                current_date = d;
+            }
+        }
 
+        let tags = extract_tags(&entry.text);
+        let tag_line = if tags.is_empty() { None } else { Some(tags.join(" ")) };
         let mut lines: Vec<Line> = Vec::new();
         lines.push(Line::from(entry.timestamp.format("%b %d, %Y – %-I:%M%p").to_string()));
-        if let Some(t) = &tag_line {
-            lines.push(Line::from(t.clone()));
+        if let Some(t) = tag_line {
+            lines.push(highlight_tags_line(&t));
         }
-        for l in entry.text.lines() {
-            lines.push(Line::from(l.to_string()));
-        }
+        for l in entry.text.lines() { lines.push(highlight_tags_line(l)); }
         lines.push(Line::from("────────────"));
+        blocks.push(lines);
+    }
 
-        let h = lines.len() as u16;
-        if y < area.y + h {
-            break;
-        }
+    let mut y = area.bottom();
+    for block in blocks.into_iter().rev() {
+        let h = block.len() as u16;
+        if y < area.y + h { break; }
         y -= h;
         let rect = Rect::new(area.x + padding, y, usable_width, h);
-        let widget = Paragraph::new(lines).block(Block::default().borders(Borders::NONE));
+        let widget = Paragraph::new(block).block(Block::default().borders(Borders::NONE));
         f.render_widget(widget, rect);
     }
 }
@@ -138,7 +144,7 @@ fn render_review<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
     let padding = area.width / 4;
     let usable_width = area.width - padding * 2;
     let mut y = area.y + TOP_BAR_HEIGHT;
-    for entry in state.zen_journal_entries.iter().rev() {
+    for entry in state.filtered_journal_entries().into_iter().rev() {
         let text = format!("\u{1F551} {}\n{}", entry.timestamp.format("%I:%M %p"), entry.text);
         let rect = Rect::new(area.x + padding, y, usable_width, 3);
         let p = Paragraph::new(text).block(Block::default().borders(Borders::BOTTOM));
@@ -308,4 +314,18 @@ fn parse_zen_line(input: &str, syntax: ZenSyntax) -> Line {
         ZenSyntax::Json => parse_json_line(input),
         ZenSyntax::None => Line::from(input),
     }
+}
+
+fn highlight_tags_line(input: &str) -> Line<'static> {
+    use ratatui::text::{Span, Line};
+    let mut spans = Vec::new();
+    for token in input.split_whitespace() {
+        if token.starts_with('#') {
+            spans.push(Span::styled(token.to_string(), Style::default().fg(Color::Blue)));
+        } else {
+            spans.push(Span::raw(token.to_string()));
+        }
+        spans.push(Span::raw(" "));
+    }
+    Line::from(spans)
 }
