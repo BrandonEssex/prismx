@@ -1,0 +1,4 @@
+- ui/components/logs.rs
+- ui/input.rs
+- config/hotkeys.toml
+- state/view.rs

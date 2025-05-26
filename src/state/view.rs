@@ -71,3 +71,13 @@ impl DebugSnapshot {
         }
     }
 }
+
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+pub enum LogViewState {
+    Hidden,
+    Visible,
+}
+
+impl Default for LogViewState {
+    fn default() -> Self { Self::Hidden }
+}
