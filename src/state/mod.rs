@@ -9,11 +9,13 @@ mod spotlight;
 mod history;
 mod drag;
 mod helpers;
+mod triage;
 mod view;
 
 pub use core::*;
 
 pub use helpers::register_plugin_favorite;
+pub use triage::*;
 
 pub use view::*;
 
