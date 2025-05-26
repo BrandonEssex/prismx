@@ -6,6 +6,8 @@ use crate::state::serialize::PersistedLayout;
 
 pub const CONFIG_VERSION: u32 = 1;
 
+pub mod theme;
+
 #[derive(Serialize, Deserialize, Default, Clone)]
 pub struct PrismConfig {
     pub version: u32,
