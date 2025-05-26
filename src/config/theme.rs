@@ -1,14 +1,16 @@
-use serde::Deserialize;
-use ratatui::style::Color;
+use serde::{Deserialize, Serialize};
 use std::fs;
 use ratatui::style::{Color, Style};
 
-#[derive(Debug, Deserialize, Clone)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct ThemeConfig {
     pub dark_mode: bool,
     pub opacity: f32,
     pub zen_peaceful: bool,
     pub zen_breathe: bool,
+    pub text_brightness: f32,
+    pub border_contrast: f32,
+    pub accent_color: String,
     pub dock_pulse: bool,
     pub layout_mode: Option<String>,
 }
@@ -20,11 +22,15 @@ impl Default for ThemeConfig {
             opacity: 1.0,
             zen_peaceful: false,
             zen_breathe: true,
+            text_brightness: 1.0,
+            border_contrast: 1.0,
+            accent_color: "cyan".into(),
             dock_pulse: true,
             layout_mode: Some("tree".into()),
         }
     }
 }
+
 
 impl ThemeConfig {
     pub fn load() -> Self {
@@ -32,6 +38,14 @@ impl ThemeConfig {
             .ok()
             .and_then(|s| toml::from_str(&s).ok())
             .unwrap_or_default()
+    }
+
+    /// Save the current theme configuration to `config/theme.toml`.
+    pub fn save(&self) {
+        if let Ok(serialized) = toml::to_string(self) {
+            let _ = fs::create_dir_all("config");
+            let _ = fs::write("config/theme.toml", serialized);
+        }
     }
 
     pub fn zen_peaceful(&self) -> bool {
