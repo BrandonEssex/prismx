@@ -43,6 +43,7 @@ impl Default for PluginViewMode {
     fn default() -> Self { Self::Registry }
 }
 
+
 #[derive(Clone, serde::Serialize)]
 pub struct DebugSnapshot {
     pub active_module: String,

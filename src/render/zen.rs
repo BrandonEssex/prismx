@@ -1,5 +1,5 @@
 use ratatui::{prelude::*, widgets::{Block, Borders, Paragraph}, style::Modifier};
-use crate::state::{AppState, ZenSyntax, ZenTheme, ZenJournalView, ZenViewMode};
+use crate::state::{AppState, ZenSyntax, ZenTheme, ZenViewMode, ZenMode};
 use crate::zen::journal::extract_tags;
 use crate::beamx::render_full_border;
 use crate::ui::beamx::{BeamX, BeamXStyle, BeamXMode, BeamXAnimationMode};
@@ -61,9 +61,9 @@ pub fn render_zen_journal<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppS
     let bg = Block::default().style(Style::default().bg(bg_color));
     f.render_widget(bg, area);
 
-    match state.zen_journal_view {
-        ZenJournalView::Compose => render_compose(f, area, state, tick),
-        ZenJournalView::Review => render_review(f, area, state),
+    match state.zen_mode {
+        ZenMode::Compose => render_compose(f, area, state, tick),
+        ZenMode::Scroll => render_review(f, area, state),
     }
     render_top_icon(f, area, state, tick);
 }
