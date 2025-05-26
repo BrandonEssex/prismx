@@ -14,21 +14,6 @@ use crate::state::AppState;
 use crate::beam_color::BeamColor;
 use std::sync::atomic::{AtomicBool, AtomicU8, Ordering};
 
-auto_arrange = false
-debug_input_mode = false
-dock_layout = "vertical"
-
-gemx_beam_color = "Prism"
-zen_beam_color = "Aqua"
-triage_beam_color = "Aqua"
-settings_beam_color = "Aqua"
-
-zen_icon_enabled = true
-zen_icon_glyph = ""
-
-beamx_panel_theme = "Prism"
-beamx_panel_visible = true
-
 impl Default for UserSettings {
     fn default() -> Self {
         Self {
