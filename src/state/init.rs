@@ -1,4 +1,5 @@
 use crate::plugin::loader;
+use crate::plugin::registry;
 
 /// Initialize runtime features on startup.
 pub fn init() {
@@ -12,6 +13,7 @@ pub fn init() {
             tracing::debug!("[INIT] plugin available: {}", plug.path.display());
         }
     }
+    registry::init();
 }
 
 /// Reload all plugins in the `plugins/` directory. Only `.so` and `.dylib`
