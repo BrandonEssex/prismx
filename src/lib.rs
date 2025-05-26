@@ -28,7 +28,6 @@ pub mod gemx;
 pub mod routineforge;
 pub mod triage;
 pub mod settings;
-pub mod triage;
 #[path = "state/mod.rs"]
 pub mod state;
 pub mod shortcuts;

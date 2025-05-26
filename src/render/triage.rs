@@ -2,7 +2,7 @@ use ratatui::{backend::Backend, layout::Rect, Frame};
 use crate::beamx::render_full_border;
 use crate::state::AppState;
 use crate::ui::beamx::{BeamX, BeamXStyle, BeamXMode, BeamXAnimationMode};
-use crate::triage::panel::render_panel;
+use crate::triage::panel::render_triage_panel;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 pub fn render_triage<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
