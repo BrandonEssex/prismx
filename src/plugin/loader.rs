@@ -14,6 +14,29 @@ pub struct LoadedPlugin {
     lib: Library,
 }
 
+/// Attempt to load a single plugin library and validate that it exposes the
+/// required `prismx_plugin_entry` symbol.
+pub fn load_plugin(path: &str) -> Option<LoadedPlugin> {
+    unsafe {
+        match Library::new(path) {
+            Ok(lib) => {
+                let has_entry = lib.get::<libloading::Symbol<unsafe extern "C" fn()>>(b"prismx_plugin_entry").is_ok();
+                if has_entry {
+                    tracing::info!("[PLUGIN] loaded {}", path);
+                    Some(LoadedPlugin { path: PathBuf::from(path), lib })
+                } else {
+                    tracing::info!("[PLUGIN] missing entry symbol in {}", path);
+                    None
+                }
+            }
+            Err(err) => {
+                tracing::info!("[PLUGIN] failed to load {}: {}", path, err);
+                None
+            }
+        }
+    }
+}
+
 /// Search the given directory for `.so` or `.dylib` files and attempt to load
 /// them using `libloading`. Any successfully opened libraries are returned.
 pub fn discover_plugins(dir: &Path) -> Vec<LoadedPlugin> {

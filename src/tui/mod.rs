@@ -377,6 +377,8 @@ pub fn launch_ui() -> std::io::Result<()> {
                 } else if match_hotkey("debug_overlay_sticky", code, modifiers, &state) {
                     state.debug_overlay_sticky = !state.debug_overlay_sticky;
                     state.debug_overlay = state.debug_overlay_sticky;
+                } else if match_hotkey("reload_plugins", code, modifiers, &state) {
+                    crate::state::init::reload_plugins();
                 } else if code == KeyCode::Char('v')
                     && modifiers.contains(KeyModifiers::CONTROL)
                     && modifiers.contains(KeyModifiers::SHIFT)
