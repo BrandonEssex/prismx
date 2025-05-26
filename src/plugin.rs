@@ -1,3 +1,4 @@
+pub mod loader;
 use crate::plugins::{PluginFrame, PluginRender, PomodoroPlugin, CountdownPlugin};
 use ratatui::layout::Rect;
 use std::collections::VecDeque;

@@ -9,6 +9,7 @@ mod spotlight;
 mod history;
 mod drag;
 mod helpers;
+pub mod init;
 
 pub use core::*;
 
