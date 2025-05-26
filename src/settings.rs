@@ -28,7 +28,7 @@ use ratatui::{
 use std::fs;
 
 use crate::state::AppState;
-use std::sync::atomic::{AtomicBool, AtomicU8, Ordering};
+use std::sync::atomic::{AtomicU8, Ordering};
 
 impl Default for UserSettings {
     fn default() -> Self {
@@ -76,7 +76,6 @@ pub fn save_user_settings(state: &AppState) {
     }
 }
 
-static BEAMX_ENABLED: AtomicBool = AtomicBool::new(false);
 static THEME_INDEX: AtomicU8 = AtomicU8::new(0);
 const THEME_PRESETS: [BeamColor; 5] = [
     BeamColor::Prism,
@@ -105,13 +104,6 @@ fn toggle_debug_mode(s: &mut AppState) {
 }
 
 
-fn is_beamx_enabled(_: &AppState) -> bool {
-    BEAMX_ENABLED.load(Ordering::Relaxed)
-}
-fn toggle_beamx(_: &mut AppState) {
-    let new = !BEAMX_ENABLED.load(Ordering::Relaxed);
-    BEAMX_ENABLED.store(new, Ordering::Relaxed);
-}
 
 fn is_zoom_locked(s: &AppState) -> bool { s.zoom_locked_by_user }
 fn toggle_zoom_lock(s: &mut AppState) {
@@ -145,11 +137,6 @@ fn toggle_beamx_theme(s: &mut AppState) {
 }
 
 pub const SETTING_TOGGLES: &[SettingToggle] = &[
-    SettingToggle {
-        label: "BeamX Panel",
-        is_enabled: is_beamx_enabled,
-        toggle: toggle_beamx,
-    },
     SettingToggle {
         label: "Debug Input Mode",
         is_enabled: is_debug_mode,
