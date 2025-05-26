@@ -63,7 +63,9 @@ pub fn render_triage_panel<B: Backend>(f: &mut Frame<B>, area: Rect, state: &App
 
         let mut entry_style = Style::default();
         if entry.resolved {
-            entry_style = entry_style.fg(Color::DarkGray);
+            entry_style = entry_style
+                .fg(Color::DarkGray)
+                .add_modifier(Modifier::DIM);
         }
 
         let src = match entry.source {
@@ -78,9 +80,14 @@ pub fn render_triage_panel<B: Backend>(f: &mut Frame<B>, area: Rect, state: &App
             Span::styled(&entry.text, entry_style),
         ]));
 
-        lines.push(Line::from(
-            Span::styled("[r]esolve [d]ismiss [a]rchive", Style::default().fg(Color::Blue)),
-        ));
+        if !entry.resolved {
+            lines.push(Line::from(
+                Span::styled(
+                    "[r]esolve [d]ismiss [a]rchive",
+                    Style::default().fg(Color::Blue),
+                ),
+            ));
+        }
 
         lines.push(Line::from(""));
     }
