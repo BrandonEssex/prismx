@@ -29,6 +29,10 @@ pub fn load_default_hotkeys() -> HashMap<String, String> {
     map.insert("redo".into(), "ctrl-shift-z".into());
     map.insert("toggle_snap_grid".into(), "ctrl-g".into());
     map.insert("zen_toggle_theme".into(), "ctrl-a".into());
+    map.insert("debug_snapshot".into(), "alt+shift-s".into());
+
+    map.insert("debug_overlay".into(), "alt-d".into());
+    map.insert("debug_overlay_sticky".into(), "alt-shift-d".into());
 
 
     map

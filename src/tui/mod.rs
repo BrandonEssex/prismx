@@ -26,6 +26,8 @@ use crate::screen::render_gemx;
 use crate::settings::render_settings;
 use crate::ui::components::plugin::render_plugin;
 use crate::ui::components::debug::render_debug;
+use crate::ui::components::logs::render_logs;
+use crate::ui::input;
 
 mod hotkeys;
 use hotkeys::match_hotkey;
@@ -33,7 +35,7 @@ use crate::shortcuts::{match_shortcut, Shortcut};
 use std::time::Duration;
 
 pub fn draw<B: Backend>(terminal: &mut Terminal<B>, state: &mut AppState, _last_key: &str) -> std::io::Result<()> {
-    use ratatui::layout::{Constraint, Direction, Layout};
+    use ratatui::layout::{Constraint, Direction, Layout, Rect};
     use ratatui::widgets::Paragraph;
 
     if !state.auto_arrange {
@@ -119,7 +121,25 @@ pub fn draw<B: Backend>(terminal: &mut Terminal<B>, state: &mut AppState, _last_
         };
         render_module_icon(f, full, &state.mode);
         render_favorites_dock(f, full, state);
+        if state.show_logs {
+            render_logs(f, full, state);
+        }
+
+        if state.debug_overlay || state.debug_overlay_sticky {
+            let width = 30;
+            let height = 9;
+            let x = full.right().saturating_sub(width + 1);
+            let area = Rect::new(x, full.y, width, height);
+            crate::ui::overlay::render_debug_overlay(
+                f,
+                area,
+                state,
+                state.debug_overlay_sticky,
+            );
+        }
+
         crate::ui::components::debug::render_debug(f, full, state);
+
         render_status_bar(f, vertical[1], display_string.as_str());
     })?;
     if state.spotlight_just_opened {
@@ -177,6 +197,12 @@ pub fn launch_ui() -> std::io::Result<()> {
                     last_key = format!("{:?} + {:?}", code, modifiers);
                     if state.debug_input_mode {
                         crate::tui::hotkeys::debug_input(&mut state, code, modifiers);
+                    }
+                    if state.show_logs {
+                        if input::handle_log_keys(&mut state, code, modifiers) {
+                            draw(&mut terminal, &mut state, &last_key)?;
+                            continue;
+                        }
                     }
                     if let Some(sc) = match_shortcut(code, modifiers) {
                         match sc {
@@ -280,6 +306,17 @@ pub fn launch_ui() -> std::io::Result<()> {
                     continue;
                 }
 
+                // Alt+L toggles log viewer
+                if code == KeyCode::Char('l') && modifiers == KeyModifiers::ALT {
+                    state.show_logs = !state.show_logs;
+                    if !state.show_logs {
+                        state.logs_filter.clear();
+                        state.logs_scroll = 0;
+                    }
+                    draw(&mut terminal, &mut state, &last_key)?;
+                    continue;
+                }
+
                 // 🧭 Module switcher
                 if state.module_switcher_open {
                     match code {
@@ -362,6 +399,13 @@ pub fn launch_ui() -> std::io::Result<()> {
                     state.mode = "zen".into();
                 } else if match_hotkey("zen_toggle_theme", code, modifiers, &state) && state.mode == "zen" {
                     state.cycle_zen_theme();
+                } else if match_hotkey("debug_snapshot", code, modifiers, &state) {
+                    crate::ui::components::debug::write_debug_snapshot(&mut state);
+                } else if match_hotkey("debug_overlay", code, modifiers, &state) {
+                    state.debug_overlay = !state.debug_overlay;
+                } else if match_hotkey("debug_overlay_sticky", code, modifiers, &state) {
+                    state.debug_overlay_sticky = !state.debug_overlay_sticky;
+                    state.debug_overlay = state.debug_overlay_sticky;
                 } else if code == KeyCode::Char('v')
                     && modifiers.contains(KeyModifiers::CONTROL)
                     && modifiers.contains(KeyModifiers::SHIFT)

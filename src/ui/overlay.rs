@@ -18,7 +18,7 @@ pub fn render_dynamic_overlay<B: Backend>(
     let mut pairs: Vec<(String, String)> = state
         .hotkeys
         .iter()
-        .map(|(act, key)| (key.clone(), act.clone()))
+        .map(|(act, key)| (key.clone(), act.replace('_', " ")))
         .collect();
 
     pairs.extend_from_slice(plugin_keys);
@@ -34,4 +34,11 @@ pub fn render_dynamic_overlay<B: Backend>(
     let content = Paragraph::new(lines.join("\n"))
         .block(Block::default().title("Shortcuts").borders(Borders::ALL));
     f.render_widget(content, Rect::new(area.x + 1, area.y + 1, area.width - 2, inner_height));
+}
+
+use crate::ui::components::debug::render_debug_panel;
+
+/// Render the developer diagnostic overlay.
+pub fn render_debug_overlay<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState, sticky: bool) {
+    render_debug_panel(f, area, state, sticky);
 }
