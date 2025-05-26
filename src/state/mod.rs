@@ -502,7 +502,6 @@ impl AppState {
 
     self.root_nodes.sort_unstable();
     self.root_nodes.dedup();
-}
 
     /// Ensure nodes have unique positions when auto-arrange is disabled.
     pub fn ensure_grid_positions(&mut self) {
@@ -717,7 +716,7 @@ impl AppState {
         // Run both audits: structure and ancestry
         self.audit_node_graph();
         self.audit_ancestry();
-
+    }
     pub fn exit_spotlight(&mut self) {
         self.spotlight_input.clear();
         self.show_spotlight = false;
