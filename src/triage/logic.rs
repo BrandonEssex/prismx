@@ -134,3 +134,25 @@ pub fn update_pipeline(state: &mut AppState) {
         }
     }
 }
+
+/// Count visible triage tags for summary bar.
+pub fn tag_counts(state: &AppState) -> (usize, usize, usize) {
+    let mut now = 0usize;
+    let mut triton = 0usize;
+    let mut done = 0usize;
+    for entry in &state.triage_entries {
+        if entry.archived {
+            continue;
+        }
+        if entry.tags.iter().any(|t| t.eq("#NOW")) {
+            now += 1;
+        }
+        if entry.tags.iter().any(|t| t.eq("#TRITON")) {
+            triton += 1;
+        }
+        if entry.tags.iter().any(|t| t.eq("#DONE")) {
+            done += 1;
+        }
+    }
+    (now, triton, done)
+}
