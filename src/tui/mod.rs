@@ -62,7 +62,7 @@ pub fn draw<B: Backend>(terminal: &mut Terminal<B>, state: &mut AppState, _last_
             "zen" => render_zen_journal(f, vertical[0], state),
             "gemx" => render_gemx(f, vertical[0], state),
             "settings" => render_settings(f, vertical[0], state),
-            "triage" => render_triage(f, vertical[0]),
+            "triage" => render_triage(f, vertical[0], state),
             _ => {
                 let fallback = Paragraph::new("Unknown mode");
                 f.render_widget(fallback, vertical[0]);
@@ -403,14 +403,14 @@ pub fn launch_ui() -> std::io::Result<()> {
                         if state.settings_focus_index > 0 {
                             state.settings_focus_index -= 1;
                         } else {
-                            state.settings_focus_index = crate::settings::SETTING_TOGGLES.len() - 1;
+                            state.settings_focus_index = crate::settings::settings_len() - 1;
                         }
                     }
                     KeyCode::Down if state.mode == "settings" => {
-                        state.settings_focus_index = (state.settings_focus_index + 1) % crate::settings::SETTING_TOGGLES.len();
+                        state.settings_focus_index = (state.settings_focus_index + 1) % crate::settings::settings_len();
                     }
                     KeyCode::Enter | KeyCode::Char(' ') if state.mode == "settings" => {
-                        let idx = state.settings_focus_index % crate::settings::SETTING_TOGGLES.len();
+                        let idx = state.settings_focus_index % crate::settings::settings_len();
                         (crate::settings::SETTING_TOGGLES[idx].toggle)(&mut state);
                     }
 

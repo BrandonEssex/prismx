@@ -3,21 +3,19 @@ use ratatui::{
     layout::Rect,
     style::{Color, Modifier, Style},
     widgets::{Block, Borders, Paragraph},
-    text::{Line, Span},
     Frame,
 };
 use crate::state::{AppState, DockLayout};
-use crate::beamx::style_for_mode;
 
 pub fn render_favorites_dock<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppState) {
     if !state.favorite_dock_enabled {
         return;
     }
 
-    let mut favorites = state.favorite_entries();
+    let favorites = state.favorite_entries();
     state.dock_entry_bounds.clear();
 
-    let theme = style_for_mode(&state.mode);
+    let theme = state.beam_style_for_mode(&state.mode);
     let base_style = Style::default().fg(theme.border_color);
 
     let horizontal = state.favorite_dock_layout == DockLayout::Horizontal;

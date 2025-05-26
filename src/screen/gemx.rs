@@ -8,13 +8,13 @@ use crate::layout::{
 };
 use crate::node::{NodeID, NodeMap};
 use crate::state::AppState;
-use crate::beamx::{render_full_border, style_for_mode};
+use crate::beamx::render_full_border;
 use crate::ui::beamx::{BeamX, BeamXStyle, BeamXMode, BeamXAnimationMode};
 use std::time::{SystemTime, UNIX_EPOCH};
 use std::collections::HashMap;
 
 pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppState) {
-    let style = style_for_mode(&state.mode);
+    let style = state.beam_style_for_mode(&state.mode);
     let block = Block::default()
         .title(if state.auto_arrange { "Gemx [Auto-Arrange]" } else { "Gemx" })
         .borders(Borders::NONE);
@@ -434,11 +434,15 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppStat
             .unwrap_or_default()
             .as_millis() / 300) as u64
     };
+    let mut bx_style = BeamXStyle::from(BeamXMode::Default);
+    bx_style.border_color = style.border_color;
+    bx_style.status_color = style.status_color;
+    bx_style.prism_color = style.prism_color;
     let beamx = BeamX {
         tick,
         enabled: true,
         mode: BeamXMode::Default,
-        style: BeamXStyle::from(BeamXMode::Default),
+        style: bx_style,
         animation: BeamXAnimationMode::PulseEntryRadiate,
     };
     beamx.render(f, area);
