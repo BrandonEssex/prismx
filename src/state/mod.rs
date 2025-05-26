@@ -139,7 +139,10 @@ pub struct AppState {
     pub zen_journal_view: ZenJournalView,
     pub zen_compose_input: String,
     pub zen_journal_entries: Vec<ZenJournalEntry>,
-
+    pub gemx_beam_color: crate::beam_color::BeamColor,
+    pub zen_beam_color: crate::beam_color::BeamColor,
+    pub triage_beam_color: crate::beam_color::BeamColor,
+    pub settings_beam_color: crate::beam_color::BeamColor,
 
 }
 
@@ -221,6 +224,10 @@ impl Default for AppState {
             zen_journal_view: ZenJournalView::Compose,
             zen_compose_input: String::new(),
             zen_journal_entries: Vec::new(),
+            gemx_beam_color: crate::beam_color::BeamColor::Prism,
+            zen_beam_color: crate::beam_color::BeamColor::Prism,
+            triage_beam_color: crate::beam_color::BeamColor::Prism,
+            settings_beam_color: crate::beam_color::BeamColor::Prism,
 
         };
 
@@ -231,6 +238,10 @@ impl Default for AppState {
             "horizontal" => DockLayout::Horizontal,
             _ => DockLayout::Vertical,
         };
+        state.gemx_beam_color = config.gemx_beam_color;
+        state.zen_beam_color = config.zen_beam_color;
+        state.triage_beam_color = config.triage_beam_color;
+        state.settings_beam_color = config.settings_beam_color;
 
         for node in state.nodes.values_mut() {
             if node.label.starts_with("[F]") {
@@ -317,6 +328,43 @@ impl AppState {
         }
 
         result
+    }
+
+    pub fn beam_color_for_mode(&self, mode: &str) -> crate::beam_color::BeamColor {
+        match mode {
+            "gemx" => self.gemx_beam_color,
+            "zen" => self.zen_beam_color,
+            "triage" => self.triage_beam_color,
+            "settings" => self.settings_beam_color,
+            _ => self.gemx_beam_color,
+        }
+    }
+
+    pub fn cycle_beam_color(&mut self, mode: &str) {
+        use crate::beam_color::BeamColor::*;
+        let next = |c| match c {
+            Prism => Infrared,
+            Infrared => Aqua,
+            Aqua => Emerald,
+            Emerald => Ice,
+            Ice => Prism,
+        };
+        match mode {
+            "gemx" => self.gemx_beam_color = next(self.gemx_beam_color),
+            "zen" => self.zen_beam_color = next(self.zen_beam_color),
+            "triage" => self.triage_beam_color = next(self.triage_beam_color),
+            "settings" => self.settings_beam_color = next(self.settings_beam_color),
+            _ => {}
+        }
+    }
+
+    pub fn beam_style_for_mode(&self, mode: &str) -> crate::beamx::BeamStyle {
+        let mut style = crate::beamx::style_for_mode(mode);
+        let (border, status, prism) = self.beam_color_for_mode(mode).palette();
+        style.border_color = border;
+        style.status_color = status;
+        style.prism_color = prism;
+        style
     }
 
     /// Ensure at least one valid root exists. Promotes the first node if roots

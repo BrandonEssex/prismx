@@ -11,12 +11,18 @@ use serde::{Deserialize, Serialize};
 use std::fs;
 
 use crate::state::{AppState, DockLayout};
+use crate::beam_color::BeamColor;
 
 #[derive(Serialize, Deserialize)]
+#[serde(default)]
 pub struct UserSettings {
     pub auto_arrange: bool,
     pub debug_input_mode: bool,
     pub dock_layout: String,
+    pub gemx_beam_color: BeamColor,
+    pub zen_beam_color: BeamColor,
+    pub triage_beam_color: BeamColor,
+    pub settings_beam_color: BeamColor,
 }
 
 impl Default for UserSettings {
@@ -25,6 +31,10 @@ impl Default for UserSettings {
             auto_arrange: true,
             debug_input_mode: true,
             dock_layout: "vertical".into(),
+            gemx_beam_color: BeamColor::Prism,
+            zen_beam_color: BeamColor::Prism,
+            triage_beam_color: BeamColor::Prism,
+            settings_beam_color: BeamColor::Prism,
         }
     }
 }
@@ -41,6 +51,10 @@ pub fn save_user_settings(state: &AppState) {
         auto_arrange: state.auto_arrange,
         debug_input_mode: state.debug_input_mode,
         dock_layout: format!("{:?}", state.favorite_dock_layout).to_lowercase(),
+        gemx_beam_color: state.gemx_beam_color,
+        zen_beam_color: state.zen_beam_color,
+        triage_beam_color: state.triage_beam_color,
+        settings_beam_color: state.settings_beam_color,
     };
     if let Ok(serialized) = toml::to_string(&config) {
         let _ = fs::create_dir_all("config");
@@ -80,6 +94,23 @@ fn toggle_dock_layout(s: &mut AppState) {
     save_user_settings(s);
 }
 
+fn toggle_gemx_color(s: &mut AppState) {
+    s.cycle_beam_color("gemx");
+    save_user_settings(s);
+}
+fn toggle_zen_color(s: &mut AppState) {
+    s.cycle_beam_color("zen");
+    save_user_settings(s);
+}
+fn toggle_triage_color(s: &mut AppState) {
+    s.cycle_beam_color("triage");
+    save_user_settings(s);
+}
+fn toggle_settings_color(s: &mut AppState) {
+    s.cycle_beam_color("settings");
+    save_user_settings(s);
+}
+
 pub const SETTING_TOGGLES: &[SettingToggle] = &[
     SettingToggle {
         label: "Auto-Arrange",
@@ -96,7 +127,31 @@ pub const SETTING_TOGGLES: &[SettingToggle] = &[
         is_enabled: is_vertical_dock,
         toggle: toggle_dock_layout,
     },
+    SettingToggle {
+        label: "Gemx Color",
+        is_enabled: |_| true,
+        toggle: toggle_gemx_color,
+    },
+    SettingToggle {
+        label: "Zen Color",
+        is_enabled: |_| true,
+        toggle: toggle_zen_color,
+    },
+    SettingToggle {
+        label: "Triage Color",
+        is_enabled: |_| true,
+        toggle: toggle_triage_color,
+    },
+    SettingToggle {
+        label: "Settings Color",
+        is_enabled: |_| true,
+        toggle: toggle_settings_color,
+    },
 ];
+
+pub const fn settings_len() -> usize {
+    SETTING_TOGGLES.len()
+}
 
 pub fn render_settings<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
     let lines: Vec<Line> = SETTING_TOGGLES
@@ -105,6 +160,16 @@ pub fn render_settings<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppStat
         .map(|(i, t)| {
             let enabled = (t.is_enabled)(state);
             let selected = i == state.settings_focus_index % SETTING_TOGGLES.len();
+            let mut label = t.label.to_string();
+            if t.label.starts_with("Gemx Color") {
+                label = format!("Gemx Color: {}", state.gemx_beam_color);
+            } else if t.label.starts_with("Zen Color") {
+                label = format!("Zen Color: {}", state.zen_beam_color);
+            } else if t.label.starts_with("Triage Color") {
+                label = format!("Triage Color: {}", state.triage_beam_color);
+            } else if t.label.starts_with("Settings Color") {
+                label = format!("Settings Color: {}", state.settings_beam_color);
+            }
             let check = if enabled { "[x]" } else { "[ ]" };
             let prefix = if selected { "> " } else { "  " };
             let style = if selected {
@@ -114,7 +179,7 @@ pub fn render_settings<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppStat
             };
             Line::from(vec![
                 Span::styled(prefix.to_string(), style),
-                Span::styled(format!("{} {}", check, t.label), style),
+                Span::styled(format!("{} {}", check, label), style),
             ])
         })
         .collect();
