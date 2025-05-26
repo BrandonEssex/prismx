@@ -14,10 +14,10 @@ use crate::render::{
     render_shortcuts_overlay,
     render_spotlight,
     render_triage,
-    render_module_switcher,
     render_module_icon,
     render_favorites_dock,
 };
+use crate::ui::components::module::render_module_switcher;
 
 fn rect_contains(rect: ratatui::layout::Rect, x: u16, y: u16) -> bool {
     x >= rect.x && x < rect.x + rect.width && y >= rect.y && y < rect.y + rect.height
@@ -45,6 +45,14 @@ pub fn draw<B: Backend>(terminal: &mut Terminal<B>, state: &mut AppState, _last_
     if state.show_spotlight && !state.prev_show_spotlight {
         state.spotlight_just_opened = true;
         state.spotlight_animation_frame = 0;
+    }
+
+    if state.module_switcher_open && !state.prev_module_switcher_open {
+        state.module_switcher_animation_frame = 0;
+    }
+    if !state.module_switcher_open && state.prev_module_switcher_open {
+        state.module_switcher_closing = true;
+        state.module_switcher_animation_frame = 0;
     }
 
     terminal.draw(|f| {
@@ -78,8 +86,8 @@ pub fn draw<B: Backend>(terminal: &mut Terminal<B>, state: &mut AppState, _last_
             render_shortcuts_overlay(f, layout_chunks[1]);
         }
 
-        if state.module_switcher_open {
-            render_module_switcher(f, vertical[0], state.module_switcher_index);
+        if state.module_switcher_open || state.module_switcher_closing {
+            render_module_switcher(f, vertical[0], &state);
         }
 
         if state.show_spotlight {
@@ -148,6 +156,15 @@ pub fn draw<B: Backend>(terminal: &mut Terminal<B>, state: &mut AppState, _last_
             state.spotlight_just_opened = false;
         }
     }
+    if state.module_switcher_open && state.module_switcher_animation_frame < 3 {
+        state.module_switcher_animation_frame += 1;
+    } else if state.module_switcher_closing {
+        state.module_switcher_animation_frame += 1;
+        if state.module_switcher_animation_frame >= 3 {
+            state.module_switcher_closing = false;
+        }
+    }
+    state.prev_module_switcher_open = state.module_switcher_open;
     state.prev_show_spotlight = state.show_spotlight;
     Ok(())
 }
@@ -436,6 +453,11 @@ pub fn launch_ui() -> std::io::Result<()> {
                 {
                     state.zen_toolbar_open = !state.zen_toolbar_open;
                     state.zen_toolbar_index = 0;
+                } else if code == KeyCode::Tab
+                    && modifiers == KeyModifiers::ALT
+                    && state.mode == "zen"
+                {
+                    input::toggle_zen_view(&mut state);
                 } else if match_hotkey("toggle_collapsed", code, modifiers, &state) && state.mode == "gemx" {
                     state.toggle_collapse();
                 } else if match_hotkey("drill_down", code, modifiers, &state) {
@@ -577,17 +599,20 @@ pub fn launch_ui() -> std::io::Result<()> {
                         }
                     }
 
-                    KeyCode::Char(c) if state.mode == "zen" && state.zen_journal_view == crate::state::ZenJournalView::Compose => {
+                    KeyCode::Char(c) if state.mode == "zen" && state.zen_mode == crate::state::ZenMode::Compose => {
                         state.zen_compose_input.push(c);
                     }
 
-                    KeyCode::Backspace if state.mode == "zen" && state.zen_journal_view == crate::state::ZenJournalView::Compose => {
+                    KeyCode::Backspace if state.mode == "zen" && state.zen_mode == crate::state::ZenMode::Compose => {
                         state.zen_compose_input.pop();
                     }
 
-                    KeyCode::Enter if state.mode == "zen" && state.zen_journal_view == crate::state::ZenJournalView::Compose => {
+                    KeyCode::Enter if state.mode == "zen" && state.zen_mode == crate::state::ZenMode::Compose => {
                         let text = state.zen_compose_input.trim().to_string();
                         if !text.is_empty() {
+                            if crate::config::theme::ThemeConfig::load().zen_breathe() {
+                                std::thread::sleep(std::time::Duration::from_millis(150));
+                            }
                             let entry = crate::state::ZenJournalEntry { timestamp: chrono::Local::now(), text: text.clone() };
                             state.zen_journal_entries.push(entry.clone());
                             state.append_journal_entry(&entry);

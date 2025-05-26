@@ -5,16 +5,27 @@ use ratatui::{
     widgets::{Block, BorderType, Borders, Paragraph},
     Frame,
 };
-use std::cmp::max;
+use unicode_width::UnicodeWidthStr;
+use crate::layout::RESERVED_ZONE_W;
+use crate::render::module_icon::{module_icon, module_label};
 
-pub fn render_zoom_overlay<B: Backend>(f: &mut Frame<B>, area: Rect, zoom: f32) {
+pub fn render_zoom_overlay<B: Backend>(
+    f: &mut Frame<B>,
+    area: Rect,
+    zoom: f32,
+    mode: &str,
+) {
     let text = format!("Zoom: {:.1}x", zoom);
     let text_width = text.len() as u16;
     let width = text_width + 2;
-    let x = max(
-        area.right().saturating_sub(width + 8),
-        area.left(),
-    );
+
+    let icon_content = format!("{} {}", module_icon(mode), module_label(mode));
+    let icon_width = UnicodeWidthStr::width(icon_content.as_str()) as u16 + 2;
+    let offset = RESERVED_ZONE_W as u16 + icon_width + 1;
+
+    let right = area.right().saturating_sub(width + offset);
+    let x = if right < area.left() { area.left() } else { right };
+
     let y = area.bottom().saturating_sub(5);
     let style = Style::default().fg(Color::White).bg(Color::Rgb(40, 40, 40));
     let block = Block::default()
