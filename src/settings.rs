@@ -184,42 +184,42 @@ pub const SETTING_TOGGLES: &[SettingToggle] = &[
 pub const fn settings_len() -> usize {
     SETTING_TOGGLES.len()
 }
+pub fn render_settings<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
+    let lines: Vec<Line> = SETTING_TOGGLES
+        .iter()
+        .enumerate()
+        .map(|(i, t)| {
+            let enabled = (t.is_enabled)(state);
+            let selected = i == state.settings_focus_index % SETTING_TOGGLES.len();
+            let mut label = t.label.to_string();
 
-let lines: Vec<Line> = SETTING_TOGGLES
-    .iter()
-    .enumerate()
-    .map(|(i, t)| {
-        let enabled = (t.is_enabled)(state);
-        let selected = i == state.settings_focus_index % SETTING_TOGGLES.len();
-        let mut label = t.label.to_string();
+            if t.label.starts_with("Theme Preset") {
+                label = format!("Theme Preset: {}", theme_label());
+            } else if t.label.starts_with("Gemx Color") {
+                label = format!("Gemx Color: {}", state.gemx_beam_color);
+            } else if t.label.starts_with("Zen Color") {
+                label = format!("Zen Color: {}", state.zen_beam_color);
+            } else if t.label.starts_with("Triage Color") {
+                label = format!("Triage Color: {}", state.triage_beam_color);
+            } else if t.label.starts_with("Settings Color") {
+                label = format!("Settings Color: {}", state.settings_beam_color);
+            } else if t.label.starts_with("BeamX Theme") {
+                label = format!("BeamX Theme: {}", state.beamx_panel_theme);
+            }
 
-        if t.label.starts_with("Theme Preset") {
-            label = format!("Theme Preset: {}", theme_label());
-        } else if t.label.starts_with("Gemx Color") {
-            label = format!("Gemx Color: {}", state.gemx_beam_color);
-        } else if t.label.starts_with("Zen Color") {
-            label = format!("Zen Color: {}", state.zen_beam_color);
-        } else if t.label.starts_with("Triage Color") {
-            label = format!("Triage Color: {}", state.triage_beam_color);
-        } else if t.label.starts_with("Settings Color") {
-            label = format!("Settings Color: {}", state.settings_beam_color);
-        } else if t.label.starts_with("BeamX Theme") {
-            label = format!("BeamX Theme: {}", state.beamx_panel_theme);
-        }
-
-        let check = if enabled { "[x]" } else { "[ ]" };
-        let prefix = if selected { "> " } else { "  " };
-        let style = if selected {
-            Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD)
-        } else {
-            Style::default().fg(Color::Gray)
-        };
-        Line::from(vec![
-            Span::styled(prefix.to_string(), style),
-            Span::styled(format!("{} {}", check, label), style),
-        ])
-    })
-    .collect();
+            let check = if enabled { "[x]" } else { "[ ]" };
+            let prefix = if selected { "> " } else { "  " };
+            let style = if selected {
+                Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD)
+            } else {
+                Style::default().fg(Color::Gray)
+            };
+            Line::from(vec![
+                Span::styled(prefix.to_string(), style),
+                Span::styled(format!("{} {}", check, label), style),
+            ])
+        })
+        .collect();
 
     let content_width = lines
         .iter()
@@ -230,7 +230,6 @@ let lines: Vec<Line> = SETTING_TOGGLES
 
     let width = content_width.min(area.width);
     let mut height = lines.len() as u16 + 2;
-    // Clamp box height so it never overlaps the status bar
     height = height.min(area.height.saturating_sub(1));
 
     let x = area.x + (area.width.saturating_sub(width)) / 2;
