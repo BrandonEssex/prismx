@@ -6,6 +6,7 @@ pub mod triage;
 pub mod module_switcher;
 pub mod module_icon;
 pub mod favorites;
+pub mod zoom_overlay;
 
 pub use zen::render_zen_journal;
 pub use status::render_status_bar;
@@ -15,3 +16,4 @@ pub use triage::render_triage;
 pub use module_switcher::render_module_switcher;
 pub use module_icon::render_module_icon;
 pub use favorites::render_favorites_dock;
+pub use zoom_overlay::render_zoom_overlay;
