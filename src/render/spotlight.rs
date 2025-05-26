@@ -54,9 +54,13 @@ pub fn render_spotlight<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut Ap
     let mut lines = vec![
         Line::styled(
             format!("> {}", input),
-            Style::default().fg(Color::White).bg(Color::Black),
+            Style::default()
+                .fg(Color::White)
+                .bg(Color::Black)
+                .add_modifier(Modifier::BOLD),
         ),
     ];
+
     if let Some((msg, known)) = preview {
         if known {
             lines.push(Line::from(vec![
@@ -64,7 +68,10 @@ pub fn render_spotlight<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut Ap
                     "→ ",
                     Style::default().fg(Color::Cyan).bg(Color::Black),
                 ),
-                Span::styled(msg, Style::default().fg(Color::White).bg(Color::Black)),
+                Span::styled(
+                    msg,
+                    Style::default().fg(Color::White).bg(Color::Black),
+                ),
             ]));
         } else {
             let style = Style::default().fg(Color::Red).bg(Color::Black);
@@ -76,13 +83,15 @@ pub fn render_spotlight<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut Ap
     }
 
     let paragraph = Paragraph::new(lines).block(block);
-    let bg_rect = Rect::new(x_offset, y_offset, width, total_height);
 
+    // Clear background area and render solid black base layer
+    let bg_rect = Rect::new(x_offset, y_offset, width, total_height);
     f.render_widget(Clear, bg_rect);
     f.render_widget(
         Block::default().style(Style::default().bg(Color::Black)),
         bg_rect,
     );
+
     f.render_widget(paragraph, spotlight_area);
 
     for (i, suggestion) in matches.iter().take(5).enumerate() {
@@ -96,4 +105,3 @@ pub fn render_spotlight<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut Ap
             Rect::new(x_offset, y, width, 1),
         );
     }
-}
