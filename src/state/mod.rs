@@ -1286,6 +1286,7 @@ impl AppState {
         }
     }
 }
+
 // Outside impl block:
 pub fn register_plugin_favorite(state: &mut AppState, icon: &'static str, command: &'static str) {
     if state.plugin_favorites.len() < 5 {
