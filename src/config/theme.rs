@@ -20,7 +20,7 @@ impl Default for ThemeConfig {
             dark_mode: true,
             opacity: 1.0,
             zen_peaceful: false,
-            zen_breathe: false,
+            zen_breathe: true,
             dock_pulse: true,
             layout_mode: Some("tree".into()),
         }
