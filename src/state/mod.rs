@@ -346,18 +346,40 @@ impl AppState {
             return;
         }
 
+        use std::collections::HashSet;
+
         let ids: Vec<NodeID> = self.nodes.keys().copied().collect();
-        let mut index = 0;
-        let (tw, _) = terminal::size().unwrap_or((80, 20));
-        let margin = SIBLING_SPACING_X * 2;
-        let row_pad = CHILD_SPACING_Y * 2;
-        let cols = (tw as i16 / margin.max(1)).max(1) as usize;
+        let (tw, th) = terminal::size().unwrap_or((80, 20));
+
+        let mut used: HashSet<(i16, i16)> =
+            self.nodes.values().map(|n| (n.x, n.y)).collect();
+
+        let base_x = 6;
+        let base_y = GEMX_HEADER_HEIGHT + 1;
+        let step_x = SIBLING_SPACING_X * 2;
+        let step_y = CHILD_SPACING_Y * 2;
+
+        let max_y = th as i16 - 2;
+        let max_x = tw as i16 - 4;
+
         for id in ids {
             if let Some(node) = self.nodes.get_mut(&id) {
                 if node.x == 0 && node.y == 0 {
-                    node.x = ((index % cols) as i16) * margin + 1;
-                    node.y = ((index / cols) as i16) * row_pad + GEMX_HEADER_HEIGHT + 1;
-                    index += 1;
+                    let mut x = base_x;
+                    let mut y = base_y;
+                    while used.contains(&(x, y)) {
+                        y += step_y;
+                        if y > max_y {
+                            y = base_y;
+                            x += step_x;
+                            if x > max_x {
+                                x = base_x;
+                            }
+                        }
+                    }
+                    node.x = x;
+                    node.y = y;
+                    used.insert((x, y));
                 }
             }
         }
