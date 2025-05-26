@@ -1,0 +1,20 @@
+name: Label & Merge PRs
+
+on:
+  pull_request_target:
+    types: [opened, synchronize, labeled]
+  pull_request:
+    types: [labeled]
+
+jobs:
+  automerge:
+    if: github.event.pull_request != null
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v3
+
+      - name: 🤖 Run automerge checks
+        run: .github/scripts/automerge-check.sh
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
