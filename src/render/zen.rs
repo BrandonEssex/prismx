@@ -2,10 +2,29 @@ use ratatui::{prelude::*, widgets::{Block, Borders, Paragraph}};
 use crate::state::{AppState, ZenSyntax, ZenTheme, ZenJournalView};
 use crate::beamx::render_full_border;
 use crate::ui::beamx::{BeamX, BeamXStyle, BeamXMode, BeamXAnimationMode};
+use crate::render::traits::Renderable;
 
 const TOP_BAR_HEIGHT: u16 = 5;
 
 use std::time::{SystemTime, UNIX_EPOCH};
+
+pub struct ZenRenderer<'a> {
+    pub state: &'a AppState,
+}
+
+impl<'a> ZenRenderer<'a> {
+    pub fn new(state: &'a AppState) -> Self {
+        Self { state }
+    }
+}
+
+impl<'a> Renderable for ZenRenderer<'a> {
+    fn render_frame<B: Backend>(&mut self, f: &mut Frame<B>, area: Rect) {
+        render_zen_journal(f, area, self.state);
+    }
+
+    fn tick(&mut self) {}
+}
 
 pub fn render_zen_journal<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
     let mut style = state.beam_style_for_mode(&state.mode);
