@@ -8,7 +8,8 @@ use ratatui::{
 };
 
 use crate::state::AppState;
-use crate::spotlight::{command_preview, command_suggestions};
+use crate::spotlight::{command_preview, command_suggestions_scored};
+use crate::spotlight::render::command_icon;
 use crate::theme;
 use crate::config::theme::ThemeConfig;
 
@@ -24,12 +25,12 @@ pub fn render_spotlight<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut Ap
     let y_offset = area.y + area.height / 3;
 
     let preview = command_preview(input);
-    let matches = command_suggestions(input);
+    let matches = command_suggestions_scored(input);
     let mut height = if preview.is_some() { 4 } else { 3 };
     // Ensure Spotlight stays above the status bar
     height = height.min(area.height.saturating_sub(1));
     let suggestion_count = matches.len().min(5) as u16;
-    let total_height = height + suggestion_count;
+    let total_height = height + suggestion_count * 2;
     let spotlight_area = Rect::new(x_offset, y_offset, width, height);
 
     let border_color = Color::Cyan;
@@ -82,8 +83,8 @@ pub fn render_spotlight<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut Ap
 
     f.render_widget(paragraph, spotlight_area);
 
-    for (i, suggestion) in matches.iter().take(5).enumerate() {
-        let y = y_offset + 2 + i as u16;
+    for (i, (suggestion, score)) in matches.iter().take(5).enumerate() {
+        let y = y_offset + 2 + (i as u16 * 2);
         if y >= area.y + area.height.saturating_sub(1) {
             break;
         }
@@ -91,8 +92,16 @@ pub fn render_spotlight<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut Ap
         if Some(i) == state.spotlight_suggestion_index {
             style = cfg.highlight_style().add_modifier(Modifier::UNDERLINED);
         }
+        let icon = command_icon(suggestion);
+        let mut spans = vec![Span::styled(icon, style) , Span::raw(" "), Span::styled(*suggestion, style)];
+        #[cfg(debug_assertions)]
+        {
+            spans.push(Span::raw(" "));
+            spans.push(Span::styled(format!("{}", score), style.add_modifier(Modifier::DIM)));
+        }
+        let line = Line::from(spans);
         f.render_widget(
-            Paragraph::new(*suggestion).style(style),
+            Paragraph::new(line).style(style),
             Rect::new(x_offset, y, width, 1),
         );
     }
