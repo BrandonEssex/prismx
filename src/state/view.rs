@@ -38,3 +38,13 @@ pub enum PluginViewMode {
 impl Default for PluginViewMode {
     fn default() -> Self { Self::Registry }
 }
+
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+pub enum LogViewState {
+    Hidden,
+    Visible,
+}
+
+impl Default for LogViewState {
+    fn default() -> Self { Self::Hidden }
+}

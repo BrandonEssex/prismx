@@ -25,6 +25,8 @@ fn rect_contains(rect: ratatui::layout::Rect, x: u16, y: u16) -> bool {
 use crate::screen::render_gemx;
 use crate::settings::render_settings;
 use crate::ui::components::plugin::render_plugin;
+use crate::ui::components::logs::render_logs;
+use crate::ui::input;
 
 mod hotkeys;
 use hotkeys::match_hotkey;
@@ -118,6 +120,9 @@ pub fn draw<B: Backend>(terminal: &mut Terminal<B>, state: &mut AppState, _last_
         };
         render_module_icon(f, full, &state.mode);
         render_favorites_dock(f, full, state);
+        if state.show_logs {
+            render_logs(f, full, state);
+        }
         render_status_bar(f, vertical[1], display_string.as_str());
     })?;
     if state.spotlight_just_opened {
@@ -175,6 +180,12 @@ pub fn launch_ui() -> std::io::Result<()> {
                     last_key = format!("{:?} + {:?}", code, modifiers);
                     if state.debug_input_mode {
                         crate::tui::hotkeys::debug_input(&mut state, code, modifiers);
+                    }
+                    if state.show_logs {
+                        if input::handle_log_keys(&mut state, code, modifiers) {
+                            draw(&mut terminal, &mut state, &last_key)?;
+                            continue;
+                        }
                     }
                     if let Some(sc) = match_shortcut(code, modifiers) {
                         match sc {
@@ -274,6 +285,17 @@ pub fn launch_ui() -> std::io::Result<()> {
                 {
                     state.show_spotlight = !state.show_spotlight;
                     state.spotlight_history_index = None;
+                    draw(&mut terminal, &mut state, &last_key)?;
+                    continue;
+                }
+
+                // Alt+L toggles log viewer
+                if code == KeyCode::Char('l') && modifiers == KeyModifiers::ALT {
+                    state.show_logs = !state.show_logs;
+                    if !state.show_logs {
+                        state.logs_filter.clear();
+                        state.logs_scroll = 0;
+                    }
                     draw(&mut terminal, &mut state, &last_key)?;
                     continue;
                 }
