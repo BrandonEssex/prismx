@@ -3,7 +3,7 @@ use ratatui::{
     layout::Rect,
     style::{Color, Modifier, Style},
     text::{Line, Span},
-    widgets::{Block, Borders, Paragraph},
+    widgets::{Block, Borders, Paragraph, Clear},
     Frame,
 };
 
@@ -46,17 +46,31 @@ pub fn render_spotlight<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut Ap
     let block = Block::default()
         .title(format!("{}Spotlight", arrow))
         .borders(Borders::ALL)
-        .style(Style::default().fg(border_color));
+        .style(Style::default().fg(border_color).bg(Color::Black));
 
-    let mut lines = vec![Line::styled(format!("> {}", input), Style::default().fg(Color::White))];
+    let mut lines = vec![
+        Line::styled(
+            format!("> {}", input),
+            Style::default()
+                .fg(Color::White)
+                .bg(Color::Black)
+                .add_modifier(Modifier::BOLD),
+        ),
+    ];
     if let Some((msg, known)) = preview {
         if known {
             lines.push(Line::from(vec![
-                Span::styled("→ ", Style::default().fg(Color::Cyan)),
-                Span::styled(msg, Style::default().fg(Color::White)),
+                Span::styled(
+                    "→ ",
+                    Style::default().fg(Color::Cyan).bg(Color::Black),
+                ),
+                Span::styled(
+                    msg,
+                    Style::default().fg(Color::White).bg(Color::Black),
+                ),
             ]));
         } else {
-            let style = Style::default().fg(Color::Red).add_modifier(Modifier::DIM);
+            let style = Style::default().fg(Color::Red).bg(Color::Black);
             lines.push(Line::from(vec![
                 Span::styled("⚠ ", style),
                 Span::styled(msg, style),
@@ -65,6 +79,7 @@ pub fn render_spotlight<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut Ap
     }
 
     let paragraph = Paragraph::new(lines).block(block);
+    f.render_widget(Clear, spotlight_area);
     f.render_widget(paragraph, spotlight_area);
 
     let matches = command_suggestions(input);
@@ -73,7 +88,7 @@ pub fn render_spotlight<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut Ap
         if y >= area.y + area.height.saturating_sub(1) {
             break;
         }
-        let style = Style::default().fg(Color::Cyan).add_modifier(Modifier::DIM);
+        let style = Style::default().fg(Color::Cyan).bg(Color::Black);
         f.render_widget(
             Paragraph::new(*suggestion).style(style),
             Rect::new(x_offset, y, width, 1),
