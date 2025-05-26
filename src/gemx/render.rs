@@ -20,6 +20,8 @@ impl<'a> Renderable for GemxRenderer<'a> {
         render_gemx(f, area, self.state);
     }
 
-    fn tick(&mut self) {}
+    fn tick(&mut self) {
+        crate::triage::logic::update_pipeline(self.state);
+    }
 }
 

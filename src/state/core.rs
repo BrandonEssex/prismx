@@ -138,6 +138,7 @@ pub struct AppState {
     pub zen_view_mode: crate::state::ZenViewMode,
     pub zen_compose_input: String,
     pub zen_journal_entries: Vec<ZenJournalEntry>,
+    pub triage_entries: Vec<crate::triage::logic::TriageEntry>,
     pub gemx_beam_color: crate::beam_color::BeamColor,
     pub zen_beam_color: crate::beam_color::BeamColor,
     pub triage_beam_color: crate::beam_color::BeamColor,
@@ -146,6 +147,7 @@ pub struct AppState {
     pub zen_icon_glyph: Option<String>,
     pub beamx_panel_theme: crate::beam_color::BeamColor,
     pub beamx_panel_visible: bool,
+    pub triage_view_mode: crate::state::TriageViewMode,
 }
 
 pub fn default_beamx_panel_visible() -> bool {
@@ -242,6 +244,7 @@ impl Default for AppState {
             zen_view_mode: crate::state::ZenViewMode::default(),
             zen_compose_input: String::new(),
             zen_journal_entries: Vec::new(),
+            triage_entries: Vec::new(),
             gemx_beam_color: crate::beam_color::BeamColor::Prism,
             zen_beam_color: crate::beam_color::BeamColor::Prism,
             triage_beam_color: crate::beam_color::BeamColor::Prism,
@@ -250,6 +253,7 @@ impl Default for AppState {
             zen_icon_glyph: None,
             beamx_panel_theme: crate::beam_color::BeamColor::Prism,
             beamx_panel_visible: default_beamx_panel_visible(),
+            triage_view_mode: crate::state::TriageViewMode::default(),
         };
 
         let config = crate::settings::load_user_settings();
