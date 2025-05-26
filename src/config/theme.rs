@@ -1,4 +1,5 @@
 use serde::Deserialize;
+use ratatui::style::Color;
 use std::fs;
 use ratatui::style::{Color, Style};
 
@@ -38,6 +39,10 @@ impl ThemeConfig {
     pub fn zen_breathe(&self) -> bool {
         self.zen_breathe
     }
+
+
+    pub fn dim_color(&self) -> Color {
+        if self.dark_mode { Color::DarkGray } else { Color::Gray }
 
     pub fn layout_mode(&self) -> crate::gemx::layout::LayoutMode {
         match self.layout_mode.as_deref() {
