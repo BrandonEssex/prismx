@@ -49,6 +49,62 @@ pub fn render_zen_journal<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppS
 }
 
 fn render_compose<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState, tick: u64) {
+    use ratatui::layout::{Constraint, Direction, Layout};
+
+    let chunks = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints([Constraint::Percentage(75), Constraint::Percentage(25)].as_ref())
+        .split(area);
+
+    render_history(f, chunks[0], state);
+    render_input(f, chunks[1], state, tick);
+
+    render_full_border(f, area, &state.beam_style_for_mode(&state.mode), true, false);
+}
+
+fn render_history<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
+    let padding = area.width / 4;
+    let usable_width = area.width - padding * 2;
+
+    if state.zen_journal_entries.is_empty() {
+        let msg = Paragraph::new("No journal entries yet.")
+            .alignment(Alignment::Center);
+        let rect = Rect::new(area.x + padding, area.y + area.height / 2, usable_width, 1);
+        f.render_widget(msg, rect);
+        return;
+    }
+
+    let mut y = area.bottom();
+    for entry in state.zen_journal_entries.iter().rev() {
+        let tags: Vec<&str> = entry
+            .text
+            .split_whitespace()
+            .filter(|t| t.starts_with('#'))
+            .collect();
+        let tag_line = if tags.is_empty() { None } else { Some(tags.join(" ")) };
+
+        let mut lines: Vec<Line> = Vec::new();
+        lines.push(Line::from(entry.timestamp.format("%b %d, %Y – %-I:%M%p").to_string()));
+        if let Some(t) = &tag_line {
+            lines.push(Line::from(t.clone()));
+        }
+        for l in entry.text.lines() {
+            lines.push(Line::from(l.to_string()));
+        }
+        lines.push(Line::from("────────────"));
+
+        let h = lines.len() as u16;
+        if y < area.y + h {
+            break;
+        }
+        y -= h;
+        let rect = Rect::new(area.x + padding, y, usable_width, h);
+        let widget = Paragraph::new(lines).block(Block::default().borders(Borders::NONE));
+        f.render_widget(widget, rect);
+    }
+}
+
+fn render_input<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState, tick: u64) {
     let padding = area.width / 4;
     let usable_width = area.width - padding * 2;
     let caret = if tick % 2 == 0 { "|" } else { " " };
@@ -57,7 +113,6 @@ fn render_compose<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState, ti
     let input_rect = Rect::new(area.x + padding, area.bottom().saturating_sub(2), usable_width, 1);
     let widget = Paragraph::new(input).block(Block::default().borders(Borders::NONE));
     f.render_widget(widget, input_rect);
-    render_full_border(f, area, &state.beam_style_for_mode(&state.mode), true, false);
 }
 
 fn render_review<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
