@@ -5,6 +5,7 @@ use ratatui::text::{Line, Span};
 
 use crate::state::AppState;
 use crate::triage::logic::{TriageSource, tag_counts};
+use crate::ui::components::status::render_triage_status;
 use crate::beamx::render_full_border;
 
 
@@ -23,7 +24,7 @@ fn draw_plain_border<B: Backend>(f: &mut Frame<B>, area: Rect, color: Color) {
     }
 }
 
-pub fn render_triage_panel<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
+pub fn render_triage_panel<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppState) {
     let style = state.beam_style_for_mode("triage");
     let block_style = Style::default().fg(style.border_color);
 
@@ -39,25 +40,28 @@ pub fn render_triage_panel<B: Backend>(f: &mut Frame<B>, area: Rect, state: &App
         .split(zones[1]);
 
     // --- Summary Bar ---
-    let open_count = state
-        .triage_entries
-        .iter()
-        .filter(|e| !e.archived && !e.resolved)
-        .count();
-    let summary = Paragraph::new(format!("{open_count} open entries"))
-        .block(Block::default().borders(Borders::NONE).style(block_style));
-    f.render_widget(summary, zones[0]);
+    let (now_count, triton_count, done_count) = tag_counts(state);
+    {
+        let metrics = &mut state.triage_summary;
+        if (now_count, triton_count, done_count)
+            != (metrics.now, metrics.triton, metrics.done)
+        {
+            if metrics.triton > triton_count && done_count > metrics.done {
+                metrics.last_action = Some("#TRITON → #DONE".into());
+            } else if metrics.now > now_count && triton_count > metrics.triton {
+                metrics.last_action = Some("#NOW → #TRITON".into());
+            }
+            metrics.now = now_count;
+            metrics.triton = triton_count;
+            metrics.done = done_count;
+            metrics.highlight_frames = 4;
+        }
+    }
+    render_triage_status(f, zones[0], state);
 
     // --- Left Feed ---
     let mut lines = Vec::new();
 
-    let (now_count, triton_count, done_count) = tag_counts(state);
-    let summary_style = Style::default().fg(Color::Cyan).add_modifier(Modifier::DIM);
-    lines.push(Line::from(Span::styled(
-        format!("[ #NOW: {} ] [ #TRITON: {} ] [ #DONE: {} ]", now_count, triton_count, done_count),
-        summary_style,
-    )));
-    lines.push(Line::from(""));
     for entry in &state.triage_entries {
         if entry.archived { continue; }
 
