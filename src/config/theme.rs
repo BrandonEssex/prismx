@@ -7,6 +7,7 @@ pub struct ThemeConfig {
     pub opacity: f32,
     pub zen_peaceful: bool,
     pub zen_breathe: bool,
+    pub dock_pulse: bool,
 }
 
 impl Default for ThemeConfig {
@@ -16,6 +17,7 @@ impl Default for ThemeConfig {
             opacity: 1.0,
             zen_peaceful: false,
             zen_breathe: false,
+            dock_pulse: true,
         }
     }
 }
@@ -34,5 +36,9 @@ impl ThemeConfig {
 
     pub fn zen_breathe(&self) -> bool {
         self.zen_breathe
+    }
+
+    pub fn dock_pulse(&self) -> bool {
+        self.dock_pulse
     }
 }
