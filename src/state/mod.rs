@@ -504,6 +504,25 @@ impl AppState {
         self.root_nodes.dedup();
     }
 
+    pub fn audit_ancestry(&self) {
+        for (&id, node) in &self.nodes {
+            let mut current = node.parent;
+            let mut depth = 0;
+            while let Some(pid) = current {
+                if pid == id {
+                    tracing::error!("node {} is its own ancestor", id);
+                    panic!("node {} is its own ancestor", id);
+                }
+                if depth > self.nodes.len() {
+                    tracing::error!("cycle detected at node {}", id);
+                    panic!("cycle detected at node {}", id);
+                }
+                current = self.nodes.get(&pid).and_then(|n| n.parent);
+                depth += 1;
+            }
+        }
+    }
+
 
     /// Ensure nodes have unique positions when auto-arrange is disabled.
     pub fn ensure_grid_positions(&mut self) {

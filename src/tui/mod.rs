@@ -150,8 +150,8 @@ pub fn launch_ui() -> std::io::Result<()> {
 
         if let Some(sim_input) = state.simulate_input_queue.pop_front() {
             match sim_input {
-                SimInput::Enter => state.add_sibling(),
-                SimInput::Tab => state.add_child(),
+                SimInput::Enter => state.add_sibling_node(),
+                SimInput::Tab => state.add_child_node(),
                 SimInput::Delete => state.delete_node(),
                 SimInput::Drill => state.drill_selected(),
                 SimInput::Pop => state.pop_stack(),
@@ -284,9 +284,9 @@ pub fn launch_ui() -> std::io::Result<()> {
                     state.ensure_valid_roots();
                     debug_assert!(!state.root_nodes.is_empty());
                     state.push_undo();
-                    state.add_child();
+                    SimInput::Tab => state.add_child_node(),
                 } else if match_hotkey("create_sibling", code, modifiers, &state) && state.mode == "gemx" {
-                    state.push_undo(); state.add_sibling();
+                    state.push_undo(); SimInput::Enter => state.add_sibling_node(),
                 } else if match_hotkey("add_free_node", code, modifiers, &state) {
                     state.push_undo();
                     crate::gemx::interaction::spawn_free_node(&mut state);

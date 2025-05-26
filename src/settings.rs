@@ -1,3 +1,21 @@
+use crate::beam_color::BeamColor;
+use serde::{Deserialize, Serialize};
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct UserSettings {
+    pub auto_arrange: bool,
+    pub debug_input_mode: bool,
+    pub dock_layout: String,
+    pub gemx_beam_color: BeamColor,
+    pub zen_beam_color: BeamColor,
+    pub triage_beam_color: BeamColor,
+    pub settings_beam_color: BeamColor,
+    pub zen_icon_enabled: bool,
+    pub zen_icon_glyph: Option<String>,
+    pub beamx_panel_theme: BeamColor,
+    pub beamx_panel_visible: bool,
+}
+
 use ratatui::{
     backend::Backend,
     layout::Rect,
