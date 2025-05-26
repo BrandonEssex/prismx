@@ -30,10 +30,10 @@ wasm-bindgen = "0.2"
 console_error_panic_hook = "0.1"
 web-sys = { version = "0.3", features = ["console"] }
 
-[[bin]]
-name = "prismx_wasm"
-path = "wasm/entry.rs"
+# [[bin]]
+# name = "prismx_wasm"
+# path = "wasm/entry.rs"
 
-[[bin]]
-name = "wasm_build"
-path = "build/wasm_build.rs"
+# [[bin]]
+# name = "wasm_build"
+# path = "build/wasm_build.rs"
