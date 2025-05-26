@@ -1,3 +1,6 @@
+use super::core::AppState;
+use crossterm::terminal;
+
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub enum ZenViewMode {
     Journal,
@@ -37,4 +40,34 @@ pub enum PluginViewMode {
 
 impl Default for PluginViewMode {
     fn default() -> Self { Self::Registry }
+}
+
+#[derive(Clone, serde::Serialize)]
+pub struct DebugSnapshot {
+    pub active_module: String,
+    pub auto_arrange: bool,
+    pub scroll_x: i16,
+    pub scroll_y: i16,
+    pub zoom_level: f32,
+    pub selected_node: Option<crate::node::NodeID>,
+    pub viewport_width: u16,
+    pub viewport_height: u16,
+    pub plugins_active: usize,
+}
+
+impl DebugSnapshot {
+    pub fn from_state(state: &AppState) -> Self {
+        let (viewport_width, viewport_height) = crossterm::terminal::size().unwrap_or((0, 0));
+        Self {
+            active_module: state.mode.clone(),
+            auto_arrange: state.auto_arrange,
+            scroll_x: state.scroll_x,
+            scroll_y: state.scroll_y,
+            zoom_level: state.zoom_scale,
+            selected_node: state.selected,
+            viewport_width,
+            viewport_height,
+            plugins_active: state.plugin_host.active.len(),
+        }
+    }
 }

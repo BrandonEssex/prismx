@@ -360,6 +360,8 @@ pub fn launch_ui() -> std::io::Result<()> {
                     state.mode = "zen".into();
                 } else if match_hotkey("zen_toggle_theme", code, modifiers, &state) && state.mode == "zen" {
                     state.cycle_zen_theme();
+                } else if match_hotkey("debug_snapshot", code, modifiers, &state) {
+                    crate::ui::components::debug::write_debug_snapshot(&mut state);
                 } else if code == KeyCode::Char('v')
                     && modifiers.contains(KeyModifiers::CONTROL)
                     && modifiers.contains(KeyModifiers::SHIFT)
