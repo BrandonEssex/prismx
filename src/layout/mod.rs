@@ -22,6 +22,8 @@ pub const BASE_SPACING_X: i16 = 20;
 pub const BASE_SPACING_Y: i16 = 5;
 pub const SNAP_GRID_X: i16 = 4;
 pub const SNAP_GRID_Y: i16 = 2;
+pub const RESERVED_ZONE_W: i16 = 6;
+pub const RESERVED_ZONE_H: i16 = 6;
 
 pub fn spacing_for_zoom(zoom: f32) -> (i16, i16) {
     if zoom < 0.7 {
@@ -348,5 +350,24 @@ pub fn clamp_scroll(state: &mut crate::state::AppState) {
     }
     if state.scroll_y < 0 {
         state.scroll_y = 0;
+    }
+}
+
+/// Returns true if the position falls within the protected top-right zone.
+pub fn in_reserved_zone(x: i16, y: i16, term_width: i16) -> bool {
+    x >= term_width - RESERVED_ZONE_W && y < RESERVED_ZONE_H
+}
+
+/// Shift coordinates left if they collide with the protected zone.
+pub fn avoid_reserved_zone(pos: &mut Coords, term_width: i16) {
+    if in_reserved_zone(pos.x, pos.y, term_width) {
+        pos.x = (term_width - RESERVED_ZONE_W - SNAP_GRID_X).max(0);
+    }
+}
+
+/// Apply [`avoid_reserved_zone`] to every entry in the map.
+pub fn avoid_reserved_zone_map(map: &mut HashMap<NodeID, Coords>, term_width: i16) {
+    for pos in map.values_mut() {
+        avoid_reserved_zone(pos, term_width);
     }
 }
