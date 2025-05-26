@@ -9,6 +9,7 @@ use ratatui::{
 
 use crate::state::AppState;
 use crate::spotlight::{command_preview, command_suggestions};
+use crate::theme;
 
 pub fn render_spotlight<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppState) {
     let input = &state.spotlight_input;
@@ -51,12 +52,11 @@ pub fn render_spotlight<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut Ap
         .borders(Borders::ALL)
         .style(Style::default().fg(border_color).bg(Color::Black));
 
+    let spot_style = theme::get_style("spotlight");
     let mut lines = vec![
         Line::styled(
             format!("> {}", input),
-            Style::default()
-                .fg(Color::White)
-                .bg(Color::Black)
+            spot_style
                 .add_modifier(Modifier::BOLD),
         ),
     ];
@@ -99,7 +99,10 @@ pub fn render_spotlight<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut Ap
         if y >= area.y + area.height.saturating_sub(1) {
             break;
         }
-        let style = Style::default().fg(Color::Cyan).bg(Color::Black);
+        let mut style = spot_style;
+        if Some(i) == state.spotlight_suggestion_index {
+            style = style.fg(Color::Black).bg(Color::White);
+        }
         f.render_widget(
             Paragraph::new(*suggestion).style(style),
             Rect::new(x_offset, y, width, 1),

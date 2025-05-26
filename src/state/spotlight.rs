@@ -5,11 +5,13 @@ impl AppState {
         self.spotlight_input.clear();
         self.show_spotlight = false;
         self.spotlight_just_opened = false;
+        self.spotlight_suggestion_index = None;
     }
 
     pub fn execute_spotlight_command(&mut self) {
         let command = self.spotlight_input.clone();
         let input = command.trim();
+        let cmd = input.trim_start_matches('/');
         crate::log_debug!(self, "Executing spotlight: {}", input);
         if !input.is_empty() {
             self.spotlight_history.push_front(input.to_string());
@@ -18,10 +20,11 @@ impl AppState {
             }
         }
         self.spotlight_history_index = None;
-        if input == "/start pomodoro" {
+        self.spotlight_suggestion_index = None;
+        if cmd == "start pomodoro" {
             self.plugin_host.start_pomodoro();
-        } else if input.starts_with("/countdown ") {
-            let rest = &input["/countdown ".len()..];
+        } else if cmd.starts_with("countdown ") {
+            let rest = &cmd["countdown ".len()..];
             let mut parts = rest.splitn(2, ' ');
             let days_part = parts.next().unwrap_or("");
             let label = parts.next().unwrap_or("").to_string();
@@ -30,8 +33,8 @@ impl AppState {
                     self.plugin_host.add_countdown(label, days);
                 }
             }
-        } else if input.starts_with("/dock_layout=") {
-            let layout = &input["/dock_layout=".len()..];
+        } else if cmd.starts_with("dock_layout=") {
+            let layout = &cmd["dock_layout=".len()..];
             if layout.eq_ignore_ascii_case("horizontal") {
                 self.favorite_dock_layout = DockLayout::Horizontal;
             } else if layout.eq_ignore_ascii_case("vertical") {
@@ -40,13 +43,13 @@ impl AppState {
             self.dock_focus_index = None;
             self.status_message.clear();
             self.status_message_last_updated = None;
-        } else if input.starts_with("/dock_limit=") {
-            let value = &input["/dock_limit=".len()..];
+        } else if cmd.starts_with("dock_limit=") {
+            let value = &cmd["dock_limit=".len()..];
             if let Ok(num) = value.parse::<usize>() {
                 self.favorite_dock_limit = num.min(5);
             }
-        } else if input.starts_with("/dock_enabled=") {
-            let value = &input["/dock_enabled=".len()..];
+        } else if cmd.starts_with("dock_enabled=") {
+            let value = &cmd["dock_enabled=".len()..];
             if let Ok(flag) = value.parse::<bool>() {
                 self.favorite_dock_enabled = flag;
             }
@@ -55,8 +58,8 @@ impl AppState {
                 self.status_message.clear();
                 self.status_message_last_updated = None;
             }
-        } else if input.starts_with("/simulate") {
-            for token in input.split_whitespace().skip(1) {
+        } else if cmd.starts_with("simulate") {
+            for token in cmd.split_whitespace().skip(1) {
                 match token.to_lowercase().as_str() {
                     "enter" => self.simulate_input_queue.push_back(SimInput::Enter),
                     "tab" => self.simulate_input_queue.push_back(SimInput::Tab),
@@ -69,31 +72,31 @@ impl AppState {
                 }
             }
         } else {
-            match input {
-                "/triage" => self.mode = "triage".into(),
-                "/zen" => self.mode = "zen".into(),
-                "/settings" => self.mode = "settings".into(),
-                "/gemx" => self.mode = "gemx".into(),
-                "/toggle triage" => self.show_triage = !self.show_triage,
-                "/toggle keymap" => self.show_keymap = !self.show_keymap,
-                "/toggle spotlight" => self.show_spotlight = !self.show_spotlight,
-                "/mode zen" => self.mode = "zen".into(),
-                "/mode gemx" => self.mode = "gemx".into(),
-                "/arrange" => self.auto_arrange = true,
-                "/undo" => self.undo(),
-                "/redo" => self.redo(),
-                "/toolbar" => {
+            match cmd {
+                "triage" => self.mode = "triage".into(),
+                "zen" => self.mode = "zen".into(),
+                "settings" => self.mode = "settings".into(),
+                "gemx" => self.mode = "gemx".into(),
+                "toggle triage" => self.show_triage = !self.show_triage,
+                "toggle keymap" => self.show_keymap = !self.show_keymap,
+                "toggle spotlight" => self.show_spotlight = !self.show_spotlight,
+                "mode zen" => self.mode = "zen".into(),
+                "mode gemx" => self.mode = "gemx".into(),
+                "arrange" => self.auto_arrange = true,
+                "undo" => self.undo(),
+                "redo" => self.redo(),
+                "toolbar" => {
                     self.zen_toolbar_open = !self.zen_toolbar_open;
                     self.zen_toolbar_index = 0;
                 }
-                _ if input.starts_with("/open ") => {
-                    let path = input.trim_start_matches("/open ").trim();
+                _ if cmd.starts_with("open ") => {
+                    let path = cmd.trim_start_matches("open ").trim();
                     if !path.is_empty() {
                         self.open_zen_file(path);
                         self.mode = "zen".into();
                     }
                 }
-                "/clear" => self.zen_buffer = vec![String::new()],
+                "clear" => self.zen_buffer = vec![String::new()],
                 _ => {}
             }
         }
