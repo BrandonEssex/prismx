@@ -1,0 +1,3 @@
+- config/theme.rs
+- ui/components/theme.rs
+- render/settings.rs

@@ -136,6 +136,7 @@ impl AppState {
                         "\u{26a0} root_nodes was empty — promoted Node {} to root",
                         first_id
                     );
+                    tracing::debug!("[STATE] promoted node {} to root", first_id);
                 }
             }
             if self.root_nodes.is_empty() {
