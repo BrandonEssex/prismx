@@ -469,39 +469,40 @@ impl AppState {
                 }
             }
         }
-    }
-    // Reachability from roots
-    let mut reachable = HashSet::new();
-    let mut stack: VecDeque<NodeID> = self.root_nodes.iter().copied().collect();
-    while let Some(id) = stack.pop_front() {
-        if reachable.insert(id) {
-            if let Some(n) = self.nodes.get(&id) {
-                for child in &n.children {
-                    stack.push_back(*child);
+
+        // Reachability from roots
+        let mut reachable = HashSet::new();
+        let mut stack: VecDeque<NodeID> = self.root_nodes.iter().copied().collect();
+        while let Some(id) = stack.pop_front() {
+            if reachable.insert(id) {
+                if let Some(n) = self.nodes.get(&id) {
+                    for child in &n.children {
+                        stack.push_back(*child);
+                    }
                 }
             }
         }
-    }
 
-    for id in self.nodes.keys() {
-        if !reachable.contains(id) {
-            crate::log_debug!(self, "⚠ Node {} unreachable from roots", id);
+        for id in self.nodes.keys() {
+            if !reachable.contains(id) {
+                crate::log_debug!(self, "⚠ Node {} unreachable from roots", id);
+            }
         }
-    }
 
-    // Dedup children
-    for (id, node) in self.nodes.iter_mut() {
-        let before = node.children.len();
-        node.children.sort_unstable();
-        node.children.dedup();
-        if node.children.len() != before {
-            crate::log_debug!(self, "⚠ Node {} had duplicate children", id);
+        // Dedup children
+        for (id, node) in self.nodes.iter_mut() {
+            let before = node.children.len();
+            node.children.sort_unstable();
+            node.children.dedup();
+            if node.children.len() != before {
+                crate::log_debug!(self, "⚠ Node {} had duplicate children", id);
+            }
         }
-    }
 
         self.root_nodes.sort_unstable();
         self.root_nodes.dedup();
     }
+
 
     /// Ensure nodes have unique positions when auto-arrange is disabled.
     pub fn ensure_grid_positions(&mut self) {
