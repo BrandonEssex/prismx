@@ -5,6 +5,7 @@ use std::fs;
 pub struct ThemeConfig {
     pub dark_mode: bool,
     pub opacity: f32,
+    pub zen_peaceful: bool,
 }
 
 impl Default for ThemeConfig {
@@ -12,6 +13,7 @@ impl Default for ThemeConfig {
         Self {
             dark_mode: true,
             opacity: 1.0,
+            zen_peaceful: false,
         }
     }
 }
@@ -22,5 +24,9 @@ impl ThemeConfig {
             .ok()
             .and_then(|s| toml::from_str(&s).ok())
             .unwrap_or_default()
+    }
+
+    pub fn zen_peaceful(&self) -> bool {
+        self.zen_peaceful
     }
 }
