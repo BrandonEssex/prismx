@@ -69,16 +69,16 @@ pub fn draw<B: Backend>(terminal: &mut Terminal<B>, state: &mut AppState, _last_
             }
         }
 
-        if state.show_spotlight {
-            render_spotlight(f, vertical[0], state);
-        }
-
         if state.show_keymap && layout_chunks.len() > 1 {
             render_shortcuts_overlay(f, layout_chunks[1]);
         }
 
         if state.module_switcher_open {
             render_module_switcher(f, vertical[0], state.module_switcher_index);
+        }
+
+        if state.show_spotlight {
+            render_spotlight(f, vertical[0], state);
         }
 
         if let Some(last) = state.status_message_last_updated {
@@ -318,6 +318,9 @@ pub fn launch_ui() -> std::io::Result<()> {
                     } else {
                         state.start_link();
                     }
+                } else if match_hotkey("toggle_link_mode", code, modifiers, &state) {
+                    state.link_mode = !state.link_mode;
+                    crate::log_debug!(state, "link_mode toggled: {}", state.link_mode);
                 } else if match_hotkey("save", code, modifiers, &state) {
                     state.export_zen_to_file();
                 } else if match_hotkey("mode_zen", code, modifiers, &state) {
