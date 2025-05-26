@@ -96,4 +96,4 @@ impl AppState {
             _ => crate::state::ZenViewMode::Summary,
         };
     }
-
+}
