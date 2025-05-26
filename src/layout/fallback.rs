@@ -55,7 +55,7 @@ pub fn promote_unreachable(
 
                 while filled.contains(&(x, y)) {
                     if state.debug_input_mode {
-                        eprintln!("↪ collision at {},{}", x, y);
+                        tracing::debug!("↪ collision at {},{}", x, y);
                     }
                     y += step_y;
                     if y > max_y {
@@ -70,13 +70,13 @@ pub fn promote_unreachable(
                 state.fallback_next_y = y + step_y;
 
                 if state.debug_input_mode {
-                    eprintln!("\u{1F4D0} Placed Node {} at x={}, y={}", id, n.x, n.y);
+                    tracing::debug!("\u{1F4D0} Placed Node {} at x={}, y={}", id, n.x, n.y);
                 }
             }
             drawn_at.insert(id, Coords { x: n.x, y: n.y });
             node_roles.insert(id, LayoutRole::Root);
         } else {
-            eprintln!("❌ Fallback failed: Node {} not found.", id);
+            tracing::error!("❌ Fallback failed: Node {} not found.", id);
         }
 
         crate::log_debug!(state, "\u{26a0} Promoted Node {} to root (label-safe)", id);
