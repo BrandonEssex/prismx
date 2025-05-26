@@ -9,6 +9,7 @@ pub mod favorites;
 pub mod zoom_overlay;
 
 pub use zen::render_zen_journal;
+pub use crate::zen::render::render_zen;
 pub use status::render_status_bar;
 pub use shortcuts_overlay::render_shortcuts_overlay;
 pub use spotlight::render_spotlight;

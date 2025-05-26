@@ -18,6 +18,7 @@ pub mod theme;
 pub mod clipboard;
 pub mod input;
 pub mod dashboard;
+pub mod zen;
 pub mod render;
 pub mod beamx;
 pub mod beam_color;

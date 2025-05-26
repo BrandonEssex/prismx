@@ -10,7 +10,7 @@ use std::io::stdout;
 use crate::state::{AppState, SimInput};
 use crate::render::{
     render_status_bar,
-    render_zen_journal,
+    render_zen,
     render_shortcuts_overlay,
     render_spotlight,
     render_triage,
@@ -59,7 +59,7 @@ pub fn draw<B: Backend>(terminal: &mut Terminal<B>, state: &mut AppState, _last_
             .split(layout_chunks[0]);
 
         match state.mode.as_str() {
-            "zen" => render_zen_journal(f, vertical[0], state),
+            "zen" => render_zen(f, vertical[0], state),
             "gemx" => render_gemx(f, vertical[0], state),
             "settings" => render_settings(f, vertical[0], state),
             "triage" => render_triage(f, vertical[0], state),
@@ -362,9 +362,10 @@ pub fn launch_ui() -> std::io::Result<()> {
                     && modifiers.contains(KeyModifiers::SHIFT)
                     && state.mode == "zen"
                 {
-                    state.zen_journal_view = match state.zen_journal_view {
-                        crate::state::ZenJournalView::Compose => crate::state::ZenJournalView::Review,
-                        crate::state::ZenJournalView::Review => crate::state::ZenJournalView::Compose,
+                    state.zen_view_mode = match state.zen_view_mode {
+                        crate::state::ZenViewMode::Journal => crate::state::ZenViewMode::Classic,
+                        crate::state::ZenViewMode::Classic => crate::state::ZenViewMode::Split,
+                        crate::state::ZenViewMode::Split => crate::state::ZenViewMode::Journal,
                     };
                 } else if code == KeyCode::Char('t')
                     && modifiers == KeyModifiers::CONTROL
