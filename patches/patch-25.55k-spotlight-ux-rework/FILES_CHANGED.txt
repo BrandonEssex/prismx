@@ -1,0 +1,2 @@
+src/tui/mod.rs
+src/render/spotlight.rs
