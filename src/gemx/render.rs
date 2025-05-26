@@ -17,6 +17,7 @@ impl<'a> GemxRenderer<'a> {
 
 impl<'a> Renderable for GemxRenderer<'a> {
     fn render_frame<B: Backend>(&mut self, f: &mut Frame<B>, area: Rect) {
+        // Render main GemX view
         render_gemx(f, area, self.state);
     }
 
