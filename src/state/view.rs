@@ -3,6 +3,7 @@ pub enum ZenViewMode {
     Journal,
     Classic,
     Split,
+    Summary,
 }
 
 impl Default for ZenViewMode {
