@@ -1,17 +1,37 @@
-#[derive(Clone, Copy)]
-pub struct PluginEntry {
-    pub name: &'static str,
-    pub version: &'static str,
-    pub description: &'static str,
+use serde::Deserialize;
+use std::fs;
+use std::error::Error;
+use std::sync::{Mutex, OnceLock};
+use std::process::Command;
+use std::time::{Duration, Instant};
+use crate::state::PluginTagFilter;
+
+#[derive(Debug, Deserialize, Clone)]
+pub struct PluginManifest {
+    pub id: String,
+    pub name: String,
+    pub description: String,
+    pub url: String,
+    pub tags: Vec<String>,
+    #[serde(default)]
     pub trusted: bool,
-    pub trust_chain: &'static str,
-    pub tags: &'static [&'static str],
+    #[serde(default)]
+    pub trust_chain: Option<String>,
 }
 
-use std::sync::OnceLock;
-use std::process::Command;
-use std::sync::Mutex;
-use std::time::{Duration, Instant};
+#[derive(Debug, Deserialize)]
+struct PluginRegistry {
+    #[serde(rename = "plugin")]
+    pub plugins: Vec<PluginManifest>,
+}
+
+pub fn load_registry() -> Result<Vec<PluginManifest>, Box<dyn Error>> {
+    let data = fs::read_to_string("config/prismx-epel.toml")?;
+    let registry: PluginRegistry = toml::from_str(&data)?;
+    Ok(registry.plugins)
+}
+
+// ───── Registry Sync Logic ─────
 
 struct RegistryState {
     last_hash: Option<String>,
@@ -23,7 +43,7 @@ static REGISTRY_STATE: OnceLock<Mutex<RegistryState>> = OnceLock::new();
 
 fn compute_hash() -> Option<String> {
     let output = Command::new("sha256sum")
-        .arg("config/plugin.json")
+        .arg("config/prismx-epel.toml")
         .output()
         .ok()?;
     let hash = String::from_utf8_lossy(&output.stdout);
@@ -38,12 +58,10 @@ fn init_state() -> RegistryState {
     }
 }
 
-/// Initialize plugin registry sync state.
 pub fn init() {
     REGISTRY_STATE.get_or_init(|| Mutex::new(init_state()));
 }
 
-/// Check registry file for updates. Should be called periodically.
 pub fn tick() {
     let lock = REGISTRY_STATE.get_or_init(|| Mutex::new(init_state()));
     let mut state = lock.lock().unwrap();
@@ -57,14 +75,13 @@ pub fn tick() {
     };
     if state.last_hash.as_deref() != Some(&new_hash) {
         state.last_hash = Some(new_hash);
-        if crate::config::load_locked_registry().is_ok() {
+        if load_registry().is_ok() {
             tracing::info!("[PLUGIN] registry synchronized");
         }
         state.last_sync = Some(Instant::now());
     }
 }
 
-/// Returns true if a sync occurred recently.
 pub fn sync_badge() -> bool {
     if let Some(lock) = REGISTRY_STATE.get() {
         let state = lock.lock().unwrap();
@@ -75,52 +92,18 @@ pub fn sync_badge() -> bool {
     false
 }
 
-pub fn registry() -> Vec<PluginEntry> {
-    vec![
-        PluginEntry {
-            name: "GemX",
-            version: "0.1.0",
-            description: "Mindmap engine",
-            trusted: true,
-            trust_chain: "PrismX Core",
-            tags: &["editor", "trusted"],
-        },
-        PluginEntry {
-            name: "Dashboard",
-            version: "0.1.0",
-            description: "Project dashboard",
-            trusted: true,
-            trust_chain: "PrismX Core",
-            tags: &["utility", "trusted"],
-        },
-        PluginEntry {
-            name: "Mindtrace",
-            version: "0.1.0",
-            description: "AI memory system",
-            trusted: false,
-            trust_chain: "unknown",
-            tags: &["debug"],
-        },
-        PluginEntry {
-            name: "RoutineForge",
-            version: "0.1.0",
-            description: "Task & habit manager",
-            trusted: false,
-            trust_chain: "unknown",
-            tags: &["utility"],
-        },
-    ]
-}
+// ───── Filtering ─────
 
-use crate::state::PluginTagFilter;
-
-pub fn registry_filtered(filter: PluginTagFilter) -> Vec<PluginEntry> {
-    registry()
-        .into_iter()
-        .filter(|p| match filter {
-            PluginTagFilter::All => true,
-            PluginTagFilter::Trusted => p.trusted,
-            PluginTagFilter::Debug => p.tags.iter().any(|t| *t == "debug"),
-        })
-        .collect()
+pub fn registry_filtered(filter: PluginTagFilter) -> Vec<PluginManifest> {
+    match load_registry() {
+        Ok(registry) => registry
+            .into_iter()
+            .filter(|p| match filter {
+                PluginTagFilter::All => true,
+                PluginTagFilter::Trusted => p.trusted,
+                PluginTagFilter::Debug => p.tags.iter().any(|t| t == "debug"),
+            })
+            .collect(),
+        Err(_) => vec![],
+    }
 }
