@@ -168,11 +168,77 @@ impl BeamX {
 
         match self.animation {
             BeamXAnimationMode::PulseEntryRadiate => {
-                self.render_frame(f, area, self.tick);
+                self.render_pulse_entry_radiate(f, area, self.tick);
             }
             BeamXAnimationMode::FadeOut => {
                 self.render_frame(f, area, self.tick);
                 self.render_shimmer(f, area);
+            }
+        }
+    }
+
+    fn render_pulse_entry_radiate<B: Backend>(
+        &self,
+        f: &mut Frame<B>,
+        area: Rect,
+        tick: u64,
+    ) {
+        let frame = tick % 24;
+        let x = area.right().saturating_sub(7);
+        let y = area.top();
+
+        let border = Style::default().fg(self.style.border_color);
+        let status = Style::default().fg(self.style.status_color);
+        let prism = Style::default().fg(self.style.prism_color);
+
+        match frame {
+            0..=2 => {
+                render_glyph(f, x + 6, y + 0, "⇙", status);
+            }
+            3..=4 => {
+                render_glyph(f, x + 3, y + 1, "✦", prism);
+            }
+            5..=7 => {
+                render_glyph(
+                    f,
+                    x + 3,
+                    y + 1,
+                    "X",
+                    prism.add_modifier(Modifier::BOLD),
+                );
+            }
+            8..=10 => {
+                render_glyph(
+                    f,
+                    x + 3,
+                    y + 1,
+                    "X",
+                    prism.add_modifier(Modifier::BOLD),
+                );
+                render_glyph(f, x + 0, y + 0, "⬉", border);
+                render_glyph(f, x + 6, y + 2, "⬊", border);
+            }
+            11..=14 => {
+                let b = border.add_modifier(Modifier::BOLD);
+                render_glyph(
+                    f,
+                    x + 3,
+                    y + 1,
+                    "X",
+                    prism.add_modifier(Modifier::BOLD),
+                );
+                render_glyph(f, x + 0, y + 0, "⬉", b);
+                render_glyph(f, x + 6, y + 2, "⬊", b);
+            }
+            15..=19 => {
+                let dim_border = border.add_modifier(Modifier::DIM);
+                let dim_status = status.add_modifier(Modifier::DIM);
+                render_glyph(f, x + 6, y + 0, "⇙", dim_status);
+                render_glyph(f, x + 0, y + 0, "⬉", dim_border);
+                render_glyph(f, x + 6, y + 2, "⬊", dim_border);
+            }
+            _ => {
+                render_glyph(f, x + 3, y + 1, "X", prism);
             }
         }
     }
