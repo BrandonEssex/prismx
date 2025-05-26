@@ -176,86 +176,52 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppStat
     if state.auto_arrange {
         let node_ids: Vec<NodeID> = state.nodes.keys().copied().collect();
         for id in node_ids {
-            if state.fallback_this_frame {
-                continue;
+            if let Some(n) = state.nodes.get_mut(&id) {
+                if n.x == 0 && n.y == 0 {
+                    let step_x = 20;
+                    let step_y = 3;
+                    let base_y = GEMX_HEADER_HEIGHT + 2;
+                    let max_y = area.height as i16 - 4;
+                    let max_x = area.width as i16 - RESERVED_ZONE_W - 1;
+
+                    let mut x = state.fallback_next_x;
+                    let mut y = state.fallback_next_y;
+
+                    while filled.contains(&(x, y)) {
+                        if state.debug_input_mode {
+                            crate::log_debug!(state, "↪ collision at {},{}", x, y);
+                        }
+                        y += step_y;
+                        if y > max_y {
+                            y = base_y;
+                            x += step_x;
+                        }
+                        if x > max_x {
+                            x = 6;
+                        }
+                    }
+
+                    n.x = x;
+                    n.y = y;
+
+                    // Update fallback tracker
+                    state.fallback_next_x = x;
+                    state.fallback_next_y = y + step_y;
+                }
+
+                crate::log_debug!(state, "📦 Placed Node {} at x={}, y={}", id, n.x, n.y);
             }
-            let node = match state.nodes.get(&id) {
-                Some(n) => n,
-                None => continue,
-            };
-            if state.root_nodes.contains(&id)
-                || drawn_at.contains_key(&id)
-                || reachable_ids.contains(&id)
-                || state.fallback_promoted_this_session.contains(&id)
-            {
-                continue;
-            }
-            if node.children.is_empty() {
-                continue;
-            }
 
-            state.root_nodes.push(id);
-            state.root_nodes.sort_unstable();
-            state.root_nodes.dedup();
-            state.fallback_this_frame = true;
-            state.fallback_promoted_this_session.insert(id);
+            drawn_at.insert(id, Coords { x: n.x, y: n.y });
+            node_roles.insert(id, LayoutRole::Root);
 
-            use std::collections::HashSet;
-            let filled: HashSet<(i16, i16)> =
-                state.nodes.values().map(|n| (n.x, n.y)).collect();
-
-            let Some(n) = state.nodes.get_mut(&id) else {
-                crate::log_debug!(state, "❌ Fallback failed: Node {} not found.", id);
-                return;
-            };
-
-    if n.x == 0 && n.y == 0 {
-        let step_x = 20;
-        let step_y = 3;
-        let base_y = GEMX_HEADER_HEIGHT + 2;
-        let max_y = area.height as i16 - 4;
-        let max_x = area.width as i16 - RESERVED_ZONE_W - 1;
-
-        let mut x = state.fallback_next_x;
-        let mut y = state.fallback_next_y;
-
-        while filled.contains(&(x, y)) {
-            if state.debug_input_mode {
-                crate::log_debug!(state, "↪ collision at {},{}", x, y);
-            }
-            y += step_y;
-            if y > max_y {
-                y = base_y;
-                x += step_x;
-            }
-            if x > max_x {
-                x = 6;
-            }
-        }
-
-        n.x = x;
-        n.y = y;
-
-        // Update fallback tracker
-        state.fallback_next_x = x;
-        state.fallback_next_y = y + step_y;
-    }
-
-    crate::log_debug!(state, "📦 Placed Node {} at x={}, y={}", id, n.x, n.y);
-
-    drawn_at.insert(id, Coords { x: n.x, y: n.y });
-    node_roles.insert(id, LayoutRole::Root);
-
-    crate::log_debug!(state, "🚨 Promoted Node {} to root (label-safe)", id);
-    break;
-
-
-    for (&id, _) in &state.nodes {
-        if !drawn_at.contains_key(&id) {
-            drawn_at.insert(id, Coords { x: 3, y: GEMX_HEADER_HEIGHT + 2 });
-            node_roles.insert(id, LayoutRole::Free);
+            crate::log_debug!(state, "🚨 Promoted Node {} to root (label-safe)", id);
+            break;
         }
     }
+
+    crate::log_debug!(state, "🏁 Auto-arrange complete");
+}
 
     crate::layout::avoid_reserved_zone_map(&mut drawn_at, area.width as i16);
 
