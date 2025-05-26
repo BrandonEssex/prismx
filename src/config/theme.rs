@@ -1,4 +1,5 @@
 use serde::Deserialize;
+use ratatui::style::Color;
 use std::fs;
 
 #[derive(Debug, Deserialize, Clone)]
@@ -34,5 +35,9 @@ impl ThemeConfig {
 
     pub fn zen_breathe(&self) -> bool {
         self.zen_breathe
+    }
+
+    pub fn dim_color(&self) -> Color {
+        if self.dark_mode { Color::DarkGray } else { Color::Gray }
     }
 }
