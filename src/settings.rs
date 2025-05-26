@@ -24,6 +24,8 @@ pub struct UserSettings {
     pub zen_beam_color: BeamColor,
     pub triage_beam_color: BeamColor,
     pub settings_beam_color: BeamColor,
+    pub beamx_panel_theme: BeamColor,
+    pub beamx_panel_visible: bool,
 }
 
 impl Default for UserSettings {
@@ -36,6 +38,8 @@ impl Default for UserSettings {
             zen_beam_color: BeamColor::Prism,
             triage_beam_color: BeamColor::Prism,
             settings_beam_color: BeamColor::Prism,
+            beamx_panel_theme: BeamColor::Prism,
+            beamx_panel_visible: crate::state::default_beamx_panel_visible(),
         }
     }
 }
@@ -56,6 +60,8 @@ pub fn save_user_settings(state: &AppState) {
         zen_beam_color: state.zen_beam_color,
         triage_beam_color: state.triage_beam_color,
         settings_beam_color: state.settings_beam_color,
+        beamx_panel_theme: state.beamx_panel_theme,
+        beamx_panel_visible: state.beamx_panel_visible,
     };
     if let Ok(serialized) = toml::to_string(&config) {
         let _ = fs::create_dir_all("config");
@@ -120,6 +126,17 @@ fn toggle_theme(state: &mut AppState) {
     save_user_settings(state);
 }
 
+fn is_beamx_panel_visible(s: &AppState) -> bool { s.beamx_panel_visible }
+fn toggle_beamx_panel_visibility(s: &mut AppState) {
+    s.beamx_panel_visible = !s.beamx_panel_visible;
+    save_user_settings(s);
+}
+
+fn toggle_beamx_theme(s: &mut AppState) {
+    s.cycle_beamx_panel_theme();
+    save_user_settings(s);
+}
+
 pub const SETTING_TOGGLES: &[SettingToggle] = &[
     SettingToggle {
         label: "BeamX Panel",
@@ -146,36 +163,57 @@ pub const SETTING_TOGGLES: &[SettingToggle] = &[
         is_enabled: |_| true,
         toggle: toggle_theme,
     },
+    SettingToggle {
+        label: "BeamX Panel",
+        is_enabled: is_beamx_panel_visible,
+        toggle: toggle_beamx_panel_visibility,
+    },
+    SettingToggle {
+        label: "BeamX Theme",
+        is_enabled: |_| true,
+        toggle: toggle_beamx_theme,
+    },
 ];
 
 pub const fn settings_len() -> usize {
     SETTING_TOGGLES.len()
 }
 
-pub fn render_settings<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
-    let lines: Vec<Line> = SETTING_TOGGLES
-        .iter()
-        .enumerate()
-        .map(|(i, t)| {
-            let enabled = (t.is_enabled)(state);
-            let selected = i == state.settings_focus_index % SETTING_TOGGLES.len();
-            let mut label = t.label.to_string();
-            if t.label.starts_with("Theme Preset") {
-                label = format!("Theme Preset: {}", theme_label());
-            }
-            let check = if enabled { "[x]" } else { "[ ]" };
-            let prefix = if selected { "> " } else { "  " };
-            let style = if selected {
-                Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD)
-            } else {
-                Style::default().fg(Color::Gray)
-            };
-            Line::from(vec![
-                Span::styled(prefix.to_string(), style),
-                Span::styled(format!("{} {}", check, label), style),
-            ])
-        })
-        .collect();
+let lines: Vec<Line> = SETTING_TOGGLES
+    .iter()
+    .enumerate()
+    .map(|(i, t)| {
+        let enabled = (t.is_enabled)(state);
+        let selected = i == state.settings_focus_index % SETTING_TOGGLES.len();
+        let mut label = t.label.to_string();
+
+        if t.label.starts_with("Theme Preset") {
+            label = format!("Theme Preset: {}", theme_label());
+        } else if t.label.starts_with("Gemx Color") {
+            label = format!("Gemx Color: {}", state.gemx_beam_color);
+        } else if t.label.starts_with("Zen Color") {
+            label = format!("Zen Color: {}", state.zen_beam_color);
+        } else if t.label.starts_with("Triage Color") {
+            label = format!("Triage Color: {}", state.triage_beam_color);
+        } else if t.label.starts_with("Settings Color") {
+            label = format!("Settings Color: {}", state.settings_beam_color);
+        } else if t.label.starts_with("BeamX Theme") {
+            label = format!("BeamX Theme: {}", state.beamx_panel_theme);
+        }
+
+        let check = if enabled { "[x]" } else { "[ ]" };
+        let prefix = if selected { "> " } else { "  " };
+        let style = if selected {
+            Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD)
+        } else {
+            Style::default().fg(Color::Gray)
+        };
+        Line::from(vec![
+            Span::styled(prefix.to_string(), style),
+            Span::styled(format!("{} {}", check, label), style),
+        ])
+    })
+    .collect();
 
     let content_width = lines
         .iter()
