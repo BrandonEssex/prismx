@@ -1,6 +1,9 @@
 use chrono::{DateTime, Local};
 use regex::Regex;
-use crate::state::AppState;
+use crate::state::{AppState, ZenJournalEntry};
+
+/// Tags that mark an entry for triage.
+const TRIAGE_TAGS: &[&str] = &["#TODO", "#TRITON", "#PRIORITY", "#NOW"];
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum TriageSource {
@@ -36,10 +39,26 @@ impl TriageEntry {
 }
 
 fn extract_tags(text: &str) -> Vec<String> {
-    let re = Regex::new(r"#\\w+").unwrap();
+    let re = Regex::new(r"#\w+").unwrap();
     re.find_iter(text)
         .map(|m| m.as_str().to_string())
         .collect()
+}
+
+/// Collect raw journal entries containing any triage tags.
+pub fn collect(entries: &[ZenJournalEntry]) -> Vec<ZenJournalEntry> {
+    let mut filtered: Vec<ZenJournalEntry> = entries
+        .iter()
+        .filter(|e| {
+            let tags = extract_tags(&e.text);
+            tags.iter().any(|tag| TRIAGE_TAGS.contains(&tag.as_str()))
+        })
+        .cloned()
+        .collect();
+
+    // Sort most recent first
+    filtered.sort_by(|a, b| b.timestamp.cmp(&a.timestamp));
+    filtered
 }
 
 pub fn capture_entry(state: &mut AppState, source: TriageSource, text: &str) {
@@ -102,8 +121,7 @@ pub fn archive(state: &mut AppState, id: usize) {
     }
 }
 
-/// Simple pipeline updates. Entries tagged #NOW move to #TRITON after creation
-/// delay (~60s) or if resolve() is called. Resolved #TRITON entries become #DONE.
+/// Simple pipeline updates. Entries tagged #NOW move to #TRITON after ~60s.
 pub fn update_pipeline(state: &mut AppState) {
     for entry in &mut state.triage_entries {
         if entry.resolved { continue; }

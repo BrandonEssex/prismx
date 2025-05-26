@@ -61,6 +61,16 @@ impl AppState {
         }
     }
 
+    /// Return journal entries containing any of the provided tags (used by Triage).
+    pub fn tagged_journal_entries(&self, tags: &[&str]) -> Vec<ZenJournalEntry> {
+        self.zen_journal_entries
+            .iter()
+            .filter(|e| tags.iter().any(|t| e.text.contains(t)))
+            .cloned()
+            .collect()
+    }
+
+    /// Return journal entries that match the current active Zen tag filter.
     pub fn filtered_journal_entries(&self) -> Vec<&ZenJournalEntry> {
         self.zen_journal_entries
             .iter()
@@ -74,10 +84,12 @@ impl AppState {
             .collect()
     }
 
+    /// Set the active tag filter in Zen.
     pub fn set_tag_filter(&mut self, tag: Option<&str>) {
         self.zen_tag_filter = tag.map(|t| t.to_string());
     }
 
+    /// Toggle between Summary and Journal view modes in Zen.
     pub fn toggle_summary_view(&mut self) {
         self.zen_view_mode = match self.zen_view_mode {
             crate::state::ZenViewMode::Summary => crate::state::ZenViewMode::Journal,
@@ -85,4 +97,3 @@ impl AppState {
         };
     }
 
-}
