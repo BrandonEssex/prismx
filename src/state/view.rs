@@ -43,6 +43,27 @@ impl Default for PluginViewMode {
     fn default() -> Self { Self::Registry }
 }
 
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+pub enum PluginTagFilter {
+    All,
+    Trusted,
+    Debug,
+}
+
+impl Default for PluginTagFilter {
+    fn default() -> Self { Self::All }
+}
+
+impl PluginTagFilter {
+    pub fn next(self) -> Self {
+        match self {
+            PluginTagFilter::All => PluginTagFilter::Trusted,
+            PluginTagFilter::Trusted => PluginTagFilter::Debug,
+            PluginTagFilter::Debug => PluginTagFilter::All,
+        }
+    }
+}
+
 #[derive(Clone, serde::Serialize)]
 pub struct DebugSnapshot {
     pub active_module: String,

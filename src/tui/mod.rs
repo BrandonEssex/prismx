@@ -516,7 +516,7 @@ pub fn launch_ui() -> std::io::Result<()> {
                     }
 
                     KeyCode::Up if state.mode == "plugin" && !state.show_plugin_preview => {
-                        let len = crate::plugin::registry::registry().len();
+                        let len = crate::plugin::registry::registry_filtered(state.plugin_tag_filter).len();
                         if len > 0 {
                             if state.plugin_registry_index == 0 {
                                 state.plugin_registry_index = len - 1;
@@ -526,13 +526,17 @@ pub fn launch_ui() -> std::io::Result<()> {
                         }
                     }
                     KeyCode::Down if state.mode == "plugin" && !state.show_plugin_preview => {
-                        let len = crate::plugin::registry::registry().len();
+                        let len = crate::plugin::registry::registry_filtered(state.plugin_tag_filter).len();
                         if len > 0 {
                             state.plugin_registry_index = (state.plugin_registry_index + 1) % len;
                         }
                     }
                     KeyCode::Enter if state.mode == "plugin" && !state.show_plugin_preview => {
                         state.show_plugin_preview = true;
+                    }
+                    KeyCode::Tab if state.mode == "plugin" && !state.show_plugin_preview => {
+                        state.plugin_tag_filter = state.plugin_tag_filter.next();
+                        state.plugin_registry_index = 0;
                     }
 
                     KeyCode::Up if state.favorite_dock_enabled && modifiers == KeyModifiers::NONE => {
