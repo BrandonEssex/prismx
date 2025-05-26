@@ -149,6 +149,7 @@ pub struct AppState {
     pub beamx_panel_theme: crate::beam_color::BeamColor,
     pub beamx_panel_visible: bool,
     pub triage_view_mode: crate::state::TriageViewMode,
+    pub plugin_view_mode: crate::state::PluginViewMode,
 }
 
 pub fn default_beamx_panel_visible() -> bool {
@@ -256,6 +257,7 @@ impl Default for AppState {
             beamx_panel_theme: crate::beam_color::BeamColor::Prism,
             beamx_panel_visible: default_beamx_panel_visible(),
             triage_view_mode: crate::state::TriageViewMode::default(),
+            plugin_view_mode: crate::state::PluginViewMode::default(),
         };
 
         let config = crate::settings::load_user_settings();

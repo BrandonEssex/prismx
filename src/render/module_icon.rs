@@ -15,6 +15,7 @@ pub fn module_icon(mode: &str) -> &'static str {
         "triage" => "🧭",
         "spotlight" => "🔍",
         "settings" => "⚙️",
+        "plugin" => "🔌",
         _ => "❓",
     }
 }
@@ -26,6 +27,7 @@ pub fn module_label(mode: &str) -> &'static str {
         "triage" => "Triage",
         "spotlight" => "Spotlight",
         "settings" => "Settings",
+        "plugin" => "Plugins",
         _ => "Unknown",
     }
 }
