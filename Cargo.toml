@@ -26,7 +26,7 @@ chrono = "0.4"
 dirs = "4.0"
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["fmt", "env-filter"] }
-tracing-appender = "0.2"
+tracing-appender = "0.2" # file logging via PRISMX_LOG
 libloading = "0.7"
 regex = "1"
 
