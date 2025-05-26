@@ -1,4 +1,4 @@
-auto_arrange = false
+auto_arrange = true
 debug_input_mode = false
 dock_layout = "vertical"
 gemx_beam_color = "Prism"
@@ -8,4 +8,4 @@ settings_beam_color = "Aqua"
 zen_icon_enabled = true
 zen_icon_glyph = ""
 beamx_panel_theme = "Prism"
-beamx_panel_visible = true
+beamx_panel_visible = false
