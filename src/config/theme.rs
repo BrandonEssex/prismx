@@ -1,5 +1,6 @@
 use serde::Deserialize;
 use std::fs;
+use ratatui::style::{Color, Style};
 
 #[derive(Debug, Deserialize, Clone)]
 pub struct ThemeConfig {
@@ -34,5 +35,19 @@ impl ThemeConfig {
 
     pub fn zen_breathe(&self) -> bool {
         self.zen_breathe
+    }
+
+    /// Style used to highlight selected rows with good contrast
+    pub fn highlight_style(&self) -> Style {
+        if self.dark_mode {
+            Style::default().fg(Color::Black).bg(Color::White)
+        } else {
+            Style::default().fg(Color::White).bg(Color::Black)
+        }
+    }
+
+    /// Return a readable foreground color based on theme mode
+    pub fn input_fg(&self) -> Color {
+        if self.dark_mode { Color::White } else { Color::Black }
     }
 }
