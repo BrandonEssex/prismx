@@ -110,7 +110,7 @@ fn render_history<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
         let tag_line = if tags.is_empty() { None } else { Some(tags.join(" ")) };
         let mut lines: Vec<Line> = Vec::new();
         let ts = entry.timestamp.format("%b %d, %Y – %-I:%M%p").to_string();
-        lines.push(Line::from(Span::styled(ts, Style::default().fg(Color::Gray).add_modifier(Modifier::DIM))));
+        lines.push(Line::from(Span::styled(ts, Style::default().fg(Color::DarkGray).add_modifier(Modifier::DIM))));
         if let Some(t) = tag_line {
             lines.push(highlight_tags_line(&t));
         }
@@ -127,13 +127,15 @@ fn render_history<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
         let rect = Rect::new(area.x + padding, y, usable_width, h);
         let widget = Paragraph::new(block).block(Block::default().borders(Borders::NONE));
         f.render_widget(widget, rect);
+        if y > area.y { y -= 1; }
     }
 }
 
 fn render_input<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState, tick: u64) {
     let padding = area.width / 4;
     let usable_width = area.width - padding * 2;
-    let caret = if tick % 2 == 0 { "|" } else { " " };
+    use crate::ui::animate::cursor_blink;
+    let caret = cursor_blink(tick);
     let timestamp = chrono::Local::now().format("%H:%M").to_string();
     let input = format!("{} {}{}", timestamp, state.zen_compose_input, caret);
     let input_rect = Rect::new(area.x + padding, area.bottom().saturating_sub(2), usable_width, 1);
@@ -151,7 +153,7 @@ fn render_review<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
         let ts = entry.timestamp.format("%I:%M %p").to_string();
         lines.push(Line::from(vec![
             Span::raw("\u{1F551} "),
-            Span::styled(ts, Style::default().fg(Color::Gray).add_modifier(Modifier::DIM)),
+            Span::styled(ts, Style::default().fg(Color::DarkGray).add_modifier(Modifier::DIM)),
         ]));
         for l in entry.text.lines() {
             lines.push(highlight_tags_line(l));

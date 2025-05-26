@@ -37,3 +37,13 @@ pub fn breath_style(color: Color, tick: u64) -> Style {
         Style::default().fg(color)
     }
 }
+
+/// Return the cursor glyph for a simple blink animation.
+pub fn cursor_blink(tick: u64) -> &'static str {
+    if tick % 2 == 0 { "|" } else { " " }
+}
+
+/// Style that fades a cursor in and out using the breathing rhythm.
+pub fn cursor_fade(tick: u64) -> Style {
+    breath_style(Color::White, tick)
+}
