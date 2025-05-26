@@ -645,6 +645,7 @@ pub fn audit_node_graph(&mut self) {
             self.ensure_grid_positions();
         }
         crate::layout::roles::recalculate_roles(self);
+        crate::layout::center_on_node(self, new_id);
         if self.nodes.get(&new_id).and_then(|n| n.parent).is_none() {
             if let Some(n) = self.nodes.get_mut(&new_id) {
                 n.parent = Some(parent_id);
@@ -701,10 +702,12 @@ pub fn audit_node_graph(&mut self) {
         crate::layout::roles::recalculate_roles(self);
         self.ensure_valid_roots();
 
+        // Viewport centering for visibility
+        crate::layout::center_on_node(self, new_id);
+
         // Run both audits: structure and ancestry
         self.audit_node_graph();
         self.audit_ancestry();
-
 
     pub fn exit_spotlight(&mut self) {
         self.spotlight_input.clear();
@@ -839,17 +842,23 @@ pub fn audit_node_graph(&mut self) {
     pub fn add_free_node(&mut self) {
         let new_id = self.nodes.keys().max().copied().unwrap_or(100) + 1;
         let mut node = Node::new(new_id, "Free Node", None);
+
         if !self.auto_arrange {
             node.x = (self.nodes.len() as i16 % 5) * SIBLING_SPACING_X;
             node.y = GEMX_HEADER_HEIGHT + 2;
         }
+
         self.nodes.insert(new_id, node);
         self.root_nodes.push(new_id);
         self.set_selected(Some(new_id));
+
         crate::layout::roles::recalculate_roles(self);
         self.ensure_valid_roots();
+        crate::layout::center_on_node(self, new_id);
         self.audit_node_graph();
+        self.audit_ancestry();
     }
+
 
     pub fn drill_down(&mut self) {
         if let Some(current) = self.get_selected_node() {
