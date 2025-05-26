@@ -1,0 +1,3 @@
+- plugin/registry.rs
+- state/init.rs
+- ui/components/plugin.rs

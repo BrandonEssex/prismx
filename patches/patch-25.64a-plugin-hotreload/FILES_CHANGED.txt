@@ -1,0 +1,3 @@
+- plugin/loader.rs
+- state/init.rs
+- config/hotkeys.toml

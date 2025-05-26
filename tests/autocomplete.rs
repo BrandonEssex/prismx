@@ -19,3 +19,10 @@ fn autocomplete_no_matches_returns_empty() {
     let results = command_suggestions("unknown");
     assert!(results.is_empty());
 }
+
+#[test]
+fn autocomplete_slash_and_no_slash_equivalent() {
+    let no_slash = command_suggestions("zen");
+    let with_slash = command_suggestions("/zen");
+    assert_eq!(no_slash, with_slash);
+}

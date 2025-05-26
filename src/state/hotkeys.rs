@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 
+
 pub fn load_default_hotkeys() -> HashMap<String, String> {
     let mut map = HashMap::new();
 
@@ -23,11 +24,27 @@ pub fn load_default_hotkeys() -> HashMap<String, String> {
     map.insert("open_module_switcher".into(), "ctrl-space" .into());
     map.insert("start_drag".into(), "ctrl-r".into());
     map.insert("start_link".into(), "ctrl-l".into());
+    map.insert("toggle_plugin".into(), "ctrl-l".into());
     map.insert("toggle_link_mode".into(), "ctrl-b".into());
     map.insert("redo".into(), "ctrl-shift-z".into());
     map.insert("toggle_snap_grid".into(), "ctrl-g".into());
     map.insert("zen_toggle_theme".into(), "ctrl-a".into());
+    map.insert("debug_snapshot".into(), "alt+shift-s".into());
+
+    map.insert("debug_overlay".into(), "alt-d".into());
+    map.insert("debug_overlay_sticky".into(), "alt-shift-d".into());
+    map.insert("reload_plugins".into(), "alt-r".into());
 
 
+    map
+}
+
+pub fn load_hotkeys() -> HashMap<String, String> {
+    let mut map = load_default_hotkeys();
+    if let Ok(s) = std::fs::read_to_string("config/shortcuts.toml") {
+        if let Ok(user_map) = toml::from_str::<HashMap<String, String>>(&s) {
+            map.extend(user_map);
+        }
+    }
     map
 }

@@ -29,6 +29,9 @@ pub fn match_hotkey(action: &str, code: KeyCode, mods: KeyModifiers, state: &App
             "ctrl+shift" | "ctrl-shift" => {
                 mods.contains(KeyModifiers::CONTROL) && mods.contains(KeyModifiers::SHIFT)
             }
+            "alt+shift" | "alt-shift" => {
+                mods.contains(KeyModifiers::ALT) && mods.contains(KeyModifiers::SHIFT)
+            }
             "" => mods.is_empty() || mods == KeyModifiers::NONE,
             _ => false,
         };
@@ -66,7 +69,11 @@ pub fn match_hotkey(action: &str, code: KeyCode, mods: KeyModifiers, state: &App
             _ => false,
         };
 
-        mod_match && code_match
+        let matched = mod_match && code_match;
+        if matched {
+            tracing::debug!("[INPUT] hotkey match: {} => {}", action, binding);
+        }
+        matched
     } else {
         false
     }

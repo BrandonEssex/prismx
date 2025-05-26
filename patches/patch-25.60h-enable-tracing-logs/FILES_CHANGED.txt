@@ -1,0 +1,5 @@
+- src/bootstrap.rs
+- src/state/helpers.rs
+- src/input.rs
+- src/plugin/loader.rs
+- src/layout/mod.rs

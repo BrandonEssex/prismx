@@ -13,10 +13,21 @@ pub fn fuzzy_score(candidate: &str, query: &str) -> Option<usize> {
 }
 
 pub fn rank<'a>(query: &str, items: &'a [&'a str]) -> Vec<&'a str> {
+    let query = query.trim_start_matches('/');
     let mut scored: Vec<(usize, &str)> = items
         .iter()
         .filter_map(|c| fuzzy_score(c, query).map(|s| (s, *c)))
         .collect();
     scored.sort_by_key(|t| t.0);
     scored.into_iter().map(|t| t.1).collect()
+}
+
+pub fn rank_with_scores<'a>(query: &str, items: &'a [&'a str]) -> Vec<(&'a str, usize)> {
+    let query = query.trim_start_matches('/');
+    let mut scored: Vec<(usize, &str)> = items
+        .iter()
+        .filter_map(|c| fuzzy_score(c, query).map(|s| (s, *c)))
+        .collect();
+    scored.sort_by_key(|t| t.0);
+    scored.into_iter().map(|t| (t.1, t.0)).collect()
 }

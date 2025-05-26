@@ -136,7 +136,11 @@ impl AppState {
                         "\u{26a0} root_nodes was empty — promoted Node {} to root",
                         first_id
                     );
+                    tracing::debug!("[STATE] promoted node {} to root", first_id);
                 }
+            }
+            if self.root_nodes.is_empty() {
+                crate::log_warn!("fallback root promotion failed");
             }
         }
         self.root_nodes.sort_unstable();
@@ -387,5 +391,14 @@ impl AppState {
 pub fn register_plugin_favorite(state: &mut AppState, icon: &'static str, command: &'static str) {
     if state.plugin_favorites.len() < 5 {
         state.plugin_favorites.push(FavoriteEntry { icon, command });
+    }
+}
+
+impl AppState {
+    pub fn save_layout_config(&self) {
+        let layout = crate::state::serialize::capture(self);
+        let mut cfg = crate::config::load_config();
+        cfg.layout = Some(layout);
+        crate::config::save_config(&cfg);
     }
 }

@@ -1,0 +1,24 @@
+name: Auto Label Codex PRs
+
+on:
+  pull_request:
+    types: [opened]
+
+permissions:
+  pull-requests: write
+
+jobs:
+  label:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v3
+
+      - name: 🏷️ Apply automerge label
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          chmod +x .github/scripts/label-codex-prs.sh
+          .github/scripts/label-codex-prs.sh "$PR_NUMBER"
+

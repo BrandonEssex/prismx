@@ -1,0 +1,4 @@
+- ui/overlay.rs
+- state/view.rs
+- config/shortcuts.toml
+- plugin/hook.rs

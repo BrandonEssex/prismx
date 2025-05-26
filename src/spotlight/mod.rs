@@ -2,6 +2,7 @@ use crate::node::NodeID;
 
 pub mod parser;
 pub mod commands;
+pub mod render;
 
 pub use commands::{COMMANDS, command_preview};
 
@@ -33,7 +34,18 @@ fn fuzzy_score(candidate: &str, query: &str) -> Option<usize> {
 
 /// Return command suggestions using the predictive ranking parser.
 pub fn command_suggestions(input: &str) -> Vec<&'static str> {
-    parser::rank(input, &COMMANDS).into_iter().take(5).collect()
+    parser::rank(input.trim_start_matches('/'), &COMMANDS)
+        .into_iter()
+        .take(5)
+        .collect()
+}
+
+/// Return command suggestions along with fuzzy match scores.
+pub fn command_suggestions_scored(input: &str) -> Vec<(&'static str, usize)> {
+    parser::rank_with_scores(input.trim_start_matches('/'), &COMMANDS)
+        .into_iter()
+        .take(5)
+        .collect()
 }
 
 #[cfg(test)]

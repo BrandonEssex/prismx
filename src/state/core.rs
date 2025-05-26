@@ -4,7 +4,7 @@ use crate::node::{Node, NodeID, NodeMap};
 use crate::layout::{GEMX_HEADER_HEIGHT, LayoutRole};
 use crate::plugin::PluginHost;
 
-use super::hotkeys::load_default_hotkeys;
+use super::hotkeys::load_hotkeys;
 
 #[derive(Clone, PartialEq)]
 pub struct LayoutSnapshot {
@@ -54,9 +54,13 @@ pub enum ZenTheme {
 }
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
-pub enum ZenJournalView {
+pub enum ZenMode {
     Compose,
-    Review,
+    Scroll,
+}
+
+impl Default for ZenMode {
+    fn default() -> Self { Self::Compose }
 }
 
 #[derive(Clone)]
@@ -87,10 +91,16 @@ pub struct AppState {
     pub spotlight_history: VecDeque<String>,
     pub spotlight_history_index: Option<usize>,
     pub spotlight_suggestion_index: Option<usize>,
+    pub show_logs: bool,
+    pub logs_scroll: usize,
+    pub logs_filter: String,
     pub show_triage: bool,
     pub show_keymap: bool,
     pub module_switcher_open: bool,
     pub module_switcher_index: usize,
+    pub module_switcher_animation_frame: u8,
+    pub module_switcher_closing: bool,
+    pub prev_module_switcher_open: bool,
     pub hotkeys: HashMap<String, String>,
     pub scroll_offset: usize,
     pub max_visible_lines: usize,
@@ -118,6 +128,9 @@ pub struct AppState {
     pub layout_fail_count: u8,
     pub debug_input_mode: bool,
     pub debug_border: bool,
+    pub debug_overlay: bool,
+    pub debug_overlay_sticky: bool,
+    pub mindmap_lanes: bool,
     pub simulate_input_queue: VecDeque<SimInput>,
     pub status_message: String,
     pub status_message_last_updated: Option<std::time::Instant>,
@@ -141,10 +154,15 @@ pub struct AppState {
     pub zen_word_count: usize,
     pub zen_current_syntax: ZenSyntax,
     pub zen_theme: ZenTheme,
-    pub zen_journal_view: ZenJournalView,
+    pub zen_mode: crate::state::ZenMode,
     pub zen_view_mode: crate::state::ZenViewMode,
     pub zen_draft: DraftState,
+    pub zen_summary_mode: crate::state::ZenSummaryMode,
+    pub zen_compose_input: String,
     pub zen_journal_entries: Vec<ZenJournalEntry>,
+    pub zen_tag_filter: Option<String>,
+    pub triage_entries: Vec<crate::triage::logic::TriageEntry>,
+    pub triage_summary: crate::state::view::TriageSummary,
     pub gemx_beam_color: crate::beam_color::BeamColor,
     pub zen_beam_color: crate::beam_color::BeamColor,
     pub triage_beam_color: crate::beam_color::BeamColor,
@@ -153,6 +171,11 @@ pub struct AppState {
     pub zen_icon_glyph: Option<String>,
     pub beamx_panel_theme: crate::beam_color::BeamColor,
     pub beamx_panel_visible: bool,
+    pub triage_view_mode: crate::state::TriageViewMode,
+    pub plugin_view_mode: crate::state::PluginViewMode,
+    pub plugin_tag_filter: crate::state::PluginTagFilter,
+    pub plugin_registry_index: usize,
+    pub show_plugin_preview: bool,
 }
 
 pub fn default_beamx_panel_visible() -> bool {
@@ -191,11 +214,17 @@ impl Default for AppState {
             spotlight_history: VecDeque::new(),
             spotlight_history_index: None,
             spotlight_suggestion_index: None,
+            show_logs: false,
+            logs_scroll: 0,
+            logs_filter: String::new(),
             show_triage: false,
             show_keymap: false,
             module_switcher_open: false,
             module_switcher_index: 0,
-            hotkeys: load_default_hotkeys(),
+            module_switcher_animation_frame: 0,
+            module_switcher_closing: false,
+            prev_module_switcher_open: false,
+            hotkeys: load_hotkeys(),
             scroll_offset: 0,
             max_visible_lines: 20,
             undo_stack: Vec::new(),
@@ -222,6 +251,9 @@ impl Default for AppState {
             layout_fail_count: 0,
             debug_input_mode: true,
             debug_border: std::env::var("PRISMX_DEBUG_BORDER").is_ok(),
+            debug_overlay: false,
+            debug_overlay_sticky: false,
+            mindmap_lanes: true,
             simulate_input_queue: VecDeque::new(),
             status_message: String::new(),
             status_message_last_updated: None,
@@ -245,10 +277,15 @@ impl Default for AppState {
             zen_word_count: 0,
             zen_current_syntax: ZenSyntax::Markdown,
             zen_theme: ZenTheme::DarkGray,
-            zen_journal_view: ZenJournalView::Compose,
+            zen_mode: crate::state::ZenMode::default(),
             zen_view_mode: crate::state::ZenViewMode::default(),
             zen_draft: DraftState::default(),
+            zen_summary_mode: crate::state::ZenSummaryMode::default(),
+            zen_compose_input: String::new(),
             zen_journal_entries: Vec::new(),
+            zen_tag_filter: None,
+            triage_entries: Vec::new(),
+            triage_summary: crate::state::view::TriageSummary::default(),
             gemx_beam_color: crate::beam_color::BeamColor::Prism,
             zen_beam_color: crate::beam_color::BeamColor::Prism,
             triage_beam_color: crate::beam_color::BeamColor::Prism,
@@ -257,6 +294,11 @@ impl Default for AppState {
             zen_icon_glyph: None,
             beamx_panel_theme: crate::beam_color::BeamColor::Prism,
             beamx_panel_visible: default_beamx_panel_visible(),
+            triage_view_mode: crate::state::TriageViewMode::default(),
+            plugin_view_mode: crate::state::PluginViewMode::default(),
+            plugin_tag_filter: crate::state::PluginTagFilter::default(),
+            plugin_registry_index: 0,
+            show_plugin_preview: false,
         };
 
         let config = crate::settings::load_user_settings();
@@ -274,6 +316,7 @@ impl Default for AppState {
         state.zen_icon_glyph = config.zen_icon_glyph.clone();
         state.beamx_panel_theme = config.beamx_panel_theme;
         state.beamx_panel_visible = config.beamx_panel_visible;
+        state.mindmap_lanes = config.mindmap_lanes;
 
         for node in state.nodes.values_mut() {
             if node.label.starts_with("[F]") {
@@ -284,6 +327,10 @@ impl Default for AppState {
         state.update_zen_word_count();
         state.load_today_journal();
         state.audit_node_graph();
+
+        if let Some(layout) = crate::config::load_config().layout {
+            crate::state::serialize::apply(&mut state, layout);
+        }
 
         state
     }

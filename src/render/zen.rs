@@ -1,5 +1,7 @@
-use ratatui::{prelude::*, widgets::{Block, Borders, Paragraph}};
-use crate::state::{AppState, ZenSyntax, ZenTheme, ZenJournalView};
+use ratatui::{prelude::*, widgets::{Block, Borders, Paragraph}, style::Modifier};
+use crate::state::{AppState, ZenSyntax, ZenTheme, ZenViewMode, ZenJournalView, ZenMode};
+use chrono::Datelike;
+use crate::zen::journal::extract_tags;
 use crate::beamx::render_full_border;
 use crate::ui::beamx::{BeamX, BeamXStyle, BeamXMode, BeamXAnimationMode};
 use crate::render::traits::Renderable;
@@ -60,9 +62,9 @@ pub fn render_zen_journal<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppS
     let bg = Block::default().style(Style::default().bg(bg_color));
     f.render_widget(bg, area);
 
-    match state.zen_journal_view {
-        ZenJournalView::Compose => render_compose(f, area, state, tick),
-        ZenJournalView::Review => render_review(f, area, state),
+    match state.zen_mode {
+        ZenMode::Compose => render_compose(f, area, state, tick),
+        ZenMode::Scroll => render_review(f, area, state),
     }
     render_top_icon(f, area, state, tick);
 }
@@ -84,6 +86,9 @@ fn render_compose<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState, ti
 fn render_history<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
     let padding = area.width / 4;
     let usable_width = area.width - padding * 2;
+    use crate::ui::animate::fade_line;
+    use crate::config::theme::ThemeConfig;
+    let breathe = ThemeConfig::load().zen_breathe();
 
     if state.zen_journal_entries.is_empty() {
         let msg = Paragraph::new("No journal entries yet.")
@@ -93,49 +98,91 @@ fn render_history<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
         return;
     }
 
-    let mut y = area.bottom();
-    for (idx, entry) in state.zen_journal_entries.iter().enumerate().rev() {
-        let tags: Vec<&str> = entry
-            .text
-            .split_whitespace()
-            .filter(|t| t.starts_with('#'))
-            .collect();
-        let tag_line = if tags.is_empty() { None } else { Some(tags.join(" ")) };
+let entries = state.filtered_journal_entries();
+let mut blocks: Vec<Vec<Line>> = Vec::new();
+let mut current_label = String::new();
 
-        let mut lines: Vec<Line> = Vec::new();
-        let mut ts = entry.timestamp.format("%b %d, %Y – %-I:%M%p").to_string();
-        if entry.prev_text.is_some() {
-            ts.push_str(" (edited)");
+for (idx, entry) in entries.iter().enumerate().rev() {
+    // Summary grouping
+    if matches!(state.zen_view_mode, ZenViewMode::Summary) {
+        let label = match state.zen_summary_mode {
+            crate::state::ZenSummaryMode::Weekly => {
+                format!("Week {}", entry.timestamp.iso_week().week())
+            }
+            crate::state::ZenSummaryMode::Daily => {
+                let today = chrono::Local::now().date_naive();
+                let edate = entry.timestamp.date_naive();
+                if edate == today {
+                    "Today".to_string()
+                } else {
+                    entry.timestamp.format("%A").to_string()
+                }
+            }
+        };
+        if current_label != label {
+            blocks.push(vec![Line::from(Span::styled(label.clone(), Style::default().fg(Color::Magenta)))]);
+            current_label = label;
         }
-        lines.push(Line::from(ts));
-        if let Some(t) = &tag_line {
-            lines.push(Line::from(t.clone()));
-        }
-        for l in entry.text.lines() {
-            lines.push(Line::from(l.to_string()));
-        }
-        lines.push(Line::from("────────────"));
+    }
 
-        let h = lines.len() as u16;
+    let tags = extract_tags(&entry.text);
+    let tag_line = if tags.is_empty() { None } else { Some(tags.join(" ")) };
+    let mut lines: Vec<Line> = Vec::new();
+
+    let mut ts = entry.timestamp.format("%b %d, %Y – %-I:%M%p").to_string();
+    if entry.prev_text.is_some() {
+        ts.push_str(" (edited)");
+    }
+
+    lines.push(Line::from(Span::styled(ts, Style::default().fg(Color::DarkGray).add_modifier(Modifier::DIM))));
+    if let Some(t) = &tag_line {
+        lines.push(highlight_tags_line(t));
+    }
+
+    for l in entry.text.lines() {
+        lines.push(highlight_tags_line(l));
+    }
+
+    lines.push(Line::from(Span::styled("────────────", Style::default().fg(Color::Gray).add_modifier(Modifier::DIM))));
+
+    if breathe {
+        let age = (chrono::Local::now() - entry.timestamp).num_milliseconds() as u128;
+        for line in lines.iter_mut() {
+            fade_line(line, age, 150);
+        }
+    }
+
+    let mut block = Block::default().borders(Borders::NONE);
+    if Some(idx) == state.zen_draft.editing {
+        block = block.border_style(Style::default().fg(Color::DarkGray)).borders(Borders::ALL);
+    }
+
+    blocks.push(vec![Paragraph::new(lines).block(block)]);
+}
+
+let mut y = area.bottom();
+for block_lines in blocks.into_iter().rev() {
+    for widget in block_lines {
+        let h = widget.height().min(area.height);
         if y < area.y + h {
             break;
         }
         y -= h;
         let rect = Rect::new(area.x + padding, y, usable_width, h);
-        let mut block = Block::default().borders(Borders::NONE);
-        if Some(idx) == state.zen_draft.editing {
-            block = block.border_style(Style::default().fg(Color::DarkGray)).borders(Borders::ALL);
-        }
-        let widget = Paragraph::new(lines).block(block);
         f.render_widget(widget, rect);
+        if y > area.y {
+            y -= 1;
+        }
     }
 }
+
 
 fn render_input<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState, tick: u64) {
     use ratatui::widgets::Block;
     let padding = area.width / 4;
     let usable_width = area.width - padding * 2;
-    let caret = if tick % 2 == 0 { "|" } else { " " };
+    use crate::ui::animate::cursor_blink;
+    let caret = cursor_blink(tick);
     let timestamp = chrono::Local::now().format("%H:%M").to_string();
     let input = format!("{} {}{}", timestamp, state.zen_draft.text, caret);
     let input_rect = Rect::new(area.x + padding, area.bottom().saturating_sub(2), usable_width, 1);
@@ -148,13 +195,32 @@ fn render_input<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState, tick
 }
 
 fn render_review<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
+    use ratatui::text::{Span, Line};
+    use crate::ui::animate::fade_line;
+    use crate::config::theme::ThemeConfig;
+    let breathe = ThemeConfig::load().zen_breathe();
     let padding = area.width / 4;
     let usable_width = area.width - padding * 2;
     let mut y = area.y + TOP_BAR_HEIGHT;
-    for entry in state.zen_journal_entries.iter().rev() {
-        let text = format!("\u{1F551} {}\n{}", entry.timestamp.format("%I:%M %p"), entry.text);
-        let rect = Rect::new(area.x + padding, y, usable_width, 3);
-        let p = Paragraph::new(text).block(Block::default().borders(Borders::BOTTOM));
+    for entry in state.filtered_journal_entries().into_iter().rev() {
+        let mut lines = vec![];
+        let ts = entry.timestamp.format("%I:%M %p").to_string();
+        lines.push(Line::from(vec![
+            Span::raw("\u{1F551} "),
+            Span::styled(ts, Style::default().fg(Color::DarkGray).add_modifier(Modifier::DIM)),
+        ]));
+        for l in entry.text.lines() {
+            lines.push(highlight_tags_line(l));
+        }
+        lines.push(Line::from(Span::styled("────────────", Style::default().fg(Color::Gray).add_modifier(Modifier::DIM))));
+        if breathe {
+            let age = (chrono::Local::now() - entry.timestamp).num_milliseconds() as u128;
+            for line in lines.iter_mut() {
+                fade_line(line, age, 150);
+            }
+        }
+        let rect = Rect::new(area.x + padding, y, usable_width, lines.len() as u16);
+        let p = Paragraph::new(lines).block(Block::default().borders(Borders::NONE));
         f.render_widget(p, rect);
         y = y.saturating_add(3);
         if y > area.bottom() { break; }
@@ -173,7 +239,7 @@ fn render_top_icon<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState, t
     }
 
     if let Some(glyph) = &state.zen_icon_glyph {
-        let style = Style::default().fg(Color::Magenta).add_modifier(Modifier::BOLD);
+        let style = Style::default().fg(Color::Magenta);
         let x = area.right().saturating_sub(glyph.len() as u16 + 1);
         f.render_widget(Paragraph::new(glyph.as_str()).style(style), Rect::new(x, area.y + 1, glyph.len() as u16, 1));
     } else {
@@ -200,12 +266,12 @@ fn parse_markdown_line(input: &str) -> Line {
     if input.starts_with("### ") {
         return Line::from(Span::styled(&input[4..], Style::default().add_modifier(Modifier::ITALIC)));
     } else if input.starts_with("## ") {
-        return Line::from(Span::styled(&input[3..], Style::default().add_modifier(Modifier::BOLD)));
+        return Line::from(Span::from(&input[3..]));
     } else if input.starts_with("# ") {
-        return Line::from(Span::styled(&input[2..], Style::default().add_modifier(Modifier::BOLD | Modifier::UNDERLINED)));
+        return Line::from(Span::from(&input[2..]));
     } else if input.starts_with("- ") || input.starts_with("* ") {
         return Line::from(vec![
-            Span::styled("• ", Style::default().add_modifier(Modifier::BOLD)),
+            Span::raw("• "),
             Span::raw(&input[2..]),
         ]);
     }
@@ -227,7 +293,7 @@ fn parse_markdown_line(input: &str) -> Line {
                 bold.push(next);
                 chars.next();
             }
-            spans.push(Span::styled(bold, Style::default().add_modifier(Modifier::BOLD)));
+            spans.push(Span::raw(bold));
         } else if c == '_' {
             let mut italic = String::new();
             while let Some(&next) = chars.peek() {
@@ -321,4 +387,18 @@ fn parse_zen_line(input: &str, syntax: ZenSyntax) -> Line {
         ZenSyntax::Json => parse_json_line(input),
         ZenSyntax::None => Line::from(input),
     }
+}
+
+fn highlight_tags_line(input: &str) -> Line<'static> {
+    use ratatui::text::{Span, Line};
+    let mut spans = Vec::new();
+    for token in input.split_whitespace() {
+        if token.starts_with('#') {
+            spans.push(Span::styled(token.to_string(), Style::default().fg(Color::Blue)));
+        } else {
+            spans.push(Span::raw(token.to_string()));
+        }
+        spans.push(Span::raw(" "));
+    }
+    Line::from(spans)
 }

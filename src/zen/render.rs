@@ -7,6 +7,7 @@ pub fn render_zen<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
     match state.zen_view_mode {
         ZenViewMode::Journal => render_zen_journal(f, area, state),
         ZenViewMode::Classic => render_classic(f, area, state),
+        ZenViewMode::Summary => render_zen_journal(f, area, state),
         ZenViewMode::Split => {
             let mid = area.width / 2;
             let left = Rect { x: area.x, y: area.y, width: mid, height: area.height };

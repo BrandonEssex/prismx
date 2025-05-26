@@ -14,16 +14,20 @@ use crate::render::{
     render_shortcuts_overlay,
     render_spotlight,
     render_triage,
-    render_module_switcher,
     render_module_icon,
     render_favorites_dock,
 };
+use crate::ui::components::module::render_module_switcher;
 
 fn rect_contains(rect: ratatui::layout::Rect, x: u16, y: u16) -> bool {
     x >= rect.x && x < rect.x + rect.width && y >= rect.y && y < rect.y + rect.height
 }
 use crate::screen::render_gemx;
 use crate::settings::render_settings;
+use crate::ui::components::plugin::render_plugin;
+use crate::ui::components::debug::render_debug;
+use crate::ui::components::logs::render_logs;
+use crate::ui::input;
 
 mod hotkeys;
 use hotkeys::match_hotkey;
@@ -31,7 +35,7 @@ use crate::shortcuts::{match_shortcut, Shortcut};
 use std::time::Duration;
 
 pub fn draw<B: Backend>(terminal: &mut Terminal<B>, state: &mut AppState, _last_key: &str) -> std::io::Result<()> {
-    use ratatui::layout::{Constraint, Direction, Layout};
+    use ratatui::layout::{Constraint, Direction, Layout, Rect};
     use ratatui::widgets::Paragraph;
 
     if !state.auto_arrange {
@@ -41,6 +45,14 @@ pub fn draw<B: Backend>(terminal: &mut Terminal<B>, state: &mut AppState, _last_
     if state.show_spotlight && !state.prev_show_spotlight {
         state.spotlight_just_opened = true;
         state.spotlight_animation_frame = 0;
+    }
+
+    if state.module_switcher_open && !state.prev_module_switcher_open {
+        state.module_switcher_animation_frame = 0;
+    }
+    if !state.module_switcher_open && state.prev_module_switcher_open {
+        state.module_switcher_closing = true;
+        state.module_switcher_animation_frame = 0;
     }
 
     terminal.draw(|f| {
@@ -63,6 +75,7 @@ pub fn draw<B: Backend>(terminal: &mut Terminal<B>, state: &mut AppState, _last_
             "gemx" => render_gemx(f, vertical[0], state),
             "settings" => render_settings(f, vertical[0], state),
             "triage" => render_triage(f, vertical[0], state),
+            "plugin" => render_plugin(f, vertical[0], state),
             _ => {
                 let fallback = Paragraph::new("Unknown mode");
                 f.render_widget(fallback, vertical[0]);
@@ -73,8 +86,8 @@ pub fn draw<B: Backend>(terminal: &mut Terminal<B>, state: &mut AppState, _last_
             render_shortcuts_overlay(f, layout_chunks[1]);
         }
 
-        if state.module_switcher_open {
-            render_module_switcher(f, vertical[0], state.module_switcher_index);
+        if state.module_switcher_open || state.module_switcher_closing {
+            render_module_switcher(f, vertical[0], &state);
         }
 
         if state.show_spotlight {
@@ -116,6 +129,25 @@ pub fn draw<B: Backend>(terminal: &mut Terminal<B>, state: &mut AppState, _last_
         };
         render_module_icon(f, full, &state.mode);
         render_favorites_dock(f, full, state);
+        if state.show_logs {
+            render_logs(f, full, state);
+        }
+
+        if state.debug_overlay || state.debug_overlay_sticky {
+            let width = 30;
+            let height = 9;
+            let x = full.right().saturating_sub(width + 1);
+            let area = Rect::new(x, full.y, width, height);
+            crate::ui::overlay::render_debug_overlay(
+                f,
+                area,
+                state,
+                state.debug_overlay_sticky,
+            );
+        }
+
+        crate::ui::components::debug::render_debug(f, full, state);
+
         render_status_bar(f, vertical[1], display_string.as_str());
     })?;
     if state.spotlight_just_opened {
@@ -124,6 +156,15 @@ pub fn draw<B: Backend>(terminal: &mut Terminal<B>, state: &mut AppState, _last_
             state.spotlight_just_opened = false;
         }
     }
+    if state.module_switcher_open && state.module_switcher_animation_frame < 3 {
+        state.module_switcher_animation_frame += 1;
+    } else if state.module_switcher_closing {
+        state.module_switcher_animation_frame += 1;
+        if state.module_switcher_animation_frame >= 3 {
+            state.module_switcher_closing = false;
+        }
+    }
+    state.prev_module_switcher_open = state.module_switcher_open;
     state.prev_show_spotlight = state.show_spotlight;
     Ok(())
 }
@@ -173,6 +214,12 @@ pub fn launch_ui() -> std::io::Result<()> {
                     last_key = format!("{:?} + {:?}", code, modifiers);
                     if state.debug_input_mode {
                         crate::tui::hotkeys::debug_input(&mut state, code, modifiers);
+                    }
+                    if state.show_logs {
+                        if input::handle_log_keys(&mut state, code, modifiers) {
+                            draw(&mut terminal, &mut state, &last_key)?;
+                            continue;
+                        }
                     }
                     if let Some(sc) = match_shortcut(code, modifiers) {
                         match sc {
@@ -266,13 +313,27 @@ pub fn launch_ui() -> std::io::Result<()> {
                     continue;
                 }
 
-                // Alt+Shift+S toggles Spotlight
-                if code == KeyCode::Char('S')
-                    && modifiers.contains(KeyModifiers::ALT)
-                    && modifiers.contains(KeyModifiers::SHIFT)
+                // Alt+Space or Alt+/ toggles Spotlight
+                if (code == KeyCode::Char(' ') || code == KeyCode::Char('/'))
+                    && modifiers == KeyModifiers::ALT
                 {
                     state.show_spotlight = !state.show_spotlight;
+                    tracing::info!(
+                        "[INPUT] spotlight {}",
+                        if state.show_spotlight { "opened" } else { "closed" }
+                    );
                     state.spotlight_history_index = None;
+                    draw(&mut terminal, &mut state, &last_key)?;
+                    continue;
+                }
+
+                // Alt+L toggles log viewer
+                if code == KeyCode::Char('l') && modifiers == KeyModifiers::ALT {
+                    state.show_logs = !state.show_logs;
+                    if !state.show_logs {
+                        state.logs_filter.clear();
+                        state.logs_scroll = 0;
+                    }
                     draw(&mut terminal, &mut state, &last_key)?;
                     continue;
                 }
@@ -282,13 +343,16 @@ pub fn launch_ui() -> std::io::Result<()> {
                     match code {
                         KeyCode::Tab => {
                             state.module_switcher_index = (state.module_switcher_index + 1) % 4;
+                            tracing::debug!("[INPUT] module switcher index {}", state.module_switcher_index);
                         }
                         KeyCode::Enter => {
                             state.mode = state.get_module_by_index().into();
                             state.module_switcher_open = false;
+                            tracing::info!("[INPUT] mode switched to {}", state.mode);
                         }
                         KeyCode::Esc => {
                             state.module_switcher_open = false;
+                            tracing::debug!("[INPUT] module switcher closed");
                         }
                         _ => {}
                     }
@@ -307,6 +371,10 @@ pub fn launch_ui() -> std::io::Result<()> {
                     break;
                 } else if match_hotkey("toggle_triage", code, modifiers, &state) {
                     state.mode = "triage".into();
+                    tracing::info!("[INPUT] mode switched to triage");
+                } else if match_hotkey("toggle_plugin", code, modifiers, &state) {
+                    state.mode = "plugin".into();
+                    tracing::info!("[INPUT] mode switched to plugin");
                 } else if match_hotkey("toggle_keymap", code, modifiers, &state) {
                     state.show_keymap = !state.show_keymap;
                 } else if match_hotkey("create_child", code, modifiers, &state) && state.mode == "gemx" {
@@ -331,6 +399,7 @@ pub fn launch_ui() -> std::io::Result<()> {
                 } else if match_hotkey("open_module_switcher", code, modifiers, &state) {
                     state.module_switcher_open = true;
                     state.module_switcher_index = 0;
+                    tracing::info!("[INPUT] module switcher opened");
                 } else if match_hotkey("start_drag", code, modifiers, &state) {
                     if state.selected_drag_source.is_some() {
                         if let Some(target) = state.selected {
@@ -355,8 +424,18 @@ pub fn launch_ui() -> std::io::Result<()> {
                     state.export_zen_to_file();
                 } else if match_hotkey("mode_zen", code, modifiers, &state) {
                     state.mode = "zen".into();
+                    tracing::info!("[INPUT] mode switched to zen");
                 } else if match_hotkey("zen_toggle_theme", code, modifiers, &state) && state.mode == "zen" {
                     state.cycle_zen_theme();
+                } else if match_hotkey("debug_snapshot", code, modifiers, &state) {
+                    crate::ui::components::debug::write_debug_snapshot(&mut state);
+                } else if match_hotkey("debug_overlay", code, modifiers, &state) {
+                    state.debug_overlay = !state.debug_overlay;
+                } else if match_hotkey("debug_overlay_sticky", code, modifiers, &state) {
+                    state.debug_overlay_sticky = !state.debug_overlay_sticky;
+                    state.debug_overlay = state.debug_overlay_sticky;
+                } else if match_hotkey("reload_plugins", code, modifiers, &state) {
+                    crate::state::init::reload_plugins();
                 } else if code == KeyCode::Char('v')
                     && modifiers.contains(KeyModifiers::CONTROL)
                     && modifiers.contains(KeyModifiers::SHIFT)
@@ -365,7 +444,8 @@ pub fn launch_ui() -> std::io::Result<()> {
                     state.zen_view_mode = match state.zen_view_mode {
                         crate::state::ZenViewMode::Journal => crate::state::ZenViewMode::Classic,
                         crate::state::ZenViewMode::Classic => crate::state::ZenViewMode::Split,
-                        crate::state::ZenViewMode::Split => crate::state::ZenViewMode::Journal,
+                        crate::state::ZenViewMode::Split => crate::state::ZenViewMode::Summary,
+                        crate::state::ZenViewMode::Summary => crate::state::ZenViewMode::Journal,
                     };
                 } else if code == KeyCode::Char('t')
                     && modifiers == KeyModifiers::CONTROL
@@ -373,6 +453,11 @@ pub fn launch_ui() -> std::io::Result<()> {
                 {
                     state.zen_toolbar_open = !state.zen_toolbar_open;
                     state.zen_toolbar_index = 0;
+                } else if code == KeyCode::Tab
+                    && modifiers == KeyModifiers::ALT
+                    && state.mode == "zen"
+                {
+                    input::toggle_zen_view(&mut state);
                 } else if match_hotkey("toggle_collapsed", code, modifiers, &state) && state.mode == "gemx" {
                     state.toggle_collapse();
                 } else if match_hotkey("drill_down", code, modifiers, &state) {
@@ -385,8 +470,10 @@ pub fn launch_ui() -> std::io::Result<()> {
                     state.clear_fallback_promotions();
                 } else if match_hotkey("toggle_settings", code, modifiers, &state) {
                     state.mode = "settings".into();
+                    tracing::info!("[INPUT] mode switched to settings");
                 } else if code == KeyCode::Char('.') && modifiers == KeyModifiers::CONTROL {
                     state.mode = "settings".into();
+                    tracing::info!("[INPUT] mode switched to settings");
                 }
 
                 // 🍎 macOS fallback for Cmd+Arrow scrolling
@@ -409,15 +496,22 @@ pub fn launch_ui() -> std::io::Result<()> {
                 // ⌨️ Navigation + Typing
                 match code {
                     KeyCode::Esc => {
-                        if state.mode == "zen" && state.zen_journal_view == crate::state::ZenJournalView::Compose && state.zen_draft.editing.is_some() {
+                        if state.mode == "zen"
+                            && state.zen_journal_view == crate::state::ZenJournalView::Compose
+                            && state.zen_draft.editing.is_some()
+                        {
                             state.cancel_edit_journal_entry();
                             state.zen_draft.text.clear();
+                        } else if state.mode == "plugin" && state.show_plugin_preview {
+                            state.show_plugin_preview = false;
                         } else {
                             state.mode = "gemx".into();
-                            state.show_keymap = false;
-                            state.show_spotlight = false;
+                            tracing::info!("[INPUT] mode switched to gemx");
                         }
+                        state.show_keymap = false;
+                        state.show_spotlight = false;
                     }
+
 
                     KeyCode::Left if state.mode == "gemx" && modifiers == KeyModifiers::CONTROL => {
                         state.scroll_x = state.scroll_x.saturating_sub(4);
@@ -448,6 +542,30 @@ pub fn launch_ui() -> std::io::Result<()> {
                     KeyCode::Enter | KeyCode::Char(' ') if state.mode == "settings" => {
                         let idx = state.settings_focus_index % crate::settings::settings_len();
                         (crate::settings::SETTING_TOGGLES[idx].toggle)(&mut state);
+                    }
+
+                    KeyCode::Up if state.mode == "plugin" && !state.show_plugin_preview => {
+                        let len = crate::plugin::registry::registry_filtered(state.plugin_tag_filter).len();
+                        if len > 0 {
+                            if state.plugin_registry_index == 0 {
+                                state.plugin_registry_index = len - 1;
+                            } else {
+                                state.plugin_registry_index -= 1;
+                            }
+                        }
+                    }
+                    KeyCode::Down if state.mode == "plugin" && !state.show_plugin_preview => {
+                        let len = crate::plugin::registry::registry_filtered(state.plugin_tag_filter).len();
+                        if len > 0 {
+                            state.plugin_registry_index = (state.plugin_registry_index + 1) % len;
+                        }
+                    }
+                    KeyCode::Enter if state.mode == "plugin" && !state.show_plugin_preview => {
+                        state.show_plugin_preview = true;
+                    }
+                    KeyCode::Tab if state.mode == "plugin" && !state.show_plugin_preview => {
+                        state.plugin_tag_filter = state.plugin_tag_filter.next();
+                        state.plugin_registry_index = 0;
                     }
 
                     KeyCode::Up if state.favorite_dock_enabled && modifiers == KeyModifiers::NONE => {
@@ -488,16 +606,26 @@ pub fn launch_ui() -> std::io::Result<()> {
                         }
                     }
 
-                    KeyCode::Char(c) if state.mode == "zen" && state.zen_journal_view == crate::state::ZenJournalView::Compose => {
+                    KeyCode::Char(c)
+                        if state.mode == "zen"
+                            && state.zen_journal_view == crate::state::ZenJournalView::Compose =>
+                    {
                         state.zen_draft.text.push(c);
                     }
 
-                    KeyCode::Backspace if state.mode == "zen" && state.zen_journal_view == crate::state::ZenJournalView::Compose => {
+                    KeyCode::Backspace
+                        if state.mode == "zen"
+                            && state.zen_journal_view == crate::state::ZenJournalView::Compose =>
+                    {
                         state.zen_draft.text.pop();
                     }
 
-                    KeyCode::Enter if state.mode == "zen" && state.zen_journal_view == crate::state::ZenJournalView::Compose => {
+                    KeyCode::Enter
+                        if state.mode == "zen"
+                            && state.zen_journal_view == crate::state::ZenJournalView::Compose =>
+                    {
                         let text = state.zen_draft.text.trim().to_string();
+
                         if text.starts_with("/edit ") {
                             if let Ok(idx) = text[6..].trim().parse::<usize>() {
                                 state.start_edit_journal_entry(idx);
@@ -512,16 +640,22 @@ pub fn launch_ui() -> std::io::Result<()> {
                             state.zen_draft.text.clear();
                         } else {
                             if !text.is_empty() {
-                                let entry = crate::state::ZenJournalEntry { timestamp: chrono::Local::now(), text: text.clone(), prev_text: None };
+                                if crate::config::theme::ThemeConfig::load().zen_breathe {
+                                    std::thread::sleep(std::time::Duration::from_millis(150));
+                                }
+
+                                let entry = crate::state::ZenJournalEntry {
+                                    timestamp: chrono::Local::now(),
+                                    text: text.clone(),
+                                    prev_text: None,
+                                };
                                 state.zen_journal_entries.push(entry.clone());
                                 state.append_journal_entry(&entry);
                             }
                             state.zen_draft.text.clear();
                         }
                     }
-
                     _ => {}
-                }
                 }
                 Event::Mouse(me) => {
                     use crossterm::event::{MouseButton, MouseEventKind};

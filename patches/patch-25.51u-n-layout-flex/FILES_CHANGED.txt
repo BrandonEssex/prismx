@@ -1,0 +1,3 @@
+- gemx/layout.rs
+- gemx/render.rs
+- config/theme.rs

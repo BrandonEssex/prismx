@@ -1,0 +1,2 @@
+- .github/workflows/label-and-merge.yml
+- .github/scripts/automerge-check.sh
