@@ -253,6 +253,7 @@ impl Default for AppState {
 
         state.update_zen_word_count();
         state.load_today_journal();
+        state.audit_node_graph();
 
         state
     }
@@ -386,6 +387,82 @@ impl AppState {
                 }
             }
         }
+        self.root_nodes.sort_unstable();
+        self.root_nodes.dedup();
+    }
+
+    /// Audit node graph for structural issues.
+    pub fn audit_node_graph(&mut self) {
+        use std::collections::{HashSet, VecDeque};
+
+        for (id, node) in &self.nodes {
+            if node.label.trim().is_empty() {
+                crate::log_debug!(self, "\u{26a0} Node {} has no label", id);
+            }
+
+            if let Some(pid) = node.parent {
+                if !self.nodes.contains_key(&pid) {
+                    crate::log_debug!(
+                        self,
+                        "\u{26a0} Node {} has missing parent {}",
+                        id,
+                        pid
+                    );
+                } else if !self.nodes[&pid].children.contains(id) {
+                    crate::log_debug!(
+                        self,
+                        "\u{26a0} Parent {} missing child link {}",
+                        pid,
+                        id
+                    );
+                }
+            } else if !self.root_nodes.contains(id) {
+                crate::log_debug!(self, "\u{26a0} Node {} orphaned with no root", id);
+            }
+
+            // cycle detection
+            let mut seen = HashSet::new();
+            let mut current = node.parent;
+            while let Some(pid) = current {
+                if pid == *id {
+                    crate::log_debug!(self, "\u{267b} Cycle detected at node {}", id);
+                    break;
+                }
+                if !seen.insert(pid) {
+                    break;
+                }
+                current = self.nodes.get(&pid).and_then(|n| n.parent);
+            }
+        }
+
+        // find unreachable nodes
+        let mut reachable = HashSet::new();
+        let mut stack: VecDeque<NodeID> = self.root_nodes.iter().copied().collect();
+        while let Some(id) = stack.pop_front() {
+            if reachable.insert(id) {
+                if let Some(n) = self.nodes.get(&id) {
+                    for child in &n.children {
+                        stack.push_back(*child);
+                    }
+                }
+            }
+        }
+        for id in self.nodes.keys() {
+            if !reachable.contains(id) {
+                crate::log_debug!(self, "\u{26a0} Node {} unreachable from roots", id);
+            }
+        }
+
+        // dedup children
+        for (id, node) in self.nodes.iter_mut() {
+            let before = node.children.len();
+            node.children.sort_unstable();
+            node.children.dedup();
+            if node.children.len() != before {
+                crate::log_debug!(self, "\u{26a0} Node {} had duplicate children", id);
+            }
+        }
+
         self.root_nodes.sort_unstable();
         self.root_nodes.dedup();
     }
@@ -592,6 +669,7 @@ impl AppState {
         }
         crate::layout::roles::recalculate_roles(self);
         self.ensure_valid_roots();
+        self.audit_node_graph();
     }
 
     pub fn exit_spotlight(&mut self) {
@@ -735,6 +813,8 @@ impl AppState {
         self.root_nodes.push(new_id);
         self.set_selected(Some(new_id));
         crate::layout::roles::recalculate_roles(self);
+        self.ensure_valid_roots();
+        self.audit_node_graph();
     }
 
     pub fn drill_down(&mut self) {
