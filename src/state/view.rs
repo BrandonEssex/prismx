@@ -1,5 +1,4 @@
 use super::core::AppState;
-use crossterm::terminal;
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub enum ZenViewMode {
@@ -43,6 +42,27 @@ impl Default for PluginViewMode {
     fn default() -> Self { Self::Registry }
 }
 
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+pub enum PluginTagFilter {
+    All,
+    Trusted,
+    Debug,
+}
+
+impl Default for PluginTagFilter {
+    fn default() -> Self { Self::All }
+}
+
+impl PluginTagFilter {
+    pub fn next(self) -> Self {
+        match self {
+            PluginTagFilter::All => PluginTagFilter::Trusted,
+            PluginTagFilter::Trusted => PluginTagFilter::Debug,
+            PluginTagFilter::Debug => PluginTagFilter::All,
+        }
+    }
+}
+
 #[derive(Clone, serde::Serialize)]
 pub struct DebugSnapshot {
     pub active_module: String,
@@ -81,4 +101,25 @@ pub enum LogViewState {
 
 impl Default for LogViewState {
     fn default() -> Self { Self::Hidden }
+}
+
+#[derive(Clone, Debug)]
+pub struct TriageSummary {
+    pub now: usize,
+    pub triton: usize,
+    pub done: usize,
+    pub last_action: Option<String>,
+    pub highlight_frames: u8,
+}
+
+impl Default for TriageSummary {
+    fn default() -> Self {
+        Self {
+            now: 0,
+            triton: 0,
+            done: 0,
+            last_action: None,
+            highlight_frames: 0,
+        }
+    }
 }

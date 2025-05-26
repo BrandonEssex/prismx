@@ -447,7 +447,7 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppStat
             .map(|t| t.elapsed() < std::time::Duration::from_secs(2))
             .unwrap_or(false);
     if show_zoom {
-        crate::render::render_zoom_overlay(f, area, state.zoom_scale);
+        crate::render::render_zoom_overlay(f, area, state.zoom_scale, &state.mode);
     }
 
     render_full_border(f, area, &style, true, !state.debug_border);
