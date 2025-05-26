@@ -32,7 +32,6 @@ web-sys = { version = "0.3", features = ["console"] }
 
 # [[bin]]
 # name = "prismx_wasm"
-# path = "wasm/entry.rs"
 
 # [[bin]]
 # name = "wasm_build"

@@ -1,0 +1,9 @@
+- ui/animation.rs
+- ui/render.rs
+- ui/components/dock.rs
+- ui/components/spotlight.rs
+- canvas/prism.rs
+- state/view.rs
+- spotlight/commands.rs
+- Cargo.toml
+- wasm/entry.rs (DISABLED)
