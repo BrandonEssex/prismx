@@ -67,6 +67,13 @@ impl Default for ZenMode {
 pub struct ZenJournalEntry {
     pub timestamp: chrono::DateTime<chrono::Local>,
     pub text: String,
+    pub prev_text: Option<String>,
+}
+
+#[derive(Clone, Default)]
+pub struct DraftState {
+    pub text: String,
+    pub editing: Option<usize>,
 }
 
 pub struct AppState {
@@ -149,6 +156,7 @@ pub struct AppState {
     pub zen_theme: ZenTheme,
     pub zen_mode: crate::state::ZenMode,
     pub zen_view_mode: crate::state::ZenViewMode,
+    pub zen_draft: DraftState,
     pub zen_summary_mode: crate::state::ZenSummaryMode,
     pub zen_compose_input: String,
     pub zen_journal_entries: Vec<ZenJournalEntry>,
@@ -271,6 +279,7 @@ impl Default for AppState {
             zen_theme: ZenTheme::DarkGray,
             zen_mode: crate::state::ZenMode::default(),
             zen_view_mode: crate::state::ZenViewMode::default(),
+            zen_draft: DraftState::default(),
             zen_summary_mode: crate::state::ZenSummaryMode::default(),
             zen_compose_input: String::new(),
             zen_journal_entries: Vec::new(),

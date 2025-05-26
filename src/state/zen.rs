@@ -140,7 +140,7 @@ impl AppState {
                     let (ts, text) = line.split_once('|')?;
                     chrono::DateTime::parse_from_rfc3339(ts)
                         .ok()
-                        .map(|dt| ZenJournalEntry { timestamp: dt.with_timezone(&chrono::Local), text: text.to_string() })
+                        .map(|dt| ZenJournalEntry { timestamp: dt.with_timezone(&chrono::Local), text: text.to_string(), prev_text: None })
                 })
                 .collect();
         }
