@@ -4,6 +4,10 @@ use super::beamx::{BeamXStyle, bright_color, render_glyph};
 
 /// Draw the BeamX emblem with directional arrows and animations.
 pub fn draw_beam<B: Backend>(f: &mut Frame<B>, area: Rect, tick: u64, style: &BeamXStyle) {
+    if area.width < 12 || area.height < 5 {
+        return; // Avoid drawing over small panels
+    }
+
     let frame = tick % 12;
     let beam_phase = frame % 4;
     let center_phase = tick % 8;
@@ -47,9 +51,9 @@ pub fn draw_beam<B: Backend>(f: &mut Frame<B>, area: Rect, tick: u64, style: &Be
     };
 
     let prism_color_cycle = match tick % 3 {
-        0 => style.prism_color,
+        0 => Color::White,
         1 => Color::Cyan,
-        _ => Color::Red,
+        _ => Color::Magenta,
     };
 
     let center_style = if center_glyph == "X" {
