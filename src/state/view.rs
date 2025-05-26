@@ -21,6 +21,16 @@ impl Default for TriageViewMode {
 }
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
+pub enum OverlayState {
+    Hidden,
+    Visible,
+}
+
+impl Default for OverlayState {
+    fn default() -> Self { Self::Hidden }
+}
+
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub enum PluginViewMode {
     Registry,
 }
