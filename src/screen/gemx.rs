@@ -4,6 +4,7 @@ use crate::layout::{
     layout_nodes, Coords, LayoutRole, PackRegion, GEMX_HEADER_HEIGHT,
     CHILD_SPACING_Y, subtree_span, subtree_depth, spacing_for_zoom,
     BASE_SPACING_X, BASE_SPACING_Y, SNAP_GRID_X, SNAP_GRID_Y,
+    RESERVED_ZONE_W, RESERVED_ZONE_H,
 };
 use crate::node::{NodeID, NodeMap};
 use crate::state::AppState;
@@ -25,6 +26,17 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppStat
             for gy in (0..area.height).step_by(SNAP_GRID_Y as usize) {
                 let rect = Rect::new(area.x + gx, area.y + gy, 1, 1);
                 f.render_widget(dot.clone(), rect);
+            }
+        }
+        // Show reserved top-right zone
+        let zone_x = area.right().saturating_sub(RESERVED_ZONE_W as u16);
+        let zone_y = area.top();
+        let block = Paragraph::new(" ")
+            .style(Style::default().bg(Color::DarkGray));
+        for gx in 0..RESERVED_ZONE_W {
+            for gy in 0..RESERVED_ZONE_H {
+                let rect = Rect::new(zone_x + gx as u16, zone_y + gy as u16, 1, 1);
+                f.render_widget(block.clone(), rect);
             }
         }
     }
@@ -73,7 +85,7 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppStat
     let mut drawn_at = HashMap::new();
     let mut node_roles = HashMap::new();
     if state.auto_arrange {
-        let mut pack = PackRegion::new(area.width as i16, GEMX_HEADER_HEIGHT);
+        let mut pack = PackRegion::new(area.width as i16 - RESERVED_ZONE_W, GEMX_HEADER_HEIGHT);
         for &root_id in &roots {
             let w = subtree_span(&state.nodes, root_id);
             let h = subtree_depth(&state.nodes, root_id) * CHILD_SPACING_Y + 1;
@@ -130,6 +142,8 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppStat
         }
 
     }
+
+    crate::layout::avoid_reserved_zone_map(&mut drawn_at, area.width as i16);
 
     // Ensure that every declared root node is represented in the drawn layout.
     for &root_id in &state.root_nodes {
@@ -198,6 +212,9 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppStat
                 if state.fallback_next_y > area.height as i16 - 4 {
                     state.fallback_next_y = GEMX_HEADER_HEIGHT + 2;
                     state.fallback_next_x += 20;
+                    if state.fallback_next_x > area.width as i16 - RESERVED_ZONE_W - 1 {
+                        state.fallback_next_x = 6;
+                    }
                 }
                 crate::log_debug!(state, "📦 Placed Node {} at x={}, y={}", id, n.x, n.y);
             }
@@ -216,6 +233,8 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppStat
             node_roles.insert(id, LayoutRole::Free);
         }
     }
+
+    crate::layout::avoid_reserved_zone_map(&mut drawn_at, area.width as i16);
 
     // if state.debug_input_mode {
     //     eprintln!("Rendered {} nodes this frame.", drawn_at.len());
