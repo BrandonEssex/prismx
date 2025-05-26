@@ -7,8 +7,12 @@ use crate::state::ZenJournalEntry;
 pub fn render_feed<B: Backend>(f: &mut Frame<B>, area: Rect, entries: &[ZenJournalEntry]) {
     let mut lines: Vec<Line> = Vec::new();
     for entry in entries.iter().rev() {
+        let mut ts = entry.timestamp.format("%Y-%m-%d %H:%M").to_string();
+        if entry.prev_text.is_some() {
+            ts.push_str(" (edited)");
+        }
         lines.push(Line::from(Span::styled(
-            entry.timestamp.format("%Y-%m-%d %H:%M").to_string(),
+            ts,
             Style::default().fg(Color::DarkGray),
         )));
         lines.push(Line::from(entry.text.clone()));

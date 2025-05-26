@@ -409,9 +409,14 @@ pub fn launch_ui() -> std::io::Result<()> {
                 // ⌨️ Navigation + Typing
                 match code {
                     KeyCode::Esc => {
-                        state.mode = "gemx".into();
-                        state.show_keymap = false;
-                        state.show_spotlight = false;
+                        if state.mode == "zen" && state.zen_journal_view == crate::state::ZenJournalView::Compose && state.zen_draft.editing.is_some() {
+                            state.cancel_edit_journal_entry();
+                            state.zen_draft.text.clear();
+                        } else {
+                            state.mode = "gemx".into();
+                            state.show_keymap = false;
+                            state.show_spotlight = false;
+                        }
                     }
 
                     KeyCode::Left if state.mode == "gemx" && modifiers == KeyModifiers::CONTROL => {
@@ -484,21 +489,35 @@ pub fn launch_ui() -> std::io::Result<()> {
                     }
 
                     KeyCode::Char(c) if state.mode == "zen" && state.zen_journal_view == crate::state::ZenJournalView::Compose => {
-                        state.zen_compose_input.push(c);
+                        state.zen_draft.text.push(c);
                     }
 
                     KeyCode::Backspace if state.mode == "zen" && state.zen_journal_view == crate::state::ZenJournalView::Compose => {
-                        state.zen_compose_input.pop();
+                        state.zen_draft.text.pop();
                     }
 
                     KeyCode::Enter if state.mode == "zen" && state.zen_journal_view == crate::state::ZenJournalView::Compose => {
-                        let text = state.zen_compose_input.trim().to_string();
-                        if !text.is_empty() {
-                            let entry = crate::state::ZenJournalEntry { timestamp: chrono::Local::now(), text: text.clone() };
-                            state.zen_journal_entries.push(entry.clone());
-                            state.append_journal_entry(&entry);
+                        let text = state.zen_draft.text.trim().to_string();
+                        if text.starts_with("/edit ") {
+                            if let Ok(idx) = text[6..].trim().parse::<usize>() {
+                                state.start_edit_journal_entry(idx);
+                            }
+                            state.zen_draft.text.clear();
+                        } else if text == "/cancel" {
+                            state.cancel_edit_journal_entry();
+                            state.zen_draft.text.clear();
+                        } else if let Some(idx) = state.zen_draft.editing {
+                            state.edit_journal_entry(idx, &text);
+                            state.zen_draft.editing = None;
+                            state.zen_draft.text.clear();
+                        } else {
+                            if !text.is_empty() {
+                                let entry = crate::state::ZenJournalEntry { timestamp: chrono::Local::now(), text: text.clone(), prev_text: None };
+                                state.zen_journal_entries.push(entry.clone());
+                                state.append_journal_entry(&entry);
+                            }
+                            state.zen_draft.text.clear();
                         }
-                        state.zen_compose_input.clear();
                     }
 
                     _ => {}

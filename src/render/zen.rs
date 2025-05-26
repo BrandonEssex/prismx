@@ -94,7 +94,7 @@ fn render_history<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
     }
 
     let mut y = area.bottom();
-    for entry in state.zen_journal_entries.iter().rev() {
+    for (idx, entry) in state.zen_journal_entries.iter().enumerate().rev() {
         let tags: Vec<&str> = entry
             .text
             .split_whitespace()
@@ -103,7 +103,11 @@ fn render_history<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
         let tag_line = if tags.is_empty() { None } else { Some(tags.join(" ")) };
 
         let mut lines: Vec<Line> = Vec::new();
-        lines.push(Line::from(entry.timestamp.format("%b %d, %Y – %-I:%M%p").to_string()));
+        let mut ts = entry.timestamp.format("%b %d, %Y – %-I:%M%p").to_string();
+        if entry.prev_text.is_some() {
+            ts.push_str(" (edited)");
+        }
+        lines.push(Line::from(ts));
         if let Some(t) = &tag_line {
             lines.push(Line::from(t.clone()));
         }
@@ -118,19 +122,28 @@ fn render_history<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
         }
         y -= h;
         let rect = Rect::new(area.x + padding, y, usable_width, h);
-        let widget = Paragraph::new(lines).block(Block::default().borders(Borders::NONE));
+        let mut block = Block::default().borders(Borders::NONE);
+        if Some(idx) == state.zen_draft.editing {
+            block = block.border_style(Style::default().fg(Color::DarkGray)).borders(Borders::ALL);
+        }
+        let widget = Paragraph::new(lines).block(block);
         f.render_widget(widget, rect);
     }
 }
 
 fn render_input<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState, tick: u64) {
+    use ratatui::widgets::Block;
     let padding = area.width / 4;
     let usable_width = area.width - padding * 2;
     let caret = if tick % 2 == 0 { "|" } else { " " };
     let timestamp = chrono::Local::now().format("%H:%M").to_string();
-    let input = format!("{} {}{}", timestamp, state.zen_compose_input, caret);
+    let input = format!("{} {}{}", timestamp, state.zen_draft.text, caret);
     let input_rect = Rect::new(area.x + padding, area.bottom().saturating_sub(2), usable_width, 1);
-    let widget = Paragraph::new(input).block(Block::default().borders(Borders::NONE));
+    let mut block = Block::default().borders(Borders::NONE);
+    if state.zen_draft.editing.is_some() {
+        block = Block::default().borders(Borders::ALL).border_style(Style::default().fg(Color::DarkGray));
+    }
+    let widget = Paragraph::new(input).block(block);
     f.render_widget(widget, input_rect);
 }
 

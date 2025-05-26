@@ -63,6 +63,13 @@ pub enum ZenJournalView {
 pub struct ZenJournalEntry {
     pub timestamp: chrono::DateTime<chrono::Local>,
     pub text: String,
+    pub prev_text: Option<String>,
+}
+
+#[derive(Clone, Default)]
+pub struct DraftState {
+    pub text: String,
+    pub editing: Option<usize>,
 }
 
 pub struct AppState {
@@ -136,7 +143,7 @@ pub struct AppState {
     pub zen_theme: ZenTheme,
     pub zen_journal_view: ZenJournalView,
     pub zen_view_mode: crate::state::ZenViewMode,
-    pub zen_compose_input: String,
+    pub zen_draft: DraftState,
     pub zen_journal_entries: Vec<ZenJournalEntry>,
     pub gemx_beam_color: crate::beam_color::BeamColor,
     pub zen_beam_color: crate::beam_color::BeamColor,
@@ -240,7 +247,7 @@ impl Default for AppState {
             zen_theme: ZenTheme::DarkGray,
             zen_journal_view: ZenJournalView::Compose,
             zen_view_mode: crate::state::ZenViewMode::default(),
-            zen_compose_input: String::new(),
+            zen_draft: DraftState::default(),
             zen_journal_entries: Vec::new(),
             gemx_beam_color: crate::beam_color::BeamColor::Prism,
             zen_beam_color: crate::beam_color::BeamColor::Prism,
