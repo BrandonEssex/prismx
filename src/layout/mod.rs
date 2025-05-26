@@ -3,6 +3,7 @@ use crate::node::{NodeID, NodeMap};
 
 pub mod roles;
 pub mod fallback;
+pub mod snapshot;
 
 pub use roles::recalculate_roles;
 
@@ -14,7 +15,9 @@ pub struct Coords {
 
 pub const SIBLING_SPACING_X: i16 = 3;
 pub const MIN_NODE_GAP: i16 = 3;
-pub const CHILD_SPACING_Y: i16 = 1;
+/// Vertical spacing between parent and child nodes.
+/// Increased for better readability in auto-arrange mode.
+pub const CHILD_SPACING_Y: i16 = 2;
 pub const FREE_GRID_COLUMNS: usize = 4;
 pub const GEMX_HEADER_HEIGHT: i16 = 2;
 pub const MAX_DEPTH: usize = 32;
@@ -142,6 +145,7 @@ pub fn layout_nodes(
     term_height: i16,
     auto_arrange: bool,
 ) -> (HashMap<NodeID, Coords>, HashMap<NodeID, LayoutRole>) {
+    tracing::debug!("[LAYOUT] layout_nodes root {} auto_arrange {}", root_id, auto_arrange);
     if nodes.is_empty() {
         tracing::debug!("layout_nodes: skip -- empty node map");
         return (HashMap::new(), HashMap::new());
@@ -230,6 +234,7 @@ fn layout_recursive_safe(
     depth: usize,
 ) -> (i16, i16, i16) {
     if !visited.insert(node_id) || depth > MAX_DEPTH {
+        tracing::error!("[LAYOUT] recursion clamp at node {} depth {}", node_id, depth);
         crate::log_warn!(
             "⚠ Recursion halted: Node {} (depth {})",
             node_id,

@@ -11,6 +11,7 @@ pub fn command_preview(input: &str) -> Option<(&'static str, bool)> {
         "zen" => ("Opens Zen mode", true),
         "gemx" => ("Opens GemX mode", true),
         "settings" => ("Opens Settings panel", true),
+        "plugin" => ("Opens Plugin panel", true),
         _ => ("Unknown command", false),
     };
 

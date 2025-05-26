@@ -1,0 +1,5 @@
+- ui/components/spotlight.rs
+- gemx/layout.rs
+- gemx/render.rs
+- triage/panel.rs
+- canvas/prism.rs

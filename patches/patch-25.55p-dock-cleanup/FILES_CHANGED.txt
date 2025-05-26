@@ -1,0 +1,3 @@
+- ui/components/status.rs
+- ui/components/module.rs
+- config/theme.rs

@@ -1,0 +1,4 @@
+- ui/overlay.rs
+- ui/components/debug.rs
+- state/view.rs
+- config/hotkeys.toml

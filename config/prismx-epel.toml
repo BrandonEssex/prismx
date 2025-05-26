@@ -1,0 +1,20 @@
+[[plugin]]
+id = "gemx"
+name = "GEMX Mindmap"
+description = "Graphical mind mapping tools"
+url = "https://example.com/gemx"
+tags = ["official", "planning"]
+
+[[plugin]]
+id = "dashboard"
+name = "Dashboard"
+description = "Overview dashboard module"
+url = "https://example.com/dashboard"
+tags = ["official"]
+
+[[plugin]]
+id = "mindtrace"
+name = "Mindtrace"
+description = "AI-powered thought tracing"
+url = "https://example.com/mindtrace"
+tags = ["experimental", "ai"]

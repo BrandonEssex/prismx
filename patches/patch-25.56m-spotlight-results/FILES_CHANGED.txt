@@ -1,0 +1,3 @@
+- spotlight/render.rs
+- spotlight/parser.rs
+- ui/components/spotlight.rs

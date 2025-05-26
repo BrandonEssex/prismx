@@ -1,0 +1,5 @@
+- gemx/layout.rs
+- gemx/render.rs
+- state/view.rs
+- state/helpers.rs
+- ui/components/debug.rs

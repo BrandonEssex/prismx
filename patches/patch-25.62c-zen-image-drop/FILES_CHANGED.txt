@@ -1,5 +1,7 @@
 - zen/journal.rs
 - zen/render.rs
-- ui/components/feed.rs
+
 - state/media.rs
+- ui/components/feed.rs
+
 - config/settings.toml
