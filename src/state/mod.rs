@@ -423,11 +423,10 @@ impl AppState {
                     );
                 }
             }
-        }
         self.root_nodes.sort_unstable();
         self.root_nodes.dedup();
-    }
-
+        }
+        
     pub fn audit_node_graph(&mut self) {
         use std::collections::{HashSet, VecDeque};
 
@@ -502,7 +501,7 @@ impl AppState {
 
     self.root_nodes.sort_unstable();
     self.root_nodes.dedup();
-
+    }
     /// Ensure nodes have unique positions when auto-arrange is disabled.
     pub fn ensure_grid_positions(&mut self) {
         if self.auto_arrange {
