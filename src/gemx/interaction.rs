@@ -7,6 +7,7 @@ use crate::layout::{
 };
 use crossterm::terminal;
 use std::collections::HashMap;
+use std::time::Instant;
 
 /// Toggle snap-to-grid mode
 pub fn toggle_snap(state: &mut AppState) {
@@ -108,6 +109,13 @@ pub fn node_at_position(state: &AppState, x: u16, y: u16) -> Option<NodeID> {
 
 /// Begin dragging the specified node from mouse coords.
 pub fn start_drag(state: &mut AppState, id: NodeID, x: u16, y: u16) {
+    if state.auto_arrange {
+        state.status_message = "Drag disabled while auto-arrange is enabled".into();
+        state.status_message_last_updated = Some(Instant::now());
+        crate::log_debug!(state, "drag attempt blocked: auto-arrange active");
+        return;
+    }
+
     if state.nodes.get(&id).and_then(|n| n.parent).is_some() {
         tracing::debug!("ignored drag on child node {}", id);
         return;
@@ -123,6 +131,9 @@ pub fn start_drag(state: &mut AppState, id: NodeID, x: u16, y: u16) {
 
 /// Update dragging node position based on new mouse coords.
 pub fn drag_update(state: &mut AppState, x: u16, y: u16) {
+    if state.auto_arrange {
+        return;
+    }
     let zoom = state.zoom_scale as f32;
     let (bsx, bsy) = spacing_for_zoom(state.zoom_scale);
     let wx = (state.scroll_x as f32 + (x as f32 / (bsx as f32 * zoom))).round() as i16;
