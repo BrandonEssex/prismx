@@ -1,0 +1,4 @@
+- spotlight/parser.rs
+- spotlight/mod.rs
+- ui/input.rs
+- config/hotkeys.toml
