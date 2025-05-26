@@ -7,8 +7,9 @@ pub fn init() {
     if plugins.is_empty() {
         tracing::info!("[INIT] no dynamic plugins found");
     } else {
+        tracing::info!("[INIT] {} plugins discovered", plugins.len());
         for plug in &plugins {
-            tracing::info!("[INIT] plugin available: {}", plug.path.display());
+            tracing::debug!("[INIT] plugin available: {}", plug.path.display());
         }
     }
 }
