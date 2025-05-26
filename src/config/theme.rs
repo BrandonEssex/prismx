@@ -9,6 +9,7 @@ pub struct ThemeConfig {
     pub opacity: f32,
     pub zen_peaceful: bool,
     pub zen_breathe: bool,
+    pub dock_pulse: bool,
     pub layout_mode: Option<String>,
 }
 
@@ -19,6 +20,7 @@ impl Default for ThemeConfig {
             opacity: 1.0,
             zen_peaceful: false,
             zen_breathe: false,
+            dock_pulse: true,
             layout_mode: Some("tree".into()),
         }
     }
@@ -40,6 +42,8 @@ impl ThemeConfig {
         self.zen_breathe
     }
 
+    pub fn dock_pulse(&self) -> bool {
+        self.dock_pulse
 
     pub fn dim_color(&self) -> Color {
         if self.dark_mode { Color::DarkGray } else { Color::Gray }
