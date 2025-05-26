@@ -19,7 +19,7 @@ pub const SHORTCUTS: &[(&str, &str)] = &[
     ("Alt+-", "Zoom Out"),
     ("Ctrl+Space", "Module Switch"),
     ("Ctrl+.", "Settings"),
-    ("Alt+Shift+S", "Spotlight"),
+    ("Alt+Space / Alt+/", "Spotlight"),
     ("/zoom in", "Zoom In via Spotlight"),
     ("/zoom out", "Zoom Out via Spotlight"),
     ("Ctrl+Y", "Triage"),
