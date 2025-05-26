@@ -103,3 +103,4 @@ impl ThemeConfig {
     pub fn input_fg(&self) -> Color {
         if self.dark_mode { Color::White } else { Color::Black }
     }
+}
