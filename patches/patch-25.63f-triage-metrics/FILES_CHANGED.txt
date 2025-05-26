@@ -1,0 +1,3 @@
+- triage/panel.rs
+- ui/components/status.rs
+- state/view.rs

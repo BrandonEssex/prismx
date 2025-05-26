@@ -69,7 +69,11 @@ pub fn match_hotkey(action: &str, code: KeyCode, mods: KeyModifiers, state: &App
             _ => false,
         };
 
-        mod_match && code_match
+        let matched = mod_match && code_match;
+        if matched {
+            tracing::debug!("[INPUT] hotkey match: {} => {}", action, binding);
+        }
+        matched
     } else {
         false
     }
