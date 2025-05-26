@@ -49,6 +49,9 @@ impl Default for UserSettings {
 }
 
 pub fn load_user_settings() -> UserSettings {
+    if std::env::var("PRISMX_TEST").is_ok() {
+        return UserSettings::default();
+    }
     fs::read_to_string("config/settings.toml")
         .ok()
         .and_then(|s| toml::from_str(&s).ok())
