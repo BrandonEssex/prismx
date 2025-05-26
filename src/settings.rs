@@ -23,6 +23,8 @@ pub struct UserSettings {
     pub zen_beam_color: BeamColor,
     pub triage_beam_color: BeamColor,
     pub settings_beam_color: BeamColor,
+    pub beamx_panel_theme: BeamColor,
+    pub beamx_panel_visible: bool,
 }
 
 impl Default for UserSettings {
@@ -35,6 +37,8 @@ impl Default for UserSettings {
             zen_beam_color: BeamColor::Prism,
             triage_beam_color: BeamColor::Prism,
             settings_beam_color: BeamColor::Prism,
+            beamx_panel_theme: BeamColor::Prism,
+            beamx_panel_visible: crate::state::default_beamx_panel_visible(),
         }
     }
 }
@@ -55,6 +59,8 @@ pub fn save_user_settings(state: &AppState) {
         zen_beam_color: state.zen_beam_color,
         triage_beam_color: state.triage_beam_color,
         settings_beam_color: state.settings_beam_color,
+        beamx_panel_theme: state.beamx_panel_theme,
+        beamx_panel_visible: state.beamx_panel_visible,
     };
     if let Ok(serialized) = toml::to_string(&config) {
         let _ = fs::create_dir_all("config");
@@ -111,6 +117,17 @@ fn toggle_settings_color(s: &mut AppState) {
     save_user_settings(s);
 }
 
+fn is_beamx_panel_visible(s: &AppState) -> bool { s.beamx_panel_visible }
+fn toggle_beamx_panel_visibility(s: &mut AppState) {
+    s.beamx_panel_visible = !s.beamx_panel_visible;
+    save_user_settings(s);
+}
+
+fn toggle_beamx_theme(s: &mut AppState) {
+    s.cycle_beamx_panel_theme();
+    save_user_settings(s);
+}
+
 pub const SETTING_TOGGLES: &[SettingToggle] = &[
     SettingToggle {
         label: "Auto-Arrange",
@@ -147,6 +164,16 @@ pub const SETTING_TOGGLES: &[SettingToggle] = &[
         is_enabled: |_| true,
         toggle: toggle_settings_color,
     },
+    SettingToggle {
+        label: "BeamX Panel",
+        is_enabled: is_beamx_panel_visible,
+        toggle: toggle_beamx_panel_visibility,
+    },
+    SettingToggle {
+        label: "BeamX Theme",
+        is_enabled: |_| true,
+        toggle: toggle_beamx_theme,
+    },
 ];
 
 pub const fn settings_len() -> usize {
@@ -169,6 +196,8 @@ pub fn render_settings<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppStat
                 label = format!("Triage Color: {}", state.triage_beam_color);
             } else if t.label.starts_with("Settings Color") {
                 label = format!("Settings Color: {}", state.settings_beam_color);
+            } else if t.label.starts_with("BeamX Theme") {
+                label = format!("BeamX Theme: {}", state.beamx_panel_theme);
             }
             let check = if enabled { "[x]" } else { "[ ]" };
             let prefix = if selected { "> " } else { "  " };
