@@ -426,7 +426,7 @@ impl AppState {
         }
         self.root_nodes.sort_unstable();
         self.root_nodes.dedup();
-        }
+    }
         
     pub fn audit_node_graph(&mut self) {
         use std::collections::{HashSet, VecDeque};
