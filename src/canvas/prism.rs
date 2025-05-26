@@ -7,6 +7,7 @@ use ratatui::{
 };
 
 /// Render a small PrismX emblem in the top-right corner of the canvas.
+/// Rendered only in modules that are not visually sensitive (e.g., not Triage).
 pub fn render_prism<B: Backend>(f: &mut Frame<B>, area: Rect) {
     // Manual BeamX fallback – draws 6 arrows around a center star
     let x = area.right().saturating_sub(12);
