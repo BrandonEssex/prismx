@@ -11,7 +11,22 @@ use crate::state::AppState;
 use crate::beamx::render_full_border;
 use crate::ui::beamx::{BeamX, BeamXStyle, BeamXMode, BeamXAnimationMode};
 use std::time::{SystemTime, UNIX_EPOCH};
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
+
+fn node_in_cycle(nodes: &NodeMap, start: NodeID) -> bool {
+    let mut current = start;
+    let mut visited = HashSet::new();
+    while let Some(pid) = nodes.get(&current).and_then(|n| n.parent) {
+        if pid == start {
+            return true;
+        }
+        if !visited.insert(pid) {
+            return true;
+        }
+        current = pid;
+    }
+    false
+}
 
 pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppState) {
     let style = state.beam_style_for_mode(&state.mode);
@@ -314,8 +329,17 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppStat
         }
 
         let unreachable = !reachable_ids.contains(&node_id);
-        if state.debug_input_mode && unreachable {
-            label = format!("❓ {}", label);
+        let missing_parent = node.parent.map(|p| !state.nodes.contains_key(&p)).unwrap_or(false);
+        let self_parent = node.parent == Some(node_id);
+        let cycle = node_in_cycle(&state.nodes, node_id);
+        let orphan_not_root = node.parent.is_none() && !state.root_nodes.contains(&node_id);
+        let invalid = missing_parent || self_parent || cycle || orphan_not_root;
+        if state.debug_input_mode {
+            if self_parent || cycle {
+                label = format!("❌ {}", label);
+            } else if missing_parent || orphan_not_root || unreachable {
+                label = format!("❓ {}", label);
+            }
         }
 
         let width = label.len().min((area.width - draw_x) as usize);
@@ -343,11 +367,8 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppStat
             style = style.fg(Color::DarkGray);
         }
 
-        if state.debug_input_mode {
-            let has_parent = node.parent.is_some();
-            if !has_parent && !matches!(role, LayoutRole::Root | LayoutRole::Free) {
-                style = style.bg(Color::Red);
-            }
+        if state.debug_input_mode && invalid {
+            style = style.bg(Color::Red);
         }
 
         let para = Paragraph::new(label).style(style);
