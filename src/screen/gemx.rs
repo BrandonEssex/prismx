@@ -172,6 +172,7 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppStat
         } else {
             "⚠ No valid root nodes."
         };
+        crate::log_debug!(state, "layout fallback failed -- no nodes drawn");
         f.render_widget(Paragraph::new(msg), area);
         return;
     }
@@ -287,6 +288,9 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppStat
             .max(0.0) as u16;
 
         if draw_x >= area.width || draw_y >= area.height {
+            if !state.zoom_locked_by_user && state.zoom_scale > 0.5 {
+                state.zoom_scale = (state.zoom_scale - 0.1).max(0.5);
+            }
             #[cfg(debug_assertions)]
             tracing::debug!("clamp node ({},{})", draw_x, draw_y);
             continue;
@@ -479,6 +483,7 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppStat
     }
 
     if drawn_at.is_empty() {
+        crate::log_debug!(state, "fallback render panic");
         panic!("❌ Layout aborted: No root nodes rendered. Fallback failed.");
     }
 }

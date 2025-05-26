@@ -15,7 +15,9 @@ pub struct Coords {
 
 pub const SIBLING_SPACING_X: i16 = 3;
 pub const MIN_NODE_GAP: i16 = 3;
-pub const CHILD_SPACING_Y: i16 = 1;
+/// Vertical spacing between parent and child nodes.
+/// Increased for better readability in auto-arrange mode.
+pub const CHILD_SPACING_Y: i16 = 2;
 pub const FREE_GRID_COLUMNS: usize = 4;
 pub const GEMX_HEADER_HEIGHT: i16 = 2;
 pub const MAX_DEPTH: usize = 32;

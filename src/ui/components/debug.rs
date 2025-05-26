@@ -11,6 +11,20 @@ use ratatui::{
 
 use crate::{plugin::registry::registry, layout::subtree_depth};
 
+/// Render debug information when [`AppState::debug_input_mode`] is enabled.
+pub fn render_debug<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
+    if !state.debug_input_mode {
+        return;
+    }
+    let msg = if state.status_message.is_empty() {
+        "Debug Mode".to_string()
+    } else {
+        state.status_message.clone()
+    };
+    let para = Paragraph::new(msg).style(Style::default().fg(Color::Yellow));
+    f.render_widget(para, area);
+}
+
 /// Capture a debug snapshot of the current app state and write it to the
 /// `logs/snapshots/` directory. The filename is timestamped using local time.
 pub fn write_debug_snapshot(state: &mut AppState) {
@@ -82,3 +96,4 @@ pub fn render_debug_panel<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppS
         Rect::new(area.x + 1, area.y + 1, area.width - 2, inner_height),
     );
 }
+

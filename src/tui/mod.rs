@@ -25,6 +25,7 @@ fn rect_contains(rect: ratatui::layout::Rect, x: u16, y: u16) -> bool {
 use crate::screen::render_gemx;
 use crate::settings::render_settings;
 use crate::ui::components::plugin::render_plugin;
+use crate::ui::components::debug::render_debug;
 use crate::ui::components::logs::render_logs;
 use crate::ui::input;
 
@@ -136,6 +137,9 @@ pub fn draw<B: Backend>(terminal: &mut Terminal<B>, state: &mut AppState, _last_
                 state.debug_overlay_sticky,
             );
         }
+
+        crate::ui::components::debug::render_debug(f, full, state);
+
         render_status_bar(f, vertical[1], display_string.as_str());
     })?;
     if state.spotlight_just_opened {
