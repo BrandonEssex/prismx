@@ -1,4 +1,7 @@
 # Custom hotkey overrides
 spotlight = "Alt+Space"
 spotlight_alt = "Alt+/"
+
 logs = "Alt+L"
+debug_overlay = "Alt+D"
+debug_overlay_sticky = "Alt+Shift+D"

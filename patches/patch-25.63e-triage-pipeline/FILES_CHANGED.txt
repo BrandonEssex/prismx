@@ -1,0 +1,3 @@
+- triage/logic.rs
+- triage/panel.rs
+- ui/components/feed.rs
