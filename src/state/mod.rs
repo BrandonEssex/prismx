@@ -428,49 +428,49 @@ impl AppState {
         self.root_nodes.dedup();
     }
 
-pub fn audit_node_graph(&mut self) {
-    use std::collections::{HashSet, VecDeque};
+    pub fn audit_node_graph(&mut self) {
+        use std::collections::{HashSet, VecDeque};
 
-    for (&id, node) in &self.nodes {
-        if node.label.trim().is_empty() {
-            crate::log_debug!(self, "⚠ Node {} has no label", id);
-        }
+        for (&id, node) in &self.nodes {
+            if node.label.trim().is_empty() {
+                crate::log_debug!(self, "⚠ Node {} has no label", id);
+            }
 
-        if let Some(pid) = node.parent {
-            if !self.nodes.contains_key(&pid) {
-                crate::log_debug!(self, "⚠ Node {} has missing parent {}", id, pid);
-            } else if !self.nodes[&pid].children.contains(&id) {
-                crate::log_debug!(self, "⚠ Parent {} missing child link {}", pid, id);
+            if let Some(pid) = node.parent {
+                if !self.nodes.contains_key(&pid) {
+                    crate::log_debug!(self, "⚠ Node {} has missing parent {}", id, pid);
+                } else if !self.nodes[&pid].children.contains(&id) {
+                    crate::log_debug!(self, "⚠ Parent {} missing child link {}", pid, id);
+                }
+            } else if !self.root_nodes.contains(&id) {
+                crate::log_debug!(self, "⚠ Node {} orphaned with no root", id);
             }
-        } else if !self.root_nodes.contains(&id) {
-            crate::log_debug!(self, "⚠ Node {} orphaned with no root", id);
-        }
 
-        // Cycle & ancestry loop detection
-        let mut seen = HashSet::new();
-        let mut current = node.parent;
-        let mut depth = 0;
-        while let Some(pid) = current {
-            if pid == id {
-                crate::log_debug!(self, "♻ Cycle detected at node {}", id);
-                #[cfg(not(debug_assertions))]
-                panic!("❌ Node {} is its own ancestor", id);
-                break;
-            }
-            if !seen.insert(pid) {
-                break;
-            }
-            current = self.nodes.get(&pid).and_then(|n| n.parent);
-            depth += 1;
-            if depth > self.nodes.len() {
-                crate::log_debug!(self, "♻ Cycle detected by depth overflow at {}", id);
-                #[cfg(not(debug_assertions))]
-                panic!("❌ Cycle detected at node {}", id);
-                break;
+            // Cycle & ancestry loop detection
+            let mut seen = HashSet::new();
+            let mut current = node.parent;
+            let mut depth = 0;
+            while let Some(pid) = current {
+                if pid == id {
+                    crate::log_debug!(self, "♻ Cycle detected at node {}", id);
+                    #[cfg(not(debug_assertions))]
+                    panic!("❌ Node {} is its own ancestor", id);
+                    break;
+                }
+                if !seen.insert(pid) {
+                    break;
+                }
+                current = self.nodes.get(&pid).and_then(|n| n.parent);
+                depth += 1;
+                if depth > self.nodes.len() {
+                    crate::log_debug!(self, "♻ Cycle detected by depth overflow at {}", id);
+                    #[cfg(not(debug_assertions))]
+                    panic!("❌ Cycle detected at node {}", id);
+                    break;
+                }
             }
         }
     }
-
     // Reachability from roots
     let mut reachable = HashSet::new();
     let mut stack: VecDeque<NodeID> = self.root_nodes.iter().copied().collect();
@@ -1286,9 +1286,6 @@ pub fn audit_node_graph(&mut self) {
             }
         }
     }
-
-}
-
 }
 // Outside impl block:
 pub fn register_plugin_favorite(state: &mut AppState, icon: &'static str, command: &'static str) {
