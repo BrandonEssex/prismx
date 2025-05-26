@@ -425,6 +425,15 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppStat
         f.render_widget(indicator, Rect::new(area.x + 1, area.y + 1, 20, 1));
     }
 
+    let show_zoom = state.debug_input_mode
+        || state
+            .zoom_preview_last
+            .map(|t| t.elapsed() < std::time::Duration::from_secs(2))
+            .unwrap_or(false);
+    if show_zoom {
+        crate::render::render_zoom_overlay(f, area, state.zoom_scale);
+    }
+
     render_full_border(f, area, &style, true, !state.debug_border);
     let tick = if std::env::var("PRISMX_TEST").is_ok() {
         0

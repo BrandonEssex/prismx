@@ -1,4 +1,5 @@
 use std::collections::{HashMap, HashSet, VecDeque};
+use std::time::Instant;
 use crate::node::{Node, NodeID, NodeMap};
 use crate::layout::{ SIBLING_SPACING_X, CHILD_SPACING_Y, GEMX_HEADER_HEIGHT, LayoutRole };
 use crossterm::terminal;
@@ -118,6 +119,7 @@ pub struct AppState {
     pub simulate_input_queue: VecDeque<SimInput>,
     pub status_message: String,
     pub status_message_last_updated: Option<std::time::Instant>,
+    pub zoom_preview_last: Option<Instant>,
     pub plugin_host: PluginHost,
     pub plugin_favorites: Vec<FavoriteEntry>,
     pub favorite_dock_limit: usize,
@@ -204,6 +206,7 @@ impl Default for AppState {
             simulate_input_queue: VecDeque::new(),
             status_message: String::new(),
             status_message_last_updated: None,
+            zoom_preview_last: None,
             plugin_host: PluginHost::new(),
             plugin_favorites: Vec::new(),
             favorite_dock_limit: 3,
@@ -987,6 +990,7 @@ impl AppState {
     pub fn zoom_in(&mut self) {
         self.zoom_scale = (self.zoom_scale + 0.1).min(1.5);
         self.zoom_locked_by_user = true;
+        self.zoom_preview_last = Some(Instant::now());
         if let Some(id) = self.selected {
             crate::layout::zoom_to_anchor(self, id);
         }
@@ -995,6 +999,7 @@ impl AppState {
     pub fn zoom_out(&mut self) {
         self.zoom_scale = (self.zoom_scale - 0.1).max(0.5);
         self.zoom_locked_by_user = true;
+        self.zoom_preview_last = Some(Instant::now());
         if let Some(id) = self.selected {
             crate::layout::zoom_to_anchor(self, id);
         }
@@ -1003,6 +1008,7 @@ impl AppState {
     pub fn zoom_reset(&mut self) {
         self.zoom_scale = 1.0;
         self.zoom_locked_by_user = false;
+        self.zoom_preview_last = Some(Instant::now());
         if let Some(id) = self.selected {
             crate::layout::zoom_to_anchor(self, id);
         }
