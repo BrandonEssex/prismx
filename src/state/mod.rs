@@ -270,6 +270,7 @@ impl Default for AppState {
 
         state.update_zen_word_count();
         state.load_today_journal();
+        state.audit_node_graph();
 
         state
     }
@@ -418,25 +419,81 @@ impl AppState {
         self.root_nodes.dedup();
     }
 
-    /// Panic if any node becomes its own ancestor.
-    pub fn audit_ancestry(&self) {
-        for (&id, node) in &self.nodes {
-            let mut current = node.parent;
-            let mut depth = 0;
-            while let Some(pid) = current {
-                if pid == id {
-                    tracing::error!("node {} is its own ancestor", id);
-                    panic!("node {} is its own ancestor", id);
-                }
-                if depth > self.nodes.len() {
-                    tracing::error!("cycle detected at node {}", id);
-                    panic!("cycle detected at node {}", id);
-                }
-                current = self.nodes.get(&pid).and_then(|n| n.parent);
-                depth += 1;
+pub fn audit_node_graph(&mut self) {
+    use std::collections::{HashSet, VecDeque};
+
+    for (&id, node) in &self.nodes {
+        if node.label.trim().is_empty() {
+            crate::log_debug!(self, "⚠ Node {} has no label", id);
+        }
+
+        if let Some(pid) = node.parent {
+            if !self.nodes.contains_key(&pid) {
+                crate::log_debug!(self, "⚠ Node {} has missing parent {}", id, pid);
+            } else if !self.nodes[&pid].children.contains(&id) {
+                crate::log_debug!(self, "⚠ Parent {} missing child link {}", pid, id);
+            }
+        } else if !self.root_nodes.contains(&id) {
+            crate::log_debug!(self, "⚠ Node {} orphaned with no root", id);
+        }
+
+        // Cycle & ancestry loop detection
+        let mut seen = HashSet::new();
+        let mut current = node.parent;
+        let mut depth = 0;
+        while let Some(pid) = current {
+            if pid == id {
+                crate::log_debug!(self, "♻ Cycle detected at node {}", id);
+                #[cfg(not(debug_assertions))]
+                panic!("❌ Node {} is its own ancestor", id);
+                break;
+            }
+            if !seen.insert(pid) {
+                break;
+            }
+            current = self.nodes.get(&pid).and_then(|n| n.parent);
+            depth += 1;
+            if depth > self.nodes.len() {
+                crate::log_debug!(self, "♻ Cycle detected by depth overflow at {}", id);
+                #[cfg(not(debug_assertions))]
+                panic!("❌ Cycle detected at node {}", id);
+                break;
             }
         }
     }
+
+    // Reachability from roots
+    let mut reachable = HashSet::new();
+    let mut stack: VecDeque<NodeID> = self.root_nodes.iter().copied().collect();
+    while let Some(id) = stack.pop_front() {
+        if reachable.insert(id) {
+            if let Some(n) = self.nodes.get(&id) {
+                for child in &n.children {
+                    stack.push_back(*child);
+                }
+            }
+        }
+    }
+
+    for id in self.nodes.keys() {
+        if !reachable.contains(id) {
+            crate::log_debug!(self, "⚠ Node {} unreachable from roots", id);
+        }
+    }
+
+    // Dedup children
+    for (id, node) in self.nodes.iter_mut() {
+        let before = node.children.len();
+        node.children.sort_unstable();
+        node.children.dedup();
+        if node.children.len() != before {
+            crate::log_debug!(self, "⚠ Node {} had duplicate children", id);
+        }
+    }
+
+    self.root_nodes.sort_unstable();
+    self.root_nodes.dedup();
+}
 
     /// Ensure nodes have unique positions when auto-arrange is disabled.
     pub fn ensure_grid_positions(&mut self) {
@@ -636,25 +693,18 @@ impl AppState {
         self.nodes.insert(new_id, sibling);
         crate::log_debug!(self, "Inserted node {} → parent {:?}", new_id, parent_id);
         self.selected = Some(new_id);
+
         if !self.auto_arrange {
             self.ensure_grid_positions();
         }
+
         crate::layout::roles::recalculate_roles(self);
         self.ensure_valid_roots();
+
+        // Run both audits: structure and ancestry
+        self.audit_node_graph();
         self.audit_ancestry();
-    }
 
-    pub fn add_child(&mut self) {
-        self.add_child_node();
-    }
-
-    pub fn add_sibling(&mut self) {
-        self.add_sibling_node();
-    }
-
-    pub fn handle_enter_key(&mut self) {
-        self.add_sibling_node();
-    }
 
     pub fn exit_spotlight(&mut self) {
         self.spotlight_input.clear();
@@ -797,6 +847,8 @@ impl AppState {
         self.root_nodes.push(new_id);
         self.set_selected(Some(new_id));
         crate::layout::roles::recalculate_roles(self);
+        self.ensure_valid_roots();
+        self.audit_node_graph();
     }
 
     pub fn drill_down(&mut self) {
