@@ -144,6 +144,8 @@ pub struct AppState {
     pub zen_beam_color: crate::beam_color::BeamColor,
     pub triage_beam_color: crate::beam_color::BeamColor,
     pub settings_beam_color: crate::beam_color::BeamColor,
+    pub zen_icon_enabled: bool,
+    pub zen_icon_glyph: Option<String>,
 
 }
 
@@ -230,6 +232,8 @@ impl Default for AppState {
             zen_beam_color: crate::beam_color::BeamColor::Prism,
             triage_beam_color: crate::beam_color::BeamColor::Prism,
             settings_beam_color: crate::beam_color::BeamColor::Prism,
+            zen_icon_enabled: true,
+            zen_icon_glyph: None,
 
         };
 
@@ -244,6 +248,8 @@ impl Default for AppState {
         state.zen_beam_color = config.zen_beam_color;
         state.triage_beam_color = config.triage_beam_color;
         state.settings_beam_color = config.settings_beam_color;
+        state.zen_icon_enabled = config.zen_icon_enabled;
+        state.zen_icon_glyph = config.zen_icon_glyph.clone();
 
         for node in state.nodes.values_mut() {
             if node.label.starts_with("[F]") {

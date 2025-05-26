@@ -5,3 +5,5 @@ gemx_beam_color = "Prism"
 zen_beam_color = "Aqua"
 triage_beam_color = "Aqua"
 settings_beam_color = "Aqua"
+zen_icon_enabled = true
+zen_icon_glyph = ""
