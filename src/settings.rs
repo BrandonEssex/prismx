@@ -25,11 +25,9 @@ use ratatui::{
     Frame,
 };
 
-use serde::{Deserialize, Serialize};
 use std::fs;
 
 use crate::state::AppState;
-use crate::beam_color::BeamColor;
 use std::sync::atomic::{AtomicBool, AtomicU8, Ordering};
 
 impl Default for UserSettings {
