@@ -423,6 +423,7 @@ impl AppState {
                     );
                 }
             }
+        }
         self.root_nodes.sort_unstable();
         self.root_nodes.dedup();
         }
