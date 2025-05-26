@@ -43,17 +43,6 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppStat
                 f.render_widget(dot.clone(), rect);
             }
         }
-        // Show reserved top-right zone
-        let zone_x = area.right().saturating_sub(RESERVED_ZONE_W as u16);
-        let zone_y = area.top();
-        let block = Paragraph::new(" ")
-            .style(Style::default().bg(Color::DarkGray));
-        for gx in 0..RESERVED_ZONE_W {
-            for gy in 0..RESERVED_ZONE_H {
-                let rect = Rect::new(zone_x + gx as u16, zone_y + gy as u16, 1, 1);
-                f.render_widget(block.clone(), rect);
-            }
-        }
     }
 
     // Reset unreachable fallback lock for this frame

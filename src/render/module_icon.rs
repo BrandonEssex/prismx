@@ -18,16 +18,20 @@ pub fn module_icon(mode: &str) -> &'static str {
     }
 }
 
+pub fn module_label(mode: &str) -> &'static str {
+    match mode {
+        "gemx" => "GemX",
+        "zen" => "Zen",
+        "triage" => "Triage",
+        "spotlight" => "Spotlight",
+        "settings" => "Settings",
+        _ => "Unknown",
+    }
+}
+
 pub fn render_module_icon<B: Backend>(f: &mut Frame<B>, area: Rect, mode: &str) {
     let glyph = module_icon(mode);
-    let label = match mode {
-        "gemx" => "GEMX",
-        "zen" => "ZEN",
-        "triage" => "TRIAGE",
-        "spotlight" => "SPOTLIGHT",
-        "settings" => "SETTINGS",
-        _ => "UNKNOWN",
-    };
+    let label = module_label(mode);
 
     let content = format!("{} {}", glyph, label);
 
