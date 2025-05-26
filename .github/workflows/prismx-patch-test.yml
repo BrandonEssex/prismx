@@ -24,10 +24,12 @@ jobs:
       - name: 🧮 Find Patch Folders
         id: set-matrix
         run: |
+          chmod +x .github/scripts/filter-patch-jobs.sh scripts/ci/should-run-patch.sh
           patches=$(find patches -maxdepth 1 -type d -name 'patch-*' \
-            -exec test -f {}/test_plan.sh \; -print | sed 's|patches/||' | \
-            jq -R -s -c 'split("\n") | map(select(length > 0))')
-          echo "matrix=$patches" >> $GITHUB_OUTPUT
+            -exec test -f {}/test_plan.sh \; -print | sed 's|patches/||')
+          filtered=$(echo "$patches" | .github/scripts/filter-patch-jobs.sh)
+          matrix=$(echo "$filtered" | jq -R -s -c 'split("\n") | map(select(length > 0))')
+          echo "matrix=$matrix" >> $GITHUB_OUTPUT
 
 
   patch-test:
@@ -58,26 +60,39 @@ jobs:
         run: |
           chmod +x ./patches/${{ matrix.patch }}/test_plan.sh || true
           chmod +x ./bin/lint-regression-check.sh || true
+          chmod +x scripts/ci/should-run-patch.sh || true
+
+      - name: 🔍 Validate Patch Metadata
+        id: runcheck
+        run: |
+          scripts/ci/should-run-patch.sh "${{ matrix.patch }}" && echo "run=true" >> "$GITHUB_OUTPUT" || echo "run=false" >> "$GITHUB_OUTPUT"
 
       - name: 🛠️ Build PrismX
+        if: steps.runcheck.outputs.run == 'true'
         run: cargo build --release
 
       - name: 🧪 Run Patch Test Plan
+        if: steps.runcheck.outputs.run == 'true'
         run: ./patches/${{ matrix.patch }}/test_plan.sh || echo "❌ test_plan.sh failed or missing"
 
       - name: ✅ Run Lint Regression Check
+        if: steps.runcheck.outputs.run == 'true'
         run: ./bin/lint-regression-check.sh || echo "⚠️ Lint check failed or skipped"
 
       - name: 📋 Run Patch Linter
+        if: steps.runcheck.outputs.run == 'true'
         run: ./bin/patch-lint.sh ${{ matrix.patch }}
 
       - name: 📄 Generate PATCH_SUMMARY.md
+        if: steps.runcheck.outputs.run == 'true'
         run: ./bin/gen-patch-summary.sh ${{ matrix.patch }}
 
       - name: 📦 Archive Patch Folder
+        if: steps.runcheck.outputs.run == 'true'
         run: ./bin/archive-patch.sh ${{ matrix.patch }}
 
       - name: ☁️ Upload Patch Artifacts
+        if: steps.runcheck.outputs.run == 'true'
         uses: actions/upload-artifact@v3
         with:
           name: ${{ matrix.patch }}-artifact
@@ -86,12 +101,13 @@ jobs:
             patches/${{ matrix.patch }}/PATCH_SUMMARY.md
 
       - name: 🗃 Archive Patch Summary in Changelog
+        if: steps.runcheck.outputs.run == 'true'
         run: |
           mkdir -p changelog/patches
           cp patches/${{ matrix.patch }}/PATCH_SUMMARY.md changelog/patches/${{ matrix.patch }}.md
 
       - name: 💬 Post Summary to PR (if applicable)
-        if: github.event_name == 'pull_request'
+        if: github.event_name == 'pull_request' && steps.runcheck.outputs.run == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PR_URL: ${{ github.event.pull_request.html_url }}
