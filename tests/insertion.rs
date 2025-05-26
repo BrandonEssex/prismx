@@ -84,3 +84,14 @@ fn handle_enter_creates_sibling() {
         assert!(state.root_nodes.contains(&new_id));
     }
 }
+
+#[test]
+fn handle_tab_creates_child() {
+    let mut state = AppState::default();
+    if let Some(b) = state.nodes.get_mut(&2) { b.x = 10; }
+    let parent = state.selected.unwrap();
+    state.handle_tab_key();
+    let child = state.selected.unwrap();
+    assert_eq!(state.nodes.get(&child).unwrap().parent, Some(parent));
+    assert!(state.nodes.get(&parent).unwrap().children.contains(&child));
+}

@@ -281,9 +281,13 @@ pub fn launch_ui() -> std::io::Result<()> {
                 } else if match_hotkey("toggle_keymap", code, modifiers, &state) {
                     state.show_keymap = !state.show_keymap;
                 } else if match_hotkey("create_child", code, modifiers, &state) && state.mode == "gemx" {
-                    state.ensure_valid_roots();
-                    debug_assert!(!state.root_nodes.is_empty());
+                    state.push_undo();
+                    state.handle_tab_key();
+                    continue;
                 } else if match_hotkey("create_sibling", code, modifiers, &state) && state.mode == "gemx" {
+                    state.push_undo();
+                    state.handle_enter_key();
+                    continue;
                 } else if match_hotkey("add_free_node", code, modifiers, &state) {
                     state.push_undo();
                     crate::gemx::interaction::spawn_free_node(&mut state);
