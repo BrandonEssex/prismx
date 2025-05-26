@@ -12,7 +12,18 @@ use crate::spotlight::{command_preview, command_suggestions};
 
 pub fn render_spotlight<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppState) {
     let input = &state.spotlight_input;
-    let width = area.width.min(60);
+    let base_width = area.width.min(60);
+    let scale = if state.spotlight_just_opened {
+        match state.spotlight_animation_frame {
+            0 => 0.90,
+            1 => 0.97,
+            _ => 1.0,
+        }
+    } else {
+        1.0
+    };
+    let width = ((base_width as f32) * scale) as u16;
+    let width = width.max(3).min(base_width);
     let x_offset = area.x + (area.width.saturating_sub(width)) / 2;
     let y_offset = area.y + area.height / 3;
 
@@ -21,17 +32,6 @@ pub fn render_spotlight<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut Ap
     // Ensure Spotlight stays above the status bar
     height = height.min(area.height.saturating_sub(1));
     let spotlight_area = Rect::new(x_offset, y_offset, width, height);
-
-    let arrow = if state.spotlight_just_opened {
-        match state.spotlight_animation_frame {
-            0 => "→ ",
-            1 => "→ → ",
-            2 => "→ → → ",
-            _ => "",
-        }
-    } else {
-        ""
-    };
 
     let border_color = if state.spotlight_just_opened {
         match state.spotlight_animation_frame {
@@ -44,7 +44,7 @@ pub fn render_spotlight<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut Ap
     };
 
     let block = Block::default()
-        .title(format!("{}Spotlight", arrow))
+        .title("Spotlight")
         .borders(Borders::ALL)
         .style(Style::default().fg(border_color));
 
