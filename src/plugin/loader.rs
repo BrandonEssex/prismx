@@ -17,6 +17,7 @@ pub struct LoadedPlugin {
 /// Attempt to load a single plugin library and validate that it exposes the
 /// required `prismx_plugin_entry` symbol.
 pub fn load_plugin(path: &str) -> Option<LoadedPlugin> {
+    tracing::debug!("[PLUGIN] attempting {}", path);
     unsafe {
         match Library::new(path) {
             Ok(lib) => {
@@ -25,12 +26,12 @@ pub fn load_plugin(path: &str) -> Option<LoadedPlugin> {
                     tracing::info!("[PLUGIN] loaded {}", path);
                     Some(LoadedPlugin { path: PathBuf::from(path), lib })
                 } else {
-                    tracing::info!("[PLUGIN] missing entry symbol in {}", path);
+                    tracing::error!("[PLUGIN] missing entry symbol in {}", path);
                     None
                 }
             }
             Err(err) => {
-                tracing::info!("[PLUGIN] failed to load {}: {}", path, err);
+                tracing::error!("[PLUGIN] failed to load {}: {}", path, err);
                 None
             }
         }
@@ -40,11 +41,13 @@ pub fn load_plugin(path: &str) -> Option<LoadedPlugin> {
 /// Search the given directory for `.so` or `.dylib` files and attempt to load
 /// them using `libloading`. Any successfully opened libraries are returned.
 pub fn discover_plugins(dir: &Path) -> Vec<LoadedPlugin> {
+    tracing::debug!("[PLUGIN] scanning {}", dir.display());
     let mut plugins = Vec::new();
     if let Ok(entries) = std::fs::read_dir(dir) {
         for entry in entries.flatten() {
             let path = entry.path();
             if matches!(path.extension().and_then(|e| e.to_str()), Some("so") | Some("dylib")) {
+                tracing::debug!("[PLUGIN] loading {}", path.display());
                 match unsafe { Library::new(&path) } {
                     Ok(lib) => {
                         tracing::info!("[PLUGIN] discovered {}", path.display());

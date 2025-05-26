@@ -4,6 +4,7 @@ use crate::state::AppState;
 use crate::render::traits::Renderable;
 use crate::screen::gemx::render_gemx;
 use crate::layout::BASE_SPACING_X;
+use crate::gemx::layout::{apply_layout, set_mode};
 use crate::config::theme::ThemeConfig;
 
 /// Wrapper implementing [`Renderable`] for the GemX screen.
@@ -13,6 +14,8 @@ pub struct GemxRenderer<'a> {
 
 impl<'a> GemxRenderer<'a> {
     pub fn new(state: &'a mut AppState) -> Self {
+        let cfg = ThemeConfig::load();
+        set_mode(cfg.layout_mode());
         Self { state }
     }
 }
@@ -22,6 +25,8 @@ impl<'a> Renderable for GemxRenderer<'a> {
         if self.state.mindmap_lanes {
             draw_lanes(f, area);
         }
+        // Apply layout before rendering
+        apply_layout(&mut self.state.nodes, &self.state.root_nodes);
         // Render main GemX view
         render_gemx(f, area, self.state);
     }
