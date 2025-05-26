@@ -425,6 +425,11 @@ pub fn launch_ui() -> std::io::Result<()> {
                 {
                     state.zen_toolbar_open = !state.zen_toolbar_open;
                     state.zen_toolbar_index = 0;
+                } else if code == KeyCode::Tab
+                    && modifiers == KeyModifiers::ALT
+                    && state.mode == "zen"
+                {
+                    input::toggle_zen_view(&mut state);
                 } else if match_hotkey("toggle_collapsed", code, modifiers, &state) && state.mode == "gemx" {
                     state.toggle_collapse();
                 } else if match_hotkey("drill_down", code, modifiers, &state) {
@@ -559,15 +564,15 @@ pub fn launch_ui() -> std::io::Result<()> {
                         }
                     }
 
-                    KeyCode::Char(c) if state.mode == "zen" && state.zen_journal_view == crate::state::ZenJournalView::Compose => {
+                    KeyCode::Char(c) if state.mode == "zen" && state.zen_mode == crate::state::ZenMode::Compose => {
                         state.zen_compose_input.push(c);
                     }
 
-                    KeyCode::Backspace if state.mode == "zen" && state.zen_journal_view == crate::state::ZenJournalView::Compose => {
+                    KeyCode::Backspace if state.mode == "zen" && state.zen_mode == crate::state::ZenMode::Compose => {
                         state.zen_compose_input.pop();
                     }
 
-                    KeyCode::Enter if state.mode == "zen" && state.zen_journal_view == crate::state::ZenJournalView::Compose => {
+                    KeyCode::Enter if state.mode == "zen" && state.zen_mode == crate::state::ZenMode::Compose => {
                         let text = state.zen_compose_input.trim().to_string();
                         if !text.is_empty() {
                             let entry = crate::state::ZenJournalEntry { timestamp: chrono::Local::now(), text: text.clone() };

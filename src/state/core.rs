@@ -54,9 +54,13 @@ pub enum ZenTheme {
 }
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
-pub enum ZenJournalView {
+pub enum ZenMode {
     Compose,
-    Review,
+    Scroll,
+}
+
+impl Default for ZenMode {
+    fn default() -> Self { Self::Compose }
 }
 
 #[derive(Clone)]
@@ -139,7 +143,7 @@ pub struct AppState {
     pub zen_word_count: usize,
     pub zen_current_syntax: ZenSyntax,
     pub zen_theme: ZenTheme,
-    pub zen_journal_view: ZenJournalView,
+    pub zen_mode: crate::state::ZenMode,
     pub zen_view_mode: crate::state::ZenViewMode,
     pub zen_compose_input: String,
     pub zen_journal_entries: Vec<ZenJournalEntry>,
@@ -254,7 +258,7 @@ impl Default for AppState {
             zen_word_count: 0,
             zen_current_syntax: ZenSyntax::Markdown,
             zen_theme: ZenTheme::DarkGray,
-            zen_journal_view: ZenJournalView::Compose,
+            zen_mode: crate::state::ZenMode::default(),
             zen_view_mode: crate::state::ZenViewMode::default(),
             zen_compose_input: String::new(),
             zen_journal_entries: Vec::new(),

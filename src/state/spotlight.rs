@@ -1,5 +1,5 @@
 use super::core::{AppState, DockLayout, SimInput};
-use crate::state::ZenViewMode;
+use crate::state::{ZenViewMode, ZenMode};
 
 impl AppState {
     pub fn exit_spotlight(&mut self) {
@@ -101,6 +101,9 @@ impl AppState {
                 }
                 "zen summary" => {
                     self.toggle_summary_view();
+                }
+                "zen view toggle" => {
+                    crate::ui::input::toggle_zen_view(self);
                 }
                 _ if cmd.starts_with("open ") => {
                     let path = cmd.trim_start_matches("open ").trim();

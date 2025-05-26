@@ -29,3 +29,11 @@ pub fn handle_log_keys(state: &mut AppState, code: KeyCode, mods: KeyModifiers) 
         _ => false,
     }
 }
+
+/// Toggle Zen compose/scroll view.
+pub fn toggle_zen_view(state: &mut AppState) {
+    state.zen_mode = match state.zen_mode {
+        crate::state::ZenMode::Compose => crate::state::ZenMode::Scroll,
+        crate::state::ZenMode::Scroll => crate::state::ZenMode::Compose,
+    };
+}
