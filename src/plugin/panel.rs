@@ -3,37 +3,66 @@ use ratatui::widgets::{Block, Borders, Paragraph, Clear, Wrap};
 use ratatui::text::{Line, Span};
 
 use crate::state::AppState;
-use crate::plugin::registry::{registry, PluginEntry};
+use crate::plugin::registry::registry_filtered;
+use crate::state::PluginTagFilter;
 
 pub fn render_plugin_panel<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
     let style = state.beam_style_for_mode("settings");
-    let entries = registry();
+    let entries = registry_filtered(state.plugin_tag_filter);
+    let filter_label = match state.plugin_tag_filter {
+        PluginTagFilter::All => "All",
+        PluginTagFilter::Trusted => "#trusted",
+        PluginTagFilter::Debug => "#debug",
+    };
 
-    let mut lines: Vec<Line> = Vec::new();
-    for (i, PluginEntry { name, description, .. }) in entries.iter().enumerate() {
-        let selected = i == state.plugin_registry_index;
-        let prefix = if selected { "> " } else { "  " };
-        let mut style_line = Style::default();
-        if selected {
-            style_line = style_line.fg(Color::Cyan).add_modifier(Modifier::BOLD);
+    if entries.is_empty() {
+        let para = Paragraph::new("No plugins available")
+            .block(Block::default().title("Plugins").borders(Borders::NONE));
+        f.render_widget(para, area);
+        crate::beamx::render_full_border(f, area, &style, true, false);
+        return;
+    }
+
+    let mut constraints = Vec::new();
+    constraints.push(Constraint::Length(1));
+    for _ in &entries {
+        constraints.push(Constraint::Length(5));
+    }
+    let chunks = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints(constraints)
+        .split(area);
+
+    let header = chunks[0];
+    let cards = &chunks[1..];
+
+    let header_para = Paragraph::new(format!("Filter: {}", filter_label))
+        .block(Block::default().borders(Borders::NONE));
+    f.render_widget(header_para, header);
+
+    for (i, (rect, entry)) in cards.iter().zip(entries.iter()).enumerate() {
+        let mut block_style = Style::default().fg(if entry.trusted { Color::Green } else { Color::Red });
+        if i == state.plugin_registry_index {
+            block_style = block_style.add_modifier(Modifier::BOLD);
         }
-        lines.push(Line::from(vec![
-            Span::styled(prefix.to_string(), style_line),
-            Span::styled(*name, style_line.add_modifier(Modifier::BOLD)),
-        ]));
-        lines.push(Line::from(Span::styled(*description, Style::default().fg(Color::Gray))));
-        lines.push(Line::from(Span::styled("[install]", Style::default().fg(Color::DarkGray))));
-        lines.push(Line::from(""));
+        let title = format!("{} v{}", entry.name, entry.version);
+        let block = Block::default().borders(Borders::ALL).title(title).style(block_style);
+
+        let tag_line = entry
+            .tags
+            .iter()
+            .map(|t| format!("[#{}]", t))
+            .collect::<Vec<_>>()
+            .join(" ");
+
+        let lines = vec![
+            Line::from(Span::raw(entry.description)),
+            Line::from(Span::styled(tag_line, Style::default().fg(Color::Blue))),
+        ];
+        let para = Paragraph::new(lines).block(block).wrap(Wrap { trim: true });
+        f.render_widget(para, *rect);
     }
 
-    if lines.is_empty() {
-        lines.push(Line::from("No plugins available"));
-    }
-
-    let para = Paragraph::new(lines)
-        .block(Block::default().title("Plugins").borders(Borders::NONE));
-
-    f.render_widget(para, area);
     crate::beamx::render_full_border(f, area, &style, true, false);
 
     if state.show_plugin_preview {

@@ -5,6 +5,7 @@ pub struct PluginEntry {
     pub description: &'static str,
     pub trusted: bool,
     pub trust_chain: &'static str,
+    pub tags: &'static [&'static str],
 }
 
 pub fn registry() -> Vec<PluginEntry> {
@@ -15,6 +16,7 @@ pub fn registry() -> Vec<PluginEntry> {
             description: "Mindmap engine",
             trusted: true,
             trust_chain: "PrismX Core",
+            tags: &["editor", "trusted"],
         },
         PluginEntry {
             name: "Dashboard",
@@ -22,6 +24,7 @@ pub fn registry() -> Vec<PluginEntry> {
             description: "Project dashboard",
             trusted: true,
             trust_chain: "PrismX Core",
+            tags: &["utility", "trusted"],
         },
         PluginEntry {
             name: "Mindtrace",
@@ -29,6 +32,7 @@ pub fn registry() -> Vec<PluginEntry> {
             description: "AI memory system",
             trusted: false,
             trust_chain: "unknown",
+            tags: &["debug"],
         },
         PluginEntry {
             name: "RoutineForge",
@@ -36,6 +40,20 @@ pub fn registry() -> Vec<PluginEntry> {
             description: "Task & habit manager",
             trusted: false,
             trust_chain: "unknown",
+            tags: &["utility"],
         },
     ]
+}
+
+use crate::state::PluginTagFilter;
+
+pub fn registry_filtered(filter: PluginTagFilter) -> Vec<PluginEntry> {
+    registry()
+        .into_iter()
+        .filter(|p| match filter {
+            PluginTagFilter::All => true,
+            PluginTagFilter::Trusted => p.trusted,
+            PluginTagFilter::Debug => p.tags.iter().any(|t| *t == "debug"),
+        })
+        .collect()
 }
