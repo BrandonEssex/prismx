@@ -1,4 +1,4 @@
-auto_arrange = true
+auto_arrange = false
 debug_input_mode = false
 dock_layout = "vertical"
 gemx_beam_color = "Ice"
