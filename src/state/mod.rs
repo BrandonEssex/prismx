@@ -469,7 +469,7 @@ impl AppState {
                 }
             }
         }
-    }
+    
     // Reachability from roots
     let mut reachable = HashSet::new();
     let mut stack: VecDeque<NodeID> = self.root_nodes.iter().copied().collect();
@@ -499,9 +499,10 @@ impl AppState {
         }
     }
 
-    self.root_nodes.sort_unstable();
-    self.root_nodes.dedup();
+        self.root_nodes.sort_unstable();
+        self.root_nodes.dedup();
     }
+
     /// Ensure nodes have unique positions when auto-arrange is disabled.
     pub fn ensure_grid_positions(&mut self) {
         if self.auto_arrange {
