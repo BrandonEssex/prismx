@@ -7,6 +7,7 @@ use crate::layout::{
 };
 use crossterm::terminal;
 use std::collections::HashMap;
+use std::time::Instant;
 
 /// Toggle snap-to-grid mode
 pub fn toggle_snap(state: &mut AppState) {
@@ -26,29 +27,61 @@ pub fn spawn_free_node(state: &mut AppState) {
     let mut node = Node::new(new_id, "Free Node", None);
 
     if !state.auto_arrange {
-        let index = state.root_nodes.len();
-        let (tw, _) = terminal::size().unwrap_or((80, 20));
-        let margin = SIBLING_SPACING_X * 2;
-        let row_pad = CHILD_SPACING_Y * 2;
-        let cols = (tw as i16 / margin.max(1)).max(1) as usize;
-        node.x = ((index % cols) as i16) * margin + 1;
-        node.y = ((index / cols) as i16) * row_pad + GEMX_HEADER_HEIGHT + 1;
+        use std::collections::HashSet;
+
+        let (tw, th) = terminal::size().unwrap_or((80, 20));
+        let used: HashSet<(i16, i16)> =
+            state.nodes.values().map(|n| (n.x, n.y)).collect();
+
+        let base_x = 6;
+        let base_y = GEMX_HEADER_HEIGHT + 1;
+        let step_x = SIBLING_SPACING_X * 2;
+        let step_y = CHILD_SPACING_Y * 2;
+
+        let mut x = base_x;
+        let mut y = base_y;
+        let max_y = th as i16 - 2;
+        let max_x = tw as i16 - 4;
+
+        while used.contains(&(x, y)) {
+            y += step_y;
+            if y > max_y {
+                y = base_y;
+                x += step_x;
+                if x > max_x {
+                    x = base_x;
+                }
+            }
+        }
+
+        node.x = x;
+        node.y = y;
     }
 
+    crate::log_debug!(
+        state,
+        "[Node {}] label=\"{}\", parent={:?}, x={}, y={}",
+        new_id,
+        node.label,
+        node.parent,
+        node.x,
+        node.y
+    );
     if state.debug_input_mode {
-        eprintln!(
-            "[Node {}] label=\"{}\", parent={:?}, x={}, y={}",
-            new_id,
-            node.label,
-            node.parent,
-            node.x,
-            node.y
-        );
+        eprintln!("📦 Free node {} at x={}, y={}", new_id, node.x, node.y);
     }
 
     state.nodes.insert(new_id, node);
     state.root_nodes.push(new_id);
     state.set_selected(Some(new_id));
+
+    // Viewport centering for visibility
+    crate::layout::center_on_node(state, new_id);
+
+    // Graph integrity + layout role refresh
+    crate::layout::roles::recalculate_roles(state);
+    state.ensure_valid_roots();
+    state.audit_node_graph();
 }
 
 /// Determine which node is at the given coordinates considering current layout.
@@ -60,7 +93,7 @@ pub fn node_at_position(state: &AppState, x: u16, y: u16) -> Option<NodeID> {
         } else {
             state.root_nodes.clone()
         };
-        let (tw, _) = terminal::size().unwrap_or((80, 20));
+        let (tw, th) = terminal::size().unwrap_or((80, 20));
         let mut pack = PackRegion::new(tw as i16, GEMX_HEADER_HEIGHT);
         for &root_id in &roots {
             let w = subtree_span(&state.nodes, root_id);
@@ -71,6 +104,7 @@ pub fn node_at_position(state: &AppState, x: u16, y: u16) -> Option<NodeID> {
                 root_id,
                 oy,
                 tw as i16,
+                th as i16,
                 state.auto_arrange,
             );
             for pos in l.values_mut() {
@@ -108,6 +142,17 @@ pub fn node_at_position(state: &AppState, x: u16, y: u16) -> Option<NodeID> {
 
 /// Begin dragging the specified node from mouse coords.
 pub fn start_drag(state: &mut AppState, id: NodeID, x: u16, y: u16) {
+    if state.auto_arrange {
+        state.status_message = "Drag disabled while auto-arrange is enabled".into();
+        state.status_message_last_updated = Some(Instant::now());
+        crate::log_debug!(state, "drag attempt blocked: auto-arrange active");
+        return;
+    }
+
+    if state.nodes.get(&id).and_then(|n| n.parent).is_some() {
+        tracing::debug!("ignored drag on child node {}", id);
+        return;
+    }
     state.dragging = Some(id);
     let zoom = state.zoom_scale as f32;
     let (bsx, bsy) = spacing_for_zoom(state.zoom_scale);
@@ -119,6 +164,9 @@ pub fn start_drag(state: &mut AppState, id: NodeID, x: u16, y: u16) {
 
 /// Update dragging node position based on new mouse coords.
 pub fn drag_update(state: &mut AppState, x: u16, y: u16) {
+    if state.auto_arrange {
+        return;
+    }
     let zoom = state.zoom_scale as f32;
     let (bsx, bsy) = spacing_for_zoom(state.zoom_scale);
     let wx = (state.scroll_x as f32 + (x as f32 / (bsx as f32 * zoom))).round() as i16;
@@ -135,7 +183,12 @@ pub fn drag_update(state: &mut AppState, x: u16, y: u16) {
 pub fn end_drag(state: &mut AppState) {
     state.dragging = None;
     state.last_mouse = None;
-    state.recalculate_roles();
+    if state.link_mode {
+        crate::layout::roles::recalculate_roles(state);
+        state.link_mode = false;
+    } else {
+        crate::log_debug!(state, "skipping reparent after drag (link_mode off)");
+    }
 }
 
 /// Drag a node and its children recursively.

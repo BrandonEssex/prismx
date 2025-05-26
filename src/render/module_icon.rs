@@ -1,4 +1,12 @@
-use ratatui::{backend::Backend, layout::Rect, style::{Color, Style, Modifier}, widgets::Paragraph, Frame};
+use ratatui::{
+    backend::Backend,
+    layout::Rect,
+    style::{Color, Modifier, Style},
+    widgets::{Block, Borders, Paragraph},
+    Frame,
+};
+use crate::beamx;
+use unicode_width::UnicodeWidthStr;
 
 pub fn module_icon(mode: &str) -> &'static str {
     match mode {
@@ -7,14 +15,45 @@ pub fn module_icon(mode: &str) -> &'static str {
         "triage" => "🧭",
         "spotlight" => "🔍",
         "settings" => "⚙️",
+        "plugin" => "🔌",
         _ => "❓",
+    }
+}
+
+pub fn module_label(mode: &str) -> &'static str {
+    match mode {
+        "gemx" => "GemX",
+        "zen" => "Zen",
+        "triage" => "Triage",
+        "spotlight" => "Spotlight",
+        "settings" => "Settings",
+        "plugin" => "Plugins",
+        _ => "Unknown",
     }
 }
 
 pub fn render_module_icon<B: Backend>(f: &mut Frame<B>, area: Rect, mode: &str) {
     let glyph = module_icon(mode);
-    let style = Style::default().fg(Color::Magenta).add_modifier(Modifier::BOLD);
-    let x = area.x + 1;
-    let y = area.y;
-    f.render_widget(Paragraph::new(glyph).style(style), Rect::new(x, y, 2, 1));
+    let label = module_label(mode);
+
+    let content = format!("{} {}", glyph, label);
+
+    let theme = beamx::style_for_mode(mode);
+    let style = Style::default()
+        .fg(theme.border_color)
+        .add_modifier(Modifier::BOLD);
+
+    let text_width = UnicodeWidthStr::width(content.as_str()) as u16;
+    let block_width = text_width + 2;
+    let height = 3u16;
+
+    let x = area.width.saturating_sub(block_width + 1);
+    let y = area.height.saturating_sub(height + 4);
+
+    let border = Block::default().borders(Borders::ALL).style(style);
+    f.render_widget(border, Rect::new(x, y, block_width, height));
+    f.render_widget(
+        Paragraph::new(content).style(style),
+        Rect::new(x + 1, y + 1, text_width, 1),
+    );
 }

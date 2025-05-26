@@ -3,21 +3,39 @@ use ratatui::widgets::{Block, Borders, Paragraph};
 use crate::layout::{
     layout_nodes, Coords, LayoutRole, PackRegion, GEMX_HEADER_HEIGHT,
     CHILD_SPACING_Y, subtree_span, subtree_depth, spacing_for_zoom,
-    BASE_SPACING_X, BASE_SPACING_Y, SIBLING_SPACING_X, SNAP_GRID_X, SNAP_GRID_Y,
+    BASE_SPACING_X, BASE_SPACING_Y, SNAP_GRID_X, SNAP_GRID_Y,
+    RESERVED_ZONE_W, RESERVED_ZONE_H,
 };
 use crate::node::{NodeID, NodeMap};
 use crate::state::AppState;
-use crate::beamx::{render_full_border, style_for_mode};
+use crate::canvas::prism::render_prism;
+use crate::beamx::render_full_border;
 use crate::ui::beamx::{BeamX, BeamXStyle, BeamXMode, BeamXAnimationMode};
 use std::time::{SystemTime, UNIX_EPOCH};
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
+
+fn node_in_cycle(nodes: &NodeMap, start: NodeID) -> bool {
+    let mut current = start;
+    let mut visited = HashSet::new();
+    while let Some(pid) = nodes.get(&current).and_then(|n| n.parent) {
+        if pid == start {
+            return true;
+        }
+        if !visited.insert(pid) {
+            return true;
+        }
+        current = pid;
+    }
+    false
+}
 
 pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppState) {
-    let style = style_for_mode(&state.mode);
+    let style = state.beam_style_for_mode(&state.mode);
     let block = Block::default()
         .title(if state.auto_arrange { "Gemx [Auto-Arrange]" } else { "Gemx" })
         .borders(Borders::NONE);
     f.render_widget(block, area);
+    render_prism(f, area);
 
     if state.debug_input_mode && std::env::var("PRISMX_TEST").is_err() {
         let dot = Paragraph::new("·").style(Style::default().fg(Color::DarkGray));
@@ -44,7 +62,7 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppStat
     // Ensure we always have valid root nodes before any layout logic
     state.ensure_valid_roots();
     if state.auto_arrange {
-        state.recalculate_roles();
+        crate::layout::roles::recalculate_roles(state);
     }
 
     // Validate again in case role recalculation removed all roots
@@ -73,7 +91,7 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppStat
     let mut drawn_at = HashMap::new();
     let mut node_roles = HashMap::new();
     if state.auto_arrange {
-        let mut pack = PackRegion::new(i16::MAX, GEMX_HEADER_HEIGHT);
+        let mut pack = PackRegion::new(area.width as i16 - RESERVED_ZONE_W, GEMX_HEADER_HEIGHT);
         for &root_id in &roots {
             let w = subtree_span(&state.nodes, root_id);
             let h = subtree_depth(&state.nodes, root_id) * CHILD_SPACING_Y + 1;
@@ -84,8 +102,21 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppStat
                 root_id,
                 oy,
                 area.width as i16,
+                area.height as i16,
                 state.auto_arrange,
             );
+            if layout.is_empty() {
+                crate::log_debug!(state, "skipping root {} - incomplete tree", root_id);
+                state.layout_fail_count += 1;
+                if state.layout_fail_count >= 3 {
+                    state.auto_arrange = false;
+                    state.layout_fail_count = 0;
+                    crate::log_debug!(state, "\u{274c} auto-arrange disabled due to failures");
+                }
+                continue;
+            } else {
+                state.layout_fail_count = 0;
+            }
             for pos in layout.values_mut() {
                 pos.x += ox;
             }
@@ -110,12 +141,15 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppStat
                 root_id,
                 0,
                 area.width as i16,
+                area.height as i16,
                 state.auto_arrange,
             );
             node_roles.extend(roles);
         }
 
     }
+
+    crate::layout::avoid_reserved_zone_map(&mut drawn_at, area.width as i16);
 
     // Ensure that every declared root node is represented in the drawn layout.
     for &root_id in &state.root_nodes {
@@ -144,70 +178,56 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppStat
 
     use std::collections::HashSet;
     let reachable_ids: HashSet<NodeID> = drawn_at.keys().copied().collect();
+
     if state.auto_arrange {
         let node_ids: Vec<NodeID> = state.nodes.keys().copied().collect();
+        let filled: HashSet<(i16, i16)> = state.nodes.values().map(|n| (n.x, n.y)).collect();
+
         for id in node_ids {
-            if state.fallback_this_frame {
-                continue;
-            }
-            let node = match state.nodes.get(&id) {
-                Some(n) => n,
-                None => continue,
-            };
-            if state.root_nodes.contains(&id)
-                || drawn_at.contains_key(&id)
-                || reachable_ids.contains(&id)
-                || state.fallback_promoted_this_session.contains(&id)
-            {
-                continue;
-            }
-            if node.children.is_empty() {
-                continue;
-            }
+            if let Some(n) = state.nodes.get_mut(&id) {
+                if n.x == 0 && n.y == 0 {
+                    let step_x = 20;
+                    let step_y = 3;
+                    let base_y = GEMX_HEADER_HEIGHT + 2;
+                    let max_y = area.height as i16 - 4;
+                    let max_x = area.width as i16 - RESERVED_ZONE_W - 1;
 
-            state.root_nodes.push(id);
-            state.root_nodes.sort_unstable();
-            state.root_nodes.dedup();
-            state.fallback_this_frame = true;
-            state.fallback_promoted_this_session.insert(id);
+                    let mut x = state.fallback_next_x;
+                    let mut y = state.fallback_next_y;
 
-            let Some(n) = state.nodes.get_mut(&id) else {
-                eprintln!("❌ Fallback failed: Node {} not found.", id);
-                return;
-            };
+                    while filled.contains(&(x, y)) {
+                        if state.debug_input_mode {
+                            crate::log_debug!(state, "↪ collision at {},{}", x, y);
+                        }
+                        y += step_y;
+                        if y > max_y {
+                            y = base_y;
+                            x += step_x;
+                        }
+                        if x > max_x {
+                            x = 6;
+                        }
+                    }
 
-            if n.x == 0 && n.y == 0 {
-                n.x = state.fallback_next_x;
-                n.y = state.fallback_next_y;
-                state.fallback_next_y += 3;
-                if state.fallback_next_y > area.height as i16 - 4 {
-                    state.fallback_next_y = GEMX_HEADER_HEIGHT + 2;
-                    state.fallback_next_x += 20;
+                    n.x = x;
+                    n.y = y;
+
+                    // Update fallback tracker
+                    state.fallback_next_x = x;
+                    state.fallback_next_y = y + step_y;
                 }
-                if state.debug_input_mode {
-                    eprintln!(
-                        "\u{1F4D0} Placed Node {} at x={}, y={}",
-                        id, n.x, n.y
-                    );
-                }
+
+                crate::log_debug!(state, "📦 Placed Node {} at x={}, y={}", id, n.x, n.y);
+                drawn_at.insert(id, Coords { x: n.x, y: n.y });
+                node_roles.insert(id, LayoutRole::Root);
+                crate::log_debug!(state, "🚨 Promoted Node {} to root (label-safe)", id);
+                break;
             }
-
-            drawn_at.insert(id, Coords { x: n.x, y: n.y });
-            node_roles.insert(id, LayoutRole::Root);
-
-            crate::log_debug!(state, "\u{26a0} Promoted Node {} to root (label-safe)", id);
-
-            break;
-        }
-
-    }
-
-    for (&id, _) in &state.nodes {
-        if !drawn_at.contains_key(&id) {
-            drawn_at.insert(id, Coords { x: 3, y: GEMX_HEADER_HEIGHT + 2 });
-            node_roles.insert(id, LayoutRole::Free);
         }
     }
+
+    crate::log_debug!(state, "🏁 Auto-arrange complete");
+    crate::layout::avoid_reserved_zone_map(&mut drawn_at, area.width as i16);
 
     // if state.debug_input_mode {
     //     eprintln!("Rendered {} nodes this frame.", drawn_at.len());
@@ -268,7 +288,7 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppStat
 
         if draw_x >= area.width || draw_y >= area.height {
             #[cfg(debug_assertions)]
-            eprintln!("[debug] clamp node ({},{})", draw_x, draw_y);
+            tracing::debug!("clamp node ({},{})", draw_x, draw_y);
             continue;
         }
 
@@ -300,8 +320,17 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppStat
         }
 
         let unreachable = !reachable_ids.contains(&node_id);
-        if state.debug_input_mode && unreachable {
-            label = format!("❓ {}", label);
+        let missing_parent = node.parent.map(|p| !state.nodes.contains_key(&p)).unwrap_or(false);
+        let self_parent = node.parent == Some(node_id);
+        let cycle = node_in_cycle(&state.nodes, node_id);
+        let orphan_not_root = node.parent.is_none() && !state.root_nodes.contains(&node_id);
+        let invalid = missing_parent || self_parent || cycle || orphan_not_root;
+        if state.debug_input_mode {
+            if self_parent || cycle {
+                label = format!("❌ {}", label);
+            } else if missing_parent || orphan_not_root || unreachable {
+                label = format!("❓ {}", label);
+            }
         }
 
         let width = label.len().min((area.width - draw_x) as usize);
@@ -329,11 +358,8 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppStat
             style = style.fg(Color::DarkGray);
         }
 
-        if state.debug_input_mode {
-            let has_parent = node.parent.is_some();
-            if !has_parent && !matches!(role, LayoutRole::Root | LayoutRole::Free) {
-                style = style.bg(Color::Red);
-            }
+        if state.debug_input_mode && invalid {
+            style = style.bg(Color::Red);
         }
 
         let para = Paragraph::new(label).style(style);
@@ -395,7 +421,7 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppStat
                     let draw_sy = syp.max(0.0) as u16;
                     if mid >= area.width || draw_sy >= area.height {
                         #[cfg(debug_assertions)]
-                        eprintln!("[debug] clamp arrow ({},{})", mid, draw_sy);
+                        tracing::debug!("clamp arrow ({},{})", mid, draw_sy);
                         continue;
                     }
                     let para = Paragraph::new(arrow);
@@ -411,6 +437,15 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppStat
         f.render_widget(indicator, Rect::new(area.x + 1, area.y + 1, 20, 1));
     }
 
+    let show_zoom = state.debug_input_mode
+        || state
+            .zoom_preview_last
+            .map(|t| t.elapsed() < std::time::Duration::from_secs(2))
+            .unwrap_or(false);
+    if show_zoom {
+        crate::render::render_zoom_overlay(f, area, state.zoom_scale);
+    }
+
     render_full_border(f, area, &style, true, !state.debug_border);
     let tick = if std::env::var("PRISMX_TEST").is_ok() {
         0
@@ -420,11 +455,16 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppStat
             .unwrap_or_default()
             .as_millis() / 300) as u64
     };
+    let mut bx_style = BeamXStyle::from(BeamXMode::Default);
+    let (b, s, p) = state.beamx_panel_theme.palette();
+    bx_style.border_color = b;
+    bx_style.status_color = s;
+    bx_style.prism_color = p;
     let beamx = BeamX {
         tick,
-        enabled: true,
+        enabled: state.beamx_panel_visible,
         mode: BeamXMode::Default,
-        style: BeamXStyle::from(BeamXMode::Default),
+        style: bx_style,
         animation: BeamXAnimationMode::PulseEntryRadiate,
     };
     beamx.render(f, area);
@@ -434,7 +474,7 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppStat
 
     for &id in &state.root_nodes {
         if !drawn_at.contains_key(&id) {
-            eprintln!("❌ Layout failed to render root node {}", id);
+            tracing::warn!("❌ Layout failed to render root node {}", id);
         }
     }
 

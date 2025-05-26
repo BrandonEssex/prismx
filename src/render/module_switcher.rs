@@ -13,6 +13,7 @@ pub fn render_module_switcher<B: Backend>(f: &mut Frame<B>, area: Rect, index: u
         ("🧘", "Zen"),
         ("🧭", "Triage"),
         ("⚙️", "Settings"),
+        ("🔌", "Plugins"),
     ];
 
     let lines: Vec<Line> = modules
@@ -43,7 +44,9 @@ pub fn render_module_switcher<B: Backend>(f: &mut Frame<B>, area: Rect, index: u
         .saturating_add(4);
 
     let width = content_width.min(area.width);
-    let height = lines.len() as u16 + 2;
+    let mut height = lines.len() as u16 + 2;
+    // Keep overlay above the status bar
+    height = height.min(area.height.saturating_sub(1));
 
     let x = area.x + (area.width.saturating_sub(width)) / 2;
     let y = area.y + (area.height.saturating_sub(height)) / 2;

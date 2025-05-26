@@ -1,3 +1,21 @@
+use crate::beam_color::BeamColor;
+use serde::{Deserialize, Serialize};
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct UserSettings {
+    pub auto_arrange: bool,
+    pub debug_input_mode: bool,
+    pub dock_layout: String,
+    pub gemx_beam_color: BeamColor,
+    pub zen_beam_color: BeamColor,
+    pub triage_beam_color: BeamColor,
+    pub settings_beam_color: BeamColor,
+    pub zen_icon_enabled: bool,
+    pub zen_icon_glyph: Option<String>,
+    pub beamx_panel_theme: BeamColor,
+    pub beamx_panel_visible: bool,
+}
+
 use ratatui::{
     backend::Backend,
     layout::Rect,
@@ -7,17 +25,10 @@ use ratatui::{
     Frame,
 };
 
-use serde::{Deserialize, Serialize};
 use std::fs;
 
-use crate::state::{AppState, DockLayout};
-
-#[derive(Serialize, Deserialize)]
-pub struct UserSettings {
-    pub auto_arrange: bool,
-    pub debug_input_mode: bool,
-    pub dock_layout: String,
-}
+use crate::state::AppState;
+use std::sync::atomic::{AtomicU8, Ordering};
 
 impl Default for UserSettings {
     fn default() -> Self {
@@ -25,11 +36,22 @@ impl Default for UserSettings {
             auto_arrange: true,
             debug_input_mode: true,
             dock_layout: "vertical".into(),
+            gemx_beam_color: BeamColor::Prism,
+            zen_beam_color: BeamColor::Prism,
+            triage_beam_color: BeamColor::Prism,
+            settings_beam_color: BeamColor::Prism,
+            zen_icon_enabled: true,
+            zen_icon_glyph: None,
+            beamx_panel_theme: BeamColor::Prism,
+            beamx_panel_visible: crate::state::default_beamx_panel_visible(),
         }
     }
 }
 
 pub fn load_user_settings() -> UserSettings {
+    if std::env::var("PRISMX_TEST").is_ok() {
+        return UserSettings::default();
+    }
     fs::read_to_string("config/settings.toml")
         .ok()
         .and_then(|s| toml::from_str(&s).ok())
@@ -41,12 +63,30 @@ pub fn save_user_settings(state: &AppState) {
         auto_arrange: state.auto_arrange,
         debug_input_mode: state.debug_input_mode,
         dock_layout: format!("{:?}", state.favorite_dock_layout).to_lowercase(),
+        gemx_beam_color: state.gemx_beam_color,
+        zen_beam_color: state.zen_beam_color,
+        triage_beam_color: state.triage_beam_color,
+        settings_beam_color: state.settings_beam_color,
+        zen_icon_enabled: state.zen_icon_enabled,
+        zen_icon_glyph: state.zen_icon_glyph.clone(),
+        beamx_panel_theme: state.beamx_panel_theme,
+        beamx_panel_visible: state.beamx_panel_visible,
     };
+
     if let Ok(serialized) = toml::to_string(&config) {
         let _ = fs::create_dir_all("config");
         let _ = fs::write("config/settings.toml", serialized);
     }
 }
+
+static THEME_INDEX: AtomicU8 = AtomicU8::new(0);
+const THEME_PRESETS: [BeamColor; 5] = [
+    BeamColor::Prism,
+    BeamColor::Infrared,
+    BeamColor::Ice,
+    BeamColor::Aqua,
+    BeamColor::Emerald,
+];
 
 pub struct SettingToggle {
     pub label: &'static str,
@@ -66,38 +106,75 @@ fn toggle_debug_mode(s: &mut AppState) {
     save_user_settings(s);
 }
 
-fn is_vertical_dock(s: &AppState) -> bool {
-    matches!(s.favorite_dock_layout, DockLayout::Vertical)
+
+
+fn is_zoom_locked(s: &AppState) -> bool { s.zoom_locked_by_user }
+fn toggle_zoom_lock(s: &mut AppState) {
+    s.zoom_locked_by_user = !s.zoom_locked_by_user;
+    save_user_settings(s);
 }
-fn toggle_dock_layout(s: &mut AppState) {
-    s.favorite_dock_layout = match s.favorite_dock_layout {
-        DockLayout::Vertical => DockLayout::Horizontal,
-        DockLayout::Horizontal => DockLayout::Vertical,
-    };
-    s.dock_focus_index = None;
-    s.status_message.clear();
-    s.status_message_last_updated = None;
+
+fn theme_label() -> BeamColor {
+    THEME_PRESETS[THEME_INDEX.load(Ordering::Relaxed) as usize]
+}
+fn toggle_theme(state: &mut AppState) {
+    let next = (THEME_INDEX.load(Ordering::Relaxed) + 1) % THEME_PRESETS.len() as u8;
+    THEME_INDEX.store(next, Ordering::Relaxed);
+    let color = theme_label();
+    state.gemx_beam_color = color;
+    state.zen_beam_color = color;
+    state.triage_beam_color = color;
+    state.settings_beam_color = color;
+    save_user_settings(state);
+}
+
+fn is_beamx_panel_visible(s: &AppState) -> bool { s.beamx_panel_visible }
+fn toggle_beamx_panel_visibility(s: &mut AppState) {
+    s.beamx_panel_visible = !s.beamx_panel_visible;
+    save_user_settings(s);
+}
+
+fn toggle_beamx_theme(s: &mut AppState) {
+    s.cycle_beamx_panel_theme();
     save_user_settings(s);
 }
 
 pub const SETTING_TOGGLES: &[SettingToggle] = &[
+    SettingToggle {
+        label: "Debug Input Mode",
+        is_enabled: is_debug_mode,
+        toggle: toggle_debug_mode,
+    },
     SettingToggle {
         label: "Auto-Arrange",
         is_enabled: is_auto_arrange,
         toggle: toggle_auto_arrange,
     },
     SettingToggle {
-        label: "Debug Mode",
-        is_enabled: is_debug_mode,
-        toggle: toggle_debug_mode,
+        label: "Lock Zoom Scale",
+        is_enabled: is_zoom_locked,
+        toggle: toggle_zoom_lock,
     },
     SettingToggle {
-        label: "Vertical Dock",
-        is_enabled: is_vertical_dock,
-        toggle: toggle_dock_layout,
+        label: "Theme Preset",
+        is_enabled: |_| true,
+        toggle: toggle_theme,
+    },
+    SettingToggle {
+        label: "BeamX Panel",
+        is_enabled: is_beamx_panel_visible,
+        toggle: toggle_beamx_panel_visibility,
+    },
+    SettingToggle {
+        label: "BeamX Theme",
+        is_enabled: |_| true,
+        toggle: toggle_beamx_theme,
     },
 ];
 
+pub const fn settings_len() -> usize {
+    SETTING_TOGGLES.len()
+}
 pub fn render_settings<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
     let lines: Vec<Line> = SETTING_TOGGLES
         .iter()
@@ -105,6 +182,22 @@ pub fn render_settings<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppStat
         .map(|(i, t)| {
             let enabled = (t.is_enabled)(state);
             let selected = i == state.settings_focus_index % SETTING_TOGGLES.len();
+            let mut label = t.label.to_string();
+
+            if t.label.starts_with("Theme Preset") {
+                label = format!("Theme Preset: {}", theme_label());
+            } else if t.label.starts_with("Gemx Color") {
+                label = format!("Gemx Color: {}", state.gemx_beam_color);
+            } else if t.label.starts_with("Zen Color") {
+                label = format!("Zen Color: {}", state.zen_beam_color);
+            } else if t.label.starts_with("Triage Color") {
+                label = format!("Triage Color: {}", state.triage_beam_color);
+            } else if t.label.starts_with("Settings Color") {
+                label = format!("Settings Color: {}", state.settings_beam_color);
+            } else if t.label.starts_with("BeamX Theme") {
+                label = format!("BeamX Theme: {}", state.beamx_panel_theme);
+            }
+
             let check = if enabled { "[x]" } else { "[ ]" };
             let prefix = if selected { "> " } else { "  " };
             let style = if selected {
@@ -114,7 +207,7 @@ pub fn render_settings<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppStat
             };
             Line::from(vec![
                 Span::styled(prefix.to_string(), style),
-                Span::styled(format!("{} {}", check, t.label), style),
+                Span::styled(format!("{} {}", check, label), style),
             ])
         })
         .collect();
@@ -127,7 +220,8 @@ pub fn render_settings<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppStat
         .saturating_add(4);
 
     let width = content_width.min(area.width);
-    let height = lines.len() as u16 + 2;
+    let mut height = lines.len() as u16 + 2;
+    height = height.min(area.height.saturating_sub(1));
 
     let x = area.x + (area.width.saturating_sub(width)) / 2;
     let y = area.y + (area.height.saturating_sub(height)) / 2;

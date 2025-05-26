@@ -1,0 +1,7 @@
+- ui/animation.rs
+- ui/components/dock.rs
+- spotlight/commands.rs
+- gemx/render.rs
+- zen/render.rs
+- state/view.rs
+- config/theme.rs

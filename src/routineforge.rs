@@ -5,7 +5,7 @@ use ratatui::{
     widgets::{Block, Borders, Paragraph},
     text::Line,
 };
-use crate::beamx::{render_full_border, style_for_mode};
+use crate::beamx::render_full_border;
 use crate::ui::beamx::{BeamX, BeamXStyle, BeamXMode, BeamXAnimationMode};
 use crate::state::AppState;
 use std::io::Stdout;
@@ -15,7 +15,7 @@ type PluginFrame<'a> = Frame<'a, CrosstermBackend<Stdout>>;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 pub fn render_triage_panel(f: &mut PluginFrame<'_>, area: Rect, state: &mut AppState) {
-    let style = style_for_mode("triage");
+    let style = state.beam_style_for_mode("triage");
     let tasks = vec![
         Line::from("[ ] Design new node engine"),
         Line::from("[x] Fix dashboard overflow"),
@@ -33,11 +33,16 @@ pub fn render_triage_panel(f: &mut PluginFrame<'_>, area: Rect, state: &mut AppS
         .duration_since(UNIX_EPOCH)
         .unwrap_or_default()
         .as_millis() / 300) as u64;
+    let mut bx_style = BeamXStyle::from(BeamXMode::Triage);
+    let (b, s, p) = state.beamx_panel_theme.palette();
+    bx_style.border_color = b;
+    bx_style.status_color = s;
+    bx_style.prism_color = p;
     let beamx = BeamX {
         tick,
-        enabled: true,
+        enabled: state.beamx_panel_visible,
         mode: BeamXMode::Triage,
-        style: BeamXStyle::from(BeamXMode::Triage),
+        style: bx_style,
         animation: BeamXAnimationMode::PulseEntryRadiate,
     };
     beamx.render(f, area);
