@@ -103,7 +103,7 @@ pub fn draw<B: Backend>(terminal: &mut Terminal<B>, state: &mut AppState, _last_
         } else {
             format!(
                 "Mode: {} | Triage: {} | Spotlight: {} | Help: {}",
-                state.mode,
+                crate::render::module_icon::module_label(&state.mode),
                 state.show_triage,
                 state.show_spotlight,
                 state.show_keymap,
