@@ -21,6 +21,7 @@ pub mod dashboard;
 pub mod zen;
 pub mod render;
 pub mod beamx;
+pub mod canvas;
 pub mod beam_color;
 pub mod ui;
 pub mod gemx;

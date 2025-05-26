@@ -23,3 +23,5 @@ pub fn load_locked_registry() -> Result<PluginRegistry, Box<dyn std::error::Erro
     }
     Ok(registry)
 }
+
+pub mod theme;
