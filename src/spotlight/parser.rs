@@ -13,6 +13,7 @@ pub fn fuzzy_score(candidate: &str, query: &str) -> Option<usize> {
 }
 
 pub fn rank<'a>(query: &str, items: &'a [&'a str]) -> Vec<&'a str> {
+    let query = query.trim_start_matches('/');
     let mut scored: Vec<(usize, &str)> = items
         .iter()
         .filter_map(|c| fuzzy_score(c, query).map(|s| (s, *c)))

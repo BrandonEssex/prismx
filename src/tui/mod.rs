@@ -268,10 +268,9 @@ pub fn launch_ui() -> std::io::Result<()> {
                     continue;
                 }
 
-                // Alt+Shift+S toggles Spotlight
-                if code == KeyCode::Char('S')
-                    && modifiers.contains(KeyModifiers::ALT)
-                    && modifiers.contains(KeyModifiers::SHIFT)
+                // Alt+Space or Alt+/ toggles Spotlight
+                if (code == KeyCode::Char(' ') || code == KeyCode::Char('/'))
+                    && modifiers == KeyModifiers::ALT
                 {
                     state.show_spotlight = !state.show_spotlight;
                     state.spotlight_history_index = None;
