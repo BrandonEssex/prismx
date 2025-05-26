@@ -1,10 +1,11 @@
 use ratatui::{backend::Backend, layout::Rect, style::Style, widgets::{Block, Borders, Paragraph}, Frame};
-use crate::beamx::{render_full_border, style_for_mode};
+use crate::beamx::render_full_border;
+use crate::state::AppState;
 use crate::ui::beamx::{BeamX, BeamXStyle, BeamXMode, BeamXAnimationMode};
 use std::time::{SystemTime, UNIX_EPOCH};
 
-pub fn render_triage<B: Backend>(f: &mut Frame<B>, area: Rect) {
-    let style = style_for_mode("triage");
+pub fn render_triage<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
+    let style = state.beam_style_for_mode("triage");
     let block = Block::default().title("Triage Panel").borders(Borders::NONE)
         .style(Style::default().fg(ratatui::style::Color::Red));
 
@@ -22,11 +23,15 @@ pub fn render_triage<B: Backend>(f: &mut Frame<B>, area: Rect) {
         .duration_since(UNIX_EPOCH)
         .unwrap_or_default()
         .as_millis() / 300) as u64;
+    let mut bx_style = BeamXStyle::from(BeamXMode::Triage);
+    bx_style.border_color = style.border_color;
+    bx_style.status_color = style.status_color;
+    bx_style.prism_color = style.prism_color;
     let beamx = BeamX {
         tick,
         enabled: true,
         mode: BeamXMode::Triage,
-        style: BeamXStyle::from(BeamXMode::Triage),
+        style: bx_style,
         animation: BeamXAnimationMode::PulseEntryRadiate,
     };
     beamx.render(f, area);

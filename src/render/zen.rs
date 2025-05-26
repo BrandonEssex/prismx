@@ -1,13 +1,13 @@
 use ratatui::{prelude::*, widgets::{Block, Borders, Paragraph}};
 use crate::state::{AppState, ZenSyntax, ZenTheme, ZenJournalView};
-use crate::beamx::{render_full_border, style_for_mode};
+use crate::beamx::render_full_border;
 use crate::ui::beamx::{BeamX, BeamXStyle, BeamXMode, BeamXAnimationMode};
 
 use std::time::{SystemTime, UNIX_EPOCH};
 
 pub fn render_zen_journal<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
     use ratatui::text::{Line, Span};
-    let mut style = style_for_mode(&state.mode);
+    let mut style = state.beam_style_for_mode(&state.mode);
     if let ZenTheme::DarkGray = state.zen_theme {
         style.border_color = Color::DarkGray;
     }
@@ -56,7 +56,7 @@ fn render_compose<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState, ti
     let input_rect = Rect::new(area.x + padding, area.bottom().saturating_sub(2), usable_width, 1);
     let widget = Paragraph::new(input).block(Block::default().borders(Borders::NONE));
     f.render_widget(widget, input_rect);
-    render_full_border(f, area, &style_for_mode(&state.mode), true, false);
+    render_full_border(f, area, &state.beam_style_for_mode(&state.mode), true, false);
 }
 
 fn render_review<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
@@ -71,7 +71,7 @@ fn render_review<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
         y = y.saturating_add(3);
         if y > area.bottom() { break; }
     }
-    render_full_border(f, area, &style_for_mode(&state.mode), true, false);
+    render_full_border(f, area, &state.beam_style_for_mode(&state.mode), true, false);
 }
 
 fn parse_markdown_line(input: &str) -> Line {
