@@ -52,7 +52,7 @@ pub fn render_spotlight<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut Ap
         .borders(Borders::ALL)
         .style(Style::default().fg(border_color).bg(Color::Black));
 
-    let spot_style = theme::get_style("spotlight");
+    let spot_style = theme::get_style("spotlight").fg(Color::White);
     let mut lines = vec![
         Line::styled(
             format!("> {}", input),

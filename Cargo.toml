@@ -17,6 +17,7 @@ toml = "0.7"
 # TUI and terminal control
 crossterm = "0.27"
 ratatui = "0.23"
+unicode-width = "0.1"
 
 # Utilities
 chrono = "0.4"
@@ -25,10 +26,10 @@ tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["fmt", "env-filter"] }
 tracing-appender = "0.2"
 
-[target.'cfg(target_arch = "wasm32")'.dependencies]
-wasm-bindgen = "0.2"
-console_error_panic_hook = "0.1"
-web-sys = { version = "0.3", features = ["console"] }
+#[target.'cfg(target_arch = "wasm32")'.dependencies]
+#wasm-bindgen = "0.2"
+#console_error_panic_hook = "0.1"
+#web-sys = { version = "0.3", features = ["console"] }
 
 # [[bin]]
 # name = "prismx_wasm"
