@@ -435,12 +435,13 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppStat
             .as_millis() / 300) as u64
     };
     let mut bx_style = BeamXStyle::from(BeamXMode::Default);
-    bx_style.border_color = style.border_color;
-    bx_style.status_color = style.status_color;
-    bx_style.prism_color = style.prism_color;
+    let (b, s, p) = state.beamx_panel_theme.palette();
+    bx_style.border_color = b;
+    bx_style.status_color = s;
+    bx_style.prism_color = p;
     let beamx = BeamX {
         tick,
-        enabled: true,
+        enabled: state.beamx_panel_visible,
         mode: BeamXMode::Default,
         style: bx_style,
         animation: BeamXAnimationMode::PulseEntryRadiate,

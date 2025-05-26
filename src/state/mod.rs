@@ -144,7 +144,20 @@ pub struct AppState {
     pub zen_beam_color: crate::beam_color::BeamColor,
     pub triage_beam_color: crate::beam_color::BeamColor,
     pub settings_beam_color: crate::beam_color::BeamColor,
+    pub beamx_panel_theme: crate::beam_color::BeamColor,
+    pub beamx_panel_visible: bool,
+}
 
+pub fn default_beamx_panel_visible() -> bool {
+    #[cfg(target_os = "macos")]
+    {
+        if let Ok(term) = std::env::var("TERM_PROGRAM") {
+            if term.to_lowercase().contains("iterm") {
+                return true;
+            }
+        }
+    }
+    false
 }
 
 impl Default for AppState {
@@ -230,6 +243,8 @@ impl Default for AppState {
             zen_beam_color: crate::beam_color::BeamColor::Prism,
             triage_beam_color: crate::beam_color::BeamColor::Prism,
             settings_beam_color: crate::beam_color::BeamColor::Prism,
+            beamx_panel_theme: crate::beam_color::BeamColor::Prism,
+            beamx_panel_visible: default_beamx_panel_visible(),
 
         };
 
@@ -244,6 +259,8 @@ impl Default for AppState {
         state.zen_beam_color = config.zen_beam_color;
         state.triage_beam_color = config.triage_beam_color;
         state.settings_beam_color = config.settings_beam_color;
+        state.beamx_panel_theme = config.beamx_panel_theme;
+        state.beamx_panel_visible = config.beamx_panel_visible;
 
         for node in state.nodes.values_mut() {
             if node.label.starts_with("[F]") {
@@ -358,6 +375,17 @@ impl AppState {
             "settings" => self.settings_beam_color = next(self.settings_beam_color),
             _ => {}
         }
+    }
+
+    pub fn cycle_beamx_panel_theme(&mut self) {
+        use crate::beam_color::BeamColor::*;
+        self.beamx_panel_theme = match self.beamx_panel_theme {
+            Prism => Infrared,
+            Infrared => Aqua,
+            Aqua => Emerald,
+            Emerald => Ice,
+            Ice => Prism,
+        };
     }
 
     pub fn beam_style_for_mode(&self, mode: &str) -> crate::beamx::BeamStyle {
