@@ -318,6 +318,9 @@ pub fn launch_ui() -> std::io::Result<()> {
                     } else {
                         state.start_link();
                     }
+                } else if match_hotkey("toggle_link_mode", code, modifiers, &state) {
+                    state.link_mode = !state.link_mode;
+                    crate::log_debug!(state, "link_mode toggled: {}", state.link_mode);
                 } else if match_hotkey("save", code, modifiers, &state) {
                     state.export_zen_to_file();
                 } else if match_hotkey("mode_zen", code, modifiers, &state) {

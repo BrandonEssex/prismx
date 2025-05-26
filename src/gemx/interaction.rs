@@ -115,6 +115,11 @@ pub fn start_drag(state: &mut AppState, id: NodeID, x: u16, y: u16) {
         crate::log_debug!(state, "drag attempt blocked: auto-arrange active");
         return;
     }
+
+    if state.nodes.get(&id).and_then(|n| n.parent).is_some() {
+        tracing::debug!("ignored drag on child node {}", id);
+        return;
+    }
     state.dragging = Some(id);
     let zoom = state.zoom_scale as f32;
     let (bsx, bsy) = spacing_for_zoom(state.zoom_scale);
@@ -145,7 +150,12 @@ pub fn drag_update(state: &mut AppState, x: u16, y: u16) {
 pub fn end_drag(state: &mut AppState) {
     state.dragging = None;
     state.last_mouse = None;
-    crate::layout::roles::recalculate_roles(state);
+    if state.link_mode {
+        crate::layout::roles::recalculate_roles(state);
+        state.link_mode = false;
+    } else {
+        crate::log_debug!(state, "skipping reparent after drag (link_mode off)");
+    }
 }
 
 /// Drag a node and its children recursively.

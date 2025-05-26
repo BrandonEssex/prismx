@@ -104,6 +104,7 @@ pub struct AppState {
     pub snap_to_grid: bool,
     pub drawing_root: Option<NodeID>,
     pub dragging: Option<NodeID>,
+    pub link_mode: bool,
     pub last_mouse: Option<(i16, i16)>,
     pub fallback_this_frame: bool,
     pub fallback_promoted_this_session: HashSet<NodeID>,
@@ -186,6 +187,7 @@ impl Default for AppState {
             snap_to_grid: false,
             drawing_root: None,
             dragging: None,
+            link_mode: false,
             last_mouse: None,
             fallback_this_frame: false,
             fallback_promoted_this_session: HashSet::new(),
@@ -983,9 +985,16 @@ impl AppState {
 
     pub fn start_drag(&mut self) {
         self.selected_drag_source = self.selected;
+        self.link_mode = true;
     }
 
     pub fn complete_drag(&mut self, target_id: NodeID) {
+        if !self.link_mode {
+            tracing::debug!("drag complete attempted without link_mode");
+            self.selected_drag_source = None;
+            return;
+        }
+        self.link_mode = false;
         if let Some(source_id) = self.selected_drag_source.take() {
             if source_id == target_id {
                 return; // prevent self-parenting
