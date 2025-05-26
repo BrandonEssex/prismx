@@ -3,6 +3,7 @@ use ratatui::style::Color;
 use std::fs;
 use ratatui::style::{Color, Style};
 
+
 #[derive(Debug, Deserialize, Clone)]
 pub struct ThemeConfig {
     pub dark_mode: bool,
@@ -42,6 +43,14 @@ impl ThemeConfig {
         self.zen_breathe
     }
 
+    /// Accent color used for focused selections.
+    pub fn focus_outline(&self) -> Color {
+        if self.dark_mode {
+            Color::LightCyan
+        } else {
+            Color::Blue
+        }
+    }
     pub fn dock_pulse(&self) -> bool {
         self.dock_pulse
 
