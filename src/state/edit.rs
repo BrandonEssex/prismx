@@ -30,7 +30,8 @@ impl AppState {
         if self.auto_arrange {
             if let Some(parent) = self.nodes.get(&parent_id) {
                 child.x = parent.x;
-                child.y = parent.y + 1;
+                // more generous spacing for readability
+                child.y = parent.y + CHILD_SPACING_Y;
             }
         } else {
             let base_x = 6 + ((self.nodes.len() as i16) % 10) * SIBLING_SPACING_X;
@@ -54,8 +55,8 @@ impl AppState {
         self.selected = Some(new_id);
         if !self.auto_arrange {
             self.ensure_grid_positions();
+            crate::layout::roles::recalculate_roles(self);
         }
-        crate::layout::roles::recalculate_roles(self);
         crate::layout::center_on_node(self, new_id);
         if self.nodes.get(&new_id).and_then(|n| n.parent).is_none() {
             if let Some(n) = self.nodes.get_mut(&new_id) {
@@ -79,14 +80,12 @@ impl AppState {
         let new_id = self.nodes.keys().max().copied().unwrap_or(100) + 1;
         let mut sibling = Node::new(new_id, "New Sibling", parent_id);
 
-        if !self.auto_arrange {
-            if let Some(selected) = self.nodes.get(&selected_id) {
-                sibling.x = selected.x + SIBLING_SPACING_X;
-                sibling.y = selected.y;
-            } else {
-                sibling.x = (self.nodes.len() as i16 % 5) * SIBLING_SPACING_X;
-                sibling.y = GEMX_HEADER_HEIGHT + 2;
-            }
+        if let Some(selected) = self.nodes.get(&selected_id) {
+            sibling.x = selected.x + SIBLING_SPACING_X;
+            sibling.y = selected.y;
+        } else if !self.auto_arrange {
+            sibling.x = (self.nodes.len() as i16 % 5) * SIBLING_SPACING_X;
+            sibling.y = GEMX_HEADER_HEIGHT + 2;
 
             if sibling.x == 0 {
                 sibling.x = ((self.nodes.len() as i16) % 5 + 1) * SIBLING_SPACING_X;
@@ -107,9 +106,8 @@ impl AppState {
 
         if !self.auto_arrange {
             self.ensure_grid_positions();
+            crate::layout::roles::recalculate_roles(self);
         }
-
-        crate::layout::roles::recalculate_roles(self);
         self.ensure_valid_roots();
         crate::layout::center_on_node(self, new_id);
         self.audit_node_graph();

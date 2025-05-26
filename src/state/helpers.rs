@@ -138,6 +138,9 @@ impl AppState {
                     );
                 }
             }
+            if self.root_nodes.is_empty() {
+                crate::log_warn!("fallback root promotion failed");
+            }
         }
         self.root_nodes.sort_unstable();
         self.root_nodes.dedup();

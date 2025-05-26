@@ -20,6 +20,7 @@ impl Default for TriageViewMode {
     fn default() -> Self { Self::Feed }
 }
 
+/// Visibility state for optional overlays such as debugging HUDs.
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub enum OverlayState {
     Hidden,
