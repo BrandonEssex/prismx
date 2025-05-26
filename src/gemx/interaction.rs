@@ -27,13 +27,35 @@ pub fn spawn_free_node(state: &mut AppState) {
     let mut node = Node::new(new_id, "Free Node", None);
 
     if !state.auto_arrange {
-        let index = state.root_nodes.len();
-        let (tw, _) = terminal::size().unwrap_or((80, 20));
-        let margin = SIBLING_SPACING_X * 2;
-        let row_pad = CHILD_SPACING_Y * 2;
-        let cols = (tw as i16 / margin.max(1)).max(1) as usize;
-        node.x = ((index % cols) as i16) * margin + 1;
-        node.y = ((index / cols) as i16) * row_pad + GEMX_HEADER_HEIGHT + 1;
+        use std::collections::HashSet;
+
+        let (tw, th) = terminal::size().unwrap_or((80, 20));
+        let used: HashSet<(i16, i16)> =
+            state.nodes.values().map(|n| (n.x, n.y)).collect();
+
+        let base_x = 6;
+        let base_y = GEMX_HEADER_HEIGHT + 1;
+        let step_x = SIBLING_SPACING_X * 2;
+        let step_y = CHILD_SPACING_Y * 2;
+
+        let mut x = base_x;
+        let mut y = base_y;
+        let max_y = th as i16 - 2;
+        let max_x = tw as i16 - 4;
+
+        while used.contains(&(x, y)) {
+            y += step_y;
+            if y > max_y {
+                y = base_y;
+                x += step_x;
+                if x > max_x {
+                    x = base_x;
+                }
+            }
+        }
+
+        node.x = x;
+        node.y = y;
     }
 
     crate::log_debug!(
@@ -45,6 +67,9 @@ pub fn spawn_free_node(state: &mut AppState) {
         node.x,
         node.y
     );
+    if state.debug_input_mode {
+        eprintln!("📦 Free node {} at x={}, y={}", new_id, node.x, node.y);
+    }
 
     state.nodes.insert(new_id, node);
     state.root_nodes.push(new_id);
