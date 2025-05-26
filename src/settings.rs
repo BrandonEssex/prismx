@@ -14,6 +14,7 @@ pub struct UserSettings {
     pub zen_icon_glyph: Option<String>,
     pub beamx_panel_theme: BeamColor,
     pub beamx_panel_visible: bool,
+    pub mindmap_lanes: bool,
 }
 
 use ratatui::{
@@ -44,6 +45,7 @@ impl Default for UserSettings {
             zen_icon_glyph: None,
             beamx_panel_theme: BeamColor::Prism,
             beamx_panel_visible: crate::state::default_beamx_panel_visible(),
+            mindmap_lanes: true,
         }
     }
 }
@@ -71,6 +73,7 @@ pub fn save_user_settings(state: &AppState) {
         zen_icon_glyph: state.zen_icon_glyph.clone(),
         beamx_panel_theme: state.beamx_panel_theme,
         beamx_panel_visible: state.beamx_panel_visible,
+        mindmap_lanes: state.mindmap_lanes,
     };
 
     if let Ok(serialized) = toml::to_string(&config) {
@@ -134,6 +137,12 @@ fn toggle_beamx_panel_visibility(s: &mut AppState) {
     save_user_settings(s);
 }
 
+fn is_mindmap_lanes(s: &AppState) -> bool { s.mindmap_lanes }
+fn toggle_mindmap_lanes(s: &mut AppState) {
+    s.mindmap_lanes = !s.mindmap_lanes;
+    save_user_settings(s);
+}
+
 fn toggle_beamx_theme(s: &mut AppState) {
     s.cycle_beamx_panel_theme();
     save_user_settings(s);
@@ -166,6 +175,11 @@ pub const SETTING_TOGGLES: &[SettingToggle] = &[
         toggle: toggle_beamx_panel_visibility,
     },
     SettingToggle {
+        label: "Mindmap Lanes",
+        is_enabled: is_mindmap_lanes,
+        toggle: toggle_mindmap_lanes,
+    },
+    SettingToggle {
         label: "BeamX Theme",
         is_enabled: |_| true,
         toggle: toggle_beamx_theme,
@@ -196,6 +210,8 @@ pub fn render_settings<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppStat
                 label = format!("Settings Color: {}", state.settings_beam_color);
             } else if t.label.starts_with("BeamX Theme") {
                 label = format!("BeamX Theme: {}", state.beamx_panel_theme);
+            } else if t.label.starts_with("Mindmap Lanes") {
+                label = "Mindmap Lanes".into();
             }
 
             let check = if enabled { "[x]" } else { "[ ]" };

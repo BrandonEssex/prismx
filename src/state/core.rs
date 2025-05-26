@@ -116,6 +116,7 @@ pub struct AppState {
     pub debug_border: bool,
     pub debug_overlay: bool,
     pub debug_overlay_sticky: bool,
+    pub mindmap_lanes: bool,
     pub simulate_input_queue: VecDeque<SimInput>,
     pub status_message: String,
     pub status_message_last_updated: Option<std::time::Instant>,
@@ -231,6 +232,7 @@ impl Default for AppState {
             debug_border: std::env::var("PRISMX_DEBUG_BORDER").is_ok(),
             debug_overlay: false,
             debug_overlay_sticky: false,
+            mindmap_lanes: true,
             simulate_input_queue: VecDeque::new(),
             status_message: String::new(),
             status_message_last_updated: None,
@@ -289,6 +291,7 @@ impl Default for AppState {
         state.zen_icon_glyph = config.zen_icon_glyph.clone();
         state.beamx_panel_theme = config.beamx_panel_theme;
         state.beamx_panel_visible = config.beamx_panel_visible;
+        state.mindmap_lanes = config.mindmap_lanes;
 
         for node in state.nodes.values_mut() {
             if node.label.starts_with("[F]") {
