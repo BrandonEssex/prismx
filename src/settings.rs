@@ -28,6 +28,7 @@ use ratatui::{
 use std::fs;
 
 use crate::state::AppState;
+use crate::config::theme::ThemeConfig;
 use std::sync::atomic::{AtomicU8, Ordering};
 
 impl Default for UserSettings {
@@ -89,6 +90,7 @@ const THEME_PRESETS: [BeamColor; 5] = [
 ];
 
 pub struct SettingToggle {
+    pub icon: &'static str,
     pub label: &'static str,
     pub is_enabled: fn(&AppState) -> bool,
     pub toggle: fn(&mut AppState),
@@ -141,31 +143,37 @@ fn toggle_beamx_theme(s: &mut AppState) {
 
 pub const SETTING_TOGGLES: &[SettingToggle] = &[
     SettingToggle {
+        icon: "🐞",
         label: "Debug Input Mode",
         is_enabled: is_debug_mode,
         toggle: toggle_debug_mode,
     },
     SettingToggle {
+        icon: "🤖",
         label: "Auto-Arrange",
         is_enabled: is_auto_arrange,
         toggle: toggle_auto_arrange,
     },
     SettingToggle {
+        icon: "🔒",
         label: "Lock Zoom Scale",
         is_enabled: is_zoom_locked,
         toggle: toggle_zoom_lock,
     },
     SettingToggle {
+        icon: "🎨",
         label: "Theme Preset",
         is_enabled: |_| true,
         toggle: toggle_theme,
     },
     SettingToggle {
+        icon: "💠",
         label: "BeamX Panel",
         is_enabled: is_beamx_panel_visible,
         toggle: toggle_beamx_panel_visibility,
     },
     SettingToggle {
+        icon: "✨",
         label: "BeamX Theme",
         is_enabled: |_| true,
         toggle: toggle_beamx_theme,
@@ -176,13 +184,12 @@ pub const fn settings_len() -> usize {
     SETTING_TOGGLES.len()
 }
 pub fn render_settings<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
-    let lines: Vec<Line> = SETTING_TOGGLES
-        .iter()
-        .enumerate()
-        .map(|(i, t)| {
-            let enabled = (t.is_enabled)(state);
-            let selected = i == state.settings_focus_index % SETTING_TOGGLES.len();
-            let mut label = t.label.to_string();
+    let theme = ThemeConfig::load();
+    let mut lines: Vec<Line> = Vec::new();
+    for (i, t) in SETTING_TOGGLES.iter().enumerate() {
+        let enabled = (t.is_enabled)(state);
+        let selected = i == state.settings_focus_index % SETTING_TOGGLES.len();
+        let mut label = t.label.to_string();
 
             if t.label.starts_with("Theme Preset") {
                 label = format!("Theme Preset: {}", theme_label());
@@ -198,19 +205,26 @@ pub fn render_settings<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppStat
                 label = format!("BeamX Theme: {}", state.beamx_panel_theme);
             }
 
-            let check = if enabled { "[x]" } else { "[ ]" };
-            let prefix = if selected { "> " } else { "  " };
-            let style = if selected {
-                Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD)
-            } else {
-                Style::default().fg(Color::Gray)
-            };
-            Line::from(vec![
-                Span::styled(prefix.to_string(), style),
-                Span::styled(format!("{} {}", check, label), style),
-            ])
-        })
-        .collect();
+        let check = if enabled { "[x]" } else { "[ ]" };
+        let prefix = if selected { "> " } else { "  " };
+        let mut style = if selected {
+            Style::default()
+                .fg(theme.focus_outline())
+                .add_modifier(Modifier::BOLD)
+        } else {
+            Style::default().fg(Color::Gray)
+        };
+        if selected {
+            style = style.bg(Color::Black);
+        }
+        lines.push(Line::from(vec![
+            Span::styled(prefix.to_string(), style),
+            Span::styled(format!("{} {} {}", check, t.icon, label), style),
+        ]));
+        if i == 2 || i == 3 {
+            lines.push(Line::default());
+        }
+    }
 
     let content_width = lines
         .iter()

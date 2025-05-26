@@ -1,5 +1,6 @@
 use serde::Deserialize;
 use std::fs;
+use ratatui::style::Color;
 
 #[derive(Debug, Deserialize, Clone)]
 pub struct ThemeConfig {
@@ -34,5 +35,14 @@ impl ThemeConfig {
 
     pub fn zen_breathe(&self) -> bool {
         self.zen_breathe
+    }
+
+    /// Accent color used for focused selections.
+    pub fn focus_outline(&self) -> Color {
+        if self.dark_mode {
+            Color::LightCyan
+        } else {
+            Color::Blue
+        }
     }
 }
