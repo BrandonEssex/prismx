@@ -4,6 +4,7 @@ use ratatui::style::{Color, Style, Modifier};
 use ratatui::text::{Line, Span};
 use crate::state::ZenJournalEntry;
 use crate::zen::journal::extract_tags;
+use chrono::Datelike;
 
 pub fn render_feed<B: Backend>(
     f: &mut Frame<B>,
@@ -11,9 +12,10 @@ pub fn render_feed<B: Backend>(
     entries: &[ZenJournalEntry],
     tag_filter: Option<&str>,
     summary: bool,
+    weekly: bool,
 ) {
     let mut blocks: Vec<Vec<Line>> = Vec::new();
-    let mut current_date = String::new();
+    let mut current_label = String::new();
     for entry in entries {
         if let Some(tag) = tag_filter {
             if !extract_tags(&entry.text).iter().any(|t| t.eq_ignore_ascii_case(tag)) {
@@ -22,10 +24,20 @@ pub fn render_feed<B: Backend>(
         }
 
         if summary {
-            let d = entry.timestamp.format("%Y-%m-%d").to_string();
-            if current_date != d {
-                blocks.push(vec![Line::from(Span::styled(d.clone(), Style::default().fg(Color::Magenta)))]);
-                current_date = d;
+            let label = if weekly {
+                format!("Week {}", entry.timestamp.iso_week().week())
+            } else {
+                let today = chrono::Local::now().date_naive();
+                let edate = entry.timestamp.date_naive();
+                if edate == today {
+                    "Today".to_string()
+                } else {
+                    entry.timestamp.format("%A").to_string()
+                }
+            };
+            if current_label != label {
+                blocks.push(vec![Line::from(Span::styled(label.clone(), Style::default().fg(Color::Magenta)))]);
+                current_label = label;
             }
         }
 

@@ -14,6 +14,16 @@ impl Default for ZenViewMode {
 }
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
+pub enum ZenSummaryMode {
+    Daily,
+    Weekly,
+}
+
+impl Default for ZenSummaryMode {
+    fn default() -> Self { Self::Daily }
+}
+
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub enum TriageViewMode {
     Feed,
     Actions,
