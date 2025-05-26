@@ -1,3 +1,3 @@
 auto_arrange = false
-debug_input_mode = true
+debug_input_mode = false
 dock_layout = "vertical"
