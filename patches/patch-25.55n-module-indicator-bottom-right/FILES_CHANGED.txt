@@ -1,0 +1,1 @@
+src/render/module_icon.rs
