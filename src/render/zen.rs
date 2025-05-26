@@ -85,6 +85,9 @@ fn render_compose<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState, ti
 fn render_history<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
     let padding = area.width / 4;
     let usable_width = area.width - padding * 2;
+    use crate::ui::animate::fade_line;
+    use crate::config::theme::ThemeConfig;
+    let breathe = ThemeConfig::load().zen_breathe();
 
     if state.zen_journal_entries.is_empty() {
         let msg = Paragraph::new("No journal entries yet.")
@@ -116,6 +119,12 @@ fn render_history<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
         }
         for l in entry.text.lines() { lines.push(highlight_tags_line(l)); }
         lines.push(Line::from(Span::styled("────────────", Style::default().fg(Color::Gray).add_modifier(Modifier::DIM))));
+        if breathe {
+            let age = (chrono::Local::now() - entry.timestamp).num_milliseconds() as u128;
+            for line in lines.iter_mut() {
+                fade_line(line, age, 150);
+            }
+        }
         blocks.push(lines);
     }
 
@@ -145,6 +154,9 @@ fn render_input<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState, tick
 
 fn render_review<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
     use ratatui::text::{Span, Line};
+    use crate::ui::animate::fade_line;
+    use crate::config::theme::ThemeConfig;
+    let breathe = ThemeConfig::load().zen_breathe();
     let padding = area.width / 4;
     let usable_width = area.width - padding * 2;
     let mut y = area.y + TOP_BAR_HEIGHT;
@@ -159,6 +171,12 @@ fn render_review<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
             lines.push(highlight_tags_line(l));
         }
         lines.push(Line::from(Span::styled("────────────", Style::default().fg(Color::Gray).add_modifier(Modifier::DIM))));
+        if breathe {
+            let age = (chrono::Local::now() - entry.timestamp).num_milliseconds() as u128;
+            for line in lines.iter_mut() {
+                fade_line(line, age, 150);
+            }
+        }
         let rect = Rect::new(area.x + padding, y, usable_width, lines.len() as u16);
         let p = Paragraph::new(lines).block(Block::default().borders(Borders::NONE));
         f.render_widget(p, rect);

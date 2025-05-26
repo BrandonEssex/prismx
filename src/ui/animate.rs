@@ -47,3 +47,37 @@ pub fn cursor_blink(tick: u64) -> &'static str {
 pub fn cursor_fade(tick: u64) -> Style {
     breath_style(Color::White, tick)
 }
+
+/// Scale an RGB color by the provided ratio (0.0 - 1.0).
+pub fn scale_color(color: Color, ratio: f32) -> Color {
+    match color {
+        Color::Rgb(r, g, b) => Color::Rgb((r as f32 * ratio) as u8, (g as f32 * ratio) as u8, (b as f32 * ratio) as u8),
+        Color::White => {
+            let v = (255.0 * ratio) as u8;
+            Color::Rgb(v, v, v)
+        }
+        Color::Gray => {
+            let v = (128.0 * ratio) as u8;
+            Color::Rgb(v, v, v)
+        }
+        Color::DarkGray => {
+            let v = (105.0 * ratio) as u8;
+            Color::Rgb(v, v, v)
+        }
+        Color::Blue => Color::Rgb(0, 0, (255.0 * ratio) as u8),
+        Color::Magenta => Color::Rgb((255.0 * ratio) as u8, 0, (255.0 * ratio) as u8),
+        Color::Red => Color::Rgb((255.0 * ratio) as u8, 0, 0),
+        Color::Green => Color::Rgb(0, (255.0 * ratio) as u8, 0),
+        Color::Yellow => Color::Rgb((255.0 * ratio) as u8, (255.0 * ratio) as u8, 0),
+        _ => color,
+    }
+}
+
+/// Patch a line's style with a fade-in effect based on the entry age.
+pub fn fade_line(line: &mut ratatui::text::Line<'_>, age_ms: u128, duration_ms: u128) {
+    let ratio = (age_ms.min(duration_ms) as f32) / (duration_ms as f32);
+    for span in &mut line.spans {
+        let fg = span.style.fg.unwrap_or(Color::White);
+        span.patch_style(Style::default().fg(scale_color(fg, ratio)));
+    }
+}

@@ -570,6 +570,9 @@ pub fn launch_ui() -> std::io::Result<()> {
                     KeyCode::Enter if state.mode == "zen" && state.zen_journal_view == crate::state::ZenJournalView::Compose => {
                         let text = state.zen_compose_input.trim().to_string();
                         if !text.is_empty() {
+                            if crate::config::theme::ThemeConfig::load().zen_breathe() {
+                                std::thread::sleep(std::time::Duration::from_millis(150));
+                            }
                             let entry = crate::state::ZenJournalEntry { timestamp: chrono::Local::now(), text: text.clone() };
                             state.zen_journal_entries.push(entry.clone());
                             state.append_journal_entry(&entry);
