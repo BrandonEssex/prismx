@@ -29,3 +29,12 @@ pub enum OverlayState {
 impl Default for OverlayState {
     fn default() -> Self { Self::Hidden }
 }
+
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+pub enum PluginViewMode {
+    Registry,
+}
+
+impl Default for PluginViewMode {
+    fn default() -> Self { Self::Registry }
+}

@@ -13,6 +13,7 @@ pub fn render_module_switcher<B: Backend>(f: &mut Frame<B>, area: Rect, index: u
         ("🧘", "Zen"),
         ("🧭", "Triage"),
         ("⚙️", "Settings"),
+        ("🔌", "Plugins"),
     ];
 
     let lines: Vec<Line> = modules
