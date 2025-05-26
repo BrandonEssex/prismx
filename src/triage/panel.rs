@@ -6,6 +6,21 @@ use crate::state::AppState;
 use crate::triage::logic::{TriageSource, TriageEntry};
 use crate::beamx::render_full_border;
 
+fn draw_plain_border<B: Backend>(f: &mut Frame<B>, area: Rect, color: Color) {
+    let style = Style::default().fg(color);
+    let right = area.x + area.width.saturating_sub(1);
+    let bottom = area.y + area.height.saturating_sub(1);
+
+    for x in area.x + 1..right {
+        f.render_widget(Paragraph::new("─").style(style), Rect::new(x, area.y, 1, 1));
+        f.render_widget(Paragraph::new("─").style(style), Rect::new(x, bottom, 1, 1));
+    }
+    for y in area.y + 1..bottom {
+        f.render_widget(Paragraph::new("│").style(style), Rect::new(area.x, y, 1, 1));
+        f.render_widget(Paragraph::new("│").style(style), Rect::new(right, y, 1, 1));
+    }
+}
+
 pub fn render_triage_panel<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
     let style = state.beam_style_for_mode("triage");
 
@@ -45,5 +60,5 @@ pub fn render_triage_panel<B: Backend>(f: &mut Frame<B>, area: Rect, state: &App
         .block(Block::default().title("Triage").borders(Borders::NONE));
 
     f.render_widget(para, area);
-    render_full_border(f, area, &style, true, false);
+    draw_plain_border(f, area, style.border_color);
 }

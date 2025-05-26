@@ -13,6 +13,7 @@ use crate::theme;
 
 pub fn render_spotlight<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppState) {
     let input = &state.spotlight_input;
+    let display_input = if input.is_empty() { "<type command>" } else { input };
     let base_width = area.width.min(60);
     let scale = if state.spotlight_just_opened {
         match state.spotlight_animation_frame {
@@ -24,7 +25,8 @@ pub fn render_spotlight<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut Ap
         1.0
     };
     let width = ((base_width as f32) * scale) as u16;
-    let width = width.max(3).min(base_width);
+    let min_width = display_input.chars().count() as u16 + 3; // "> " + input + padding
+    let width = width.max(min_width).max(3).min(base_width);
     let x_offset = area.x + (area.width.saturating_sub(width)) / 2;
     let y_offset = area.y + area.height / 3;
 
@@ -55,7 +57,7 @@ pub fn render_spotlight<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut Ap
     let spot_style = theme::get_style("spotlight").fg(Color::White);
     let mut lines = vec![
         Line::styled(
-            format!("> {}", input),
+            format!("> {}", display_input),
             spot_style
                 .add_modifier(Modifier::BOLD),
         ),
@@ -99,7 +101,7 @@ pub fn render_spotlight<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut Ap
         if y >= area.y + area.height.saturating_sub(1) {
             break;
         }
-        let mut style = spot_style;
+        let mut style = spot_style.fg(Color::White);
         if Some(i) == state.spotlight_suggestion_index {
             style = style.fg(Color::Black).bg(Color::White);
         }
