@@ -1,13 +1,3 @@
-[package]
-name = "prismx"
-version = "10.1.0"
-edition = "2021"
-authors = ["Brandon Essex"]
-description = "PrismX: Offline-first planning engine with trust, federation, and plugin runtime."
-
-[lib]
-crate-type = ["rlib", "cdylib"]
-
 [dependencies]
 # Serialization and config
 serde = { version = "1.0", features = ["derive"] }
@@ -26,12 +16,13 @@ dirs = "4.0"
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["fmt", "env-filter"] }
 tracing-appender = "0.2"
+libloading = "0.7"
 regex = "1"
 
-#[target.'cfg(target_arch = "wasm32")'.dependencies]
-#wasm-bindgen = "0.2"
-#console_error_panic_hook = "0.1"
-#web-sys = { version = "0.3", features = ["console"] }
+# [target.'cfg(target_arch = "wasm32")'.dependencies]
+# wasm-bindgen = "0.2"
+# console_error_panic_hook = "0.1"
+# web-sys = { version = "0.3", features = ["console"] }
 
 # [[bin]]
 # name = "prismx_wasm"
