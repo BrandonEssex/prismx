@@ -390,6 +390,26 @@ impl AppState {
         self.root_nodes.dedup();
     }
 
+    /// Panic if any node becomes its own ancestor.
+    pub fn audit_ancestry(&self) {
+        for (&id, node) in &self.nodes {
+            let mut current = node.parent;
+            let mut depth = 0;
+            while let Some(pid) = current {
+                if pid == id {
+                    tracing::error!("node {} is its own ancestor", id);
+                    panic!("node {} is its own ancestor", id);
+                }
+                if depth > self.nodes.len() {
+                    tracing::error!("cycle detected at node {}", id);
+                    panic!("cycle detected at node {}", id);
+                }
+                current = self.nodes.get(&pid).and_then(|n| n.parent);
+                depth += 1;
+            }
+        }
+    }
+
     /// Ensure nodes have unique positions when auto-arrange is disabled.
     pub fn ensure_grid_positions(&mut self) {
         if self.auto_arrange {
@@ -489,7 +509,7 @@ impl AppState {
         }
     }
 
-    pub fn add_child(&mut self) {
+    pub fn add_child_node(&mut self) {
         let Some(parent_id) = self.selected else { return };
         if !self.nodes.contains_key(&parent_id) {
             return;
@@ -549,9 +569,10 @@ impl AppState {
             }
         }
         self.ensure_valid_roots();
+        self.audit_ancestry();
     }
 
-    pub fn add_sibling(&mut self) {
+    pub fn add_sibling_node(&mut self) {
         let selected_id = match self.selected {
             Some(id) if self.nodes.contains_key(&id) => id,
             _ => return,
@@ -592,6 +613,19 @@ impl AppState {
         }
         crate::layout::roles::recalculate_roles(self);
         self.ensure_valid_roots();
+        self.audit_ancestry();
+    }
+
+    pub fn add_child(&mut self) {
+        self.add_child_node();
+    }
+
+    pub fn add_sibling(&mut self) {
+        self.add_sibling_node();
+    }
+
+    pub fn handle_enter_key(&mut self) {
+        self.add_sibling_node();
     }
 
     pub fn exit_spotlight(&mut self) {
