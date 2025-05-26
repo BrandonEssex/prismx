@@ -105,3 +105,4 @@ pub fn render_spotlight<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut Ap
             Rect::new(x_offset, y, width, 1),
         );
     }
+}

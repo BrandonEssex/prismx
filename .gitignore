@@ -11,3 +11,6 @@ scripts/*
 tests/*
 incoming/*
 draft*
+prismx.log.*
+journals/
+logs/

@@ -175,6 +175,8 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppStat
 
     if state.auto_arrange {
         let node_ids: Vec<NodeID> = state.nodes.keys().copied().collect();
+        let filled: HashSet<(i16, i16)> = state.nodes.values().map(|n| (n.x, n.y)).collect();
+
         for id in node_ids {
             if let Some(n) = state.nodes.get_mut(&id) {
                 if n.x == 0 && n.y == 0 {
@@ -210,19 +212,15 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppStat
                 }
 
                 crate::log_debug!(state, "📦 Placed Node {} at x={}, y={}", id, n.x, n.y);
+                drawn_at.insert(id, Coords { x: n.x, y: n.y });
+                node_roles.insert(id, LayoutRole::Root);
+                crate::log_debug!(state, "🚨 Promoted Node {} to root (label-safe)", id);
+                break;
             }
-
-            drawn_at.insert(id, Coords { x: n.x, y: n.y });
-            node_roles.insert(id, LayoutRole::Root);
-
-            crate::log_debug!(state, "🚨 Promoted Node {} to root (label-safe)", id);
-            break;
         }
     }
 
     crate::log_debug!(state, "🏁 Auto-arrange complete");
-}
-
     crate::layout::avoid_reserved_zone_map(&mut drawn_at, area.width as i16);
 
     // if state.debug_input_mode {
