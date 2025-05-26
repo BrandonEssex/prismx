@@ -469,7 +469,7 @@ impl AppState {
                 }
             }
         }
-    
+    }
     // Reachability from roots
     let mut reachable = HashSet::new();
     let mut stack: VecDeque<NodeID> = self.root_nodes.iter().copied().collect();
