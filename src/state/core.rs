@@ -135,8 +135,11 @@ pub struct AppState {
     pub zen_current_syntax: ZenSyntax,
     pub zen_theme: ZenTheme,
     pub zen_journal_view: ZenJournalView,
+    pub zen_view_mode: crate::state::ZenViewMode,
     pub zen_compose_input: String,
     pub zen_journal_entries: Vec<ZenJournalEntry>,
+    pub zen_tag_filter: Option<String>,
+    pub triage_entries: Vec<crate::triage::logic::TriageEntry>,
     pub gemx_beam_color: crate::beam_color::BeamColor,
     pub zen_beam_color: crate::beam_color::BeamColor,
     pub triage_beam_color: crate::beam_color::BeamColor,
@@ -145,6 +148,7 @@ pub struct AppState {
     pub zen_icon_glyph: Option<String>,
     pub beamx_panel_theme: crate::beam_color::BeamColor,
     pub beamx_panel_visible: bool,
+    pub triage_view_mode: crate::state::TriageViewMode,
 }
 
 pub fn default_beamx_panel_visible() -> bool {
@@ -238,8 +242,11 @@ impl Default for AppState {
             zen_current_syntax: ZenSyntax::Markdown,
             zen_theme: ZenTheme::DarkGray,
             zen_journal_view: ZenJournalView::Compose,
+            zen_view_mode: crate::state::ZenViewMode::default(),
             zen_compose_input: String::new(),
             zen_journal_entries: Vec::new(),
+            zen_tag_filter: None,
+            triage_entries: Vec::new(),
             gemx_beam_color: crate::beam_color::BeamColor::Prism,
             zen_beam_color: crate::beam_color::BeamColor::Prism,
             triage_beam_color: crate::beam_color::BeamColor::Prism,
@@ -248,6 +255,7 @@ impl Default for AppState {
             zen_icon_glyph: None,
             beamx_panel_theme: crate::beam_color::BeamColor::Prism,
             beamx_panel_visible: default_beamx_panel_visible(),
+            triage_view_mode: crate::state::TriageViewMode::default(),
         };
 
         let config = crate::settings::load_user_settings();
@@ -275,6 +283,10 @@ impl Default for AppState {
         state.update_zen_word_count();
         state.load_today_journal();
         state.audit_node_graph();
+
+        if let Some(layout) = crate::config::load_config().layout {
+            crate::state::serialize::apply(&mut state, layout);
+        }
 
         state
     }

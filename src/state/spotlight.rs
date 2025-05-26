@@ -1,4 +1,5 @@
 use super::core::{AppState, DockLayout, SimInput};
+use crate::state::ZenViewMode;
 
 impl AppState {
     pub fn exit_spotlight(&mut self) {
@@ -88,6 +89,17 @@ impl AppState {
                 "toolbar" => {
                     self.zen_toolbar_open = !self.zen_toolbar_open;
                     self.zen_toolbar_index = 0;
+                }
+                cmd if cmd.starts_with("zen tag") => {
+                    let tag = cmd.trim_start_matches("zen tag").trim();
+                    if tag.is_empty() {
+                        self.set_tag_filter(None);
+                    } else {
+                        self.set_tag_filter(Some(tag));
+                    }
+                }
+                "zen summary" => {
+                    self.toggle_summary_view();
                 }
                 _ if cmd.starts_with("open ") => {
                     let path = cmd.trim_start_matches("open ").trim();

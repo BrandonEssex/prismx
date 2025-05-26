@@ -1,23 +1,13 @@
-use ratatui::{backend::Backend, layout::Rect, style::Style, widgets::{Block, Borders, Paragraph}, Frame};
+use ratatui::{backend::Backend, layout::Rect, Frame};
 use crate::beamx::render_full_border;
 use crate::state::AppState;
 use crate::ui::beamx::{BeamX, BeamXStyle, BeamXMode, BeamXAnimationMode};
+use crate::triage::render_triage_panel as render_panel;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 pub fn render_triage<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
     let style = state.beam_style_for_mode("triage");
-    let block = Block::default().title("Triage Panel").borders(Borders::NONE)
-        .style(Style::default().fg(ratatui::style::Color::Red));
-
-    let content = Paragraph::new(
-        "• GemX rendering: OK\n\
-         • Node editing: OK\n\
-         • Zen scroll: OK\n\
-         • Triage display: Working"
-    );
-
-    f.render_widget(block, area);
-    f.render_widget(content, Rect::new(area.x + 2, area.y + 1, area.width - 4, area.height - 2));
+    render_panel(f, area, state);
     render_full_border(f, area, &style, true, false);
     let tick = (SystemTime::now()
         .duration_since(UNIX_EPOCH)
@@ -30,7 +20,7 @@ pub fn render_triage<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState)
     bx_style.prism_color = p;
     let beamx = BeamX {
         tick,
-        enabled: state.beamx_panel_visible,
+        enabled: false,
         mode: BeamXMode::Triage,
         style: bx_style,
         animation: BeamXAnimationMode::PulseEntryRadiate,

@@ -8,6 +8,7 @@ use crate::layout::{
 };
 use crate::node::{NodeID, NodeMap};
 use crate::state::AppState;
+use crate::canvas::prism::render_prism;
 use crate::beamx::render_full_border;
 use crate::ui::beamx::{BeamX, BeamXStyle, BeamXMode, BeamXAnimationMode};
 use std::time::{SystemTime, UNIX_EPOCH};
@@ -34,6 +35,7 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppStat
         .title(if state.auto_arrange { "Gemx [Auto-Arrange]" } else { "Gemx" })
         .borders(Borders::NONE);
     f.render_widget(block, area);
+    render_prism(f, area);
 
     if state.debug_input_mode && std::env::var("PRISMX_TEST").is_err() {
         let dot = Paragraph::new("·").style(Style::default().fg(Color::DarkGray));

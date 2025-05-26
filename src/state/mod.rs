@@ -9,11 +9,16 @@ mod spotlight;
 mod history;
 mod drag;
 mod helpers;
+
 pub mod init;
+mod triage;
+mod view;
 
 pub use core::*;
 
 pub use helpers::register_plugin_favorite;
+pub use triage::*;
+pub use view::*;
 
 impl AppState {
     /// Handle an Enter keypress in mindmap mode by creating a sibling node.
