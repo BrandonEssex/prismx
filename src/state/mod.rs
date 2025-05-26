@@ -540,6 +540,7 @@ impl AppState {
             self.ensure_grid_positions();
         }
         crate::layout::roles::recalculate_roles(self);
+        crate::layout::center_on_node(self, new_id);
         if self.nodes.get(&new_id).and_then(|n| n.parent).is_none() {
             if let Some(n) = self.nodes.get_mut(&new_id) {
                 n.parent = Some(parent_id);
@@ -592,6 +593,7 @@ impl AppState {
         }
         crate::layout::roles::recalculate_roles(self);
         self.ensure_valid_roots();
+        crate::layout::center_on_node(self, new_id);
     }
 
     pub fn exit_spotlight(&mut self) {
@@ -735,6 +737,7 @@ impl AppState {
         self.root_nodes.push(new_id);
         self.set_selected(Some(new_id));
         crate::layout::roles::recalculate_roles(self);
+        crate::layout::center_on_node(self, new_id);
     }
 
     pub fn drill_down(&mut self) {

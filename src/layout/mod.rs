@@ -371,3 +371,80 @@ pub fn avoid_reserved_zone_map(map: &mut HashMap<NodeID, Coords>, term_width: i1
         avoid_reserved_zone(pos, term_width);
     }
 }
+
+/// Center the viewport on the given node id.
+///
+/// Works for both auto-arrange and manual layout modes. When zoom is locked by
+/// the user, scrolling only occurs if the node would otherwise be off-screen.
+pub fn center_on_node(state: &mut crate::state::AppState, node_id: NodeID) {
+    use std::collections::HashMap;
+
+    if !state.nodes.contains_key(&node_id) {
+        return;
+    }
+
+    let (tw, th) = if std::env::var("PRISMX_TEST").is_ok() {
+        (80, 20)
+    } else {
+        crossterm::terminal::size().unwrap_or((80, 20))
+    };
+    let zoom = state.zoom_scale;
+    let (bsx, bsy) = spacing_for_zoom(state.zoom_scale);
+
+    let (nx, ny) = if state.auto_arrange {
+        let roots = if let Some(root) = state.drawing_root {
+            vec![root]
+        } else {
+            state.root_nodes.clone()
+        };
+        let mut layout = HashMap::new();
+        let mut pack = PackRegion::new(tw as i16 - RESERVED_ZONE_W, GEMX_HEADER_HEIGHT);
+        for &rid in &roots {
+            let w = subtree_span(&state.nodes, rid);
+            let h = subtree_depth(&state.nodes, rid) * CHILD_SPACING_Y + 1;
+            let (ox, oy) = pack.insert((w, h));
+            let (mut l, _) = layout_nodes(
+                &state.nodes,
+                rid,
+                oy,
+                tw as i16,
+                th as i16,
+                true,
+            );
+            for pos in l.values_mut() {
+                pos.x += ox;
+            }
+            layout.extend(l);
+        }
+        avoid_reserved_zone_map(&mut layout, tw as i16);
+        layout.get(&node_id).map(|c| (c.x, c.y)).unwrap_or_else(|| {
+            state
+                .nodes
+                .get(&node_id)
+                .map(|n| (n.x, n.y))
+                .unwrap_or((0, 0))
+        })
+    } else {
+        state
+            .nodes
+            .get(&node_id)
+            .map(|n| (n.x, n.y))
+            .unwrap_or((0, 0))
+    };
+
+    let draw_x = ((nx as f32 - state.scroll_x as f32) * bsx as f32 * zoom).round();
+    let draw_y = ((ny as f32 - state.scroll_y as f32) * bsy as f32 * zoom).round();
+
+    if state.zoom_locked_by_user
+        && draw_x >= 0.0
+        && draw_x < tw as f32
+        && draw_y >= 0.0
+        && draw_y < th as f32
+    {
+        return;
+    }
+
+    state.scroll_x = (nx as f32 - (tw as f32 / 2.0) / (bsx as f32 * zoom)).round() as i16;
+    state.scroll_y = (ny as f32 - (th as f32 / 2.0) / (bsy as f32 * zoom)).round() as i16;
+    clamp_scroll(state);
+}

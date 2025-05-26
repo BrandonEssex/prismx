@@ -74,6 +74,7 @@ pub fn spawn_free_node(state: &mut AppState) {
     state.nodes.insert(new_id, node);
     state.root_nodes.push(new_id);
     state.set_selected(Some(new_id));
+    crate::layout::center_on_node(state, new_id);
 }
 
 /// Determine which node is at the given coordinates considering current layout.
