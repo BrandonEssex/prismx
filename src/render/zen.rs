@@ -1,7 +1,9 @@
 use ratatui::{prelude::*, widgets::{Block, Borders, Paragraph}};
 use crate::state::{AppState, ZenSyntax, ZenTheme, ZenJournalView};
 use crate::beamx::render_full_border;
+use crate::ui::beamx::{BeamX, BeamXStyle, BeamXMode, BeamXAnimationMode};
 
+const TOP_BAR_HEIGHT: u16 = 5;
 
 use std::time::{SystemTime, UNIX_EPOCH};
 
@@ -43,6 +45,7 @@ pub fn render_zen_journal<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppS
         ZenJournalView::Compose => render_compose(f, area, state, tick),
         ZenJournalView::Review => render_review(f, area, state),
     }
+    render_top_icon(f, area, state, tick);
 }
 
 fn render_compose<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState, tick: u64) {
@@ -115,7 +118,7 @@ fn render_input<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState, tick
 fn render_review<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
     let padding = area.width / 4;
     let usable_width = area.width - padding * 2;
-    let mut y = area.y + 1;
+    let mut y = area.y + TOP_BAR_HEIGHT;
     for entry in state.zen_journal_entries.iter().rev() {
         let text = format!("\u{1F551} {}\n{}", entry.timestamp.format("%I:%M %p"), entry.text);
         let rect = Rect::new(area.x + padding, y, usable_width, 3);
@@ -125,6 +128,37 @@ fn render_review<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
         if y > area.bottom() { break; }
     }
     render_full_border(f, area, &state.beam_style_for_mode(&state.mode), true, false);
+}
+
+fn render_top_icon<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState, tick: u64) {
+    use ratatui::style::Modifier;
+    if !state.zen_icon_enabled {
+        let glyph = state.zen_icon_glyph.as_deref().unwrap_or("✦");
+        let style = Style::default().fg(Color::Gray);
+        let x = area.right().saturating_sub(glyph.len() as u16 + 1);
+        f.render_widget(Paragraph::new(glyph).style(style), Rect::new(x, area.y + 1, glyph.len() as u16, 1));
+        return;
+    }
+
+    if let Some(glyph) = &state.zen_icon_glyph {
+        let style = Style::default().fg(Color::Magenta).add_modifier(Modifier::BOLD);
+        let x = area.right().saturating_sub(glyph.len() as u16 + 1);
+        f.render_widget(Paragraph::new(glyph.as_str()).style(style), Rect::new(x, area.y + 1, glyph.len() as u16, 1));
+    } else {
+        let mut bx_style = BeamXStyle::from(BeamXMode::Zen);
+        let theme = state.beam_style_for_mode(&state.mode);
+        bx_style.border_color = theme.border_color;
+        bx_style.status_color = theme.status_color;
+        bx_style.prism_color = theme.prism_color;
+        let beamx = BeamX {
+            tick,
+            enabled: true,
+            mode: BeamXMode::Zen,
+            style: bx_style,
+            animation: BeamXAnimationMode::PulseEntryRadiate,
+        };
+        beamx.render(f, area);
+    }
 }
 
 fn parse_markdown_line(input: &str) -> Line {

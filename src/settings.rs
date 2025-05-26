@@ -14,19 +14,20 @@ use crate::state::AppState;
 use crate::beam_color::BeamColor;
 use std::sync::atomic::{AtomicBool, AtomicU8, Ordering};
 
-#[derive(Serialize, Deserialize)]
-#[serde(default)]
-pub struct UserSettings {
-    pub auto_arrange: bool,
-    pub debug_input_mode: bool,
-    pub dock_layout: String,
-    pub gemx_beam_color: BeamColor,
-    pub zen_beam_color: BeamColor,
-    pub triage_beam_color: BeamColor,
-    pub settings_beam_color: BeamColor,
-    pub beamx_panel_theme: BeamColor,
-    pub beamx_panel_visible: bool,
-}
+auto_arrange = false
+debug_input_mode = false
+dock_layout = "vertical"
+
+gemx_beam_color = "Prism"
+zen_beam_color = "Aqua"
+triage_beam_color = "Aqua"
+settings_beam_color = "Aqua"
+
+zen_icon_enabled = true
+zen_icon_glyph = ""
+
+beamx_panel_theme = "Prism"
+beamx_panel_visible = true
 
 impl Default for UserSettings {
     fn default() -> Self {
@@ -38,6 +39,8 @@ impl Default for UserSettings {
             zen_beam_color: BeamColor::Prism,
             triage_beam_color: BeamColor::Prism,
             settings_beam_color: BeamColor::Prism,
+            zen_icon_enabled: true,
+            zen_icon_glyph: None,
             beamx_panel_theme: BeamColor::Prism,
             beamx_panel_visible: crate::state::default_beamx_panel_visible(),
         }
@@ -60,9 +63,12 @@ pub fn save_user_settings(state: &AppState) {
         zen_beam_color: state.zen_beam_color,
         triage_beam_color: state.triage_beam_color,
         settings_beam_color: state.settings_beam_color,
+        zen_icon_enabled: state.zen_icon_enabled,
+        zen_icon_glyph: state.zen_icon_glyph.clone(),
         beamx_panel_theme: state.beamx_panel_theme,
         beamx_panel_visible: state.beamx_panel_visible,
     };
+
     if let Ok(serialized) = toml::to_string(&config) {
         let _ = fs::create_dir_all("config");
         let _ = fs::write("config/settings.toml", serialized);
