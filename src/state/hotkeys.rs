@@ -23,6 +23,7 @@ pub fn load_default_hotkeys() -> HashMap<String, String> {
     map.insert("open_module_switcher".into(), "ctrl-space" .into());
     map.insert("start_drag".into(), "ctrl-r".into());
     map.insert("start_link".into(), "ctrl-l".into());
+    map.insert("toggle_plugin".into(), "ctrl-l".into());
     map.insert("toggle_link_mode".into(), "ctrl-b".into());
     map.insert("redo".into(), "ctrl-shift-z".into());
     map.insert("toggle_snap_grid".into(), "ctrl-g".into());

@@ -4,6 +4,9 @@ use ratatui::layout::Rect;
 use std::collections::VecDeque;
 use std::time::{Duration, SystemTime};
 
+pub mod panel;
+pub mod registry;
+
 pub struct PluginHost {
     pub active: VecDeque<Box<dyn PluginRender>>,
 }
