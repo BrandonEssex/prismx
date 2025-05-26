@@ -19,3 +19,13 @@ pub enum TriageViewMode {
 impl Default for TriageViewMode {
     fn default() -> Self { Self::Feed }
 }
+
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+pub enum OverlayState {
+    Hidden,
+    Visible,
+}
+
+impl Default for OverlayState {
+    fn default() -> Self { Self::Hidden }
+}

@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 
+
 pub fn load_default_hotkeys() -> HashMap<String, String> {
     let mut map = HashMap::new();
 
@@ -29,5 +30,15 @@ pub fn load_default_hotkeys() -> HashMap<String, String> {
     map.insert("zen_toggle_theme".into(), "ctrl-a".into());
 
 
+    map
+}
+
+pub fn load_hotkeys() -> HashMap<String, String> {
+    let mut map = load_default_hotkeys();
+    if let Ok(s) = std::fs::read_to_string("config/shortcuts.toml") {
+        if let Ok(user_map) = toml::from_str::<HashMap<String, String>>(&s) {
+            map.extend(user_map);
+        }
+    }
     map
 }

@@ -4,7 +4,7 @@ use crate::node::{Node, NodeID, NodeMap};
 use crate::layout::{GEMX_HEADER_HEIGHT, LayoutRole};
 use crate::plugin::PluginHost;
 
-use super::hotkeys::load_default_hotkeys;
+use super::hotkeys::load_hotkeys;
 
 #[derive(Clone, PartialEq)]
 pub struct LayoutSnapshot {
@@ -191,7 +191,7 @@ impl Default for AppState {
             show_keymap: false,
             module_switcher_open: false,
             module_switcher_index: 0,
-            hotkeys: load_default_hotkeys(),
+            hotkeys: load_hotkeys(),
             scroll_offset: 0,
             max_visible_lines: 20,
             undo_stack: Vec::new(),
