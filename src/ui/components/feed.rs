@@ -1,6 +1,6 @@
 use ratatui::prelude::*;
 use ratatui::widgets::{Block, Borders, Paragraph};
-use ratatui::style::{Color, Style};
+use ratatui::style::{Color, Style, Modifier};
 use ratatui::text::{Line, Span};
 use crate::state::ZenJournalEntry;
 use crate::zen::journal::extract_tags;
@@ -38,7 +38,18 @@ pub fn render_feed<B: Backend>(
             let mut spans = Vec::new();
             for token in line.split_whitespace() {
                 if token.starts_with('#') {
-                    spans.push(Span::styled(token, Style::default().fg(Color::Blue)));
+                    if token.eq_ignore_ascii_case("#DONE") {
+                        spans.push(
+                            Span::styled(
+                                token,
+                                Style::default()
+                                    .fg(Color::DarkGray)
+                                    .add_modifier(Modifier::DIM),
+                            ),
+                        );
+                    } else {
+                        spans.push(Span::styled(token, Style::default().fg(Color::Blue)));
+                    }
                 } else {
                     spans.push(Span::raw(token));
                 }

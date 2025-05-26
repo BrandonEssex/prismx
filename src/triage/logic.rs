@@ -124,7 +124,18 @@ pub fn archive(state: &mut AppState, id: usize) {
 /// Simple pipeline updates. Entries tagged #NOW move to #TRITON after ~60s.
 pub fn update_pipeline(state: &mut AppState) {
     for entry in &mut state.triage_entries {
-        if entry.resolved { continue; }
+        // Promote resolved #TRITON entries to #DONE
+        if entry.resolved && entry.tags.contains(&"#TRITON".to_string()) {
+            entry.tags.retain(|t| t != "#TRITON");
+            entry.tags.push("#DONE".into());
+            continue;
+        }
+
+        if entry.resolved {
+            continue;
+        }
+
+        // Auto-promote #NOW to #TRITON after ~60s
         if entry.tags.contains(&"#NOW".to_string()) {
             let since = Local::now().signed_duration_since(entry.created).num_seconds();
             if since > 60 {
