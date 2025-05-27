@@ -83,11 +83,19 @@ fn render_compose<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState, ti
     render_full_border(f, area, &state.beam_style_for_mode(&state.mode), true, false);
 }
 
-fn render_history<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
+pub fn render_history<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
     let padding = area.width / 4;
     let usable_width = area.width - padding * 2;
     use crate::ui::animate::fade_line;
     use crate::config::theme::ThemeConfig;
+    use ratatui::{
+        layout::Alignment,
+        style::{Color, Modifier, Style},
+        text::{Line, Span},
+        widgets::{Block, Borders, Paragraph},
+        Frame,
+    };
+    use crate::state::{ZenViewMode, ZenJournalEntry};
     let breathe = ThemeConfig::load().zen_breathe();
 
     if state.zen_journal_entries.is_empty() {
@@ -97,85 +105,94 @@ fn render_history<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
         f.render_widget(msg, rect);
         return;
     }
-}
-let entries = state.filtered_journal_entries();
-let mut blocks: Vec<Vec<Line>> = Vec::new();
-let mut current_label = String::new();
 
-for (idx, entry) in entries.iter().enumerate().rev() {
-    // Summary grouping
-    if matches!(state.zen_view_mode, ZenViewMode::Summary) {
-        let label = match state.zen_summary_mode {
-            crate::state::ZenSummaryMode::Weekly => {
-                format!("Week {}", entry.timestamp.iso_week().week())
-            }
-            crate::state::ZenSummaryMode::Daily => {
-                let today = chrono::Local::now().date_naive();
-                let edate = entry.timestamp.date_naive();
-                if edate == today {
-                    "Today".to_string()
-                } else {
-                    entry.timestamp.format("%A").to_string()
+    let entries = state.filtered_journal_entries();
+    let mut blocks: Vec<Vec<Line>> = Vec::new();
+    let mut current_label = String::new();
+
+    for (idx, entry) in entries.iter().enumerate().rev() {
+        // Summary grouping
+        if matches!(state.zen_view_mode, ZenViewMode::Summary) {
+            let label = match state.zen_summary_mode {
+                crate::state::ZenSummaryMode::Weekly => {
+                    format!("Week {}", entry.timestamp.iso_week().week())
                 }
+                crate::state::ZenSummaryMode::Daily => {
+                    let today = chrono::Local::now().date_naive();
+                    let edate = entry.timestamp.date_naive();
+                    if edate == today {
+                        "Today".to_string()
+                    } else {
+                        entry.timestamp.format("%A").to_string()
+                    }
+                }
+            };
+            if current_label != label {
+                blocks.push(vec![Line::from(Span::styled(
+                    label.clone(),
+                    Style::default().fg(Color::Magenta),
+                ))]);
+                current_label = label;
             }
-        };
-        if current_label != label {
-            blocks.push(vec![Line::from(Span::styled(label.clone(), Style::default().fg(Color::Magenta)))]);
-            current_label = label;
+        }
+
+        let tags = extract_tags(&entry.text);
+        let tag_line = if tags.is_empty() { None } else { Some(tags.join(" ")) };
+        let mut lines: Vec<Line> = Vec::new();
+
+        let mut ts = entry.timestamp.format("%b %d, %Y – %-I:%M%p").to_string();
+        if entry.prev_text.is_some() {
+            ts.push_str(" (edited)");
+        }
+
+        lines.push(Line::from(Span::styled(
+            ts,
+            Style::default().fg(Color::DarkGray).add_modifier(Modifier::DIM),
+        )));
+        if let Some(t) = &tag_line {
+            lines.push(highlight_tags_line(t));
+        }
+
+        for l in entry.text.lines() {
+            lines.push(highlight_tags_line(l));
+        }
+
+        lines.push(Line::from(Span::styled(
+            "────────────",
+            Style::default().fg(Color::Gray).add_modifier(Modifier::DIM),
+        )));
+
+        if breathe {
+            let age = (chrono::Local::now() - entry.timestamp).num_milliseconds() as u128;
+            for line in lines.iter_mut() {
+                fade_line(line, age, 150);
+            }
+        }
+
+        let mut block = Block::default().borders(Borders::NONE);
+        if Some(idx) == state.zen_draft.editing {
+            block = block.border_style(Style::default().fg(Color::DarkGray)).borders(Borders::ALL);
+        }
+
+        blocks.push(vec![Paragraph::new(lines).block(block)]);
+    }
+
+    let mut y = area.bottom();
+    for block_lines in blocks.into_iter().rev() {
+        for widget in block_lines {
+            let h = widget.height().min(area.height);
+            if y < area.y + h {
+                break;
+            }
+            y -= h;
+            let rect = Rect::new(area.x + padding, y, usable_width, h);
+            f.render_widget(widget, rect);
+            if y > area.y {
+                y -= 1;
+            }
         }
     }
-
-    let tags = extract_tags(&entry.text);
-    let tag_line = if tags.is_empty() { None } else { Some(tags.join(" ")) };
-    let mut lines: Vec<Line> = Vec::new();
-
-    let mut ts = entry.timestamp.format("%b %d, %Y – %-I:%M%p").to_string();
-    if entry.prev_text.is_some() {
-        ts.push_str(" (edited)");
-    }
-
-    lines.push(Line::from(Span::styled(ts, Style::default().fg(Color::DarkGray).add_modifier(Modifier::DIM))));
-    if let Some(t) = &tag_line {
-        lines.push(highlight_tags_line(t));
-    }
-
-    for l in entry.text.lines() {
-        lines.push(highlight_tags_line(l));
-    }
-
-    lines.push(Line::from(Span::styled("────────────", Style::default().fg(Color::Gray).add_modifier(Modifier::DIM))));
-
-    if breathe {
-        let age = (chrono::Local::now() - entry.timestamp).num_milliseconds() as u128;
-        for line in lines.iter_mut() {
-            fade_line(line, age, 150);
-        }
-    }
-
-    let mut block = Block::default().borders(Borders::NONE);
-    if Some(idx) == state.zen_draft.editing {
-        block = block.border_style(Style::default().fg(Color::DarkGray)).borders(Borders::ALL);
-    }
-
-    blocks.push(vec![Paragraph::new(lines).block(block)]);
 }
-
-let mut y = area.bottom();
-for block_lines in blocks.into_iter().rev() {
-    for widget in block_lines {
-        let h = widget.height().min(area.height);
-        if y < area.y + h {
-            break;
-        }
-        y -= h;
-        let rect = Rect::new(area.x + padding, y, usable_width, h);
-        f.render_widget(widget, rect);
-        if y > area.y {
-            y -= 1;
-        }
-    }
-}
-
 
 fn render_input<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState, tick: u64) {
     use ratatui::widgets::Block;

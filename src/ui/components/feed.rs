@@ -88,7 +88,7 @@ pub fn render_feed<B: Backend>(
             y -= 1;
         }
     }
-}
+
 
         let mut lines = Vec::new();
         lines.push(Line::from(Span::styled(
