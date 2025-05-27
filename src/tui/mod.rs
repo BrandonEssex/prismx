@@ -233,7 +233,7 @@ pub fn launch_ui() -> std::io::Result<()> {
                             }
                         }
                     }
-
+                }
                 // 🌟 Spotlight
                 if state.show_spotlight {
                     match code {
@@ -309,7 +309,7 @@ pub fn launch_ui() -> std::io::Result<()> {
                         }
                         _ => {}
                     }
-                }
+
                     draw(&mut terminal, &mut state, &last_key)?;
                     continue;
                 }
