@@ -1,17 +1,10 @@
 // src/zen/render.rs
 use ratatui::prelude::*;
-use ratatui::layout::{Constraint, Direction, Layout};
-use ratatui::widgets::{Block, Borders, Paragraph};
-use ratatui::style::{Color, Style};
-use ratatui::text::Line;
-
-use crate::state::AppState;
-use crate::state::view::ZenViewMode;
 use crate::canvas::prism::render_prism;
+use crate::state::{AppState};
+use crate::state::view::ZenViewMode;
 use crate::zen::journal::{render_zen_journal, render_history};
 use crate::beamx::render_full_border;
-use crate::ui::animate::cursor_blink;
-use chrono::Local;
 
 /// Dispatches the correct Zen view mode renderer
 pub fn render_zen<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
@@ -57,6 +50,8 @@ pub fn render_zen<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
 
 /// Classic buffer-based Zen text editor
 pub fn render_classic<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
+    use ratatui::{text::Line, widgets::{Block, Borders, Paragraph}, style::Style};
+
     let lines: Vec<Line> = state
         .zen_buffer
         .iter()
@@ -73,6 +68,9 @@ pub fn render_classic<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState
 
 /// Compose mode includes input and scrollable journal view
 pub fn render_compose<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState, tick: u64) {
+    use ratatui::layout::{Constraint, Direction, Layout};
+    use crate::zen::render::render_input;
+
     let chunks = Layout::default()
         .direction(Direction::Vertical)
         .constraints([Constraint::Percentage(75), Constraint::Percentage(25)].as_ref())
@@ -86,6 +84,10 @@ pub fn render_compose<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState
 
 /// One-line entry field at bottom of Compose mode
 pub fn render_input<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState, tick: u64) {
+    use ratatui::widgets::{Paragraph, Block, Borders};
+    use crate::ui::animate::cursor_blink;
+    use chrono::Local;
+
     let padding = area.width / 4;
     let usable_width = area.width - padding * 2;
 
@@ -97,9 +99,7 @@ pub fn render_input<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState, 
     let mut block = Block::default().borders(Borders::NONE);
 
     if state.zen_draft.editing.is_some() {
-        block = block
-            .borders(Borders::ALL)
-            .border_style(Style::default().fg(Color::DarkGray));
+        block = block.borders(Borders::ALL).border_style(Style::default().fg(Color::DarkGray));
     }
 
     let widget = Paragraph::new(input).block(block);
