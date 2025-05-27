@@ -1,5 +1,17 @@
 use crate::beam_color::BeamColor;
 use serde::{Deserialize, Serialize};
+use ratatui::{
+    backend::Backend,
+    layout::Rect,
+    style::{Color, Modifier, Style},
+    text::{Line, Span},
+    widgets::{Block, Borders, Paragraph, Wrap},
+    Frame,
+};
+use std::fs;
+use std::sync::atomic::{AtomicU8, Ordering};
+use crate::state::AppState;
+use crate::config::theme::ThemeConfig;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UserSettings {
@@ -16,21 +28,6 @@ pub struct UserSettings {
     pub beamx_panel_visible: bool,
     pub mindmap_lanes: bool,
 }
-
-use ratatui::{
-    backend::Backend,
-    layout::Rect,
-    style::{Color, Modifier, Style},
-    text::{Line, Span},
-    widgets::{Block, Borders, Paragraph, Wrap},
-    Frame,
-};
-
-use std::fs;
-
-use crate::state::AppState;
-use crate::config::theme::ThemeConfig;
-use std::sync::atomic::{AtomicU8, Ordering};
 
 impl Default for UserSettings {
     fn default() -> Self {
@@ -99,6 +96,8 @@ pub struct SettingToggle {
     pub toggle: fn(&mut AppState),
 }
 
+// ───── Toggle logic ─────
+
 fn is_auto_arrange(s: &AppState) -> bool { s.auto_arrange }
 fn toggle_auto_arrange(s: &mut AppState) {
     s.auto_arrange = !s.auto_arrange;
@@ -110,8 +109,6 @@ fn toggle_debug_mode(s: &mut AppState) {
     s.debug_input_mode = !s.debug_input_mode;
     save_user_settings(s);
 }
-
-
 
 fn is_zoom_locked(s: &AppState) -> bool { s.zoom_locked_by_user }
 fn toggle_zoom_lock(s: &mut AppState) {
@@ -149,6 +146,8 @@ fn toggle_beamx_theme(s: &mut AppState) {
     s.cycle_beamx_panel_theme();
     save_user_settings(s);
 }
+
+// ───── Available toggles ─────
 
 pub const SETTING_TOGGLES: &[SettingToggle] = &[
     SettingToggle {
@@ -188,7 +187,7 @@ pub const SETTING_TOGGLES: &[SettingToggle] = &[
         toggle: toggle_mindmap_lanes,
     },
     SettingToggle {
-
+        icon: "🎯",
         label: "BeamX Theme",
         is_enabled: |_| true,
         toggle: toggle_beamx_theme,
@@ -198,29 +197,23 @@ pub const SETTING_TOGGLES: &[SettingToggle] = &[
 pub const fn settings_len() -> usize {
     SETTING_TOGGLES.len()
 }
+
+// ───── Render UI ─────
+
 pub fn render_settings<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
     let theme = ThemeConfig::load();
     let mut lines: Vec<Line> = Vec::new();
+
     for (i, t) in SETTING_TOGGLES.iter().enumerate() {
         let enabled = (t.is_enabled)(state);
         let selected = i == state.settings_focus_index % SETTING_TOGGLES.len();
-        let mut label = t.label.to_string();
 
-            if t.label.starts_with("Theme Preset") {
-                label = format!("Theme Preset: {}", theme_label());
-            } else if t.label.starts_with("Gemx Color") {
-                label = format!("Gemx Color: {}", state.gemx_beam_color);
-            } else if t.label.starts_with("Zen Color") {
-                label = format!("Zen Color: {}", state.zen_beam_color);
-            } else if t.label.starts_with("Triage Color") {
-                label = format!("Triage Color: {}", state.triage_beam_color);
-            } else if t.label.starts_with("Settings Color") {
-                label = format!("Settings Color: {}", state.settings_beam_color);
-            } else if t.label.starts_with("BeamX Theme") {
-                label = format!("BeamX Theme: {}", state.beamx_panel_theme);
-            } else if t.label.starts_with("Mindmap Lanes") {
-                label = "Mindmap Lanes".into();
-            }
+        let mut label = t.label.to_string();
+        if t.label.starts_with("Theme Preset") {
+            label = format!("Theme Preset: {}", theme_label());
+        } else if t.label.starts_with("BeamX Theme") {
+            label = format!("BeamX Theme: {}", state.beamx_panel_theme);
+        }
 
         let check = if enabled { "[x]" } else { "[ ]" };
         let prefix = if selected { "> " } else { "  " };
@@ -234,10 +227,12 @@ pub fn render_settings<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppStat
         if selected {
             style = style.bg(Color::Black);
         }
+
         lines.push(Line::from(vec![
             Span::styled(prefix.to_string(), style),
             Span::styled(format!("{} {} {}", check, t.icon, label), style),
         ]));
+
         if i == 2 || i == 3 {
             lines.push(Line::default());
         }
