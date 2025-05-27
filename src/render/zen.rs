@@ -12,7 +12,6 @@ use crate::canvas::prism::render_prism;
 use crate::config::theme::ThemeConfig;
 use crate::zen::utils::highlight_tags_line;
 use crate::state::{AppState, ZenJournalEntry};
-use crate::state::zen::filtered_journal_entries;
 
 /// Extract all #tags from a block of text.
 pub fn extract_tags(text: &str) -> Vec<String> {

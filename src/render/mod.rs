@@ -21,4 +21,4 @@ pub use module_icon::render_module_icon;
 pub use favorites::render_favorites_dock;
 pub use zoom_overlay::render_zoom_overlay;
 pub use traits::Renderable;
-pub use settings::render_settings;
+pub use settings::{render_settings, SETTING_TOGGLES, SettingToggle, settings_len};

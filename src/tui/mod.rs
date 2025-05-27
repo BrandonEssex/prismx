@@ -23,7 +23,7 @@ fn rect_contains(rect: ratatui::layout::Rect, x: u16, y: u16) -> bool {
     x >= rect.x && x < rect.x + rect.width && y >= rect.y && y < rect.y + rect.height
 }
 use crate::screen::render_gemx;
-use crate::settings::{render_settings, settings_len, SETTING_TOGGLES};
+use crate::render::{render_settings, settings_len, SETTING_TOGGLES};
 use crate::ui::components::plugin::render_plugin;
 use crate::ui::components::debug::render_debug;
 use crate::ui::components::logs::render_logs;
