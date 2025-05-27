@@ -1,0 +1,2 @@
+- src/ui/log.rs
+- src/core/hotkeys.rs
