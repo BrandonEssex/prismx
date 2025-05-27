@@ -9,8 +9,8 @@ use ratatui::{
 };
 
 use crate::state::AppState;
-use crate::render::{render_settings, settings_len, SETTING_TOGGLES};
 use crate::config::theme::ThemeConfig;
+use crate::settings::{SETTING_TOGGLES, settings_len};
 
 pub fn render_settings<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
     let theme = ThemeConfig::load();
