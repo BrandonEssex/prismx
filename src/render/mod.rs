@@ -1,3 +1,4 @@
+// src/render/mod.rs
 pub mod zen;
 pub mod status;
 pub mod shortcuts_overlay;
