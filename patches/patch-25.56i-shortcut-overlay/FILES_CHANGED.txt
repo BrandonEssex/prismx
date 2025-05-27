@@ -1,0 +1,2 @@
+- src/ui/overlay.rs
+- src/core/hotkeys.rs
