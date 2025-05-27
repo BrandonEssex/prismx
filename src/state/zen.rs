@@ -1,4 +1,4 @@
-// src/state/zen.rs (REPAIRED and STABLE)
+// src/state/zen.rs
 use super::core::{AppState, ZenJournalEntry, ZenTheme};
 use std::fs::{self, File, OpenOptions};
 use std::io::Write;
@@ -117,10 +117,7 @@ impl AppState {
                 .zen_last_saved
                 .map_or(true, |t| t.elapsed().as_secs() > 10);
             if should_save {
-                let _ = std::fs::write(
-                    &self.zen_current_filename,
-                    self.zen_buffer.join("\n"),
-                );
+                let _ = std::fs::write(&self.zen_current_filename, self.zen_buffer.join("\n"));
                 self.zen_last_saved = Some(std::time::Instant::now());
                 self.zen_dirty = false;
             }

@@ -3,6 +3,7 @@ use crate::beam_color::BeamColor;
 use crate::state::AppState;
 use serde::{Deserialize, Serialize};
 use std::fs;
+use crate::config::theme::ThemeConfig;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UserSettings {
