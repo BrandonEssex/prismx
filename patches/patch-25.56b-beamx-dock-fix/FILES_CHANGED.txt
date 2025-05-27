@@ -1,0 +1,2 @@
+- src/ui/beamx.rs
+- src/render/gemx/icons.rs
