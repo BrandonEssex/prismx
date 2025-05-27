@@ -20,11 +20,14 @@ pub fn render_settings<B: Backend>(f: &mut Frame<B>, area: Rect, cfg: &ThemeConf
     render_theme_editor(f, chunks[0], cfg);
 }
 
-let toggles = vec![
-    SettingToggle {
-        label: "Show BeamX",
-        toggle: toggle_beamx,
-        icon: "💠",
-    },
-];
+pub fn get_setting_toggles() -> Vec<SettingToggle> {
+    vec![
+        SettingToggle {
+            label: "Show BeamX",
+            toggle: toggle_beamx,
+            icon: "💠",
+        },
+    ]
+}
+
 

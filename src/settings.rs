@@ -262,9 +262,3 @@ pub fn render_settings<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppStat
 
     f.render_widget(content, Rect::new(x, y, width, height));
 }
-
-struct SettingToggle {
-    label: &'static str,
-    toggle: fn(&mut AppState),
-    icon: &'static str,
-}

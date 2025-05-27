@@ -1,193 +1,152 @@
+use chrono::{Datelike, Local};
 use ratatui::{
-    prelude::*,
+    layout::Alignment,
+    prelude::{Backend, Rect},
     style::{Color, Modifier, Style},
     text::{Line, Span},
     widgets::{Block, Borders, Paragraph},
+    Frame,
 };
 
-use chrono::Datelike;
-use std::time::{SystemTime, UNIX_EPOCH};
-
-use crate::state::{AppState, ZenSyntax, ZenTheme, ZenMode};
-use crate::state::view::ZenViewMode;
-use crate::zen::journal::{extract_tags, render_history};
-use crate::zen::utils::highlight_tags_line;
-use crate::beamx::render_full_border;
-use crate::ui::beamx::{BeamX, BeamXStyle, BeamXMode, BeamXAnimationMode};
-use crate::render::traits::Renderable;
 use crate::canvas::prism::render_prism;
+use crate::config::theme::ThemeConfig;
+use crate::zen::utils::highlight_tags_line;
+use crate::state::{AppState, ZenJournalEntry};
 
-
-const TOP_BAR_HEIGHT: u16 = 5;
-
-pub struct ZenRenderer<'a> {
-    pub state: &'a AppState,
-}
-
-impl<'a> ZenRenderer<'a> {
-    pub fn new(state: &'a AppState) -> Self {
-        Self { state }
+/// Extract all #tags from a block of text.
+pub fn extract_tags(text: &str) -> Vec<String> {
+    let mut tags = Vec::new();
+    let mut chars = text.chars().peekable();
+    while let Some(c) = chars.next() {
+        if c == '#' {
+            let mut tag = String::new();
+            while let Some(&ch) = chars.peek() {
+                if ch.is_alphanumeric() || ch == '_' || ch == '-' {
+                    tag.push(ch);
+                    chars.next();
+                } else {
+                    break;
+                }
+            }
+            if !tag.is_empty() {
+                tags.push(format!("#{}", tag));
+            }
+        }
     }
+    tags
 }
 
-impl<'a> Renderable for ZenRenderer<'a> {
-    fn render_frame<B: Backend>(&mut self, f: &mut Frame<B>, area: Rect) {
-        render_zen_journal(f, area, self.state);
+/// Render Zen journal history view.
+pub fn render_history<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
+    let padding = area.width / 4;
+    let usable_width = area.width - padding * 2;
+    let breathe = ThemeConfig::load().zen_breathe();
+
+    if state.zen_journal_entries.is_empty() {
+        let msg = Paragraph::new("No journal entries yet.").alignment(Alignment::Center);
+        let rect = Rect::new(area.x + padding, area.y + area.height / 2, usable_width, 1);
+        f.render_widget(msg, rect);
+        return;
     }
 
-    fn tick(&mut self) {}
-}
+    let entries = state.filtered_journal_entries();
+    let mut blocks: Vec<(u16, Paragraph)> = Vec::new();
+    let mut current_label = String::new();
 
-pub fn render_zen_journal<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
-    render_history(f, area, state);
-}
+    for (idx, entry) in entries.iter().enumerate().rev() {
+        let mut lines: Vec<Line> = Vec::new();
 
-pub fn render_zen<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
-    match state.zen_view_mode {
-        ZenViewMode::Journal => {
-            render_zen_journal(f, area, state);
-        }
-        ZenViewMode::Classic => {
-            render_classic(f, area, state);
-        }
-        ZenViewMode::Summary => {
-            render_zen_journal(f, area, state);
-        }
-        ZenViewMode::Split => {
-            let mid = area.width / 2;
-            let left = Rect {
-                x: area.x,
-                y: area.y,
-                width: mid,
-                height: area.height,
+        // Time-grouped label
+        if matches!(state.zen_view_mode, crate::state::view::ZenViewMode::Summary) {
+            let label = match state.zen_summary_mode {
+                crate::state::ZenSummaryMode::Weekly => {
+                    format!("Week {}", entry.timestamp.iso_week().week())
+                }
+                crate::state::ZenSummaryMode::Daily => {
+                    let today = Local::now().date_naive();
+                    let edate = entry.timestamp.date_naive();
+                    if edate == today {
+                        "Today".to_string()
+                    } else {
+                        entry.timestamp.format("%A").to_string()
+                    }
+                }
             };
-            let right = Rect {
-                x: area.x + mid,
-                y: area.y,
-                width: area.width - mid,
-                height: area.height,
-            };
-            render_classic(f, left, state);
-            render_zen_journal(f, right, state);
+
+            if current_label != label {
+                lines.push(Line::from(Span::styled(
+                    label.clone(),
+                    Style::default().fg(Color::Magenta),
+                )));
+                current_label = label;
+            }
         }
-        ZenViewMode::Compose => {
-            let tick = (SystemTime::now()
-                .duration_since(UNIX_EPOCH)
-                .unwrap_or_default()
-                .as_millis()
-                / 300) as u64;
-            render_compose(f, area, state, tick);
+
+        // Timestamp
+        let ts = entry.timestamp.format("%b %d, %Y – %-I:%M%p").to_string();
+        lines.push(Line::from(Span::styled(
+            ts,
+            Style::default().fg(Color::DarkGray).add_modifier(Modifier::DIM),
+        )));
+
+        // Tag line
+        let tags = extract_tags(&entry.text);
+        if !tags.is_empty() {
+            lines.push(highlight_tags_line(&tags.join(" ")));
+        }
+
+        // Main content
+        for l in entry.text.lines() {
+            lines.push(highlight_tags_line(l));
+        }
+
+        lines.push(Line::from(Span::styled(
+            "────────────",
+            Style::default().fg(Color::Gray).add_modifier(Modifier::DIM),
+        )));
+
+        if breathe {
+            let age = (Local::now() - entry.timestamp).num_milliseconds() as u128;
+            for line in lines.iter_mut() {
+                crate::ui::animate::fade_line(line, age, 150);
+            }
+        }
+
+        let mut block = Block::default().borders(Borders::NONE);
+        if Some(idx) == state.zen_draft.editing {
+            block = block
+                .border_style(Style::default().fg(Color::DarkGray))
+                .borders(Borders::ALL);
+        }
+
+        let h = lines.len() as u16;
+        let para = Paragraph::new(lines).block(block);
+        blocks.push((h, para));
+    }
+
+    let mut y = area.bottom();
+    for (h, para) in blocks.into_iter().rev() {
+        if y < area.y + h {
+            break;
+        }
+        y -= h;
+        let rect = Rect::new(area.x + padding, y, usable_width, h);
+        f.render_widget(para, rect);
+        if y > area.y {
+            y -= 1;
         }
     }
 
     render_prism(f, area);
 }
 
+/// Max block length before splitting
+pub const MAX_BLOCK_LEN: usize = 180;
 
-fn render_compose<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState, tick: u64) {
-    use ratatui::layout::{Constraint, Direction, Layout};
-    use crate::render::zen::render_input;
-
-    let chunks = Layout::default()
-        .direction(Direction::Vertical)
-        .constraints([Constraint::Percentage(75), Constraint::Percentage(25)].as_ref())
-        .split(area);
-
-    render_history(f, chunks[0], state);
-    render_input(f, chunks[1], state, tick);
-
-    render_full_border(f, area, &state.beam_style_for_mode(&state.mode), true, false);
-}
-
-fn render_input<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState, tick: u64) {
-    use crate::ui::animate::cursor_blink;
-
-    let padding = area.width / 4;
-    let usable_width = area.width - padding * 2;
-
-    let caret = cursor_blink(tick);
-    let timestamp = chrono::Local::now().format("%H:%M").to_string();
-    let input = format!("{} {}{}", timestamp, state.zen_draft.text, caret);
-
-    let input_rect = Rect::new(area.x + padding, area.bottom().saturating_sub(2), usable_width, 1);
-    let mut block = Block::default().borders(Borders::NONE);
-
-    if state.zen_draft.editing.is_some() {
-        block = Block::default().borders(Borders::ALL).border_style(Style::default().fg(Color::DarkGray));
-    }
-
-    let widget = Paragraph::new(input).block(block);
-    f.render_widget(widget, input_rect);
-}
-
-fn render_review<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
-    use crate::ui::animate::fade_line;
-    use crate::config::theme::ThemeConfig;
-
-    let breathe = ThemeConfig::load().zen_breathe();
-    let padding = area.width / 4;
-    let usable_width = area.width - padding * 2;
-    let mut y = area.y + TOP_BAR_HEIGHT;
-
-    for entry in state.filtered_journal_entries().into_iter().rev() {
-        let mut lines = vec![];
-        let ts = entry.timestamp.format("%I:%M %p").to_string();
-        lines.push(Line::from(vec![
-            Span::raw("\u{1F551} "),
-            Span::styled(ts, Style::default().fg(Color::DarkGray).add_modifier(Modifier::DIM)),
-        ]));
-
-        for l in entry.text.lines() {
-            lines.push(highlight_tags_line(l));
-        }
-
-        lines.push(Line::from(Span::styled("────────────", Style::default().fg(Color::Gray).add_modifier(Modifier::DIM))));
-
-        if breathe {
-            let age = (chrono::Local::now() - entry.timestamp).num_milliseconds() as u128;
-            for line in lines.iter_mut() {
-                fade_line(line, age, 150);
-            }
-        }
-
-        let rect = Rect::new(area.x + padding, y, usable_width, lines.len() as u16);
-        let p = Paragraph::new(lines).block(Block::default().borders(Borders::NONE));
-        f.render_widget(p, rect);
-        y = y.saturating_add(3);
-        if y > area.bottom() {
-            break;
-        }
-    }
-
-    render_full_border(f, area, &state.beam_style_for_mode(&state.mode), true, false);
-}
-
-fn render_top_icon<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState, tick: u64) {
-    if !state.zen_icon_enabled {
-        let glyph = state.zen_icon_glyph.as_deref().unwrap_or("✦");
-        let style = Style::default().fg(Color::Gray);
-        let x = area.right().saturating_sub(glyph.len() as u16 + 1);
-        f.render_widget(Paragraph::new(glyph).style(style), Rect::new(x, area.y + 1, glyph.len() as u16, 1));
-        return;
-    }
-
-    if let Some(glyph) = &state.zen_icon_glyph {
-        let style = Style::default().fg(Color::Magenta);
-        let x = area.right().saturating_sub(glyph.len() as u16 + 1);
-        f.render_widget(Paragraph::new(glyph.as_str()).style(style), Rect::new(x, area.y + 1, glyph.len() as u16, 1));
-    } else {
-        let mut bx_style = BeamXStyle::from(BeamXMode::Zen);
-        let theme = state.beam_style_for_mode(&state.mode);
-        bx_style.border_color = theme.border_color;
-        bx_style.status_color = theme.status_color;
-        bx_style.prism_color = theme.prism_color;
-        let beamx = BeamX {
-            tick,
-            enabled: true,
-            mode: BeamXMode::Zen,
-            style: bx_style,
-            animation: BeamXAnimationMode::PulseEntryRadiate,
-        };
-        beamx.render(f, area);
-    }
+pub fn split_blocks(text: &str) -> Vec<String> {
+    text.chars()
+        .collect::<Vec<_>>()
+        .chunks(MAX_BLOCK_LEN)
+        .map(|c| c.iter().collect::<String>())
+        .collect()
 }
