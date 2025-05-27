@@ -1,11 +1,13 @@
+// src/zen/render.rs
 use ratatui::prelude::*;
 use crate::state::{AppState};
 use crate::state::view::ZenViewMode;
 use crate::canvas::prism::render_prism;
 use crate::zen::journal::render_zen_journal;
-use crate::zen::utils::highlight_tags_line;
+use crate::zen::render::{render_input, render_history};
+use crate::beamx::render_full_border;
 
-/// Dispatch the current Zen rendering mode.
+/// Dispatches the correct Zen view mode renderer
 pub fn render_zen<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
     match state.zen_view_mode {
         ZenViewMode::Journal => {
@@ -47,13 +49,9 @@ pub fn render_zen<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
     render_prism(f, area);
 }
 
-/// Render raw text editor (Classic Zen view)
+/// Classic buffer-based Zen text editor
 pub fn render_classic<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
-    use ratatui::{
-        text::Line,
-        widgets::{Block, Borders, Paragraph},
-        style::Style,
-    };
+    use ratatui::{text::Line, widgets::{Block, Borders, Paragraph}, style::Style};
 
     let lines: Vec<Line> = state
         .zen_buffer
@@ -69,11 +67,9 @@ pub fn render_classic<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState
     render_prism(f, area);
 }
 
-/// Compose mode: typing + scrollable feed
+/// Compose mode includes input and scrollable journal view
 pub fn render_compose<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState, tick: u64) {
     use ratatui::layout::{Constraint, Direction, Layout};
-    use crate::render::zen::{render_history, render_input};
-    use crate::beamx::render_full_border;
 
     let chunks = Layout::default()
         .direction(Direction::Vertical)
@@ -86,16 +82,17 @@ pub fn render_compose<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState
     render_full_border(f, area, &state.beam_style_for_mode(&state.mode), true, false);
 }
 
-/// Single-line input area for journal entries
+/// One-line entry field at bottom of Compose mode
 pub fn render_input<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState, tick: u64) {
-    use ratatui::widgets::Paragraph;
+    use ratatui::widgets::{Paragraph, Block, Borders};
     use crate::ui::animate::cursor_blink;
+    use chrono::Local;
 
     let padding = area.width / 4;
     let usable_width = area.width - padding * 2;
 
     let caret = cursor_blink(tick);
-    let timestamp = chrono::Local::now().format("%H:%M").to_string();
+    let timestamp = Local::now().format("%H:%M").to_string();
     let input = format!("{} {}{}", timestamp, state.zen_draft.text, caret);
 
     let input_rect = Rect::new(area.x + padding, area.bottom().saturating_sub(2), usable_width, 1);

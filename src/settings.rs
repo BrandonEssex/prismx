@@ -228,7 +228,178 @@ pub fn render_settings<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppStat
             style = style.bg(Color::Black);
         }
 
-        lines.push(Line::from(vec![
+        lines.push(Lin// src/settings.rs
+use crate::beam_color::BeamColor;
+use crate::state::AppState;
+use serde::{Deserialize, Serialize};
+use std::fs;
+use std::sync::atomic::{AtomicU8, Ordering};
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct UserSettings {
+    pub auto_arrange: bool,
+    pub debug_input_mode: bool,
+    pub dock_layout: String,
+    pub gemx_beam_color: BeamColor,
+    pub zen_beam_color: BeamColor,
+    pub triage_beam_color: BeamColor,
+    pub settings_beam_color: BeamColor,
+    pub zen_icon_enabled: bool,
+    pub zen_icon_glyph: Option<String>,
+    pub beamx_panel_theme: BeamColor,
+    pub beamx_panel_visible: bool,
+    pub mindmap_lanes: bool,
+}
+
+impl Default for UserSettings {
+    fn default() -> Self {
+        Self {
+            auto_arrange: true,
+            debug_input_mode: true,
+            dock_layout: "vertical".into(),
+            gemx_beam_color: BeamColor::Prism,
+            zen_beam_color: BeamColor::Prism,
+            triage_beam_color: BeamColor::Prism,
+            settings_beam_color: BeamColor::Prism,
+            zen_icon_enabled: true,
+            zen_icon_glyph: None,
+            beamx_panel_theme: BeamColor::Prism,
+            beamx_panel_visible: true,
+            mindmap_lanes: true,
+        }
+    }
+}
+
+pub fn load_user_settings() -> UserSettings {
+    if std::env::var("PRISMX_TEST").is_ok() {
+        return UserSettings::default();
+    }
+    fs::read_to_string("config/settings.toml")
+        .ok()
+        .and_then(|s| toml::from_str(&s).ok())
+        .unwrap_or_default()
+}
+
+pub fn save_user_settings(state: &AppState) {
+    let config = UserSettings {
+        auto_arrange: state.auto_arrange,
+        debug_input_mode: state.debug_input_mode,
+        dock_layout: format!("{:?}", state.favorite_dock_layout).to_lowercase(),
+        gemx_beam_color: state.gemx_beam_color,
+        zen_beam_color: state.zen_beam_color,
+        triage_beam_color: state.triage_beam_color,
+        settings_beam_color: state.settings_beam_color,
+        zen_icon_enabled: state.zen_icon_enabled,
+        zen_icon_glyph: state.zen_icon_glyph.clone(),
+        beamx_panel_theme: state.beamx_panel_theme,
+        beamx_panel_visible: state.beamx_panel_visible,
+        mindmap_lanes: state.mindmap_lanes,
+    };
+
+    if let Ok(serialized) = toml::to_string(&config) {
+        let _ = fs::create_dir_all("config");
+        let _ = fs::write("config/settings.toml", serialized);
+    }
+}
+
+static THEME_INDEX: AtomicU8 = AtomicU8::new(0);
+const THEME_PRESETS: [BeamColor; 5] = [
+    BeamColor::Prism,
+    BeamColor::Infrared,
+    BeamColor::Ice,
+    BeamColor::Aqua,
+    BeamColor::Emerald,
+];
+
+pub fn current_theme() -> BeamColor {
+    THEME_PRESETS[THEME_INDEX.load(Ordering::Relaxed) as usize]
+}
+
+pub fn toggle_theme(state: &mut AppState) {
+    let next = (THEME_INDEX.load(Ordering::Relaxed) + 1) % THEME_PRESETS.len() as u8;
+    THEME_INDEX.store(next, Ordering::Relaxed);
+    let color = current_theme();
+    state.gemx_beam_color = color;
+    state.zen_beam_color = color;
+    state.triage_beam_color = color;
+    state.settings_beam_color = color;
+    save_user_settings(state);
+}
+
+pub struct SettingToggle {
+    pub icon: &'static str,
+    pub label: &'static str,
+    pub is_enabled: fn(&AppState) -> bool,
+    pub toggle: fn(&mut AppState),
+}
+
+fn toggle_bool(field: &mut bool) {
+    *field = !*field;
+}
+
+fn make_toggle<F: Fn(&AppState) -> bool + 'static, G: Fn(&mut AppState) + 'static>(
+    icon: &'static str,
+    label: &'static str,
+    is_enabled: F,
+    toggle: G,
+) -> SettingToggle {
+    SettingToggle {
+        icon,
+        label,
+        is_enabled: Box::leak(Box::new(is_enabled)),
+        toggle: Box::leak(Box::new(toggle)),
+    }
+}
+
+pub const SETTING_TOGGLES: &[SettingToggle] = &[
+    SettingToggle {
+        icon: "🐞",
+        label: "Debug Input Mode",
+        is_enabled: |s| s.debug_input_mode,
+        toggle: |s| { toggle_bool(&mut s.debug_input_mode); save_user_settings(s); },
+    },
+    SettingToggle {
+        icon: "🤖",
+        label: "Auto-Arrange",
+        is_enabled: |s| s.auto_arrange,
+        toggle: |s| { toggle_bool(&mut s.auto_arrange); save_user_settings(s); },
+    },
+    SettingToggle {
+        icon: "🔒",
+        label: "Lock Zoom Scale",
+        is_enabled: |s| s.zoom_locked_by_user,
+        toggle: |s| { toggle_bool(&mut s.zoom_locked_by_user); save_user_settings(s); },
+    },
+    SettingToggle {
+        icon: "🎨",
+        label: "Theme Preset",
+        is_enabled: |_| true,
+        toggle: toggle_theme,
+    },
+    SettingToggle {
+        icon: "💠",
+        label: "BeamX Panel",
+        is_enabled: |s| s.beamx_panel_visible,
+        toggle: |s| { toggle_bool(&mut s.beamx_panel_visible); save_user_settings(s); },
+    },
+    SettingToggle {
+        icon: "✨",
+        label: "Mindmap Lanes",
+        is_enabled: |s| s.mindmap_lanes,
+        toggle: |s| { toggle_bool(&mut s.mindmap_lanes); save_user_settings(s); },
+    },
+    SettingToggle {
+        icon: "🧪",
+        label: "BeamX Theme",
+        is_enabled: |_| true,
+        toggle: |s| { s.cycle_beamx_panel_theme(); save_user_settings(s); },
+    },
+];
+
+pub const fn settings_len() -> usize {
+    SETTING_TOGGLES.len()
+}
+e::from(vec![
             Span::styled(prefix.to_string(), style),
             Span::styled(format!("{} {} {}", check, t.icon, label), style),
         ]));
