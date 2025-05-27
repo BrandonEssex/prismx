@@ -233,7 +233,7 @@ pub fn launch_ui() -> std::io::Result<()> {
                             }
                         }
                     }
-                }
+
                 // 🌟 Spotlight
                 if state.show_spotlight {
                     match code {
@@ -657,6 +657,7 @@ pub fn launch_ui() -> std::io::Result<()> {
                         }
                     }
                     _ => {}
+                }
                 }
                 Event::Mouse(me) => {
                     use crossterm::event::{MouseButton, MouseEventKind};
