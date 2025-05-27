@@ -1,0 +1,2 @@
+- src/modules/gemx/drag.rs
+- src/ui/debug.rs
