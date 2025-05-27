@@ -97,7 +97,7 @@ fn render_history<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
         f.render_widget(msg, rect);
         return;
     }
-
+}
 let entries = state.filtered_journal_entries();
 let mut blocks: Vec<Vec<Line>> = Vec::new();
 let mut current_label = String::new();
