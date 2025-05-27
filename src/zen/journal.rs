@@ -101,7 +101,7 @@ pub fn render_history<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState
         }
 
         let para = Paragraph::new(lines).block(block);
-        let h = para.line_count().unwrap_or(1) as u16;
+        let h = para.lines.len() as u16;
         blocks.push((h, para));
     }
 

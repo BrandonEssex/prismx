@@ -106,7 +106,7 @@ pub fn render_history<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState
         )));
 
         if breathe {
-            let age = (Local::now() - entry.timestamp).num_milliseconds() as u128;
+            let age = Local::now().signed_duration_since(entry.timestamp).num_milliseconds() as u128;
             for line in lines.iter_mut() {
                 crate::ui::animate::fade_line(line, age, 150);
             }

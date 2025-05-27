@@ -84,3 +84,9 @@ pub fn current_theme() -> BeamColor {
     ];
     THEME_PRESETS[THEME_INDEX.load(Ordering::Relaxed) as usize]
 }
+
+pub use SETTING_TOGGLES;
+pub use SettingToggle;
+pub fn settings_len() -> usize {
+    SETTING_TOGGLES.len()
+}

@@ -10,7 +10,6 @@ pub mod zoom_overlay;
 pub mod traits;
 pub mod settings;
 
-pub use zen::render_zen_journal;
 pub use crate::zen::render::render_zen;
 pub use status::render_status_bar;
 pub use shortcuts_overlay::render_shortcuts_overlay;
