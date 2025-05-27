@@ -1,266 +1,154 @@
-use super::core::{AppState, ZenJournalEntry, ZenSyntax, ZenTheme};
+use chrono::{Datelike, Local};
+use ratatui::{
+    layout::Alignment,
+    prelude::{Backend, Rect},
+    style::{Color, Modifier, Style},
+    text::{Line, Span},
+    widgets::{Block, Borders, Paragraph},
+    Frame,
+};
 
-impl AppState {
-    pub fn export_zen_to_file(&self) {
-        use std::fs::{self, File};
-        use std::io::Write;
-        use dirs;
+use crate::canvas::prism::render_prism;
+use crate::config::theme::ThemeConfig;
+use crate::zen::utils::highlight_tags_line;
+use crate::state::{AppState, ZenJournalEntry};
+use crate::state::view::ZenViewMode;
+use crate::ui::animate::fade_line;
 
-        let path = dirs::document_dir()
-            .unwrap_or_else(|| std::path::PathBuf::from("."))
-            .join("prismx")
-            .join("zen_export.md");
-
-        let content = self.zen_buffer.join("\n");
-
-        if let Some(parent) = path.parent() {
-            let _ = fs::create_dir_all(parent);
-        }
-
-        if let Ok(mut file) = File::create(&path) {
-            let _ = file.write_all(content.as_bytes());
-        }
-    }
-
-    pub fn open_zen_file(&mut self, path: &str) {
-        if let Ok(content) = std::fs::read_to_string(path) {
-            self.zen_buffer = content.lines().map(|l| l.to_string()).collect();
-            self.zen_buffer.push(String::new());
-            self.zen_current_filename = path.to_string();
-            self.zen_current_syntax = Self::syntax_from_extension(path);
-            self.update_zen_word_count();
-            self.zen_dirty = false;
-            self.add_recent_file(path);
-            self.zen_last_saved = Some(std::time::Instant::now());
-        }
-    }
-
-    pub fn save_zen_file(&mut self, path: &str) {
-        use std::io::Write;
-        if let Some(parent) = std::path::Path::new(path).parent() {
-            let _ = std::fs::create_dir_all(parent);
-        }
-        if let Ok(mut file) = std::fs::File::create(path) {
-            let _ = file.write_all(self.zen_buffer.join("\n").as_bytes());
-            self.add_recent_file(path);
-            self.zen_current_filename = path.to_string();
-            self.zen_dirty = false;
-            self.zen_last_saved = Some(std::time::Instant::now());
-        }
-    }
-
-    pub fn update_zen_word_count(&mut self) {
-        let text = self.zen_buffer.join(" ");
-        self.zen_word_count = text.split_whitespace().count();
-        crate::log_debug!(self, "Word count updated: {}", self.zen_word_count);
-    }
-
-    pub fn add_recent_file(&mut self, path: &str) {
-        if let Some(pos) = self.zen_recent_files.iter().position(|p| p == path) {
-            self.zen_recent_files.remove(pos);
-        }
-        self.zen_recent_files.insert(0, path.to_string());
-        while self.zen_recent_files.len() > 5 {
-            self.zen_recent_files.pop();
-        }
-    }
-
-    pub fn zen_toolbar_len(&self) -> usize {
-        3 + self.zen_recent_files.len()
-    }
-
-    pub fn zen_toolbar_handle_key(&mut self, key: crossterm::event::KeyCode) {
-        let len = self.zen_toolbar_len();
-        match key {
-            crossterm::event::KeyCode::Up => {
-                if self.zen_toolbar_index == 0 {
-                    self.zen_toolbar_index = len.saturating_sub(1);
+/// Extract all #tags from a block of text.
+pub fn extract_tags(text: &str) -> Vec<String> {
+    let mut tags = Vec::new();
+    let mut chars = text.chars().peekable();
+    while let Some(c) = chars.next() {
+        if c == '#' {
+            let mut tag = String::new();
+            while let Some(&ch) = chars.peek() {
+                if ch.is_alphanumeric() || ch == '_' || ch == '-' {
+                    tag.push(ch);
+                    chars.next();
                 } else {
-                    self.zen_toolbar_index -= 1;
+                    break;
                 }
             }
-            crossterm::event::KeyCode::Down => {
-                self.zen_toolbar_index = (self.zen_toolbar_index + 1) % len;
+            if !tag.is_empty() {
+                tags.push(format!("#{}", tag));
             }
-            crossterm::event::KeyCode::Enter => {
-                match self.zen_toolbar_index {
-                    0 => {
-                        self.zen_buffer = vec![String::new()];
-                        self.zen_current_filename = "Untitled".into();
-                        self.update_zen_word_count();
-                        self.zen_dirty = false;
-                    }
-                    1 => {
-                        if let Some(path) = self.zen_recent_files.first().cloned() {
-                            self.open_zen_file(&path);
-                        }
-                    }
-                    2 => {
-                        if let Some(path) = self.zen_recent_files.first().cloned() {
-                            self.save_zen_file(&path);
-                        }
-                    }
-                    idx => {
-                        if let Some(path) = self.zen_recent_files.get(idx - 3).cloned() {
-                            self.open_zen_file(&path);
-                        }
+        }
+    }
+    tags
+}
+
+/// Max length for one entry block (wrap threshold)
+pub const MAX_BLOCK_LEN: usize = 180;
+
+/// Break long input into 180-character chunks.
+pub fn split_blocks(text: &str) -> Vec<String> {
+    text.chars()
+        .collect::<Vec<_>>()
+        .chunks(MAX_BLOCK_LEN)
+        .map(|c| c.iter().collect::<String>())
+        .collect()
+}
+
+/// Render all journal entries in view.
+pub fn render_history<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
+    let padding = area.width / 4;
+    let usable_width = area.width - padding * 2;
+    let breathe = ThemeConfig::load().zen_breathe();
+
+    if state.zen_journal_entries.is_empty() {
+        let msg = Paragraph::new("No journal entries yet.")
+            .alignment(Alignment::Center);
+        let rect = Rect::new(area.x + padding, area.y + area.height / 2, usable_width, 1);
+        f.render_widget(msg, rect);
+        return;
+    }
+
+    let entries = state.filtered_journal_entries();
+    let mut blocks: Vec<(u16, Paragraph)> = Vec::new();
+    let mut current_label = String::new();
+
+    for (idx, entry) in entries.iter().enumerate().rev() {
+        let mut lines: Vec<Line> = Vec::new();
+
+        if matches!(state.zen_view_mode, ZenViewMode::Summary) {
+            let label = match state.zen_summary_mode {
+                crate::state::ZenSummaryMode::Weekly => {
+                    format!("Week {}", entry.timestamp.iso_week().week())
+                }
+                crate::state::ZenSummaryMode::Daily => {
+                    let today = Local::now().date_naive();
+                    let edate = entry.timestamp.date_naive();
+                    if edate == today {
+                        "Today".to_string()
+                    } else {
+                        entry.timestamp.format("%A").to_string()
                     }
                 }
-                self.zen_toolbar_open = false;
-            }
-            _ => {}
-        }
-    }
-
-    pub fn auto_save_zen(&mut self) {
-        if self.zen_dirty {
-            let should_save = self
-                .zen_last_saved
-                .map_or(true, |t| t.elapsed().as_secs() > 10);
-            if should_save {
-                let _ = std::fs::write(
-                    &self.zen_current_filename,
-                    self.zen_buffer.join("\n"),
-                );
-                self.zen_last_saved = Some(std::time::Instant::now());
-                self.zen_dirty = false;
-            }
-        }
-    }
-
-    pub fn load_today_journal(&mut self) {
-        use std::fs;
-        let path = format!("journals/{}.prismx", chrono::Local::now().format("%Y-%m-%d"));
-        if let Ok(content) = fs::read_to_string(&path) {
-            self.zen_journal_entries = content
-                .lines()
-                .filter_map(|line| {
-                    let (ts, text) = line.split_once('|')?;
-                    chrono::DateTime::parse_from_rfc3339(ts)
-                        .ok()
-                        .map(|dt| ZenJournalEntry {
-                            timestamp: dt.with_timezone(&chrono::Local),
-                            text: text.to_string(),
-                            prev_text: None,
-                        })
-                })
-                .collect();
-        }
-    }
-
-    pub fn append_journal_entry(&mut self, entry: &ZenJournalEntry) {
-        use std::fs::OpenOptions;
-        use std::io::Write;
-        let dir = "journals";
-        let _ = std::fs::create_dir_all(dir);
-        let path = format!("{}/{}.prismx", dir, chrono::Local::now().format("%Y-%m-%d"));
-        if let Ok(mut file) = OpenOptions::new().create(true).append(true).open(&path) {
-            let _ = writeln!(file, "{}|{}", entry.timestamp.to_rfc3339(), entry.text);
-        }
-    }
-
-    pub fn cycle_zen_theme(&mut self) {
-        self.zen_theme = match self.zen_theme {
-            ZenTheme::DarkGray => ZenTheme::Light,
-            ZenTheme::Light => ZenTheme::HighContrast,
-            ZenTheme::HighContrast => ZenTheme::DarkGray,
-        };
-    }
-
-    // ──────────── Moved from render/zen.rs ────────────
-
-    pub fn add_journal_text(&mut self, text: &str) {
-        use crate::render::zen::split_blocks;
-        for block in split_blocks(text) {
-            if block.trim().is_empty() {
-                continue;
-            }
-
-            self.triage_capture_text(&block, crate::triage::logic::TriageSource::Zen);
-            let entry = ZenJournalEntry {
-                timestamp: chrono::Local::now(),
-                text: block,
-                prev_text: None,
             };
-            self.zen_journal_entries.push(entry);
-        }
-    }
 
-    pub fn edit_journal_entry(&mut self, index: usize, text: &str) {
-        if let Some(entry) = self.zen_journal_entries.get_mut(index) {
-            entry.prev_text = Some(entry.text.clone());
-            entry.text = text.to_string();
-        }
-    }
-
-    pub fn delete_journal_entry(&mut self, index: usize) {
-        if index < self.zen_journal_entries.len() {
-            self.zen_journal_entries.remove(index);
-        }
-    }
-
-    pub fn focus_journal_entry(&mut self, index: usize) {
-        if index < self.zen_journal_entries.len() {
-            self.scroll_offset = index;
-        }
-    }
-
-    pub fn start_edit_journal_entry(&mut self, index: usize) {
-        if let Some(entry) = self.zen_journal_entries.get(index) {
-            self.zen_draft.text = entry.text.clone();
-            self.zen_draft.editing = Some(index);
-        }
-    }
-
-    pub fn cancel_edit_journal_entry(&mut self) {
-        self.zen_draft.editing = None;
-        self.zen_draft.text.clear();
-    }
-
-    pub fn tagged_journal_entries(&self, tags: &[&str]) -> Vec<ZenJournalEntry> {
-        self.zen_journal_entries
-            .iter()
-            .filter(|e| tags.iter().any(|t| e.text.contains(t)))
-            .cloned()
-            .collect()
-    }
-
-    pub fn filtered_journal_entries(&self) -> Vec<&ZenJournalEntry> {
-        use crate::render::zen::extract_tags;
-        self.zen_journal_entries
-            .iter()
-            .filter(|e| {
-                if let Some(tag) = &self.zen_tag_filter {
-                    extract_tags(&e.text)
-                        .iter()
-                        .any(|t| t.eq_ignore_ascii_case(tag))
-                } else {
-                    true
-                }
-            })
-            .collect()
-    }
-
-    pub fn set_tag_filter(&mut self, tag: Option<&str>) {
-        self.zen_tag_filter = tag.map(|t| t.to_string());
-    }
-
-    pub fn toggle_summary_view(&mut self) {
-        use crate::state::{ZenSummaryMode, ZenViewMode};
-        match self.zen_view_mode {
-            ZenViewMode::Summary => {
-                self.zen_summary_mode = match self.zen_summary_mode {
-                    ZenSummaryMode::Daily => ZenSummaryMode::Weekly,
-                    ZenSummaryMode::Weekly => {
-                        self.zen_view_mode = ZenViewMode::Journal;
-                        ZenSummaryMode::Daily
-                    }
-                };
-            }
-            _ => {
-                self.zen_view_mode = ZenViewMode::Summary;
-                self.zen_summary_mode = ZenSummaryMode::Daily;
+            if current_label != label {
+                lines.push(Line::from(Span::styled(
+                    label.clone(),
+                    Style::default().fg(Color::Magenta),
+                )));
+                current_label = label;
             }
         }
+
+        let ts = entry.timestamp.format("%b %d, %Y – %-I:%M%p").to_string();
+        lines.push(Line::from(Span::styled(
+            ts,
+            Style::default().fg(Color::DarkGray).add_modifier(Modifier::DIM),
+        )));
+
+        let tags = extract_tags(&entry.text);
+        if !tags.is_empty() {
+            lines.push(highlight_tags_line(&tags.join(" ")));
+        }
+
+        for l in entry.text.lines() {
+            lines.push(highlight_tags_line(l));
+        }
+
+        lines.push(Line::from(Span::styled(
+            "────────────",
+            Style::default().fg(Color::Gray).add_modifier(Modifier::DIM),
+        )));
+
+        if breathe {
+            let age = Local::now()
+                .signed_duration_since(entry.timestamp)
+                .num_milliseconds() as u128;
+            for line in lines.iter_mut() {
+                fade_line(line, age, 150);
+            }
+        }
+
+        let mut block = Block::default().borders(Borders::NONE);
+        if Some(idx) == state.zen_draft.editing {
+            block = block
+                .border_style(Style::default().fg(Color::DarkGray))
+                .borders(Borders::ALL);
+        }
+
+        let para = Paragraph::new(lines).block(block);
+        let h = para.line_count().unwrap_or(1) as u16;
+        blocks.push((h, para));
     }
+
+    let mut y = area.bottom();
+    for (h, para) in blocks.into_iter().rev() {
+        if y < area.y + h {
+            break;
+        }
+        y -= h;
+        let rect = Rect::new(area.x + padding, y, usable_width, h);
+        f.render_widget(para, rect);
+        if y > area.y {
+            y -= 1;
+        }
+    }
+
+    render_prism(f, area);
 }
