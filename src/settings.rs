@@ -85,14 +85,13 @@ pub fn current_theme() -> BeamColor {
     THEME_PRESETS[THEME_INDEX.load(Ordering::Relaxed) as usize]
 }
 
-// src/settings.rs (add at bottom)
-pub use crate::settings::render_settings;
-pub use crate::settings::{SETTING_TOGGLES, SettingToggle};
-pub use crate::settings::settings_len;
-
-
 pub use SETTING_TOGGLES;
 pub use SettingToggle;
 pub fn settings_len() -> usize {
     SETTING_TOGGLES.len()
 }
+
+// src/settings.rs (add at bottom)
+pub use crate::settings::render_settings;
+pub use crate::settings::{SETTING_TOGGLES, SettingToggle};
+pub use crate::settings::settings_len;
