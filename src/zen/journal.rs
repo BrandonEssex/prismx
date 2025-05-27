@@ -101,7 +101,7 @@ pub fn render_history<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState
         }
 
         let para = Paragraph::new(lines).block(block);
-        let h = para.lines.len() as u16;
+        let h = 5; // estimated height
         blocks.push((h, para));
     }
 

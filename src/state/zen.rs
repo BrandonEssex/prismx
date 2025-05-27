@@ -158,4 +158,61 @@ impl AppState {
             ZenTheme::HighContrast => ZenTheme::DarkGray,
         };
     }
+
+    // PATCHED: Required methods from zen::journal.rs
+    pub fn start_edit_journal_entry(&mut self, index: usize) {
+        if let Some(entry) = self.zen_journal_entries.get(index) {
+            self.zen_draft.text = entry.text.clone();
+            self.zen_draft.editing = Some(index);
+        }
+    }
+
+    pub fn cancel_edit_journal_entry(&mut self) {
+        self.zen_draft.editing = None;
+        self.zen_draft.text.clear();
+    }
+
+    pub fn edit_journal_entry(&mut self, index: usize, text: &str) {
+        if let Some(entry) = self.zen_journal_entries.get_mut(index) {
+            entry.prev_text = Some(entry.text.clone());
+            entry.text = text.to_string();
+        }
+    }
+
+    pub fn filtered_journal_entries(&self) -> Vec<&ZenJournalEntry> {
+        use crate::zen::utils::extract_tags;
+        self.zen_journal_entries
+            .iter()
+            .filter(|e| {
+                if let Some(tag) = &self.zen_tag_filter {
+                    extract_tags(&e.text).iter().any(|t| t.eq_ignore_ascii_case(tag))
+                } else {
+                    true
+                }
+            })
+            .collect()
+    }
+
+    pub fn set_tag_filter(&mut self, tag: Option<&str>) {
+        self.zen_tag_filter = tag.map(|t| t.to_string());
+    }
+
+    pub fn toggle_summary_view(&mut self) {
+        use crate::state::{ZenSummaryMode, ZenViewMode};
+        match self.zen_view_mode {
+            ZenViewMode::Summary => {
+                self.zen_summary_mode = match self.zen_summary_mode {
+                    ZenSummaryMode::Daily => ZenSummaryMode::Weekly,
+                    ZenSummaryMode::Weekly => {
+                        self.zen_view_mode = ZenViewMode::Journal;
+                        ZenSummaryMode::Daily
+                    }
+                };
+            }
+            _ => {
+                self.zen_view_mode = ZenViewMode::Summary;
+                self.zen_summary_mode = ZenSummaryMode::Daily;
+            }
+        }
+    }
 }
