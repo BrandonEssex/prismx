@@ -1,18 +1,16 @@
 use ratatui::prelude::*;
 use ratatui::widgets::{Block, Borders, Paragraph, Clear, Wrap};
 use ratatui::text::{Line, Span};
-
-use crate::state::AppState;
-use crate::plugin::registry::load_registry;
-use crate::plugin::registry::registry_filtered;
-use crate::state::PluginTagFilter;
-
+use ratatui::style::{Color, Modifier, Style};
 use chrono::Datelike;
 
+use crate::state::{AppState, PluginTagFilter};
+use crate::plugin::registry::registry_filtered;
 
 pub fn render_plugin_panel<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
     let style = state.beam_style_for_mode("settings");
     let entries = registry_filtered(state.plugin_tag_filter);
+
     let filter_label = match state.plugin_tag_filter {
         PluginTagFilter::All => "All",
         PluginTagFilter::Trusted => "#trusted",
@@ -27,11 +25,11 @@ pub fn render_plugin_panel<B: Backend>(f: &mut Frame<B>, area: Rect, state: &App
         return;
     }
 
-    let mut constraints = Vec::new();
-    constraints.push(Constraint::Length(1));
+    let mut constraints = vec![Constraint::Length(1)];
     for _ in &entries {
         constraints.push(Constraint::Length(5));
     }
+
     let chunks = Layout::default()
         .direction(Direction::Vertical)
         .constraints(constraints)
@@ -49,6 +47,7 @@ pub fn render_plugin_panel<B: Backend>(f: &mut Frame<B>, area: Rect, state: &App
         if i == state.plugin_registry_index {
             block_style = block_style.add_modifier(Modifier::BOLD);
         }
+
         let title = format!("{} v{}", entry.name, entry.version);
         let block = Block::default().borders(Borders::ALL).title(title).style(block_style);
 
@@ -60,9 +59,10 @@ pub fn render_plugin_panel<B: Backend>(f: &mut Frame<B>, area: Rect, state: &App
             .join(" ");
 
         let lines = vec![
-            Line::from(Span::raw(entry.description)),
+            Line::from(Span::raw(entry.description.clone())),
             Line::from(Span::styled(tag_line, Style::default().fg(Color::Blue))),
         ];
+
         let para = Paragraph::new(lines).block(block).wrap(Wrap { trim: true });
         f.render_widget(para, *rect);
     }
@@ -71,27 +71,19 @@ pub fn render_plugin_panel<B: Backend>(f: &mut Frame<B>, area: Rect, state: &App
 
     if state.show_plugin_preview {
         if let Some(entry) = entries.get(state.plugin_registry_index) {
-            let mut details = vec![
-                Line::from(Span::styled(
-                    entry.name,
-                    Style::default().add_modifier(Modifier::BOLD),
-                )),
+            let details = vec![
+                Line::from(Span::styled(entry.name.clone(), Style::default().add_modifier(Modifier::BOLD))),
                 Line::from(format!("Version: {}", entry.version)),
-                Line::from(entry.description),
+                Line::from(entry.description.clone()),
+                Line::from(format!("Trusted: {}", if entry.trusted { "yes" } else { "no" })),
                 Line::from(format!(
-                    "Trusted: {}",
-                    if entry.trusted { "yes" } else { "no" }
+                    "Trust chain: {}",
+                    entry.trust_chain.as_deref().unwrap_or("unknown")
                 )),
-                Line::from(format!("Trust chain: {}", entry.trust_chain)),
                 Line::from(Span::styled("[Install]", Style::default().fg(Color::DarkGray))),
             ];
 
-            let content_width = details
-                .iter()
-                .map(|l| l.width() as u16)
-                .max()
-                .unwrap_or(0)
-                .saturating_add(4);
+            let content_width = details.iter().map(|l| l.width() as u16).max().unwrap_or(0).saturating_add(4);
             let width = content_width.min(area.width);
             let mut height = details.len() as u16 + 2;
             height = height.min(area.height.saturating_sub(1));

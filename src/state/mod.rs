@@ -13,7 +13,7 @@ mod helpers;
 
 pub mod init;
 mod triage;
-mod view;
+pub mod view;
 
 pub use core::*;
 pub mod serialize;

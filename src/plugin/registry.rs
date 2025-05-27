@@ -20,8 +20,7 @@ pub struct PluginManifest {
     pub version: String,                      
 }
 
-let trust_line = format!("Trust chain: {}", entry.trust_chain.as_deref().unwrap_or("unknown"));
-lines.push(Line::from(trust_line));
+
 
 #[derive(Debug, Deserialize)]
 struct PluginRegistry {

@@ -1,5 +1,8 @@
 use crate::state::{AppState, DebugSnapshot};
 use std::time::Instant;
+use crate::plugin::registry::registry_filtered;
+use crate::state::PluginTagFilter;
+
 
 use ratatui::{
     backend::Backend,
@@ -9,12 +12,12 @@ use ratatui::{
     Frame,
 };
 
-use crate::{plugin::registry::registry_filtered, layout::subtree_depth};
-let plugins = registry_filtered(PluginTagFilter::All);
+use crate::layout::subtree_depth;
 
 
 /// Render debug information when [`AppState::debug_input_mode`] is enabled.
 pub fn render_debug<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
+    let plugins = registry_filtered(PluginTagFilter::All);
     if !state.debug_input_mode {
         return;
     }
@@ -79,7 +82,8 @@ pub fn render_debug_panel<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppS
         selected,
         format!("Auto-arrange: {}", if state.auto_arrange { "ON" } else { "OFF" }),
         format!("Nodes: {} Depth: {}", state.nodes.len(), depth),
-        format!("Plugins: {} / {}", state.plugin_host.active.len(), registry().len()),
+        format!("Plugins: {} / {}", state.plugin_host.active.len(), registry_filtered(PluginTagFilter::All)
+.len()),
     ];
 
     if let Some(log) = last_log_line() {

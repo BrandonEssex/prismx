@@ -10,8 +10,8 @@ use ratatui::{
 use crate::state::ZenJournalEntry;
 use crate::ui::animate::fade_line;
 use crate::config::theme::ThemeConfig;
-use crate::ui::components::feed::extract_tags;
 use crate::zen::utils::extract_tags;
+use chrono::Datelike;
 
 
 pub fn render_feed<B: Backend>(

@@ -1,25 +1,54 @@
 use ratatui::prelude::*;
-use crate::state::{AppState, ZenViewMode};
+use crate::state::view::ZenViewMode;
+use crate::state::{AppState};
 use crate::render::zen::render_zen_journal;
 use crate::canvas::prism::render_prism;
+use crate::zen::utils::highlight_tags_line;
+
 
 pub fn render_zen<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
     match state.zen_view_mode {
-        ZenViewMode::Journal => render_zen_journal(f, area, state),
-        ZenViewMode::Classic => render_classic(f, area, state),
-        ZenViewMode::Summary => render_zen_journal(f, area, state),
+        ZenViewMode::Journal => {
+            render_zen_journal(f, area, state);
+        }
+        ZenViewMode::Classic => {
+            render_classic(f, area, state);
+        }
+        ZenViewMode::Summary => {
+            render_zen_journal(f, area, state);
+        }
         ZenViewMode::Split => {
             let mid = area.width / 2;
-            let left = Rect { x: area.x, y: area.y, width: mid, height: area.height };
-            let right = Rect { x: area.x + mid, y: area.y, width: area.width - mid, height: area.height };
+            let left = Rect {
+                x: area.x,
+                y: area.y,
+                width: mid,
+                height: area.height,
+            };
+            let right = Rect {
+                x: area.x + mid,
+                y: area.y,
+                width: area.width - mid,
+                height: area.height,
+            };
             render_classic(f, left, state);
             render_zen_journal(f, right, state);
         }
+        ZenViewMode::Compose => {
+            let tick = (std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap_or_default()
+                .as_millis()
+                / 300) as u64;
+            render_compose(f, area, state, tick);
+        }
     }
+
     render_prism(f, area);
 }
 
-fn render_classic<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
+
+pub fn render_classic<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
     use ratatui::widgets::{Paragraph, Block, Borders};
     use ratatui::style::Style;
     use ratatui::text::Line;

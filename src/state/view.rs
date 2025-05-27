@@ -6,6 +6,7 @@ pub enum ZenViewMode {
     Classic,
     Split,
     Summary,
+    Compose,
 }
 
 impl Default for ZenViewMode {

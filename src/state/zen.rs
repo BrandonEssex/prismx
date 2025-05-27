@@ -1,5 +1,6 @@
 use super::core::{AppState, ZenJournalEntry, ZenSyntax, ZenTheme};
 
+
 impl AppState {
     pub fn export_zen_to_file(&self) {
         use std::fs::{self, File};
