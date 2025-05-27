@@ -650,15 +650,14 @@ pub fn launch_ui() -> std::io::Result<()> {
                                     text: text.clone(),
                                     prev_text: None,
                                 };
-                                state.zen_journal_entries.push(entry.clone());
-                                state.append_journal_entry(&entry);
+                                state.zen_journal_entries.push(entry.clone());                                state.append_journal_entry(&entry);
                             }
                             state.zen_draft.text.clear();
                         }
                     }
                     _ => {}
                 }
-                }
+            }    
                 Event::Mouse(me) => {
                     use crossterm::event::{MouseButton, MouseEventKind};
                     match me.kind {
