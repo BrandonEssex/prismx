@@ -1,5 +1,5 @@
 use ratatui::{prelude::*, widgets::{Block, Borders, Paragraph}, style::Modifier};
-use crate::state::{AppState, ZenSyntax, ZenTheme, ZenViewMode, ZenJournalView, ZenMode};
+use crate::state::{AppState, ZenSyntax, ZenTheme, ZenViewMode, ZenMode};
 use chrono::Datelike;
 use crate::zen::journal::extract_tags;
 use crate::beamx::render_full_border;

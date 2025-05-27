@@ -34,6 +34,14 @@ use hotkeys::match_hotkey;
 use crate::shortcuts::{match_shortcut, Shortcut};
 use std::time::Duration;
 
+pub enum ZenViewMode {
+    Journal,
+    Classic,
+    Split,
+    Summary,
+    Compose,
+}
+
 pub fn draw<B: Backend>(terminal: &mut Terminal<B>, state: &mut AppState, _last_key: &str) -> std::io::Result<()> {
     use ratatui::layout::{Constraint, Direction, Layout, Rect};
     use ratatui::widgets::Paragraph;
@@ -498,7 +506,7 @@ pub fn launch_ui() -> std::io::Result<()> {
                 match code {
                     KeyCode::Esc => {
                         if state.mode == "zen"
-                            && state.zen_journal_view == crate::state::ZenJournalView::Compose
+                            && state.zen_view_mode == crate::state::ZenViewMode::Compose
                             && state.zen_draft.editing.is_some()
                         {
                             state.cancel_edit_journal_entry();
@@ -609,21 +617,21 @@ pub fn launch_ui() -> std::io::Result<()> {
 
                     KeyCode::Char(c)
                         if state.mode == "zen"
-                            && state.zen_journal_view == crate::state::ZenJournalView::Compose =>
+                            && state.zen_view_mode == crate::state::ZenViewMode::Compose =>
                     {
                         state.zen_draft.text.push(c);
                     }
 
                     KeyCode::Backspace
                         if state.mode == "zen"
-                            && state.zen_journal_view == crate::state::ZenJournalView::Compose =>
+                            && state.zen_view_mode == crate::state::ZenViewMode::Compose =>
                     {
                         state.zen_draft.text.pop();
                     }
 
                     KeyCode::Enter
                         if state.mode == "zen"
-                            && state.zen_journal_view == crate::state::ZenJournalView::Compose =>
+                            && state.zen_view_mode == crate::state::ZenViewMode::Compose =>
                     {
                         let text = state.zen_draft.text.trim().to_string();
 

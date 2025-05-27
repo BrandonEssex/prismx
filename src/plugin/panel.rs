@@ -3,8 +3,12 @@ use ratatui::widgets::{Block, Borders, Paragraph, Clear, Wrap};
 use ratatui::text::{Line, Span};
 
 use crate::state::AppState;
+use crate::plugin::registry::load_registry;
 use crate::plugin::registry::registry_filtered;
 use crate::state::PluginTagFilter;
+
+use chrono::Datelike;
+
 
 pub fn render_plugin_panel<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
     let style = state.beam_style_for_mode("settings");

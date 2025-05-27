@@ -9,7 +9,9 @@ use ratatui::{
     Frame,
 };
 
-use crate::{plugin::registry::registry, layout::subtree_depth};
+use crate::{plugin::registry::registry_filtered, layout::subtree_depth};
+let plugins = registry_filtered(PluginTagFilter::All);
+
 
 /// Render debug information when [`AppState::debug_input_mode`] is enabled.
 pub fn render_debug<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
