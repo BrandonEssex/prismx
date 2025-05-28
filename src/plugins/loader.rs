@@ -18,6 +18,11 @@ pub struct RawPluginMetadata {
     version: *const c_char,
 }
 
+pub struct LoadedPlugin {
+    pub path: PathBuf,
+    pub lib: Library,
+}
+
 type RegisterFn = unsafe extern "C" fn() -> RawPluginMetadata;
 
 static LIBS: OnceLock<Mutex<Vec<Library>>> = OnceLock::new();
@@ -43,7 +48,9 @@ fn cstr_to_string(ptr: *const c_char) -> String {
     }
 }
 
-fn load_library(path: &Path) {
+/// Load and register a single plugin.
+fn load_plugin(path: &Path) -> Option<LoadedPlugin> {
+    tracing::debug!("[PLUGIN] attempting {}", path.display());
     unsafe {
         match Library::new(path) {
             Ok(lib) => {
@@ -57,8 +64,12 @@ fn load_library(path: &Path) {
                             path: path.to_path_buf(),
                         };
                         registry_lock().lock().unwrap().push(meta);
-                        libs_lock().lock().unwrap().push(lib);
+                        libs_lock().lock().unwrap().push(lib.clone());
                         tracing::info!("[PLUGIN] loaded {}", path.display());
+                        Some(LoadedPlugin {
+                            path: path.to_path_buf(),
+                            lib,
+                        })
                     }
                     Err(err) => {
                         tracing::error!(
@@ -66,11 +77,13 @@ fn load_library(path: &Path) {
                             path.display(),
                             err
                         );
+                        None
                     }
                 }
             }
             Err(err) => {
                 tracing::error!("[PLUGIN] failed to load {}: {}", path.display(), err);
+                None
             }
         }
     }
@@ -82,7 +95,7 @@ pub fn load_plugins() {
         for entry in entries.flatten() {
             let path = entry.path();
             if matches!(path.extension().and_then(|e| e.to_str()), Some("so") | Some("dylib")) {
-                load_library(&path);
+                load_plugin(&path);
             }
         }
     }
