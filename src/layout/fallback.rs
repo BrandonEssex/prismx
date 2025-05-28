@@ -1,7 +1,7 @@
 use std::collections::{HashMap, HashSet};
 use crate::state::AppState;
 use crate::node::NodeID;
-use crate::layout::{Coords, LayoutRole, GEMX_HEADER_HEIGHT};
+use crate::layout::{Coords, LayoutRole, GEMX_HEADER_HEIGHT, RESERVED_ZONE_W};
 
 /// Promote unreachable nodes to root positions when auto-arrange is enabled.
 /// This helps recover nodes that would otherwise be lost off-screen.
@@ -50,6 +50,8 @@ pub fn promote_unreachable(
                 let step_y = 3;
                 let base_y = GEMX_HEADER_HEIGHT + 2;
                 let max_y = area_height - 4;
+                let (tw, _) = crossterm::terminal::size().unwrap_or((80, 20));
+                let max_x = tw as i16 - RESERVED_ZONE_W - 1;
                 let mut x = state.fallback_next_x;
                 let mut y = state.fallback_next_y;
 
@@ -62,8 +64,13 @@ pub fn promote_unreachable(
                         y = base_y;
                         x += step_x;
                     }
+                    if x > max_x {
+                        x = 6;
+                    }
                 }
 
+                x = x.clamp(0, max_x);
+                y = y.clamp(base_y, max_y);
                 n.x = x;
                 n.y = y;
                 state.fallback_next_x = x;
