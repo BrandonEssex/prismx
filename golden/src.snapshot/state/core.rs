@@ -69,6 +69,7 @@ pub struct ZenJournalEntry {
     pub timestamp: chrono::DateTime<chrono::Local>,
     pub text: String,
     pub prev_text: Option<String>,
+    pub tags: Vec<String>,
 }
 
 #[derive(Clone, Default)]

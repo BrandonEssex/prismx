@@ -10,7 +10,7 @@ use chrono::{Datelike, Local};
 use crate::config::theme::ThemeConfig;
 use crate::state::AppState;
 use crate::state::view::ZenViewMode;
-use crate::zen::utils::{highlight_tags_line, extract_tags};
+use crate::zen::utils::highlight_tags_line;
 use crate::beamx::render_full_border;
 
 /// Public render entry point for Journal view
@@ -70,9 +70,8 @@ pub fn render_history<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState
             Style::default().fg(Color::DarkGray).add_modifier(Modifier::DIM),
         )));
 
-        let tags = extract_tags(&entry.text);
-        if !tags.is_empty() {
-            lines.push(highlight_tags_line(&tags.join(" ")));
+        if !entry.tags.is_empty() {
+            lines.push(highlight_tags_line(&entry.tags.join(" ")));
         }
 
         for l in entry.text.lines() {

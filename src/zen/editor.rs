@@ -34,6 +34,7 @@ pub fn handle_key(state: &mut AppState, key: KeyCode) {
                         timestamp: chrono::Local::now(),
                         text: text.clone(),
                         prev_text: None,
+                        tags: crate::zen::utils::parse_tags(&text),
                     };
                     state.zen_journal_entries.push(entry.clone());
                     state.append_journal_entry(&entry);

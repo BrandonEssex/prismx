@@ -137,6 +137,7 @@ impl AppState {
                             timestamp: dt.with_timezone(&chrono::Local),
                             text: text.to_string(),
                             prev_text: None,
+                            tags: crate::zen::utils::parse_tags(text),
                         })
                 })
                 .collect();
@@ -176,16 +177,16 @@ impl AppState {
         if let Some(entry) = self.zen_journal_entries.get_mut(index) {
             entry.prev_text = Some(entry.text.clone());
             entry.text = text.to_string();
+            entry.tags = crate::zen::utils::parse_tags(text);
         }
     }
 
     pub fn filtered_journal_entries(&self) -> Vec<&ZenJournalEntry> {
-        use crate::zen::utils::extract_tags;
         self.zen_journal_entries
             .iter()
             .filter(|e| {
                 if let Some(tag) = &self.zen_tag_filter {
-                    extract_tags(&e.text).iter().any(|t| t.eq_ignore_ascii_case(tag))
+                    e.tags.iter().any(|t| t.eq_ignore_ascii_case(tag))
                 } else {
                     true
                 }
