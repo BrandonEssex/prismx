@@ -1,5 +1,5 @@
 use ratatui::text::{Line, Span};
-use ratatui::style::{Color, Style};
+use ratatui::style::{Color, Style, Modifier};
 
 /// Extract all hashtags from a line of text (e.g., "#tag")
 pub fn extract_tags(text: &str) -> Vec<String> {
@@ -35,11 +35,27 @@ pub fn parse_tags(text: &str) -> Vec<String> {
 pub fn highlight_tags_line(input: &str) -> Line<'static> {
     let mut spans = Vec::new();
     for token in input.split_whitespace() {
-        if token.starts_with('#') {
-            spans.push(Span::styled(token.to_string(), Style::default().fg(Color::Blue)));
+        let span = if token.starts_with("**") && token.ends_with("**") && token.len() > 4 {
+            Span::styled(
+                token[2..token.len() - 2].to_string(),
+                Style::default().add_modifier(Modifier::BOLD),
+            )
+        } else if token.starts_with('*') && token.ends_with('*') && token.len() > 2 {
+            Span::styled(
+                token[1..token.len() - 1].to_string(),
+                Style::default().add_modifier(Modifier::DIM),
+            )
+        } else if token.starts_with('`') && token.ends_with('`') && token.len() > 2 {
+            Span::styled(
+                token[1..token.len() - 1].to_string(),
+                Style::default().fg(Color::Yellow),
+            )
+        } else if token.starts_with('#') {
+            Span::styled(token.to_string(), Style::default().fg(Color::Blue))
         } else {
-            spans.push(Span::raw(token.to_string()));
-        }
+            Span::raw(token.to_string())
+        };
+        spans.push(span);
         spans.push(Span::raw(" "));
     }
     Line::from(spans)
