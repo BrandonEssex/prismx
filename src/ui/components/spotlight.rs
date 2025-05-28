@@ -9,7 +9,7 @@ use ratatui::{
 
 use crate::state::AppState;
 use crate::spotlight::{command_preview, command_suggestions_scored};
-use crate::spotlight::render::command_icon;
+use crate::spotlight::result::command_icon;
 use crate::theme;
 use crate::config::theme::ThemeConfig;
 
