@@ -1,6 +1,6 @@
 use chrono::{DateTime, Local};
-use regex::Regex;
 use crate::state::{AppState, ZenJournalEntry};
+use crate::triage::helpers::extract_tags;
 
 /// Tags that mark an entry for triage.
 const TRIAGE_TAGS: &[&str] = &["#TODO", "#TRITON", "#PRIORITY", "#NOW"];
@@ -36,13 +36,6 @@ impl TriageEntry {
             archived: false,
         }
     }
-}
-
-fn extract_tags(text: &str) -> Vec<String> {
-    let re = Regex::new(r"#\w+").unwrap();
-    re.find_iter(text)
-        .map(|m| m.as_str().to_string())
-        .collect()
 }
 
 /// Collect raw journal entries containing any triage tags.

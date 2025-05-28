@@ -162,7 +162,7 @@ pub struct AppState {
     pub zen_compose_input: String,
     pub zen_journal_entries: Vec<ZenJournalEntry>,
     pub zen_tag_filter: Option<String>,
-    pub triage_entries: Vec<crate::triage::logic::TriageEntry>,
+    pub triage_entries: Vec<crate::triage::state::TriageEntry>,
     pub triage_summary: crate::state::view::TriageSummary,
     pub gemx_beam_color: crate::beam_color::BeamColor,
     pub zen_beam_color: crate::beam_color::BeamColor,

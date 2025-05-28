@@ -1,8 +1,8 @@
-pub mod panel;
-pub mod logic;
+pub mod state;
+pub mod view;
+pub mod helpers;
 
-pub use panel::render_triage_panel;
-pub use logic::{
+pub use state::{
     TriageEntry,
     TriageSource,
     handle_inline_command,
@@ -10,4 +10,6 @@ pub use logic::{
     update_pipeline,
     tag_counts,
 };
+pub use view::render_triage_panel;
+pub use helpers::{sort_by_priority, parse_due_date, extract_tags};
 

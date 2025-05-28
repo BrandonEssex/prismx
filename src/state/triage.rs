@@ -1,4 +1,4 @@
-use crate::triage::logic::{capture_entry, handle_inline_command, TriageSource};
+use crate::triage::state::{capture_entry, handle_inline_command, TriageSource};
 use super::core::AppState;
 
 impl AppState {
