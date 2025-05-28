@@ -27,7 +27,7 @@ pub fn handle_key(state: &mut AppState, key: KeyCode) {
                 state.zen_draft.text.clear();
             } else {
                 if !text.is_empty() {
-                    if crate::config::theme::ThemeConfig::load().zen_breathe() {
+                    if crate::config_store::theme::ThemeConfig::load().zen_breathe() {
                         std::thread::sleep(std::time::Duration::from_millis(150));
                     }
                     let entry = ZenJournalEntry {

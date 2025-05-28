@@ -11,7 +11,7 @@ use crate::state::AppState;
 use crate::spotlight::{command_preview, command_suggestions_scored};
 use crate::spotlight::result::command_icon;
 use crate::theme;
-use crate::config::theme::ThemeConfig;
+use crate::config_store::theme::ThemeConfig;
 
 pub fn render_spotlight<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppState) {
     let input = &state.spotlight_input;

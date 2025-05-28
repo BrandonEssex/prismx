@@ -8,7 +8,7 @@ use ratatui::{
 };
 
 use crate::state::AppState;
-use crate::config::theme::ThemeConfig;
+use crate::config_store::theme::ThemeConfig;
 use super::{layout::settings_area, toggle::SETTING_TOGGLES};
 
 pub fn render_settings<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {

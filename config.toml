@@ -1,0 +1,3 @@
+theme = "dark"
+default_module = "gemx"
+log_level = "info"

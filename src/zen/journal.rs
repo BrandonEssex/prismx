@@ -7,7 +7,7 @@ use ratatui::{
 };
 
 use chrono::{Datelike, Local};
-use crate::config::theme::ThemeConfig;
+use crate::config_store::theme::ThemeConfig;
 use crate::state::AppState;
 use crate::state::view::ZenViewMode;
 use crate::zen::utils::{highlight_tags_line, extract_tags};

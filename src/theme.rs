@@ -11,6 +11,12 @@ pub fn toggle_theme() {
     }
 }
 
+pub fn set_theme(theme: &str) {
+    unsafe {
+        CURRENT_THEME = Box::leak(theme.to_string().into_boxed_str());
+    }
+}
+
 pub fn get_style(target: &str) -> Style {
     let default = Style::default().fg(Color::White).bg(Color::Black);
     let config = fs::read_to_string("theme/theme.toml").unwrap_or_default();

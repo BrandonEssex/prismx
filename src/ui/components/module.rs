@@ -9,7 +9,7 @@ use crate::ui::layout::Rect;
 
 use crate::state::AppState;
 use crate::ui::animate;
-use crate::config::theme::ThemeConfig;
+use crate::config_store::theme::ThemeConfig;
 
 pub fn render_module_switcher<B: Backend>(
     f: &mut Frame<B>,
