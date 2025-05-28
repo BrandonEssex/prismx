@@ -137,6 +137,7 @@ impl AppState {
                             timestamp: dt.with_timezone(&chrono::Local),
                             text: text.to_string(),
                             prev_text: None,
+                            tags: crate::zen::utils::parse_tags(text),
                         })
                 })
                 .collect();
@@ -147,7 +148,12 @@ impl AppState {
         let _ = std::fs::create_dir_all("journals");
         let path = format!("journals/{}.prismx", chrono::Local::now().format("%Y-%m-%d"));
         if let Ok(mut file) = OpenOptions::new().create(true).append(true).open(&path) {
-            let _ = writeln!(file, "{}|{}", entry.timestamp.to_rfc3339(), entry.text);
+            let _ = writeln!(
+                file,
+                "{}|{}",
+                entry.timestamp.to_rfc3339(),
+                entry.text.clone()
+            );
         }
     }
 
@@ -157,6 +163,23 @@ impl AppState {
             ZenTheme::Light => ZenTheme::HighContrast,
             ZenTheme::HighContrast => ZenTheme::DarkGray,
         };
+    }
+
+    pub fn filtered_journal_entries(&self) -> Vec<&ZenJournalEntry> {
+        self.zen_journal_entries
+            .iter()
+            .filter(|e| {
+                if let Some(tag) = &self.zen_tag_filter {
+                    e.tags.iter().any(|t| t.eq_ignore_ascii_case(tag))
+                } else {
+                    true
+                }
+            })
+            .collect()
+    }
+
+    pub fn load_draft_from_entry(&mut self, entry: &ZenJournalEntry) {
+        self.zen_draft.text = entry.text.clone();
     }
 
     // PATCHED: Required methods from zen::journal.rs
@@ -176,21 +199,8 @@ impl AppState {
         if let Some(entry) = self.zen_journal_entries.get_mut(index) {
             entry.prev_text = Some(entry.text.clone());
             entry.text = text.to_string();
+            entry.tags = crate::zen::utils::parse_tags(text);
         }
-    }
-
-    pub fn filtered_journal_entries(&self) -> Vec<&ZenJournalEntry> {
-        use crate::zen::utils::extract_tags;
-        self.zen_journal_entries
-            .iter()
-            .filter(|e| {
-                if let Some(tag) = &self.zen_tag_filter {
-                    extract_tags(&e.text).iter().any(|t| t.eq_ignore_ascii_case(tag))
-                } else {
-                    true
-                }
-            })
-            .collect()
     }
 
     pub fn set_tag_filter(&mut self, tag: Option<&str>) {
@@ -198,19 +208,19 @@ impl AppState {
     }
 
     pub fn toggle_summary_view(&mut self) {
-        use crate::state::{ZenSummaryMode, ZenViewMode};
-        match self.zen_view_mode {
-            ZenViewMode::Summary => {
+        use crate::state::{ZenSummaryMode, ZenLayoutMode};
+        match self.zen_layout_mode {
+            ZenLayoutMode::Summary => {
                 self.zen_summary_mode = match self.zen_summary_mode {
                     ZenSummaryMode::Daily => ZenSummaryMode::Weekly,
                     ZenSummaryMode::Weekly => {
-                        self.zen_view_mode = ZenViewMode::Journal;
+                        self.zen_layout_mode = ZenLayoutMode::Journal;
                         ZenSummaryMode::Daily
                     }
                 };
             }
             _ => {
-                self.zen_view_mode = ZenViewMode::Summary;
+                self.zen_layout_mode = ZenLayoutMode::Summary;
                 self.zen_summary_mode = ZenSummaryMode::Daily;
             }
         }

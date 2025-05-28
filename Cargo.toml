@@ -30,6 +30,12 @@ tracing-appender = "0.2" # file logging via PRISMX_LOG
 libloading = "0.7"
 regex = "1"
 
+# Async runtime
+tokio = { version = "1", features = ["full"] }
+crossbeam-channel = "0.5"
+once_cell = "1"
+walkdir = "2"
+
 # [target.'cfg(target_arch = "wasm32")'.dependencies]
 # wasm-bindgen = "0.2"
 # console_error_panic_hook = "0.1"

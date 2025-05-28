@@ -2,10 +2,10 @@ use ratatui::prelude::*;
 use ratatui::widgets::{Block, Borders, Paragraph, Clear, Wrap};
 use ratatui::text::{Line, Span};
 use ratatui::style::{Color, Modifier, Style};
-use chrono::Datelike;
 
 use crate::state::{AppState, PluginTagFilter};
 use crate::plugin::registry::registry_filtered;
+use crate::ui::components::plugin_status::render_plugin_status;
 
 pub fn render_plugin_panel<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
     let style = state.beam_style_for_mode("settings");
@@ -68,6 +68,13 @@ pub fn render_plugin_panel<B: Backend>(f: &mut Frame<B>, area: Rect, state: &App
     }
 
     crate::beamx::render_full_border(f, area, &style, true, false);
+
+    // Display a summary of loaded plugins at the bottom of the panel
+    let height = 3u16;
+    if area.height > height + 2 {
+        let status_area = Rect::new(area.x + 1, area.bottom().saturating_sub(height + 1), area.width - 2, height);
+        render_plugin_status(f, status_area);
+    }
 
     if state.show_plugin_preview {
         if let Some(entry) = entries.get(state.plugin_registry_index) {

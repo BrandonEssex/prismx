@@ -29,8 +29,8 @@ jobs:
             -exec test -f {}/test_plan.sh \; -print | sed 's|patches/||')
           filtered=$(echo "$patches" | .github/scripts/filter-patch-jobs.sh)
           matrix=$(echo "$filtered" | jq -R -s -c 'split("\n") | map(select(length > 0))')
-          echo "matrix=$matrix" >> $GITHUB_OUTPUT
-
+          echo "matrix=${matrix}" >> $GITHUB_OUTPUT
+          echo "::set-output name=matrix::${matrix}"
 
   patch-test:
     name: Run Patch Tests (${{ matrix.patch }})
@@ -56,9 +56,16 @@ jobs:
           toolchain: stable
           override: true
 
+      - name: 🧭 Debug patch folder existence
+        run: |
+          echo "🔍 Checking for: ./patches/${{ matrix.patch }}/test_plan.sh"
+          ls -la ./patches/${{ matrix.patch }} || echo "❌ Patch folder missing"
+
       - name: 🧰 Set Executable Permissions
         run: |
-          chmod +x ./patches/${{ matrix.patch }}/test_plan.sh || true
+          if [ -f ./patches/${{ matrix.patch }}/test_plan.sh ]; then
+            chmod +x ./patches/${{ matrix.patch }}/test_plan.sh
+          fi
           chmod +x ./bin/lint-regression-check.sh || true
           chmod +x scripts/ci/should-run-patch.sh || true
 
@@ -73,7 +80,12 @@ jobs:
 
       - name: 🧪 Run Patch Test Plan
         if: steps.runcheck.outputs.run == 'true'
-        run: ./patches/${{ matrix.patch }}/test_plan.sh || echo "❌ test_plan.sh failed or missing"
+        run: |
+          if [ -f ./patches/${{ matrix.patch }}/test_plan.sh ]; then
+            ./patches/${{ matrix.patch }}/test_plan.sh || echo "❌ test_plan.sh failed"
+          else
+            echo "⚠️ test_plan.sh missing for ${{ matrix.patch }}"
+          fi
 
       - name: ✅ Run Lint Regression Check
         if: steps.runcheck.outputs.run == 'true'

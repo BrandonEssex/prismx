@@ -5,14 +5,13 @@ use ratatui::{
     widgets::{Block, Borders, Paragraph},
     Frame,
 };
-use crate::ui::layout::Rect;
 
+use crate::ui::layout::Rect;
 use crate::state::ZenJournalEntry;
 use crate::ui::animate::fade_line;
 use crate::config::theme::ThemeConfig;
-use crate::zen::utils::extract_tags;
-use chrono::Datelike;
 
+use chrono::Datelike;
 
 pub fn render_feed<B: Backend>(
     f: &mut Frame<B>,
@@ -26,13 +25,10 @@ pub fn render_feed<B: Backend>(
     let mut blocks: Vec<Vec<Line>> = Vec::new();
     let mut current_label = String::new();
 
-    for (idx, entry) in entries.iter().enumerate().rev() {
+    for (_idx, entry) in entries.iter().enumerate().rev() {
         // Filter by tag if present
         if let Some(tag) = tag_filter {
-            if !extract_tags(&entry.text)
-                .iter()
-                .any(|t| t.eq_ignore_ascii_case(tag))
-            {
+            if !entry.tags.iter().any(|t| t.eq_ignore_ascii_case(tag)) {
                 continue;
             }
         }
@@ -79,9 +75,7 @@ pub fn render_feed<B: Backend>(
                     if token.eq_ignore_ascii_case("#DONE") {
                         spans.push(Span::styled(
                             token,
-                            Style::default()
-                                .fg(Color::DarkGray)
-                                .add_modifier(Modifier::DIM),
+                            Style::default().fg(Color::DarkGray).add_modifier(Modifier::DIM),
                         ));
                     } else {
                         spans.push(Span::styled(token, Style::default().fg(Color::Blue)));

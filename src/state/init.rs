@@ -11,10 +11,14 @@ pub fn init() {
         tracing::info!("[INIT] {} plugins discovered", plugins.len());
         for plug in &plugins {
             tracing::debug!("[INIT] plugin available: {}", plug.path.display());
+            // ✅ load it now:
+            let _ = loader::load_plugin(&plug.path);
         }
     }
+
     registry::init();
 }
+
 
 /// Reload all plugins in the `plugins/` directory. Only `.so` and `.dylib`
 /// files are loaded.
@@ -24,9 +28,7 @@ pub fn reload_plugins() {
         for entry in entries.flatten() {
             let path = entry.path();
             if matches!(path.extension().and_then(|e| e.to_str()), Some("so") | Some("dylib")) {
-                if let Some(p) = path.to_str() {
-                    let _ = loader::load_plugin(p);
-                }
+                let _ = loader::load_plugin(&path);
             }
         }
     }

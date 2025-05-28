@@ -30,10 +30,19 @@ pub fn handle_log_keys(state: &mut AppState, code: KeyCode, mods: KeyModifiers) 
     }
 }
 
-/// Toggle Zen compose/scroll view.
+/// Route keystrokes while in Zen mode to the editor handler.
+pub fn route_zen_keys(state: &mut AppState, code: KeyCode, _mods: KeyModifiers) -> bool {
+    if state.mode == "zen" {
+        crate::zen::editor::handle_key(state, code);
+        return true;
+    }
+    false
+}
+
+/// Toggle Zen Write/Review view.
 pub fn toggle_zen_view(state: &mut AppState) {
-    state.zen_mode = match state.zen_mode {
-        crate::state::ZenMode::Compose => crate::state::ZenMode::Scroll,
-        crate::state::ZenMode::Scroll => crate::state::ZenMode::Compose,
+    state.zen_view_mode = match state.zen_view_mode {
+        crate::state::ZenViewMode::Write => crate::state::ZenViewMode::Review,
+        crate::state::ZenViewMode::Review => crate::state::ZenViewMode::Write,
     };
 }

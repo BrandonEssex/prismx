@@ -1,15 +1,16 @@
 use super::core::AppState;
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
-pub enum ZenViewMode {
+pub enum ZenLayoutMode {
     Journal,
     Classic,
     Split,
     Summary,
     Compose,
+    Dual,
 }
 
-impl Default for ZenViewMode {
+impl Default for ZenLayoutMode {
     fn default() -> Self { Self::Journal }
 }
 

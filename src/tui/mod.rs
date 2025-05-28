@@ -7,8 +7,8 @@ use crossterm::{
     terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
 };
 use std::io::stdout;
-use crate::state::view::ZenViewMode;
-use crate::state::{AppState, SimInput};
+use crate::state::view::ZenLayoutMode;
+use crate::state::{AppState, SimInput, ZenViewMode};
 use crate::render::{
     render_status_bar,
     render_shortcuts_overlay,
@@ -26,9 +26,7 @@ fn rect_contains(rect: ratatui::layout::Rect, x: u16, y: u16) -> bool {
 }
 use crate::screen::render_gemx;
 use crate::render::render_settings;
-use crate::settings::{SETTING_TOGGLES, settings_len};
 use crate::ui::components::plugin::render_plugin;
-use crate::ui::components::debug::render_debug;
 use crate::ui::components::logs::render_logs;
 use crate::ui::input;
 
@@ -453,12 +451,13 @@ pub fn launch_ui() -> std::io::Result<()> {
                     && modifiers.contains(KeyModifiers::SHIFT)
                     && state.mode == "zen"
                 {
-                    state.zen_view_mode = match state.zen_view_mode {
-                        ZenViewMode::Journal => ZenViewMode::Classic,
-                        ZenViewMode::Classic => ZenViewMode::Split,
-                        ZenViewMode::Split => ZenViewMode::Summary,
-                        ZenViewMode::Summary => ZenViewMode::Journal,
-                        ZenViewMode::Compose => ZenViewMode::Journal,
+                    state.zen_layout_mode = match state.zen_layout_mode {
+                        ZenLayoutMode::Journal => ZenLayoutMode::Classic,
+                        ZenLayoutMode::Classic => ZenLayoutMode::Split,
+                        ZenLayoutMode::Split => ZenLayoutMode::Summary,
+                        ZenLayoutMode::Summary => ZenLayoutMode::Dual,
+                        ZenLayoutMode::Dual => ZenLayoutMode::Journal,
+                        ZenLayoutMode::Compose => ZenLayoutMode::Journal,
                     };
                 } else if code == KeyCode::Char('t')
                     && modifiers == KeyModifiers::CONTROL
@@ -467,7 +466,7 @@ pub fn launch_ui() -> std::io::Result<()> {
                     state.zen_toolbar_open = !state.zen_toolbar_open;
                     state.zen_toolbar_index = 0;
                 } else if code == KeyCode::Tab
-                    && modifiers == KeyModifiers::ALT
+                    && modifiers == KeyModifiers::CONTROL
                     && state.mode == "zen"
                 {
                     input::toggle_zen_view(&mut state);
@@ -510,7 +509,8 @@ pub fn launch_ui() -> std::io::Result<()> {
                 match code {
                     KeyCode::Esc => {
                         if state.mode == "zen"
-                            && state.zen_view_mode == ZenViewMode::Compose
+                            && state.zen_layout_mode == ZenLayoutMode::Compose
+                            && state.zen_view_mode == ZenViewMode::Write
                             && state.zen_draft.editing.is_some()
                         {
                             state.cancel_edit_journal_entry();
@@ -619,14 +619,12 @@ pub fn launch_ui() -> std::io::Result<()> {
                         }
                     }
 
-                    k @ _ if state.mode == "zen"
-                        && state.zen_view_mode == ZenViewMode::Compose =>
-                    {
-                        crate::zen::editor::handle_key(&mut state, k);
+                    k @ _ if state.mode == "zen" => {
+                        input::route_zen_keys(&mut state, k, modifiers);
                     }
                     _ => {}
                 }
-            }    
+            }
                 Event::Mouse(me) => {
                     use crossterm::event::{MouseButton, MouseEventKind};
                     match me.kind {

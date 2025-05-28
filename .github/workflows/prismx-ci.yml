@@ -35,9 +35,3 @@ jobs:
 
       - name: 🛠️ Build project
         run: cargo build --release
-
-      - name: ✅ Run test plan
-        run: |
-          chmod +x patches/patch-25.43-link-arrows-mac-scroll/test_plan.sh
-          ./patches/patch-25.43-link-arrows-mac-scroll/test_plan.sh
-        shell: bash

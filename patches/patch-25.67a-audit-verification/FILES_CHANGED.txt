@@ -1,0 +1,2 @@
++ scripts/ci/audit-integrity.sh
++ src/bin/audit.rs

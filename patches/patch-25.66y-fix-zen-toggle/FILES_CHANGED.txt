@@ -1,0 +1,3 @@
+~ src/ui/input.rs
+~ src/zen/editor.rs
+~ src/state/view.rs

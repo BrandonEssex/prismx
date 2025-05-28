@@ -1,14 +1,16 @@
 use ratatui::style::{Color, Style};
 use std::collections::HashMap;
 use std::fs;
+use std::sync::Mutex;
 
-static mut CURRENT_THEME: &str = "dark";
+pub mod zen;
+
+static CURRENT_THEME: Mutex<&str> = Mutex::new("dark");
 
 pub fn toggle_theme() {
-    unsafe {
-        CURRENT_THEME = if CURRENT_THEME == "dark" { "light" } else { "dark" };
-        tracing::debug!("[THEME] Switched to: {}", CURRENT_THEME);
-    }
+    let mut theme = CURRENT_THEME.lock().unwrap();
+    *theme = if *theme == "dark" { "light" } else { "dark" };
+    tracing::debug!("[THEME] Switched to: {}", *theme);
 }
 
 pub fn get_style(target: &str) -> Style {

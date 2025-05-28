@@ -1,14 +1,13 @@
 use ratatui::{
     backend::Backend,
-    style::{Color, Modifier, Style},
-    text::{Line, Span},
-    widgets::{Block, Borders, Paragraph},
+    style::{Color, Style},
+    widgets::Paragraph,
     Frame,
 };
 use crate::ui::layout::Rect;
 
 use crate::state::AppState;
-use crate::plugin::registry::{self, PluginManifest};
+use crate::plugin::registry::{self};
 use crate::plugin::panel::render_plugin_panel;
 
 /// Primary plugin module renderer.

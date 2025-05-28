@@ -4,7 +4,7 @@ use crate::layout::{
     layout_nodes, Coords, LayoutRole, PackRegion, GEMX_HEADER_HEIGHT,
     CHILD_SPACING_Y, subtree_span, subtree_depth, spacing_for_zoom,
     BASE_SPACING_X, BASE_SPACING_Y, SNAP_GRID_X, SNAP_GRID_Y,
-    RESERVED_ZONE_W, RESERVED_ZONE_H,
+    RESERVED_ZONE_W,
 };
 use crate::node::{NodeID, NodeMap};
 use crate::state::AppState;
@@ -210,6 +210,8 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppStat
                         }
                     }
 
+                    x = x.clamp(0, max_x);
+                    y = y.clamp(base_y, max_y);
                     n.x = x;
                     n.y = y;
 
