@@ -5,7 +5,7 @@ use crate::state::{AppState};
 use crate::state::view::ZenLayoutMode;
 use crate::state::ZenViewMode;
 use crate::zen::journal::{render_zen_journal, render_history};
-use crate::beamx::render_full_border;
+use crate::theme::zen::zen_theme;
 
 /// Dispatches the correct Zen view mode renderer
 pub fn render_zen<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
@@ -52,6 +52,7 @@ pub fn render_zen<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
 /// Classic buffer-based Zen text editor
 pub fn render_classic<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
     use ratatui::{text::Line, widgets::{Block, Borders, Paragraph}, style::Style};
+    let palette = zen_theme();
 
     let lines: Vec<Line> = state
         .zen_buffer
@@ -60,8 +61,8 @@ pub fn render_classic<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState
         .collect();
 
     let para = Paragraph::new(lines)
-        .block(Block::default().borders(Borders::ALL))
-        .style(Style::default());
+        .block(Block::default().borders(Borders::NONE).style(Style::default().bg(palette.background)))
+        .style(Style::default().fg(palette.text).bg(palette.background));
 
     f.render_widget(para, area);
     render_prism(f, area);
@@ -70,6 +71,11 @@ pub fn render_classic<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState
 /// Compose mode includes input and scrollable journal view
 pub fn render_compose<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState, tick: u64) {
     use ratatui::layout::{Constraint, Direction, Layout};
+    use ratatui::widgets::Block;
+    use ratatui::style::Style;
+    let palette = zen_theme();
+    let bg = Block::default().style(Style::default().bg(palette.background));
+    f.render_widget(bg, area);
 
     if state.zen_view_mode == crate::state::ZenViewMode::Write {
         let chunks = Layout::default()
@@ -83,14 +89,16 @@ pub fn render_compose<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState
         render_history(f, area, state);
     }
 
-    render_full_border(f, area, &state.beam_style_for_mode(&state.mode), true, false);
+    // omit harsh borders for peaceful mode
 }
 
 /// One-line entry field at bottom of Compose mode
 pub fn render_input<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState, tick: u64) {
     use ratatui::widgets::{Paragraph, Block, Borders};
+    use ratatui::style::Style;
     use crate::ui::animate::cursor_blink;
     use chrono::Local;
+    let palette = zen_theme();
 
     let padding = area.width / 4;
     let usable_width = area.width - padding * 2;
@@ -100,12 +108,12 @@ pub fn render_input<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState, 
     let input = format!("{} {}{}", timestamp, state.zen_draft.text, caret);
 
     let input_rect = Rect::new(area.x + padding, area.bottom().saturating_sub(2), usable_width, 1);
-    let mut block = Block::default().borders(Borders::NONE);
+    let mut block = Block::default().borders(Borders::NONE).style(Style::default().bg(palette.background));
 
     if state.zen_draft.editing.is_some() {
         block = block.borders(Borders::ALL).border_style(Style::default().fg(Color::DarkGray));
     }
 
-    let widget = Paragraph::new(input).block(block);
+    let widget = Paragraph::new(input).style(Style::default().fg(palette.text).bg(palette.background)).block(block);
     f.render_widget(widget, input_rect);
 }
