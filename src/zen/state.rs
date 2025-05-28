@@ -1,5 +1,5 @@
-// src/state/zen.rs
-use super::core::{AppState, ZenJournalEntry, ZenTheme};
+// src/zen/state.rs
+use crate::state::core::{AppState, ZenJournalEntry, ZenTheme};
 use std::fs::{self, File, OpenOptions};
 use std::io::Write;
 use dirs;

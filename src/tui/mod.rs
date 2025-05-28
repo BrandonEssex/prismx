@@ -608,53 +608,10 @@ pub fn launch_ui() -> std::io::Result<()> {
                         }
                     }
 
-                    KeyCode::Char(c)
-                        if state.mode == "zen"
-                            && state.zen_view_mode == ZenViewMode::Compose =>
+                    k @ _ if state.mode == "zen"
+                        && state.zen_view_mode == ZenViewMode::Compose =>
                     {
-                        state.zen_draft.text.push(c);
-                    }
-
-                    KeyCode::Backspace
-                        if state.mode == "zen"
-                            && state.zen_view_mode == ZenViewMode::Compose =>
-                    {
-                        state.zen_draft.text.pop();
-                    }
-
-                    KeyCode::Enter
-                        if state.mode == "zen"
-                            && state.zen_view_mode == ZenViewMode::Compose =>
-                    {
-                        let text = state.zen_draft.text.trim().to_string();
-
-                        if text.starts_with("/edit ") {
-                            if let Ok(idx) = text[6..].trim().parse::<usize>() {
-                                state.start_edit_journal_entry(idx);
-                            }
-                            state.zen_draft.text.clear();
-                        } else if text == "/cancel" {
-                            state.cancel_edit_journal_entry();
-                            state.zen_draft.text.clear();
-                        } else if let Some(idx) = state.zen_draft.editing {
-                            state.edit_journal_entry(idx, &text);
-                            state.zen_draft.editing = None;
-                            state.zen_draft.text.clear();
-                        } else {
-                            if !text.is_empty() {
-                                if crate::config::theme::ThemeConfig::load().zen_breathe {
-                                    std::thread::sleep(std::time::Duration::from_millis(150));
-                                }
-
-                                let entry = crate::state::ZenJournalEntry {
-                                    timestamp: chrono::Local::now(),
-                                    text: text.clone(),
-                                    prev_text: None,
-                                };
-                                state.zen_journal_entries.push(entry.clone());                                state.append_journal_entry(&entry);
-                            }
-                            state.zen_draft.text.clear();
-                        }
+                        crate::zen::editor::handle_key(&mut state, k);
                     }
                     _ => {}
                 }
