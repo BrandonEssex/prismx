@@ -5,7 +5,6 @@ pub mod journal;
 pub mod utils;
 
 pub use editor::*;
-pub use state::*;
 pub use view::*;
 pub use journal::*;
 pub use utils::*;

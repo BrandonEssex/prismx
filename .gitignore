@@ -1,7 +1,6 @@
 target/
 *AMG*
 *archive
-*.log
 *.bak*
 *.tmp*
 *.lock*
@@ -15,3 +14,5 @@ draft*
 prismx.log.*
 journals/
 logs/
+!vendor/**/*.log
+

@@ -2,7 +2,7 @@ use std::collections::{HashMap, HashSet, VecDeque};
 use std::time::Instant;
 use crate::node::{Node, NodeID, NodeMap};
 use crate::layout::{GEMX_HEADER_HEIGHT, LayoutRole};
-use crate::plugin::PluginHost;
+use crate::plugin::{loader, PluginHost};
 pub use crate::zen::state::*;
 
 use crate::hotkeys::load_hotkeys;
@@ -137,6 +137,7 @@ pub struct AppState {
     pub status_message_last_updated: Option<std::time::Instant>,
     pub zoom_preview_last: Option<Instant>,
     pub plugin_host: PluginHost,
+    pub loaded_plugins: Vec<loader::LoadedPlugin>,
     pub plugin_favorites: Vec<FavoriteEntry>,
     pub favorite_dock_limit: usize,
     pub favorite_dock_layout: DockLayout,
@@ -260,6 +261,7 @@ impl Default for AppState {
             status_message_last_updated: None,
             zoom_preview_last: None,
             plugin_host: PluginHost::new(),
+            loaded_plugins: Vec::new(),
             plugin_favorites: Vec::new(),
             favorite_dock_limit: 3,
             favorite_dock_layout: DockLayout::Vertical,
@@ -336,6 +338,8 @@ impl Default for AppState {
         if let Some(layout) = crate::config_store::load_config().layout {
             crate::state::serialize::apply(&mut state, layout);
         }
+
+        state.loaded_plugins = loader::discover_plugins(std::path::Path::new("plugins"));
 
         state
     }

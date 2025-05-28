@@ -1,5 +1,4 @@
 use super::core::AppState;
-use crate::node::NodeID;
 
 impl AppState {
     pub fn move_focus_up(&mut self) {

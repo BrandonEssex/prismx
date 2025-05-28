@@ -1,4 +1,4 @@
-use libloading::Library;
+use libloading::{Library, Symbol};
 use std::path::{Path, PathBuf};
 
 pub trait PluginEntry {
@@ -14,24 +14,31 @@ pub struct LoadedPlugin {
     lib: Library,
 }
 
-/// Attempt to load a single plugin library and validate that it exposes the
-/// required `prismx_plugin_entry` symbol.
-pub fn load_plugin(path: &str) -> Option<LoadedPlugin> {
-    tracing::debug!("[PLUGIN] attempting {}", path);
+/// Attempt to load a single plugin library and invoke its `register` function.
+pub fn load_plugin(path: &Path) -> Option<LoadedPlugin> {
+    tracing::debug!("[PLUGIN] attempting {}", path.display());
     unsafe {
         match Library::new(path) {
             Ok(lib) => {
-                let has_entry = lib.get::<libloading::Symbol<unsafe extern "C" fn()>>(b"prismx_plugin_entry").is_ok();
-                if has_entry {
-                    tracing::info!("[PLUGIN] loaded {}", path);
-                    Some(LoadedPlugin { path: PathBuf::from(path), lib })
-                } else {
-                    tracing::error!("[PLUGIN] missing entry symbol in {}", path);
-                    None
+                let symbol: Result<Symbol<unsafe extern "C" fn()>, _> = lib.get(b"register");
+                match symbol {
+                    Ok(register) => {
+                        tracing::info!("[PLUGIN] loaded {}", path.display());
+                        register();
+                        Some(LoadedPlugin { path: path.to_path_buf(), lib })
+                    }
+                    Err(err) => {
+                        tracing::error!(
+                            "[PLUGIN] missing register() in {}: {}",
+                            path.display(),
+                            err
+                        );
+                        None
+                    }
                 }
             }
             Err(err) => {
-                tracing::error!("[PLUGIN] failed to load {}: {}", path, err);
+                tracing::error!("[PLUGIN] failed to load {}: {}", path.display(), err);
                 None
             }
         }
@@ -48,18 +55,8 @@ pub fn discover_plugins(dir: &Path) -> Vec<LoadedPlugin> {
             let path = entry.path();
             if matches!(path.extension().and_then(|e| e.to_str()), Some("so") | Some("dylib")) {
                 tracing::debug!("[PLUGIN] loading {}", path.display());
-                match unsafe { Library::new(&path) } {
-                    Ok(lib) => {
-                        tracing::info!("[PLUGIN] discovered {}", path.display());
-                        plugins.push(LoadedPlugin { path, lib });
-                    }
-                    Err(err) => {
-                        tracing::warn!(
-                            "[PLUGIN] failed to load {}: {}",
-                            path.display(),
-                            err
-                        );
-                    }
+                if let Some(plugin) = load_plugin(&path) {
+                    plugins.push(plugin);
                 }
             }
         }

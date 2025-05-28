@@ -1,8 +1,8 @@
 use ratatui::style::{Color, Style};
 use std::collections::HashMap;
 use std::fs;
-use once_cell::sync::Lazy;
 use std::sync::Mutex;
+use once_cell::sync::Lazy;
 
 static CURRENT_THEME: Lazy<Mutex<String>> = Lazy::new(|| Mutex::new("dark".to_string()));
 
@@ -21,6 +21,7 @@ pub fn set_theme(theme: &str) {
     *current = theme.to_string();
     tracing::debug!("[THEME] Set to: {}", *current);
 }
+
 
 pub fn get_style(target: &str) -> Style {
     let default = Style::default().fg(Color::White).bg(Color::Black);

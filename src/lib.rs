@@ -35,3 +35,4 @@ pub mod hotkeys;
 #[path = "state/mod.rs"]
 pub mod state;
 pub mod shortcuts;
+pub mod tasks;

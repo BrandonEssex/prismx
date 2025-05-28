@@ -1,4 +1,4 @@
-use super::core::{AppState, FavoriteEntry, LayoutSnapshot, DockLayout, ZenSyntax};
+use super::core::{AppState, FavoriteEntry, ZenSyntax};
 use crate::node::{Node, NodeID, NodeMap};
 use crate::layout::{SIBLING_SPACING_X, CHILD_SPACING_Y, GEMX_HEADER_HEIGHT};
 use crossterm::terminal;

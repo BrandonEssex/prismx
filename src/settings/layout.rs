@@ -1,5 +1,4 @@
 use ratatui::{layout::Rect, text::Line};
-use unicode_width::UnicodeWidthStr;
 
 /// Calculate centered rectangle for the settings panel based on content lines.
 pub fn settings_area(area: Rect, lines: &[Line]) -> Rect {

@@ -26,7 +26,7 @@ pub fn render_feed<B: Backend>(
     let mut blocks: Vec<Vec<Line>> = Vec::new();
     let mut current_label = String::new();
 
-    for (idx, entry) in entries.iter().enumerate().rev() {
+    for (_idx, entry) in entries.iter().enumerate().rev() {
         // Filter by tag if present
         if let Some(tag) = tag_filter {
             if !extract_tags(&entry.text)

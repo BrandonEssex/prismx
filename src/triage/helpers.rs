@@ -1,4 +1,4 @@
-use chrono::{NaiveDate, Datelike};
+use chrono::NaiveDate;
 use regex::Regex;
 use super::state::TriageEntry;
 
