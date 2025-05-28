@@ -203,16 +203,23 @@ pub fn layout_nodes(
     if auto_arrange {
         use std::collections::HashSet;
         let mut used: HashSet<(i16, i16)> = HashSet::new();
-        let mut offset_y: i16 = 0;
         for pos in coords.values_mut() {
-            let mut key = (pos.x, pos.y);
-            if key == (0, 0) || !used.insert(key) {
-                offset_y += 2;
-                pos.y += offset_y;
+            loop {
+                if pos.x == 0 {
+                    pos.x += SNAP_GRID_X;
+                }
+                if pos.y == 0 {
+                    pos.y += SNAP_GRID_Y;
+                }
+                let key = (pos.x, pos.y);
+                if used.insert(key) {
+                    break;
+                }
+                pos.x += SNAP_GRID_X;
+                pos.y += SNAP_GRID_Y;
                 pos.y = pos.y.max(GEMX_HEADER_HEIGHT);
+                pos.x -= pos.x % SNAP_GRID_X;
                 pos.y -= pos.y % SNAP_GRID_Y;
-                key = (pos.x, pos.y);
-                used.insert(key);
             }
         }
     }
@@ -284,7 +291,12 @@ fn layout_recursive_safe(
     let mut column_width = 0;
     for child_id in node.children.iter() {
         let child_h = subtree_depth(nodes, *child_id) * CHILD_SPACING_Y + 1;
-        let child_w = subtree_span(nodes, *child_id);
+        let subtree_w = subtree_span(nodes, *child_id);
+        let label_w_child = nodes
+            .get(child_id)
+            .map(|c| c.label.len() as i16 + 2)
+            .unwrap_or(2);
+        let child_w = subtree_w.max(label_w_child + MIN_NODE_GAP);
         if col_y + child_h > term_height {
             tracing::debug!("wrap column for node {}", child_id);
             col_y = child_y;
