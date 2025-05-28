@@ -1,15 +1,36 @@
 use ratatui::{
     backend::Backend,
     layout::Rect,
+    style::{Style, Color, Modifier},
+    text::Span,
     widgets::Paragraph,
     Frame,
 };
 use crate::render::traits::{Renderable, RenderFrame};
+use crate::ui::animate;
+use crate::state::AppState;
 
-/// Draw an L-shaped connector routed to the left of the parent label.
-/// `start` and `end` are screen positions relative to `area`.
-/// `avoid_width` is the width of the parent label so the line does not
-/// overlap the text.
+/// Render a mindmap view showing root node labels with animated glow trail.
+pub fn render_mindmap<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState, tick: u64) {
+    let mut y = area.y;
+    for id in &state.root_nodes {
+        if let Some(node) = state.nodes.get(id) {
+            let mut style = Style::default().fg(Color::White);
+            if Some(*id) == state.selected {
+                style = Style::default()
+                    .fg(Color::Yellow)
+                    .add_modifier(Modifier::BOLD | Modifier::UNDERLINED);
+            } else if let Some(age) = state.selection_age(*id) {
+                style = animate::glow_trail(Color::Yellow, tick, age, 900);
+            }
+            let rect = Rect::new(area.x + 1, y, area.width.saturating_sub(2), 1);
+            f.render_widget(Paragraph::new(node.label.clone()).style(style), rect);
+            y = y.saturating_add(1);
+        }
+    }
+}
+
+/// Draw an L-shaped connector between parent and child, avoiding label overlap.
 pub fn draw_connector<B: Backend>(
     f: &mut Frame<B>,
     area: Rect,
@@ -83,4 +104,3 @@ impl Renderable for MindmapDemo {
         render_demo(f, area);
     }
 }
-

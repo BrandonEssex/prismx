@@ -104,3 +104,9 @@ pub fn fade_line(line: &mut ratatui::text::Line<'_>, age_ms: u128, duration_ms: 
         span.patch_style(Style::default().fg(scale_color(fg, ratio)));
     }
 }
+
+/// Return a style that fades over `duration_ms` while shimmering each `tick`.
+pub fn glow_trail(color: Color, tick: u64, age_ms: u128, duration_ms: u128) -> Style {
+    let ratio = 1.0 - (age_ms.min(duration_ms) as f32) / (duration_ms as f32);
+    shimmer(scale_color(color, ratio), tick)
+}

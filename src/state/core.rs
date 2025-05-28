@@ -13,6 +13,7 @@ pub struct LayoutSnapshot {
     pub nodes: NodeMap,
     pub root_nodes: Vec<NodeID>,
     pub selected: Option<NodeID>,
+    pub selection_trail: VecDeque<(NodeID, Instant)>,
 }
 
 #[derive(Clone, Default)]
@@ -86,6 +87,7 @@ pub struct AppState {
     pub root_nodes: Vec<NodeID>,
     pub last_promoted_root: Option<NodeID>,
     pub selected: Option<NodeID>,
+    pub selection_trail: VecDeque<(NodeID, Instant)>,
     pub spotlight_input: String,
     pub show_spotlight: bool,
     pub prev_show_spotlight: bool,
@@ -211,6 +213,7 @@ impl Default for AppState {
             root_nodes: vec![node_a, node_b],
             last_promoted_root: None,
             selected: Some(node_a),
+            selection_trail: VecDeque::new(),
             spotlight_input: String::new(),
             show_spotlight: false,
             prev_show_spotlight: false,
