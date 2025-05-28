@@ -199,19 +199,19 @@ impl AppState {
     }
 
     pub fn toggle_summary_view(&mut self) {
-        use crate::state::{ZenSummaryMode, ZenViewMode};
-        match self.zen_view_mode {
-            ZenViewMode::Summary => {
+        use crate::state::{ZenSummaryMode, ZenLayoutMode};
+        match self.zen_layout_mode {
+            ZenLayoutMode::Summary => {
                 self.zen_summary_mode = match self.zen_summary_mode {
                     ZenSummaryMode::Daily => ZenSummaryMode::Weekly,
                     ZenSummaryMode::Weekly => {
-                        self.zen_view_mode = ZenViewMode::Journal;
+                        self.zen_layout_mode = ZenLayoutMode::Journal;
                         ZenSummaryMode::Daily
                     }
                 };
             }
             _ => {
-                self.zen_view_mode = ZenViewMode::Summary;
+                self.zen_layout_mode = ZenLayoutMode::Summary;
                 self.zen_summary_mode = ZenSummaryMode::Daily;
             }
         }

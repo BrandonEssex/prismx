@@ -9,9 +9,10 @@ use ratatui::{
 use chrono::{Datelike, Local};
 use crate::config::theme::ThemeConfig;
 use crate::state::AppState;
-use crate::state::view::ZenViewMode;
-use crate::zen::utils::highlight_tags_line;
+use crate::state::view::{ZenLayoutMode, ZenViewMode};
+use crate::zen::utils::{highlight_tags_line, extract_tags};
 use crate::beamx::render_full_border;
+
 
 /// Public render entry point for Journal view
 pub fn render_zen_journal<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
@@ -39,7 +40,7 @@ pub fn render_history<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState
     for (idx, entry) in entries.iter().enumerate().rev() {
         let mut lines: Vec<Line> = Vec::new();
 
-        if matches!(state.zen_view_mode, ZenViewMode::Summary) {
+        if matches!(state.zen_layout_mode, ZenLayoutMode::Summary) {
             let label = match state.zen_summary_mode {
                 crate::state::ZenSummaryMode::Weekly => {
                     format!("Week {}", entry.timestamp.iso_week().week())

@@ -1,5 +1,5 @@
 use super::core::{AppState, DockLayout, SimInput};
-use crate::state::{ZenViewMode, ZenMode};
+use crate::state::{ZenLayoutMode, ZenViewMode};
 
 impl AppState {
     pub fn exit_spotlight(&mut self) {
