@@ -329,7 +329,9 @@ impl Default for AppState {
         state.load_today_journal();
         state.audit_node_graph();
 
-        if let Some(layout) = crate::config::load_config().layout {
+        if let Some(layout) =
+            crate::config::load_config().ok().and_then(|c| c.layout)
+        {
             crate::state::serialize::apply(&mut state, layout);
         }
 

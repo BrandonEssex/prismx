@@ -9,32 +9,34 @@ pub mod theme;
 pub const CONFIG_VERSION: u32 = 1;
 
 #[derive(Serialize, Deserialize, Default, Clone)]
-pub struct PrismConfig {
+pub struct PrismXConfig {
     pub version: u32,
     pub layout: Option<PersistedLayout>,
+    pub theme: Option<String>,
+    pub default_module: Option<String>,
+    pub logging_level: Option<String>,
 }
 
-/// Return path to `~/.config/prismx/prismx.toml`
+/// Return path to `config/config.toml`
 fn config_file_path() -> PathBuf {
-    dirs::config_dir()
-        .unwrap_or_else(|| PathBuf::from("."))
-        .join("prismx")
-        .join("prismx.toml")
+    PathBuf::from("config").join("config.toml")
 }
 
-pub fn load_config() -> PrismConfig {
+pub type Error = Box<dyn std::error::Error + Send + Sync>;
+
+pub fn load_config() -> Result<PrismXConfig, Error> {
     let path = config_file_path();
     if let Ok(data) = fs::read_to_string(&path) {
-        if let Ok(cfg) = toml::from_str::<PrismConfig>(&data) {
+        if let Ok(cfg) = toml::from_str::<PrismXConfig>(&data) {
             if cfg.version == CONFIG_VERSION {
-                return cfg;
+                return Ok(cfg);
             }
         }
     }
-    PrismConfig { version: CONFIG_VERSION, ..Default::default() }
+    Ok(PrismXConfig { version: CONFIG_VERSION, ..Default::default() })
 }
 
-pub fn save_config(cfg: &PrismConfig) {
+pub fn save_config(cfg: &PrismXConfig) {
     if let Ok(data) = toml::to_string(cfg) {
         let path = config_file_path();
         if let Some(parent) = path.parent() {

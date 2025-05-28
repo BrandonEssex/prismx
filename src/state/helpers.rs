@@ -397,7 +397,7 @@ pub fn register_plugin_favorite(state: &mut AppState, icon: &'static str, comman
 impl AppState {
     pub fn save_layout_config(&self) {
         let layout = crate::state::serialize::capture(self);
-        let mut cfg = crate::config::load_config();
+        let mut cfg = crate::config::load_config().unwrap_or_default();
         cfg.layout = Some(layout);
         crate::config::save_config(&cfg);
     }
