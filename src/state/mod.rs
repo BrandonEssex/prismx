@@ -5,7 +5,6 @@ pub use hotkeys::*;
 pub mod core;
 mod navigation;
 mod edit;
-mod zen;
 mod spotlight;
 mod history;
 mod drag;

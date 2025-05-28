@@ -1,4 +1,4 @@
-// src/zen/render.rs
+// src/zen/view.rs
 use ratatui::prelude::*;
 use crate::canvas::prism::render_prism;
 use crate::state::{AppState};
@@ -69,7 +69,6 @@ pub fn render_classic<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState
 /// Compose mode includes input and scrollable journal view
 pub fn render_compose<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState, tick: u64) {
     use ratatui::layout::{Constraint, Direction, Layout};
-    use crate::zen::render::render_input;
 
     let chunks = Layout::default()
         .direction(Direction::Vertical)
