@@ -1,4 +1,3 @@
-// src/zen/journal.rs
 use ratatui::{
     prelude::*,
     style::{Color, Modifier, Style},
@@ -9,7 +8,8 @@ use ratatui::{
 use chrono::{Datelike, Local};
 use crate::config::theme::ThemeConfig;
 use crate::state::AppState;
-use crate::state::view::{ZenLayoutMode, ZenViewMode};
+use crate::state::view::ZenLayoutMode;
+use crate::state::ZenViewMode;
 use crate::zen::utils::{highlight_tags_line, extract_tags, parse_tags};
 use crate::beamx::render_full_border;
 
@@ -74,15 +74,8 @@ pub fn render_history<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState
             lines.push(highlight_tags_line(&entry.tags.join(" ")));
         }
 
-        match &entry.entry {
-            crate::zen::image::JournalEntry::Text(t) => {
-                for l in t.lines() {
-                    lines.push(highlight_tags_line(l));
-                }
-            }
-            crate::zen::image::JournalEntry::Image(_) => {
-                lines.push(highlight_tags_line(&entry.entry.display()));
-            }
+        for l in entry.text.lines() {
+            lines.push(highlight_tags_line(l));
         }
 
         lines.push(Line::from(Span::styled(

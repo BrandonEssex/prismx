@@ -5,15 +5,13 @@ use ratatui::{
     widgets::{Block, Borders, Paragraph},
     Frame,
 };
-use crate::ui::layout::Rect;
 
+use crate::ui::layout::Rect;
 use crate::state::ZenJournalEntry;
-use crate::zen::image::JournalEntry;
 use crate::ui::animate::fade_line;
 use crate::config::theme::ThemeConfig;
 
 use chrono::Datelike;
-
 
 pub fn render_feed<B: Backend>(
     f: &mut Frame<B>,
@@ -61,7 +59,7 @@ pub fn render_feed<B: Backend>(
         // Entry content
         let mut lines: Vec<Line> = Vec::new();
         let mut ts = entry.timestamp.format("%Y-%m-%d %H:%M").to_string();
-        if entry.prev_entry.is_some() {
+        if entry.prev_text.is_some() {
             ts.push_str(" (edited)");
         }
 
@@ -70,33 +68,24 @@ pub fn render_feed<B: Backend>(
             Style::default().fg(Color::DarkGray).add_modifier(Modifier::DIM),
         )));
 
-        match &entry.entry {
-            crate::zen::image::JournalEntry::Text(t) => {
-                for line in t.lines() {
-                    let mut spans = Vec::new();
-                    for token in line.split_whitespace() {
-                        if token.starts_with('#') {
-                            if token.eq_ignore_ascii_case("#DONE") {
-                                spans.push(Span::styled(
-                                    token,
-                                    Style::default()
-                                        .fg(Color::DarkGray)
-                                        .add_modifier(Modifier::DIM),
-                                ));
-                            } else {
-                                spans.push(Span::styled(token, Style::default().fg(Color::Blue)));
-                            }
-                        } else {
-                            spans.push(Span::raw(token));
-                        }
-                        spans.push(Span::raw(" "));
+        for line in entry.text.lines() {
+            let mut spans = Vec::new();
+            for token in line.split_whitespace() {
+                if token.starts_with('#') {
+                    if token.eq_ignore_ascii_case("#DONE") {
+                        spans.push(Span::styled(
+                            token,
+                            Style::default().fg(Color::DarkGray).add_modifier(Modifier::DIM),
+                        ));
+                    } else {
+                        spans.push(Span::styled(token, Style::default().fg(Color::Blue)));
                     }
-                    lines.push(Line::from(spans));
+                } else {
+                    spans.push(Span::raw(token));
                 }
+                spans.push(Span::raw(" "));
             }
-            crate::zen::image::JournalEntry::Image(_) => {
-                lines.push(Line::from(Span::raw(entry.entry.display())));
-            }
+            lines.push(Line::from(spans));
         }
 
         lines.push(Line::from(Span::styled(
