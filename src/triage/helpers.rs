@@ -6,7 +6,7 @@ use super::state::TriageEntry;
 pub fn extract_tags(text: &str) -> Vec<String> {
     let re = Regex::new(r"#\w+").unwrap();
     re.find_iter(text)
-        .map(|m| m.as_str().to_string())
+        .map(|m| m.as_str().to_lowercase())
         .collect()
 }
 
@@ -14,11 +14,11 @@ pub fn extract_tags(text: &str) -> Vec<String> {
 /// `#NOW` > `#TRITON` > `#TODO`/`#PRIORITY` > others.
 pub fn sort_by_priority(entries: &mut [TriageEntry]) {
     fn priority(entry: &TriageEntry) -> u8 {
-        if entry.tags.iter().any(|t| t == "#NOW") {
+        if entry.tags.iter().any(|t| t == "#now") {
             0
-        } else if entry.tags.iter().any(|t| t == "#TRITON") {
+        } else if entry.tags.iter().any(|t| t == "#triton") {
             1
-        } else if entry.tags.iter().any(|t| t == "#TODO" || t == "#PRIORITY") {
+        } else if entry.tags.iter().any(|t| t == "#todo" || t == "#priority") {
             2
         } else {
             3

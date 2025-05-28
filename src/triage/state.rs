@@ -4,7 +4,7 @@ use crate::zen::image::JournalEntry;
 use crate::triage::helpers::extract_tags;
 
 /// Tags that mark an entry for triage.
-const TRIAGE_TAGS: &[&str] = &["#TODO", "#TRITON", "#PRIORITY", "#NOW"];
+const TRIAGE_TAGS: &[&str] = &["#todo", "#triton", "#priority", "#now"];
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum TriageSource {
@@ -40,13 +40,11 @@ impl TriageEntry {
 }
 
 /// Collect raw journal entries containing any triage tags.
+/// Collect raw journal entries containing any triage tags.
 pub fn collect(entries: &[ZenJournalEntry]) -> Vec<ZenJournalEntry> {
     let mut filtered: Vec<ZenJournalEntry> = entries
         .iter()
-        .filter(|e| {
-            let tags = extract_tags(&e.entry.raw_text());
-            tags.iter().any(|tag| TRIAGE_TAGS.contains(&tag.as_str()))
-        })
+        .filter(|e| e.tags.iter().any(|tag| TRIAGE_TAGS.contains(&tag.as_str())))
         .cloned()
         .collect();
 
@@ -56,7 +54,8 @@ pub fn collect(entries: &[ZenJournalEntry]) -> Vec<ZenJournalEntry> {
 }
 
 pub fn capture_entry(state: &mut AppState, source: TriageSource, text: &str) {
-    if text.contains("#TODO") || text.contains("#NOW") || text.contains("#TRITON") {
+    let text_lc = text.to_lowercase();
+    if TRIAGE_TAGS.iter().any(|tg| text_lc.contains(tg)) {
         let id = state.triage_entries.len();
         let entry = TriageEntry::new(id, text, source);
         state.triage_entries.push(entry);
@@ -92,12 +91,12 @@ pub fn handle_inline_command(state: &mut AppState, text: &str) -> bool {
 pub fn resolve(state: &mut AppState, id: usize) {
     if let Some(entry) = state.triage_entries.get_mut(id) {
         entry.resolved = true;
-        if entry.tags.contains(&"#TRITON".to_string()) {
-            entry.tags.retain(|t| t != "#TRITON");
-            entry.tags.push("#DONE".into());
-        } else if entry.tags.contains(&"#NOW".to_string()) {
-            entry.tags.retain(|t| t != "#NOW");
-            entry.tags.push("#TRITON".into());
+        if entry.tags.contains(&"#triton".to_string()) {
+            entry.tags.retain(|t| t != "#triton");
+            entry.tags.push("#done".into());
+        } else if entry.tags.contains(&"#now".to_string()) {
+            entry.tags.retain(|t| t != "#now");
+            entry.tags.push("#triton".into());
         }
     }
 }
@@ -119,9 +118,9 @@ pub fn archive(state: &mut AppState, id: usize) {
 pub fn update_pipeline(state: &mut AppState) {
     for entry in &mut state.triage_entries {
         // Promote resolved #TRITON entries to #DONE
-        if entry.resolved && entry.tags.contains(&"#TRITON".to_string()) {
-            entry.tags.retain(|t| t != "#TRITON");
-            entry.tags.push("#DONE".into());
+        if entry.resolved && entry.tags.contains(&"#triton".to_string()) {
+            entry.tags.retain(|t| t != "#triton");
+            entry.tags.push("#done".into());
             continue;
         }
 
@@ -130,11 +129,11 @@ pub fn update_pipeline(state: &mut AppState) {
         }
 
         // Auto-promote #NOW to #TRITON after ~60s
-        if entry.tags.contains(&"#NOW".to_string()) {
+        if entry.tags.contains(&"#now".to_string()) {
             let since = Local::now().signed_duration_since(entry.created).num_seconds();
             if since > 60 {
-                entry.tags.retain(|t| t != "#NOW");
-                entry.tags.push("#TRITON".into());
+                entry.tags.retain(|t| t != "#now");
+                entry.tags.push("#triton".into());
             }
         }
     }
@@ -149,13 +148,13 @@ pub fn tag_counts(state: &AppState) -> (usize, usize, usize) {
         if entry.archived {
             continue;
         }
-        if entry.tags.iter().any(|t| t.eq("#NOW")) {
+        if entry.tags.iter().any(|t| t.eq("#now")) {
             now += 1;
         }
-        if entry.tags.iter().any(|t| t.eq("#TRITON")) {
+        if entry.tags.iter().any(|t| t.eq("#triton")) {
             triton += 1;
         }
-        if entry.tags.iter().any(|t| t.eq("#DONE")) {
+        if entry.tags.iter().any(|t| t.eq("#done")) {
             done += 1;
         }
     }

@@ -24,6 +24,14 @@ pub fn extract_tags(text: &str) -> Vec<String> {
     tags
 }
 
+/// Extract tags and normalize to lowercase for classification
+pub fn parse_tags(text: &str) -> Vec<String> {
+    extract_tags(text)
+        .into_iter()
+        .map(|t| t.to_lowercase())
+        .collect()
+}
+
 pub fn highlight_tags_line(input: &str) -> Line<'static> {
     use ratatui::text::{Span, Line};
     let mut spans = Vec::new();

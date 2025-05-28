@@ -135,8 +135,9 @@ impl AppState {
                         .ok()
                         .map(|dt| ZenJournalEntry {
                             timestamp: dt.with_timezone(&chrono::Local),
-                            entry: crate::zen::image::JournalEntry::Text(text.to_string()),
-                            prev_entry: None,
+                            text: text.to_string(),
+                            prev_text: None,
+                            tags: crate::zen::utils::parse_tags(text),
                         })
                 })
                 .collect();
@@ -179,24 +180,18 @@ impl AppState {
 
     pub fn edit_journal_entry(&mut self, index: usize, text: &str) {
         if let Some(entry) = self.zen_journal_entries.get_mut(index) {
-            entry.prev_entry = Some(entry.entry.clone());
-            entry.entry = if let Some(img) = crate::zen::image::JournalEntry::from_input(text) {
-                img
-            } else {
-                crate::zen::image::JournalEntry::Text(text.to_string())
-            };
+            entry.prev_text = Some(entry.text.clone());
+            entry.text = text.to_string();
+            entry.tags = crate::zen::utils::parse_tags(text);
         }
     }
 
     pub fn filtered_journal_entries(&self) -> Vec<&ZenJournalEntry> {
-        use crate::zen::utils::extract_tags;
         self.zen_journal_entries
             .iter()
             .filter(|e| {
                 if let Some(tag) = &self.zen_tag_filter {
-                    extract_tags(&e.entry.raw_text())
-                        .iter()
-                        .any(|t| t.eq_ignore_ascii_case(tag))
+                    e.tags.iter().any(|t| t.eq_ignore_ascii_case(tag))
                 } else {
                     true
                 }
@@ -209,19 +204,19 @@ impl AppState {
     }
 
     pub fn toggle_summary_view(&mut self) {
-        use crate::state::{ZenSummaryMode, ZenViewMode};
-        match self.zen_view_mode {
-            ZenViewMode::Summary => {
+        use crate::state::{ZenSummaryMode, ZenLayoutMode};
+        match self.zen_layout_mode {
+            ZenLayoutMode::Summary => {
                 self.zen_summary_mode = match self.zen_summary_mode {
                     ZenSummaryMode::Daily => ZenSummaryMode::Weekly,
                     ZenSummaryMode::Weekly => {
-                        self.zen_view_mode = ZenViewMode::Journal;
+                        self.zen_layout_mode = ZenLayoutMode::Journal;
                         ZenSummaryMode::Daily
                     }
                 };
             }
             _ => {
-                self.zen_view_mode = ZenViewMode::Summary;
+                self.zen_layout_mode = ZenLayoutMode::Summary;
                 self.zen_summary_mode = ZenSummaryMode::Daily;
             }
         }

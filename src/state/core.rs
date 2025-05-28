@@ -56,20 +56,21 @@ pub enum ZenTheme {
 }
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
-pub enum ZenMode {
-    Compose,
-    Scroll,
+pub enum ZenViewMode {
+    Write,
+    Review,
 }
 
-impl Default for ZenMode {
-    fn default() -> Self { Self::Compose }
+impl Default for ZenViewMode {
+    fn default() -> Self { Self::Write }
 }
 
 #[derive(Clone)]
 pub struct ZenJournalEntry {
     pub timestamp: chrono::DateTime<chrono::Local>,
-    pub entry: JournalEntry,
-    pub prev_entry: Option<JournalEntry>,
+    pub text: String,
+    pub prev_text: Option<String>,
+    pub tags: Vec<String>,
 }
 
 #[derive(Clone, Default)]
@@ -157,8 +158,8 @@ pub struct AppState {
     pub zen_word_count: usize,
     pub zen_current_syntax: ZenSyntax,
     pub zen_theme: ZenTheme,
-    pub zen_mode: crate::state::ZenMode,
     pub zen_view_mode: crate::state::ZenViewMode,
+    pub zen_layout_mode: crate::state::ZenLayoutMode,
     pub zen_draft: DraftState,
     pub zen_summary_mode: crate::state::ZenSummaryMode,
     pub zen_compose_input: String,
@@ -281,8 +282,8 @@ impl Default for AppState {
             zen_word_count: 0,
             zen_current_syntax: ZenSyntax::Markdown,
             zen_theme: ZenTheme::DarkGray,
-            zen_mode: crate::state::ZenMode::default(),
             zen_view_mode: crate::state::ZenViewMode::default(),
+            zen_layout_mode: crate::state::ZenLayoutMode::default(),
             zen_draft: DraftState::default(),
             zen_summary_mode: crate::state::ZenSummaryMode::default(),
             zen_compose_input: String::new(),

@@ -11,7 +11,7 @@ use crate::state::ZenJournalEntry;
 use crate::zen::image::JournalEntry;
 use crate::ui::animate::fade_line;
 use crate::config::theme::ThemeConfig;
-use crate::zen::utils::extract_tags;
+
 use chrono::Datelike;
 
 
@@ -30,10 +30,7 @@ pub fn render_feed<B: Backend>(
     for (_idx, entry) in entries.iter().enumerate().rev() {
         // Filter by tag if present
         if let Some(tag) = tag_filter {
-            if !extract_tags(&entry.entry.raw_text())
-                .iter()
-                .any(|t| t.eq_ignore_ascii_case(tag))
-            {
+            if !entry.tags.iter().any(|t| t.eq_ignore_ascii_case(tag)) {
                 continue;
             }
         }
