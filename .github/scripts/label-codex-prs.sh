@@ -2,7 +2,7 @@
 set -e
 
 pr_number="$1"
-label="automerge-when-ready"
+label="codex-pr"
 
 info=$(gh pr view "$pr_number" --json headRefName,author,labels)
 author=$(echo "$info" | jq -r '.author.login')
