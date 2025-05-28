@@ -29,6 +29,7 @@ tracing-subscriber = { version = "0.3", features = ["fmt", "env-filter"] }
 tracing-appender = "0.2" # file logging via PRISMX_LOG
 libloading = "0.7"
 regex = "1"
+prismx_macros = { path = "crates/prismx_macros" }
 
 # [target.'cfg(target_arch = "wasm32")'.dependencies]
 # wasm-bindgen = "0.2"

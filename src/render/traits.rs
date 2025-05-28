@@ -9,3 +9,6 @@ pub trait Renderable {
     fn tick(&mut self);
 }
 
+/// Marker trait for UI widgets.
+pub trait Widget: Renderable {}
+
