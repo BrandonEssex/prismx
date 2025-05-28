@@ -1,27 +1,24 @@
-use std::collections::HashMap;
-use crate::node::NodeID;
-use crate::state::AppState;
-use crate::layout::{LayoutRole, CHILD_SPACING_Y};
+#![cfg(feature = "std")]
 
-/// Recalculate parent/child relationships based on node positions.
-/// Nodes directly beneath another (±1 cell) become children of that node.
-/// Nodes on the same row become siblings if that row already has a parent.
-/// Otherwise the node is considered free/root.
+use alloc::collections::BTreeMap;
+use alloc::vec::Vec;
+use crate::core::node::NodeID;
+use crate::state::AppState;
+use crate::core::layout::{LayoutRole, CHILD_SPACING_Y};
+
 pub fn recalculate_roles(state: &mut AppState) {
     state.clear_fallback_promotions();
     state.layout_roles.clear();
 
     let ids: Vec<NodeID> = state.nodes.keys().copied().collect();
 
-    // Clear current structure
     for node in state.nodes.values_mut() {
         node.children.clear();
         node.parent = None;
     }
     state.root_nodes.clear();
 
-    // Pass 1: detect direct parent above
-    let mut new_parents: HashMap<NodeID, Option<NodeID>> = HashMap::new();
+    let mut new_parents: BTreeMap<NodeID, Option<NodeID>> = BTreeMap::new();
     for &id in &ids {
         let (x, y) = {
             let n = &state.nodes[&id];
@@ -41,7 +38,6 @@ pub fn recalculate_roles(state: &mut AppState) {
         new_parents.insert(id, parent_id);
     }
 
-    // Pass 2: siblings on same row inherit existing parent
     for &id in &ids {
         if new_parents[&id].is_some() {
             continue;
@@ -60,7 +56,6 @@ pub fn recalculate_roles(state: &mut AppState) {
         }
     }
 
-    // Apply structure and lock child positions
     for &id in &ids {
         if let Some(parent_id) = new_parents[&id] {
             if parent_id == id {
@@ -87,7 +82,6 @@ pub fn recalculate_roles(state: &mut AppState) {
         }
     }
 
-    // Deduplicate lists
     state.root_nodes.sort_unstable();
     state.root_nodes.dedup();
     for node in state.nodes.values_mut() {

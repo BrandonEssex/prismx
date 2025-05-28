@@ -1,4 +1,6 @@
-use std::collections::HashMap;
+use alloc::collections::BTreeMap;
+use alloc::string::{String, ToString};
+use alloc::vec::Vec;
 
 pub type NodeID = u64;
 
@@ -19,7 +21,7 @@ impl Node {
             id,
             label: label.to_string(),
             parent,
-            children: vec![],
+            children: Vec::new(),
             collapsed: false,
             x: 0,
             y: 0,
@@ -27,5 +29,5 @@ impl Node {
     }
 }
 
-pub type NodeMap = HashMap<NodeID, Node>;
+pub type NodeMap = BTreeMap<NodeID, Node>;
 pub type Selection = Option<NodeID>;

@@ -1,16 +1,17 @@
-use std::collections::{HashMap, HashSet};
-use crate::state::AppState;
-use crate::node::NodeID;
-use crate::layout::{Coords, LayoutRole, GEMX_HEADER_HEIGHT};
+#![cfg(feature = "std")]
 
-/// Promote unreachable nodes to root positions when auto-arrange is enabled.
-/// This helps recover nodes that would otherwise be lost off-screen.
+use alloc::collections::{BTreeMap, BTreeSet};
+use alloc::vec::Vec;
+use crate::state::AppState;
+use crate::core::node::NodeID;
+use crate::core::layout::{Coords, LayoutRole, GEMX_HEADER_HEIGHT};
+
 #[allow(clippy::too_many_arguments)]
 pub fn promote_unreachable(
     state: &mut AppState,
-    reachable_ids: &HashSet<NodeID>,
-    drawn_at: &mut HashMap<NodeID, Coords>,
-    node_roles: &mut HashMap<NodeID, LayoutRole>,
+    reachable_ids: &BTreeSet<NodeID>,
+    drawn_at: &mut BTreeMap<NodeID, Coords>,
+    node_roles: &mut BTreeMap<NodeID, LayoutRole>,
     area_height: i16,
 ) {
     let node_ids: Vec<NodeID> = state.nodes.keys().copied().collect();
@@ -39,13 +40,11 @@ pub fn promote_unreachable(
         state.fallback_this_frame = true;
         state.fallback_promoted_this_session.insert(id);
 
-        use std::collections::HashSet;
-        let filled: HashSet<(i16, i16)> =
+        let filled: BTreeSet<(i16, i16)> =
             state.nodes.values().map(|n| (n.x, n.y)).collect();
 
         if let Some(n) = state.nodes.get_mut(&id) {
             if n.x == 0 && n.y == 0 {
-
                 let step_x = 20;
                 let step_y = 3;
                 let base_y = GEMX_HEADER_HEIGHT + 2;

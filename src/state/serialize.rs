@@ -1,7 +1,7 @@
 use serde::{Serialize, Deserialize};
 use crate::state::core::AppState;
 use crate::node::{Node, NodeID};
-use std::collections::HashMap;
+use alloc::collections::BTreeMap;
 
 #[derive(Serialize, Deserialize, Clone)]
 struct NodeData {
@@ -70,7 +70,7 @@ pub fn apply(state: &mut AppState, snap: PersistedLayout) {
         .nodes
         .into_iter()
         .map(|n| (n.id, Node::from(n)))
-        .collect::<HashMap<_, _>>();
+        .collect::<BTreeMap<_, _>>();
     state.root_nodes = snap.root_nodes;
     state.selected = snap.selected;
     state.zoom_scale = snap.zoom;

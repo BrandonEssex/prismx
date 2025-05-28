@@ -12,11 +12,11 @@ use crate::canvas::prism::render_prism;
 use crate::beamx::render_full_border;
 use crate::ui::beamx::{BeamX, BeamXStyle, BeamXMode, BeamXAnimationMode};
 use std::time::{SystemTime, UNIX_EPOCH};
-use std::collections::{HashMap, HashSet};
+use alloc::collections::{BTreeMap, BTreeSet};
 
 fn node_in_cycle(nodes: &NodeMap, start: NodeID) -> bool {
     let mut current = start;
-    let mut visited = HashSet::new();
+    let mut visited = BTreeSet::new();
     while let Some(pid) = nodes.get(&current).and_then(|n| n.parent) {
         if pid == start {
             return true;
@@ -88,8 +88,8 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppStat
         state.root_nodes.clone()
     };
 
-    let mut drawn_at = HashMap::new();
-    let mut node_roles = HashMap::new();
+    let mut drawn_at = BTreeMap::new();
+    let mut node_roles = BTreeMap::new();
     if state.auto_arrange {
         let mut pack = PackRegion::new(area.width as i16 - RESERVED_ZONE_W, GEMX_HEADER_HEIGHT);
         for &root_id in &roots {
@@ -124,7 +124,7 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppStat
             node_roles.extend(roles);
         }
     } else {
-        fn collect(nodes: &NodeMap, id: NodeID, out: &mut HashMap<NodeID, Coords>) {
+        fn collect(nodes: &NodeMap, id: NodeID, out: &mut BTreeMap<NodeID, Coords>) {
             if let Some(n) = nodes.get(&id) {
                 out.insert(id, Coords { x: n.x, y: n.y });
                 if !n.collapsed {
@@ -177,12 +177,11 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppStat
         return;
     }
 
-    use std::collections::HashSet;
-    let reachable_ids: HashSet<NodeID> = drawn_at.keys().copied().collect();
+    let reachable_ids: BTreeSet<NodeID> = drawn_at.keys().copied().collect();
 
     if state.auto_arrange {
         let node_ids: Vec<NodeID> = state.nodes.keys().copied().collect();
-        let filled: HashSet<(i16, i16)> = state.nodes.values().map(|n| (n.x, n.y)).collect();
+        let filled: BTreeSet<(i16, i16)> = state.nodes.values().map(|n| (n.x, n.y)).collect();
 
         for id in node_ids {
             if let Some(n) = state.nodes.get_mut(&id) {

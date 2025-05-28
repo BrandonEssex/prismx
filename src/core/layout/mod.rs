@@ -1,10 +1,18 @@
-use std::collections::{HashMap, HashSet};
-use crate::node::{NodeID, NodeMap};
+use alloc::collections::{BTreeMap, BTreeSet};
+#[cfg(feature = "std")]
+use alloc::vec::Vec;
+#[cfg(feature = "std")]
+use alloc::vec;
+use crate::core::node::{NodeID, NodeMap};
 
+#[cfg(feature = "std")]
 pub mod roles;
+#[cfg(feature = "std")]
 pub mod fallback;
+#[cfg(feature = "std")]
 pub mod snapshot;
 
+#[cfg(feature = "std")]
 pub use roles::recalculate_roles;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -37,7 +45,7 @@ pub fn spacing_for_zoom(zoom: f32) -> (i16, i16) {
 }
 
 pub fn subtree_span(nodes: &NodeMap, id: NodeID) -> i16 {
-    fn walk(nodes: &NodeMap, nid: NodeID, visited: &mut HashSet<NodeID>) -> i16 {
+    fn walk(nodes: &NodeMap, nid: NodeID, visited: &mut BTreeSet<NodeID>) -> i16 {
         if !visited.insert(nid) {
             return 0;
         }
@@ -59,11 +67,11 @@ pub fn subtree_span(nodes: &NodeMap, id: NodeID) -> i16 {
         }
     }
 
-    walk(nodes, id, &mut HashSet::new())
+    walk(nodes, id, &mut BTreeSet::new())
 }
 
 pub fn subtree_depth(nodes: &NodeMap, id: NodeID) -> i16 {
-    fn walk(nodes: &NodeMap, nid: NodeID, visited: &mut HashSet<NodeID>) -> i16 {
+    fn walk(nodes: &NodeMap, nid: NodeID, visited: &mut BTreeSet<NodeID>) -> i16 {
         if !visited.insert(nid) {
             return 0;
         }
@@ -81,7 +89,7 @@ pub fn subtree_depth(nodes: &NodeMap, id: NodeID) -> i16 {
         }
     }
 
-    walk(nodes, id, &mut HashSet::new())
+    walk(nodes, id, &mut BTreeSet::new())
 }
 
 pub struct PackRegion {
@@ -144,16 +152,16 @@ pub fn layout_nodes(
     term_width: i16,
     term_height: i16,
     auto_arrange: bool,
-) -> (HashMap<NodeID, Coords>, HashMap<NodeID, LayoutRole>) {
+) -> (BTreeMap<NodeID, Coords>, BTreeMap<NodeID, LayoutRole>) {
     tracing::debug!("[LAYOUT] layout_nodes root {} auto_arrange {}", root_id, auto_arrange);
     if nodes.is_empty() {
         tracing::debug!("layout_nodes: skip -- empty node map");
-        return (HashMap::new(), HashMap::new());
+        return (BTreeMap::new(), BTreeMap::new());
     }
 
     let Some(root_node) = nodes.get(&root_id) else {
         tracing::debug!("layout_nodes: skip -- root {} missing", root_id);
-        return (HashMap::new(), HashMap::new());
+        return (BTreeMap::new(), BTreeMap::new());
     };
 
     if let Some(pid) = root_node.parent {
@@ -163,15 +171,15 @@ pub fn layout_nodes(
                 root_id,
                 pid
             );
-            return (HashMap::new(), HashMap::new());
+            return (BTreeMap::new(), BTreeMap::new());
         }
     }
 
     let start_y = start_y.max(GEMX_HEADER_HEIGHT);
     let start_x = if auto_arrange { 0 } else { term_width / 2 };
-    let mut coords = HashMap::new();
-    let mut roles = HashMap::new();
-    let mut visited = HashSet::new();
+    let mut coords = BTreeMap::new();
+    let mut roles = BTreeMap::new();
+    let mut visited = BTreeSet::new();
     let _ = layout_recursive_safe(
         nodes,
         root_id,
@@ -185,7 +193,6 @@ pub fn layout_nodes(
         &mut visited,
         0,
     );
-
 
     if let Some(min_x) = coords.values().map(|c| c.x).min() {
         if min_x < 0 {
@@ -201,8 +208,8 @@ pub fn layout_nodes(
     }
 
     if auto_arrange {
-        use std::collections::HashSet;
-        let mut used: HashSet<(i16, i16)> = HashSet::new();
+        use alloc::collections::BTreeSet;
+        let mut used: BTreeSet<(i16, i16)> = BTreeSet::new();
         let mut offset_y: i16 = 0;
         for pos in coords.values_mut() {
             let mut key = (pos.x, pos.y);
@@ -227,10 +234,10 @@ fn layout_recursive_safe(
     y: i16,
     _term_width: i16,
     term_height: i16,
-    out: &mut HashMap<NodeID, Coords>,
-    roles: &mut HashMap<NodeID, LayoutRole>,
+    out: &mut BTreeMap<NodeID, Coords>,
+    roles: &mut BTreeMap<NodeID, LayoutRole>,
     auto_arrange: bool,
-    visited: &mut HashSet<NodeID>,
+    visited: &mut BTreeSet<NodeID>,
     depth: usize,
 ) -> (i16, i16, i16) {
     if !visited.insert(node_id) || depth > MAX_DEPTH {
@@ -249,8 +256,6 @@ fn layout_recursive_safe(
     };
 
     let role = if depth == 0 {
-        // Always treat the initial node as a root regardless of mode so that
-        // fallback-promoted nodes remain visible.
         LayoutRole::Root
     } else {
         match node.parent {
@@ -320,7 +325,7 @@ fn layout_recursive_safe(
     (max_y, min_x_span.min(x), max_x_span.max(x + label_width))
 }
 
-fn shift_subtree(id: NodeID, dx: i16, out: &mut HashMap<NodeID, Coords>, nodes: &NodeMap) {
+fn shift_subtree(id: NodeID, dx: i16, out: &mut BTreeMap<NodeID, Coords>, nodes: &NodeMap) {
     if dx == 0 {
         return;
     }
@@ -336,7 +341,7 @@ fn shift_subtree(id: NodeID, dx: i16, out: &mut HashMap<NodeID, Coords>, nodes: 
     }
 }
 
-/// Recenter scroll offsets so the given node remains the anchor after a zoom change.
+#[cfg(feature = "std")]
 pub fn zoom_to_anchor(state: &mut crate::state::AppState, node_id: NodeID) {
     if let Some(node) = state.nodes.get(&node_id) {
         let (tw, th) = crossterm::terminal::size().unwrap_or((80, 20));
@@ -348,7 +353,7 @@ pub fn zoom_to_anchor(state: &mut crate::state::AppState, node_id: NodeID) {
     }
 }
 
-/// Ensure scroll offsets never go below zero.
+#[cfg(feature = "std")]
 pub fn clamp_scroll(state: &mut crate::state::AppState) {
     if state.scroll_x < 0 {
         state.scroll_x = 0;
@@ -358,31 +363,25 @@ pub fn clamp_scroll(state: &mut crate::state::AppState) {
     }
 }
 
-/// Returns true if the position falls within the protected top-right zone.
 pub fn in_reserved_zone(x: i16, y: i16, term_width: i16) -> bool {
     x >= term_width - RESERVED_ZONE_W && y < RESERVED_ZONE_H
 }
 
-/// Shift coordinates left if they collide with the protected zone.
 pub fn avoid_reserved_zone(pos: &mut Coords, term_width: i16) {
     if in_reserved_zone(pos.x, pos.y, term_width) {
         pos.x = (term_width - RESERVED_ZONE_W - SNAP_GRID_X).max(0);
     }
 }
 
-/// Apply [`avoid_reserved_zone`] to every entry in the map.
-pub fn avoid_reserved_zone_map(map: &mut HashMap<NodeID, Coords>, term_width: i16) {
+pub fn avoid_reserved_zone_map(map: &mut BTreeMap<NodeID, Coords>, term_width: i16) {
     for pos in map.values_mut() {
         avoid_reserved_zone(pos, term_width);
     }
 }
 
-/// Center the viewport on the given node id.
-///
-/// Works for both auto-arrange and manual layout modes. When zoom is locked by
-/// the user, scrolling only occurs if the node would otherwise be off-screen.
+#[cfg(feature = "std")]
 pub fn center_on_node(state: &mut crate::state::AppState, node_id: NodeID) {
-    use std::collections::HashMap;
+    use alloc::collections::BTreeMap;
 
     if !state.nodes.contains_key(&node_id) {
         return;
@@ -402,7 +401,7 @@ pub fn center_on_node(state: &mut crate::state::AppState, node_id: NodeID) {
         } else {
             state.root_nodes.clone()
         };
-        let mut layout = HashMap::new();
+        let mut layout = BTreeMap::new();
         let mut pack = PackRegion::new(tw as i16 - RESERVED_ZONE_W, GEMX_HEADER_HEIGHT);
         for &rid in &roots {
             let w = subtree_span(&state.nodes, rid);
