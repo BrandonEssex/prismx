@@ -4,7 +4,7 @@ use ratatui::layout::{Layout, Constraint, Direction};
 use ratatui::text::{Line, Span};
 
 use crate::state::AppState;
-use crate::triage::logic::{TriageSource, tag_counts};
+use crate::triage::state::{TriageSource, tag_counts};
 use crate::ui::components::status::render_triage_status;
 use crate::beamx::render_full_border;
 

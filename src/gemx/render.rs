@@ -32,7 +32,7 @@ impl<'a> Renderable for GemxRenderer<'a> {
     }
 
     fn tick(&mut self) {
-        crate::triage::logic::update_pipeline(self.state);
+        crate::triage::state::update_pipeline(self.state);
     }
 }
 
