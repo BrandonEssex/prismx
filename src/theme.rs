@@ -1,14 +1,25 @@
 use ratatui::style::{Color, Style};
 use std::collections::HashMap;
 use std::fs;
+use once_cell::sync::Lazy;
+use std::sync::Mutex;
 
-static mut CURRENT_THEME: &str = "dark";
+static CURRENT_THEME: Lazy<Mutex<String>> = Lazy::new(|| Mutex::new("dark".to_string()));
 
 pub fn toggle_theme() {
-    unsafe {
-        CURRENT_THEME = if CURRENT_THEME == "dark" { "light" } else { "dark" };
-        tracing::debug!("[THEME] Switched to: {}", CURRENT_THEME);
+    let mut theme = CURRENT_THEME.lock().unwrap();
+    if theme.as_str() == "dark" {
+        *theme = "light".to_string();
+    } else {
+        *theme = "dark".to_string();
     }
+    tracing::debug!("[THEME] Switched to: {}", *theme);
+}
+
+pub fn set_theme(theme: &str) {
+    let mut current = CURRENT_THEME.lock().unwrap();
+    *current = theme.to_string();
+    tracing::debug!("[THEME] Set to: {}", *current);
 }
 
 pub fn get_style(target: &str) -> Style {

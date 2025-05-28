@@ -5,7 +5,7 @@ use crate::render::traits::Renderable;
 use crate::screen::gemx::render_gemx;
 use crate::layout::BASE_SPACING_X;
 use crate::gemx::layout::{apply_layout, set_mode};
-use crate::config::theme::ThemeConfig;
+use crate::config_store::theme::ThemeConfig;
 
 /// Wrapper implementing [`Renderable`] for the GemX screen.
 pub struct GemxRenderer<'a> {

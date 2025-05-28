@@ -319,6 +319,10 @@ impl Default for AppState {
         state.beamx_panel_visible = config.beamx_panel_visible;
         state.mindmap_lanes = config.mindmap_lanes;
 
+        if let Some(module) = crate::config::load_config().default_module {
+            state.mode = module;
+        }
+
         for node in state.nodes.values_mut() {
             if node.label.starts_with("[F]") {
                 node.label = node.label.replacen("[F] ", "", 1);
@@ -329,7 +333,7 @@ impl Default for AppState {
         state.load_today_journal();
         state.audit_node_graph();
 
-        if let Some(layout) = crate::config::load_config().layout {
+        if let Some(layout) = crate::config_store::load_config().layout {
             crate::state::serialize::apply(&mut state, layout);
         }
 

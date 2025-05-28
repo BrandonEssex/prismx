@@ -7,7 +7,7 @@ use ratatui::{
 };
 use crate::ui::layout::Rect;
 
-use crate::config::theme::ThemeConfig;
+use crate::config_store::theme::ThemeConfig;
 
 /// Render the theme editor panel.
 /// This is a simple UI for adjusting brightness, contrast

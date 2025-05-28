@@ -4,6 +4,9 @@ pub mod node;
 pub mod layout;
 pub mod screen;
 pub mod bootstrap;
+#[path = "config/mod.rs"]
+pub mod config_store;
+#[path = "config.rs"]
 pub mod config;
 pub mod plugin;
 pub mod plugins;
