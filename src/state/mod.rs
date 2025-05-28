@@ -1,5 +1,3 @@
-pub mod hotkeys;
-pub use hotkeys::*;
 
 
 pub mod core;

@@ -30,8 +30,7 @@ use crate::ui::components::debug::render_debug;
 use crate::ui::components::logs::render_logs;
 use crate::ui::input;
 
-mod hotkeys;
-use hotkeys::match_hotkey;
+use crate::hotkeys::match_hotkey;
 use crate::shortcuts::{match_shortcut, Shortcut};
 use std::time::Duration;
 
@@ -214,7 +213,7 @@ pub fn launch_ui() -> std::io::Result<()> {
                 Event::Key(KeyEvent { code, modifiers, .. }) => {
                     last_key = format!("{:?} + {:?}", code, modifiers);
                     if state.debug_input_mode {
-                        crate::tui::hotkeys::debug_input(&mut state, code, modifiers);
+                        crate::hotkeys::debug_input(&mut state, code, modifiers);
                     }
                     if state.show_logs {
                         if input::handle_log_keys(&mut state, code, modifiers) {
