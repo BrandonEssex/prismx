@@ -7,3 +7,4 @@ pub mod debug;
 pub mod theme;
 pub mod status;
 pub mod module;
+pub mod mindmap;
