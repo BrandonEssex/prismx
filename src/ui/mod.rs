@@ -1,4 +1,5 @@
 pub mod beamx;
+pub mod layout;
 pub mod animate;
 pub mod shortcuts;
 pub mod components;

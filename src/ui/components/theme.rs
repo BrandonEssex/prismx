@@ -1,11 +1,11 @@
 use ratatui::{
     backend::Backend,
-    layout::Rect,
     style::{Color, Style},
     text::{Line, Span},
     widgets::{Block, Borders, Paragraph, Wrap},
     Frame,
 };
+use crate::ui::layout::Rect;
 
 use crate::config::theme::ThemeConfig;
 

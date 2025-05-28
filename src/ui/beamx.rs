@@ -1,4 +1,5 @@
-use ratatui::{backend::Backend, layout::Rect, style::{Color, Style, Modifier}, widgets::Paragraph, Frame};
+use ratatui::{backend::Backend, style::{Color, Style, Modifier}, widgets::Paragraph, Frame};
+use crate::ui::layout::Rect;
 
 pub(crate) fn bright_color(c: Color) -> Color {
     use Color::*;

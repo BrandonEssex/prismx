@@ -1,4 +1,5 @@
-use ratatui::{backend::Backend, layout::Rect, style::{Color, Style}, widgets::{Block, Borders, Paragraph}, text::{Span, Line}, Frame};
+use ratatui::{backend::Backend, style::{Color, Style}, widgets::{Block, Borders, Paragraph}, text::{Span, Line}, Frame};
+use crate::ui::layout::Rect;
 
 use crate::state::{AppState, TriageSummary};
 use crate::ui::animate::shimmer;

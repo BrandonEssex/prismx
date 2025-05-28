@@ -1,11 +1,11 @@
 use ratatui::{
     backend::Backend,
-    layout::Rect,
     style::{Color, Modifier, Style},
     text::{Line, Span},
     widgets::{Block, Borders, Paragraph, Wrap, Clear},
     Frame,
 };
+use crate::ui::layout::Rect;
 
 use crate::state::AppState;
 use crate::ui::animate;
