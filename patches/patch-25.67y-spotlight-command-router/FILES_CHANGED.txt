@@ -1,0 +1,2 @@
+~ src/ui/components/spotlight.rs
+~ src/ui/input.rs
