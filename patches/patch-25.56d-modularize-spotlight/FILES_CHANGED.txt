@@ -1,0 +1,4 @@
+- src/spotlight.rs → src/spotlight/mod.rs
++ src/spotlight/input.rs
++ src/spotlight/search.rs
++ src/spotlight/result.rs
