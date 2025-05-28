@@ -14,6 +14,9 @@ pub struct Coords {
 }
 
 pub const SIBLING_SPACING_X: i16 = 3;
+/// Minimum horizontal spacing applied between sibling nodes
+/// to avoid visual clumping during layout drawing.
+pub const MIN_SIBLING_SPACING_X: i16 = 1;
 pub const MIN_NODE_GAP: i16 = 3;
 /// Vertical spacing between parent and child nodes.
 /// Increased for better readability in auto-arrange mode.
@@ -289,7 +292,7 @@ fn layout_recursive_safe(
     let mut col_x = x;
     let mut col_y = child_y;
     let mut column_width = 0;
-    for child_id in node.children.iter() {
+    for (index, child_id) in node.children.iter().enumerate() {
         let child_h = subtree_depth(nodes, *child_id) * CHILD_SPACING_Y + 1;
         let subtree_w = subtree_span(nodes, *child_id);
         let label_w_child = nodes
@@ -308,10 +311,11 @@ fn layout_recursive_safe(
             tracing::debug!("overflow node {} beyond height {}", child_id, term_height);
         }
 
+        let offset_x = index as i16 * MIN_SIBLING_SPACING_X;
         let (cy, mi, ma) = layout_recursive_safe(
             nodes,
             *child_id,
-            col_x,
+            col_x + offset_x,
             col_y,
             _term_width,
             term_height,
