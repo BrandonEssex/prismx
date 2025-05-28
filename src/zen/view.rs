@@ -4,6 +4,8 @@ use crate::state::AppState;
 use crate::state::view::ZenLayoutMode;
 use crate::state::ZenViewMode;
 use crate::zen::journal::{render_zen_journal, render_history};
+use crate::beamx::render_full_border;
+use crate::render::traits::{Renderable, RenderFrame};
 use crate::theme::zen::zen_theme;
 
 /// Dispatches the correct Zen view mode renderer
@@ -148,4 +150,21 @@ pub fn render_input<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState, 
 
     let widget = Paragraph::new(input).style(Style::default().fg(palette.text).bg(palette.background)).block(block);
     f.render_widget(widget, input_rect);
+}
+
+/// Wrapper implementing [`Renderable`] for the Zen view.
+pub struct ZenView<'a> {
+    pub state: &'a AppState,
+}
+
+impl<'a> ZenView<'a> {
+    pub fn new(state: &'a AppState) -> Self {
+        Self { state }
+    }
+}
+
+impl<'a> Renderable for ZenView<'a> {
+    fn render(&mut self, f: &mut RenderFrame<'_>, area: Rect) {
+        render_zen(f, area, self.state);
+    }
 }

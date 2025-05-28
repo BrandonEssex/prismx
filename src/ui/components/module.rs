@@ -1,5 +1,4 @@
 use ratatui::{
-    backend::Backend,
     style::{Color, Modifier, Style},
     text::{Line, Span},
     widgets::{Block, Borders, Paragraph, Wrap, Clear},
@@ -10,9 +9,10 @@ use crate::ui::layout::Rect;
 use crate::state::AppState;
 use crate::ui::animate;
 use crate::config::theme::ThemeConfig;
+use crate::render::traits::{Renderable, RenderFrame};
 
-pub fn render_module_switcher<B: Backend>(
-    f: &mut Frame<B>,
+pub fn render_module_switcher(
+    f: &mut RenderFrame<'_>,
     area: Rect,
     state: &AppState,
 ) {
@@ -97,4 +97,21 @@ pub fn render_module_switcher<B: Backend>(
     let bg = Rect::new(x, y, width, height);
     f.render_widget(Clear, bg);
     f.render_widget(content, bg);
+}
+
+/// Wrapper implementing [`Renderable`] for the module switcher overlay.
+pub struct ModuleSwitcher<'a> {
+    pub state: &'a AppState,
+}
+
+impl<'a> ModuleSwitcher<'a> {
+    pub fn new(state: &'a AppState) -> Self {
+        Self { state }
+    }
+}
+
+impl<'a> Renderable for ModuleSwitcher<'a> {
+    fn render(&mut self, f: &mut RenderFrame<'_>, area: Rect) {
+        render_module_switcher(f, area, self.state);
+    }
 }
