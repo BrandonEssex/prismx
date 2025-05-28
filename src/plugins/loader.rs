@@ -1,68 +1,89 @@
-use libloading::Library;
+use std::ffi::CStr;
+use std::os::raw::c_char;
 use std::path::{Path, PathBuf};
+use std::sync::{Mutex, OnceLock};
 
-pub trait PluginEntry {
-    fn name(&self) -> &'static str;
-    fn init(&mut self);
-    fn tick(&mut self);
-}
+use libloading::{Library, Symbol};
 
-/// Represents a discovered plugin library.
-pub struct LoadedPlugin {
+#[derive(Debug, Clone)]
+pub struct PluginMetadata {
+    pub name: String,
+    pub version: String,
     pub path: PathBuf,
-    #[allow(dead_code)]
-    lib: Library,
 }
 
-/// Attempt to load a single plugin library and validate that it exposes the
-/// required `prismx_plugin_entry` symbol.
-pub fn load_plugin(path: &str) -> Option<LoadedPlugin> {
-    tracing::debug!("[PLUGIN] attempting {}", path);
-    unsafe {
-        match Library::new(path) {
-            Ok(lib) => {
-                let has_entry = lib.get::<libloading::Symbol<unsafe extern "C" fn()>>(b"prismx_plugin_entry").is_ok();
-                if has_entry {
-                    tracing::info!("[PLUGIN] loaded {}", path);
-                    Some(LoadedPlugin { path: PathBuf::from(path), lib })
-                } else {
-                    tracing::error!("[PLUGIN] missing entry symbol in {}", path);
-                    None
-                }
-            }
-            Err(err) => {
-                tracing::error!("[PLUGIN] failed to load {}: {}", path, err);
-                None
-            }
-        }
+#[repr(C)]
+pub struct RawPluginMetadata {
+    name: *const c_char,
+    version: *const c_char,
+}
+
+type RegisterFn = unsafe extern "C" fn() -> RawPluginMetadata;
+
+static LIBS: OnceLock<Mutex<Vec<Library>>> = OnceLock::new();
+static REGISTRY: OnceLock<Mutex<Vec<PluginMetadata>>> = OnceLock::new();
+
+fn registry_lock() -> &'static Mutex<Vec<PluginMetadata>> {
+    REGISTRY.get_or_init(|| Mutex::new(Vec::new()))
+}
+
+fn libs_lock() -> &'static Mutex<Vec<Library>> {
+    LIBS.get_or_init(|| Mutex::new(Vec::new()))
+}
+
+pub fn registry() -> Vec<PluginMetadata> {
+    registry_lock().lock().unwrap().clone()
+}
+
+fn cstr_to_string(ptr: *const c_char) -> String {
+    if ptr.is_null() {
+        String::new()
+    } else {
+        unsafe { CStr::from_ptr(ptr).to_string_lossy().into_owned() }
     }
 }
 
-/// Search the given directory for `.so` or `.dylib` files and attempt to load
-/// them using `libloading`. Any successfully opened libraries are returned.
-pub fn discover_plugins(dir: &Path) -> Vec<LoadedPlugin> {
-    tracing::debug!("[PLUGIN] scanning {}", dir.display());
-    let mut plugins = Vec::new();
-    if let Ok(entries) = std::fs::read_dir(dir) {
-        for entry in entries.flatten() {
-            let path = entry.path();
-            if matches!(path.extension().and_then(|e| e.to_str()), Some("so") | Some("dylib")) {
-                tracing::debug!("[PLUGIN] loading {}", path.display());
-                match unsafe { Library::new(&path) } {
-                    Ok(lib) => {
-                        tracing::info!("[PLUGIN] discovered {}", path.display());
-                        plugins.push(LoadedPlugin { path, lib });
+fn load_library(path: &Path) {
+    unsafe {
+        match Library::new(path) {
+            Ok(lib) => {
+                let register: Result<Symbol<RegisterFn>, _> = lib.get(b"register");
+                match register {
+                    Ok(func) => {
+                        let raw = func();
+                        let meta = PluginMetadata {
+                            name: cstr_to_string(raw.name),
+                            version: cstr_to_string(raw.version),
+                            path: path.to_path_buf(),
+                        };
+                        registry_lock().lock().unwrap().push(meta);
+                        libs_lock().lock().unwrap().push(lib);
+                        tracing::info!("[PLUGIN] loaded {}", path.display());
                     }
                     Err(err) => {
-                        tracing::warn!(
-                            "[PLUGIN] failed to load {}: {}",
+                        tracing::error!(
+                            "[PLUGIN] register symbol missing in {}: {}",
                             path.display(),
                             err
                         );
                     }
                 }
             }
+            Err(err) => {
+                tracing::error!("[PLUGIN] failed to load {}: {}", path.display(), err);
+            }
         }
     }
-    plugins
+}
+
+pub fn load_plugins() {
+    let dir = Path::new("./plugins");
+    if let Ok(entries) = std::fs::read_dir(dir) {
+        for entry in entries.flatten() {
+            let path = entry.path();
+            if matches!(path.extension().and_then(|e| e.to_str()), Some("so") | Some("dylib")) {
+                load_library(&path);
+            }
+        }
+    }
 }
