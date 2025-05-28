@@ -7,7 +7,6 @@ target/
 *.lock*
 .DS_Store
 Cargo.lock
-scripts/*
 !scripts/ci/
 !scripts/ci/should-run-patch.sh
 tests/*
