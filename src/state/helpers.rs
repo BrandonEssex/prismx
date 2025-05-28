@@ -232,6 +232,30 @@ impl AppState {
         }
     }
 
+    /// Return a list of node IDs that are not reachable from any root.
+    pub fn disconnected_nodes(&self) -> Vec<NodeID> {
+        use std::collections::{HashSet, VecDeque};
+
+        let mut reachable = HashSet::new();
+        let mut stack: VecDeque<NodeID> = self.root_nodes.iter().copied().collect();
+        while let Some(id) = stack.pop_front() {
+            if reachable.insert(id) {
+                if let Some(n) = self.nodes.get(&id) {
+                    for child in &n.children {
+                        stack.push_back(*child);
+                    }
+                }
+            }
+        }
+
+        self
+            .nodes
+            .keys()
+            .copied()
+            .filter(|id| !reachable.contains(id))
+            .collect()
+    }
+
     pub fn ensure_grid_positions(&mut self) {
         if self.auto_arrange {
             return;
