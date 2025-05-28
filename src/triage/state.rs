@@ -1,5 +1,6 @@
 use chrono::{DateTime, Local};
 use crate::state::{AppState, ZenJournalEntry};
+use crate::zen::image::JournalEntry;
 use crate::triage::helpers::extract_tags;
 
 /// Tags that mark an entry for triage.
@@ -38,6 +39,7 @@ impl TriageEntry {
     }
 }
 
+/// Collect raw journal entries containing any triage tags.
 /// Collect raw journal entries containing any triage tags.
 pub fn collect(entries: &[ZenJournalEntry]) -> Vec<ZenJournalEntry> {
     let mut filtered: Vec<ZenJournalEntry> = entries

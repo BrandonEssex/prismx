@@ -74,8 +74,15 @@ pub fn render_history<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState
             lines.push(highlight_tags_line(&entry.tags.join(" ")));
         }
 
-        for l in entry.text.lines() {
-            lines.push(highlight_tags_line(l));
+        match &entry.entry {
+            crate::zen::image::JournalEntry::Text(t) => {
+                for l in t.lines() {
+                    lines.push(highlight_tags_line(l));
+                }
+            }
+            crate::zen::image::JournalEntry::Image(_) => {
+                lines.push(highlight_tags_line(&entry.entry.display()));
+            }
         }
 
         lines.push(Line::from(Span::styled(

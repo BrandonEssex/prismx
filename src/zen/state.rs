@@ -148,7 +148,12 @@ impl AppState {
         let _ = std::fs::create_dir_all("journals");
         let path = format!("journals/{}.prismx", chrono::Local::now().format("%Y-%m-%d"));
         if let Ok(mut file) = OpenOptions::new().create(true).append(true).open(&path) {
-            let _ = writeln!(file, "{}|{}", entry.timestamp.to_rfc3339(), entry.text);
+            let _ = writeln!(
+                file,
+                "{}|{}",
+                entry.timestamp.to_rfc3339(),
+                entry.entry.raw_text()
+            );
         }
     }
 
@@ -163,7 +168,7 @@ impl AppState {
     // PATCHED: Required methods from zen::journal.rs
     pub fn start_edit_journal_entry(&mut self, index: usize) {
         if let Some(entry) = self.zen_journal_entries.get(index) {
-            self.zen_draft.text = entry.text.clone();
+            self.zen_draft.text = entry.entry.raw_text();
             self.zen_draft.editing = Some(index);
         }
     }
