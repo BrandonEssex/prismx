@@ -447,7 +447,8 @@ pub fn launch_ui() -> std::io::Result<()> {
                         ZenLayoutMode::Journal => ZenLayoutMode::Classic,
                         ZenLayoutMode::Classic => ZenLayoutMode::Split,
                         ZenLayoutMode::Split => ZenLayoutMode::Summary,
-                        ZenLayoutMode::Summary => ZenLayoutMode::Journal,
+                        ZenLayoutMode::Summary => ZenLayoutMode::Dual,
+                        ZenLayoutMode::Dual => ZenLayoutMode::Journal,
                         ZenLayoutMode::Compose => ZenLayoutMode::Journal,
                     };
                 } else if code == KeyCode::Char('t')

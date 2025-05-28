@@ -35,6 +35,37 @@ pub fn render_zen<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
             render_classic(f, left, state);
             render_zen_journal(f, right, state);
         }
+        ZenLayoutMode::Dual => {
+            use ratatui::widgets::Block;
+            use ratatui::style::Style;
+
+            let palette = zen_theme();
+            let tick = (std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap_or_default()
+                .as_millis()
+                / 300) as u64;
+
+            let mid = area.width / 2;
+            let left = Rect {
+                x: area.x,
+                y: area.y,
+                width: mid,
+                height: area.height,
+            };
+            let right = Rect {
+                x: area.x + mid,
+                y: area.y,
+                width: area.width - mid,
+                height: area.height,
+            };
+
+            let bg = Block::default().style(Style::default().bg(palette.background));
+            f.render_widget(bg, area);
+
+            render_input(f, left, state, tick);
+            render_history(f, right, state);
+        }
         ZenLayoutMode::Compose => {
             let tick = (std::time::SystemTime::now()
                 .duration_since(std::time::UNIX_EPOCH)

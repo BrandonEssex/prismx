@@ -7,6 +7,7 @@ pub enum ZenLayoutMode {
     Split,
     Summary,
     Compose,
+    Dual,
 }
 
 impl Default for ZenLayoutMode {
