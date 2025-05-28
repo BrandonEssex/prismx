@@ -31,7 +31,7 @@ impl AppState {
             self.redo_stack.push(current);
             self.nodes = prev.nodes;
             self.root_nodes = prev.root_nodes;
-            self.selected = prev.selected;
+            self.set_selected(prev.selected);
             crate::layout::roles::recalculate_roles(self);
             self.ensure_valid_roots();
         }
@@ -48,7 +48,7 @@ impl AppState {
             self.undo_stack.push(current);
             self.nodes = next.nodes;
             self.root_nodes = next.root_nodes;
-            self.selected = next.selected;
+            self.set_selected(next.selected);
             crate::layout::roles::recalculate_roles(self);
             self.ensure_valid_roots();
         }

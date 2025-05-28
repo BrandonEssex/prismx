@@ -52,7 +52,7 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppStat
 
     if let Some(sel) = state.selected {
         if !state.nodes.contains_key(&sel) {
-            state.selected = None;
+            state.set_selected(None);
         }
     }
     if state.selected.is_none() {

@@ -17,6 +17,16 @@ impl AppState {
     pub fn set_selected(&mut self, id: Option<NodeID>) {
         self.selected = id;
         self.last_promoted_root = None;
+
+        if let Some(node_id) = id {
+            let prev_x = self.scroll_x;
+            let prev_y = self.scroll_y;
+            crate::layout::center_on_node(self, node_id);
+            self.scroll_target_x = self.scroll_x;
+            self.scroll_target_y = self.scroll_y;
+            self.scroll_x = prev_x;
+            self.scroll_y = prev_y;
+        }
     }
 
     pub fn dock_focus_prev(&mut self) {
@@ -329,6 +339,25 @@ impl AppState {
         if let Some(id) = self.selected {
             crate::layout::zoom_to_anchor(self, id);
         }
+    }
+
+    /// Animate scroll offsets toward the target values for smooth centering.
+    pub fn animate_scroll(&mut self) {
+        let dx = self.scroll_target_x - self.scroll_x;
+        if dx.abs() > 0 {
+            self.scroll_x += dx / 2;
+            if (self.scroll_x - self.scroll_target_x).abs() <= 1 {
+                self.scroll_x = self.scroll_target_x;
+            }
+        }
+        let dy = self.scroll_target_y - self.scroll_y;
+        if dy.abs() > 0 {
+            self.scroll_y += dy / 2;
+            if (self.scroll_y - self.scroll_target_y).abs() <= 1 {
+                self.scroll_y = self.scroll_target_y;
+            }
+        }
+        crate::layout::clamp_scroll(self);
     }
 
     pub fn clear_fallback_promotions(&mut self) {

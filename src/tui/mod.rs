@@ -46,6 +46,8 @@ pub fn draw(
         state.ensure_grid_positions();
     }
 
+    state.animate_scroll();
+
     if state.show_spotlight && !state.prev_show_spotlight {
         state.spotlight_just_opened = true;
         state.spotlight_animation_frame = 0;

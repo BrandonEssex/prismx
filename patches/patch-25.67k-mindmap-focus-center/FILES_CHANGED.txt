@@ -1,2 +1,8 @@
-~ src/ui/viewport.rs
-~ src/ui/components/mindmap.rs
+~ src/state/core.rs
+~ src/state/helpers.rs
+~ src/state/edit.rs
+~ src/state/history.rs
+~ src/state/serialize.rs
+~ src/gemx/interaction.rs
+~ src/screen/gemx.rs
+~ src/tui/mod.rs

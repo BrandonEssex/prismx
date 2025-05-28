@@ -117,6 +117,8 @@ pub struct AppState {
     pub zoom_locked_by_user: bool,
     pub scroll_x: i16,
     pub scroll_y: i16,
+    pub scroll_target_x: i16,
+    pub scroll_target_y: i16,
     pub snap_to_grid: bool,
     pub drawing_root: Option<NodeID>,
     pub dragging: Option<NodeID>,
@@ -241,6 +243,8 @@ impl Default for AppState {
             zoom_locked_by_user: false,
             scroll_x: 0,
             scroll_y: 0,
+            scroll_target_x: 0,
+            scroll_target_y: 0,
             snap_to_grid: false,
             drawing_root: None,
             dragging: None,
@@ -338,6 +342,9 @@ impl Default for AppState {
         }
 
         state.loaded_plugins = loader::discover_plugins(std::path::Path::new("plugins"));
+
+        state.scroll_target_x = state.scroll_x;
+        state.scroll_target_y = state.scroll_y;
 
         state
     }
