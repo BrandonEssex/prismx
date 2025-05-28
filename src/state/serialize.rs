@@ -1,7 +1,7 @@
 use serde::{Serialize, Deserialize};
 use crate::state::core::AppState;
 use crate::node::{Node, NodeID};
-use std::collections::HashMap;
+use alloc::collections::HashMap;
 
 #[derive(Serialize, Deserialize, Clone)]
 struct NodeData {

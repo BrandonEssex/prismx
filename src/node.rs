@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use alloc::collections::HashMap;
 
 pub type NodeID = u64;
 

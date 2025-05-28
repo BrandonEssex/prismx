@@ -1,4 +1,4 @@
-use std::collections::{HashMap, HashSet};
+use alloc::collections::{HashMap, HashSet};
 use crate::state::AppState;
 use crate::node::NodeID;
 use crate::layout::{Coords, LayoutRole, GEMX_HEADER_HEIGHT};
@@ -39,7 +39,7 @@ pub fn promote_unreachable(
         state.fallback_this_frame = true;
         state.fallback_promoted_this_session.insert(id);
 
-        use std::collections::HashSet;
+        use alloc::collections::HashSet;
         let filled: HashSet<(i16, i16)> =
             state.nodes.values().map(|n| (n.x, n.y)).collect();
 

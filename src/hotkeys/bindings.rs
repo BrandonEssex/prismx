@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use alloc::collections::HashMap;
 
 /// Input hotkey definitions for PrismX
 pub const SNAP_GRID_TOGGLE: &str = "Ctrl+G";

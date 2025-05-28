@@ -1,6 +1,6 @@
 use crate::node::{NodeID, NodeMap};
 use crate::state::AppState;
-use std::collections::HashSet;
+use alloc::collections::HashSet;
 use std::sync::atomic::{AtomicU8, Ordering};
 
 /// Layout mode selector for GemX.

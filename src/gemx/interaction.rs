@@ -6,7 +6,7 @@ use crate::layout::{
     subtree_depth, spacing_for_zoom,
 };
 use crossterm::terminal;
-use std::collections::HashMap;
+use alloc::collections::HashMap;
 use std::time::Instant;
 
 /// Toggle snap-to-grid mode
@@ -27,7 +27,7 @@ pub fn spawn_free_node(state: &mut AppState) {
     let mut node = Node::new(new_id, "Free Node", None);
 
     if !state.auto_arrange {
-        use std::collections::HashSet;
+        use alloc::collections::HashSet;
 
         let (tw, th) = terminal::size().unwrap_or((80, 20));
         let used: HashSet<(i16, i16)> =

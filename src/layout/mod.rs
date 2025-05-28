@@ -1,4 +1,4 @@
-use std::collections::{HashMap, HashSet};
+use alloc::collections::{HashMap, HashSet};
 use crate::node::{NodeID, NodeMap};
 
 pub mod roles;
@@ -201,7 +201,7 @@ pub fn layout_nodes(
     }
 
     if auto_arrange {
-        use std::collections::HashSet;
+        use alloc::collections::HashSet;
         let mut used: HashSet<(i16, i16)> = HashSet::new();
         let mut offset_y: i16 = 0;
         for pos in coords.values_mut() {
@@ -382,7 +382,7 @@ pub fn avoid_reserved_zone_map(map: &mut HashMap<NodeID, Coords>, term_width: i1
 /// Works for both auto-arrange and manual layout modes. When zoom is locked by
 /// the user, scrolling only occurs if the node would otherwise be off-screen.
 pub fn center_on_node(state: &mut crate::state::AppState, node_id: NodeID) {
-    use std::collections::HashMap;
+    use alloc::collections::HashMap;
 
     if !state.nodes.contains_key(&node_id) {
         return;

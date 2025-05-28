@@ -105,7 +105,7 @@ pub fn render_triage_panel<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut
     f.render_widget(feed, body[0]);
 
     // --- Right Stats ---
-    use std::collections::BTreeMap;
+    use alloc::collections::BTreeMap;
     let mut counts: BTreeMap<String, usize> = BTreeMap::new();
     for entry in &state.triage_entries {
         if entry.archived { continue; }

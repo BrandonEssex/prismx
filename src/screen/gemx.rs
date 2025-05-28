@@ -12,7 +12,7 @@ use crate::canvas::prism::render_prism;
 use crate::beamx::render_full_border;
 use crate::ui::beamx::{BeamX, BeamXStyle, BeamXMode, BeamXAnimationMode};
 use std::time::{SystemTime, UNIX_EPOCH};
-use std::collections::{HashMap, HashSet};
+use alloc::collections::{HashMap, HashSet};
 
 fn node_in_cycle(nodes: &NodeMap, start: NodeID) -> bool {
     let mut current = start;
@@ -177,7 +177,7 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppStat
         return;
     }
 
-    use std::collections::HashSet;
+    use alloc::collections::HashSet;
     let reachable_ids: HashSet<NodeID> = drawn_at.keys().copied().collect();
 
     if state.auto_arrange {

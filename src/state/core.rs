@@ -1,4 +1,4 @@
-use std::collections::{HashMap, HashSet, VecDeque};
+use alloc::collections::{HashMap, HashSet, VecDeque};
 use std::time::Instant;
 use crate::node::{Node, NodeID, NodeMap};
 use crate::layout::{GEMX_HEADER_HEIGHT, LayoutRole};
@@ -109,7 +109,7 @@ pub struct AppState {
     pub redo_stack: Vec<LayoutSnapshot>,
     pub view_stack: Vec<Option<NodeID>>,
     pub selected_drag_source: Option<NodeID>,
-    pub link_map: std::collections::HashMap<NodeID, Vec<NodeID>>,
+    pub link_map: alloc::collections::HashMap<NodeID, Vec<NodeID>>,
     pub auto_arrange: bool,
     pub zoom_scale: f32,
     pub zoom_locked_by_user: bool,
@@ -180,7 +180,7 @@ pub struct AppState {
 }
 
 pub fn default_beamx_panel_visible() -> bool {
-    #[cfg(target_os = "macos")]
+    #[cfg(all(std, target_os = "macos"))]
     {
         if let Ok(term) = std::env::var("TERM_PROGRAM") {
             if term.to_lowercase().contains("iterm") {
@@ -232,7 +232,7 @@ impl Default for AppState {
             redo_stack: Vec::new(),
             view_stack: Vec::new(),
             selected_drag_source: None,
-            link_map: std::collections::HashMap::new(),
+            link_map: alloc::collections::HashMap::new(),
             auto_arrange: true,
             zoom_scale: 1.0,
             zoom_locked_by_user: false,
@@ -251,7 +251,16 @@ impl Default for AppState {
             layout_warning_logged: false,
             layout_fail_count: 0,
             debug_input_mode: true,
-            debug_border: std::env::var("PRISMX_DEBUG_BORDER").is_ok(),
+            debug_border: {
+                #[cfg(std)]
+                {
+                    std::env::var("PRISMX_DEBUG_BORDER").is_ok()
+                }
+                #[cfg(not(std))]
+                {
+                    false
+                }
+            },
             debug_overlay: false,
             debug_overlay_sticky: false,
             mindmap_lanes: true,

@@ -2,7 +2,7 @@ use super::core::{AppState, FavoriteEntry, LayoutSnapshot, DockLayout, ZenSyntax
 use crate::node::{Node, NodeID, NodeMap};
 use crate::layout::{SIBLING_SPACING_X, CHILD_SPACING_Y, GEMX_HEADER_HEIGHT};
 use crossterm::terminal;
-use std::collections::HashSet;
+use alloc::collections::HashSet;
 use std::time::Instant;
 
 impl AppState {
@@ -148,7 +148,7 @@ impl AppState {
     }
 
     pub fn audit_node_graph(&mut self) {
-        use std::collections::VecDeque;
+        use alloc::collections::VecDeque;
         for (&id, node) in &self.nodes {
             if node.label.trim().is_empty() {
                 crate::log_debug!(self, "⚠ Node {} has no label", id);

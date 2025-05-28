@@ -1,6 +1,6 @@
 use crate::plugins::{PluginFrame, PluginRender, PomodoroPlugin, CountdownPlugin};
 use ratatui::layout::Rect;
-use std::collections::VecDeque;
+use alloc::collections::VecDeque;
 use std::time::{Duration, SystemTime};
 
 pub struct PluginHost {

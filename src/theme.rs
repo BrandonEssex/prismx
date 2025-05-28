@@ -1,5 +1,5 @@
 use ratatui::style::{Color, Style};
-use std::collections::HashMap;
+use alloc::collections::HashMap;
 use std::fs;
 
 static mut CURRENT_THEME: &str = "dark";
