@@ -70,13 +70,20 @@ pub fn render_history<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState
             Style::default().fg(Color::DarkGray).add_modifier(Modifier::DIM),
         )));
 
-        let tags = extract_tags(&entry.text);
+        let tags = extract_tags(&entry.entry.raw_text());
         if !tags.is_empty() {
             lines.push(highlight_tags_line(&tags.join(" ")));
         }
 
-        for l in entry.text.lines() {
-            lines.push(highlight_tags_line(l));
+        match &entry.entry {
+            crate::zen::image::JournalEntry::Text(t) => {
+                for l in t.lines() {
+                    lines.push(highlight_tags_line(l));
+                }
+            }
+            crate::zen::image::JournalEntry::Image(_) => {
+                lines.push(highlight_tags_line(&entry.entry.display()));
+            }
         }
 
         lines.push(Line::from(Span::styled(

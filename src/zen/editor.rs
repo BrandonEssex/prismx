@@ -1,6 +1,7 @@
 use crossterm::event::KeyCode;
 use crate::state::AppState;
 use crate::state::ZenJournalEntry;
+use crate::zen::image::JournalEntry;
 
 /// Handle key input for Zen compose mode.
 pub fn handle_key(state: &mut AppState, key: KeyCode) {
@@ -30,10 +31,12 @@ pub fn handle_key(state: &mut AppState, key: KeyCode) {
                     if crate::config::theme::ThemeConfig::load().zen_breathe() {
                         std::thread::sleep(std::time::Duration::from_millis(150));
                     }
+                    let content = JournalEntry::from_input(&text)
+                        .unwrap_or(JournalEntry::Text(text.clone()));
                     let entry = ZenJournalEntry {
                         timestamp: chrono::Local::now(),
-                        text: text.clone(),
-                        prev_text: None,
+                        entry: content,
+                        prev_entry: None,
                     };
                     state.zen_journal_entries.push(entry.clone());
                     state.append_journal_entry(&entry);

@@ -135,8 +135,8 @@ impl AppState {
                         .ok()
                         .map(|dt| ZenJournalEntry {
                             timestamp: dt.with_timezone(&chrono::Local),
-                            text: text.to_string(),
-                            prev_text: None,
+                            entry: crate::zen::image::JournalEntry::Text(text.to_string()),
+                            prev_entry: None,
                         })
                 })
                 .collect();
@@ -147,7 +147,12 @@ impl AppState {
         let _ = std::fs::create_dir_all("journals");
         let path = format!("journals/{}.prismx", chrono::Local::now().format("%Y-%m-%d"));
         if let Ok(mut file) = OpenOptions::new().create(true).append(true).open(&path) {
-            let _ = writeln!(file, "{}|{}", entry.timestamp.to_rfc3339(), entry.text);
+            let _ = writeln!(
+                file,
+                "{}|{}",
+                entry.timestamp.to_rfc3339(),
+                entry.entry.raw_text()
+            );
         }
     }
 
@@ -162,7 +167,7 @@ impl AppState {
     // PATCHED: Required methods from zen::journal.rs
     pub fn start_edit_journal_entry(&mut self, index: usize) {
         if let Some(entry) = self.zen_journal_entries.get(index) {
-            self.zen_draft.text = entry.text.clone();
+            self.zen_draft.text = entry.entry.raw_text();
             self.zen_draft.editing = Some(index);
         }
     }
@@ -174,8 +179,12 @@ impl AppState {
 
     pub fn edit_journal_entry(&mut self, index: usize, text: &str) {
         if let Some(entry) = self.zen_journal_entries.get_mut(index) {
-            entry.prev_text = Some(entry.text.clone());
-            entry.text = text.to_string();
+            entry.prev_entry = Some(entry.entry.clone());
+            entry.entry = if let Some(img) = crate::zen::image::JournalEntry::from_input(text) {
+                img
+            } else {
+                crate::zen::image::JournalEntry::Text(text.to_string())
+            };
         }
     }
 
@@ -185,7 +194,9 @@ impl AppState {
             .iter()
             .filter(|e| {
                 if let Some(tag) = &self.zen_tag_filter {
-                    extract_tags(&e.text).iter().any(|t| t.eq_ignore_ascii_case(tag))
+                    extract_tags(&e.entry.raw_text())
+                        .iter()
+                        .any(|t| t.eq_ignore_ascii_case(tag))
                 } else {
                     true
                 }

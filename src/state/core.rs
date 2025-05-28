@@ -3,6 +3,7 @@ use std::time::Instant;
 use crate::node::{Node, NodeID, NodeMap};
 use crate::layout::{GEMX_HEADER_HEIGHT, LayoutRole};
 use crate::plugin::{loader, PluginHost};
+use crate::zen::image::JournalEntry;
 pub use crate::zen::state::*;
 
 use crate::hotkeys::load_hotkeys;
@@ -67,8 +68,8 @@ impl Default for ZenMode {
 #[derive(Clone)]
 pub struct ZenJournalEntry {
     pub timestamp: chrono::DateTime<chrono::Local>,
-    pub text: String,
-    pub prev_text: Option<String>,
+    pub entry: JournalEntry,
+    pub prev_entry: Option<JournalEntry>,
 }
 
 #[derive(Clone, Default)]

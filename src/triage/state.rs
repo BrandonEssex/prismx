@@ -1,5 +1,6 @@
 use chrono::{DateTime, Local};
 use crate::state::{AppState, ZenJournalEntry};
+use crate::zen::image::JournalEntry;
 use crate::triage::helpers::extract_tags;
 
 /// Tags that mark an entry for triage.
@@ -43,7 +44,7 @@ pub fn collect(entries: &[ZenJournalEntry]) -> Vec<ZenJournalEntry> {
     let mut filtered: Vec<ZenJournalEntry> = entries
         .iter()
         .filter(|e| {
-            let tags = extract_tags(&e.text);
+            let tags = extract_tags(&e.entry.raw_text());
             tags.iter().any(|tag| TRIAGE_TAGS.contains(&tag.as_str()))
         })
         .cloned()
