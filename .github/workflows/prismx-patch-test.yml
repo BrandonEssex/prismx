@@ -105,7 +105,7 @@ jobs:
 
       - name: ☁️ Upload Patch Artifacts
         if: steps.runcheck.outputs.run == 'true'
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v3.1.2
         with:
           name: ${{ matrix.patch }}-artifact
           path: |
