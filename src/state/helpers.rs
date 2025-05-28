@@ -15,8 +15,24 @@ impl AppState {
     }
 
     pub fn set_selected(&mut self, id: Option<NodeID>) {
+        if let Some(prev) = self.selected {
+            if Some(prev) != id {
+                self.selection_trail.push_back((prev, Instant::now()));
+                if self.selection_trail.len() > 8 {
+                    self.selection_trail.pop_front();
+                }
+            }
+        }
         self.selected = id;
         self.last_promoted_root = None;
+    }
+
+    pub fn selection_age(&self, id: NodeID) -> Option<u128> {
+        self.selection_trail
+            .iter()
+            .rev()
+            .find(|(nid, _)| *nid == id)
+            .map(|(_, t)| t.elapsed().as_millis())
     }
 
     pub fn dock_focus_prev(&mut self) {

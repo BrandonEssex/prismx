@@ -8,6 +8,7 @@ impl AppState {
             nodes: self.nodes.clone(),
             root_nodes: self.root_nodes.clone(),
             selected: self.selected,
+            selection_trail: self.selection_trail.clone(),
         };
         if self.undo_stack.last().map(|s| s == &snap).unwrap_or(false) {
             return;
@@ -27,6 +28,7 @@ impl AppState {
                 nodes: self.nodes.clone(),
                 root_nodes: self.root_nodes.clone(),
                 selected: self.selected,
+                selection_trail: self.selection_trail.clone(),
             };
             self.redo_stack.push(current);
             self.nodes = prev.nodes;
@@ -44,6 +46,7 @@ impl AppState {
                 nodes: self.nodes.clone(),
                 root_nodes: self.root_nodes.clone(),
                 selected: self.selected,
+                selection_trail: self.selection_trail.clone(),
             };
             self.undo_stack.push(current);
             self.nodes = next.nodes;
