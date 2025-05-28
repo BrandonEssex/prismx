@@ -9,6 +9,7 @@ use crate::ui::components::status::render_triage_status;
 use crate::beamx::render_full_border;
 
 
+#[allow(dead_code)]
 fn draw_plain_border<B: Backend>(f: &mut Frame<B>, area: Rect, color: Color) {
     let style = Style::default().fg(color);
     let right = area.x + area.width.saturating_sub(1);

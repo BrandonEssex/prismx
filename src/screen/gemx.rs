@@ -4,7 +4,7 @@ use crate::layout::{
     layout_nodes, Coords, LayoutRole, PackRegion, GEMX_HEADER_HEIGHT,
     CHILD_SPACING_Y, subtree_span, subtree_depth, spacing_for_zoom,
     BASE_SPACING_X, BASE_SPACING_Y, SNAP_GRID_X, SNAP_GRID_Y,
-    RESERVED_ZONE_W, RESERVED_ZONE_H,
+    RESERVED_ZONE_W,
 };
 use crate::node::{NodeID, NodeMap};
 use crate::state::AppState;

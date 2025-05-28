@@ -24,9 +24,7 @@ fn rect_contains(rect: ratatui::layout::Rect, x: u16, y: u16) -> bool {
 }
 use crate::screen::render_gemx;
 use crate::render::render_settings;
-use crate::settings::{SETTING_TOGGLES, settings_len};
 use crate::ui::components::plugin::render_plugin;
-use crate::ui::components::debug::render_debug;
 use crate::ui::components::logs::render_logs;
 use crate::ui::input;
 

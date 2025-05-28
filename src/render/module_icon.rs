@@ -1,7 +1,7 @@
 use ratatui::{
     backend::Backend,
     layout::Rect,
-    style::{Modifier, Style},
+    style::Modifier,
     widgets::{Block, Borders, Paragraph},
     Frame,
 };

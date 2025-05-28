@@ -17,7 +17,7 @@ use crate::layout::subtree_depth;
 
 /// Render debug information when [`AppState::debug_input_mode`] is enabled.
 pub fn render_debug<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
-    let plugins = registry_filtered(PluginTagFilter::All);
+    let _plugins = registry_filtered(PluginTagFilter::All);
     if !state.debug_input_mode {
         return;
     }

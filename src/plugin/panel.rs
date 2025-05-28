@@ -2,7 +2,6 @@ use ratatui::prelude::*;
 use ratatui::widgets::{Block, Borders, Paragraph, Clear, Wrap};
 use ratatui::text::{Line, Span};
 use ratatui::style::{Color, Modifier, Style};
-use chrono::Datelike;
 
 use crate::state::{AppState, PluginTagFilter};
 use crate::plugin::registry::registry_filtered;

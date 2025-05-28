@@ -25,7 +25,6 @@ pub fn extract_tags(text: &str) -> Vec<String> {
 }
 
 pub fn highlight_tags_line(input: &str) -> Line<'static> {
-    use ratatui::text::{Span, Line};
     let mut spans = Vec::new();
     for token in input.split_whitespace() {
         if token.starts_with('#') {
