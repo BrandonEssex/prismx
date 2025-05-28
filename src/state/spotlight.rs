@@ -74,14 +74,22 @@ impl AppState {
         } else {
             match cmd {
                 "triage" => self.mode = "triage".into(),
-                "zen" => self.mode = "zen".into(),
+                "zen" => {
+                    self.mode = "zen".into();
+                    self.zen_layout_mode = crate::state::view::ZenLayoutMode::Compose;
+                    self.zen_view_mode = crate::state::ZenViewMode::Write;
+                },
                 "settings" => self.mode = "settings".into(),
                 "gemx" => self.mode = "gemx".into(),
                 "plugin" => self.mode = "plugin".into(),
                 "toggle triage" => self.show_triage = !self.show_triage,
                 "toggle keymap" => self.show_keymap = !self.show_keymap,
                 "toggle spotlight" => self.show_spotlight = !self.show_spotlight,
-                "mode zen" => self.mode = "zen".into(),
+                "mode zen" => {
+                    self.mode = "zen".into();
+                    self.zen_layout_mode = crate::state::view::ZenLayoutMode::Compose;
+                    self.zen_view_mode = crate::state::ZenViewMode::Write;
+                },
                 "mode gemx" => self.mode = "gemx".into(),
                 "arrange" => self.auto_arrange = true,
                 "undo" => self.undo(),
@@ -109,6 +117,8 @@ impl AppState {
                     if !path.is_empty() {
                         self.open_zen_file(path);
                         self.mode = "zen".into();
+                        self.zen_layout_mode = crate::state::view::ZenLayoutMode::Compose;
+                        self.zen_view_mode = crate::state::ZenViewMode::Write;
                     }
                 }
                 "clear" => self.zen_buffer = vec![String::new()],
