@@ -1,2 +1,0 @@
-- .github/workflows/auto-label.yml
-- .github/scripts/label-codex-prs.sh

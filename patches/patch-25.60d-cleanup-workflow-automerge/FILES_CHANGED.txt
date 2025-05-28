@@ -1,3 +1,0 @@
-- .github/workflows/prismx-patch-test.yml
-- .github/scripts/filter-patch-jobs.sh
-- scripts/ci/should-run-patch.sh
