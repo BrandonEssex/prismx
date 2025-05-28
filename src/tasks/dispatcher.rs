@@ -26,7 +26,7 @@ static FALLBACK_SENDER: Lazy<Sender<FallbackTask>> = Lazy::new(|| {
             let rt = Runtime::new().expect("runtime");
             for task in rx {
                 tracing::info!("[task] executing {}: {}", task.id, task.name);
-                rt.block_on(task.fut);
+                rt.block_on(Box::pin(task.fut));
                 TASK_REGISTRY.lock().unwrap().remove(&task.id);
             }
         })
