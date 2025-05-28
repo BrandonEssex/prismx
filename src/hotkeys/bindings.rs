@@ -1,5 +1,8 @@
 use std::collections::HashMap;
 
+/// Input hotkey definitions for PrismX
+pub const SNAP_GRID_TOGGLE: &str = "Ctrl+G";
+
 
 pub fn load_default_hotkeys() -> HashMap<String, String> {
     let mut map = HashMap::new();

@@ -36,7 +36,6 @@ pub fn match_hotkey(action: &str, code: KeyCode, mods: KeyModifiers, state: &App
             _ => false,
         };
 
-
         let code_match = match k {
             "tab" => code == KeyCode::Tab,
             "shift-tab" => matches!(code, KeyCode::BackTab | KeyCode::Tab) && mods.contains(KeyModifiers::SHIFT),
@@ -64,8 +63,6 @@ pub fn match_hotkey(action: &str, code: KeyCode, mods: KeyModifiers, state: &App
             "r" => code == KeyCode::Char('r'),
             "l" => code == KeyCode::Char('l'),
             "g" => code == KeyCode::Char('g'),
-
-
             _ => false,
         };
 

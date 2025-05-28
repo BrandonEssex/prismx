@@ -5,7 +5,7 @@ use crate::layout::{GEMX_HEADER_HEIGHT, LayoutRole};
 use crate::plugin::PluginHost;
 pub use crate::state::zen::*;
 
-use super::hotkeys::load_hotkeys;
+use crate::hotkeys::load_hotkeys;
 
 #[derive(Clone, PartialEq)]
 pub struct LayoutSnapshot {
