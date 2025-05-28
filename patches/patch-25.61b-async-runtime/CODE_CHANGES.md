@@ -1,5 +1,5 @@
 ## Code Changes
 
-- Add `tokio` or `crossbeam-channel` to dependencies
-- Move Spotlight indexing to async task
-- Use channels to pass results to main thread
+- Add `tokio` to dependencies
+- Create `spawn_task(name, future)` wrapper
+- Use `tokio::spawn` or `JoinHandle` tracking

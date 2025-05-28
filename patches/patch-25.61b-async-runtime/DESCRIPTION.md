@@ -1,3 +1,3 @@
-# Patch 25.61b – Async Runtime with Tokio or Crossbeam
+# Patch 25.61b – Async Runtime with tokio
 
-Introduces async background processing. Begins with offloading Spotlight indexing into a non-blocking async task.
+Adds background async task dispatcher with `tokio` or `crossbeam` support.
