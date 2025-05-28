@@ -1,0 +1,22 @@
+diff --git a/config/settings.toml b/config/settings.toml
+index f59d469..0887571 100644
+--- a/config/settings.toml
++++ b/config/settings.toml
+@@ -1,11 +1,11 @@
+ auto_arrange = false
+ debug_input_mode = false
+ dock_layout = "vertical"
+-gemx_beam_color = "Ice"
+-zen_beam_color = "Ice"
+-triage_beam_color = "Ice"
+-settings_beam_color = "Ice"
++gemx_beam_color = "Emerald"
++zen_beam_color = "Emerald"
++triage_beam_color = "Emerald"
++settings_beam_color = "Emerald"
+ zen_icon_enabled = true
+-zen_icon_glyph = ""
+-beamx_panel_theme = "Aqua"
++beamx_panel_theme = "Prism"
+ beamx_panel_visible = true
++mindmap_lanes = true

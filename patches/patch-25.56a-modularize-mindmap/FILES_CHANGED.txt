@@ -1,0 +1,5 @@
+- src/mindmap.rs → src/mindmap/mod.rs
++ src/mindmap/node.rs
++ src/mindmap/layout.rs
++ src/mindmap/render.rs
++ src/mindmap/input.rs
