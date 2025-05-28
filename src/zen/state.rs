@@ -165,6 +165,23 @@ impl AppState {
         };
     }
 
+    pub fn filtered_journal_entries(&self) -> Vec<&ZenJournalEntry> {
+        self.zen_journal_entries
+            .iter()
+            .filter(|e| {
+                if let Some(tag) = &self.zen_tag_filter {
+                    e.tags.iter().any(|t| t.eq_ignore_ascii_case(tag))
+                } else {
+                    true
+                }
+            })
+            .collect()
+    }
+
+    pub fn load_draft_from_entry(&mut self, entry: &ZenJournalEntry) {
+        self.zen_draft.text = entry.text.clone();
+    }
+
     // PATCHED: Required methods from zen::journal.rs
     pub fn start_edit_journal_entry(&mut self, index: usize) {
         if let Some(entry) = self.zen_journal_entries.get(index) {

@@ -1,7 +1,6 @@
-// src/zen/view.rs
 use ratatui::prelude::*;
 use crate::canvas::prism::render_prism;
-use crate::state::{AppState};
+use crate::state::AppState;
 use crate::state::view::ZenLayoutMode;
 use crate::state::ZenViewMode;
 use crate::zen::journal::{render_zen_journal, render_history};
@@ -51,7 +50,11 @@ pub fn render_zen<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
 
 /// Classic buffer-based Zen text editor
 pub fn render_classic<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
-    use ratatui::{text::Line, widgets::{Block, Borders, Paragraph}, style::Style};
+    use ratatui::{
+        text::Line,
+        widgets::{Block, Borders, Paragraph},
+        style::Style,
+    };
     let palette = zen_theme();
 
     let lines: Vec<Line> = state
@@ -77,7 +80,7 @@ pub fn render_compose<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState
     let bg = Block::default().style(Style::default().bg(palette.background));
     f.render_widget(bg, area);
 
-    if state.zen_view_mode == crate::state::ZenViewMode::Write {
+    if state.zen_view_mode == ZenViewMode::Write {
         let chunks = Layout::default()
             .direction(Direction::Vertical)
             .constraints([Constraint::Percentage(75), Constraint::Percentage(25)].as_ref())
@@ -88,8 +91,6 @@ pub fn render_compose<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState
     } else {
         render_history(f, area, state);
     }
-
-    // omit harsh borders for peaceful mode
 }
 
 /// One-line entry field at bottom of Compose mode

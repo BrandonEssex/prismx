@@ -1,4 +1,3 @@
-// src/zen/journal.rs
 use ratatui::{
     prelude::*,
     style::{Color, Modifier, Style},
@@ -74,15 +73,8 @@ pub fn render_history<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState
             lines.push(highlight_tags_line(&entry.tags.join(" ")));
         }
 
-        match &entry.entry {
-            crate::zen::image::JournalEntry::Text(t) => {
-                for l in t.lines() {
-                    lines.push(highlight_tags_line(l));
-                }
-            }
-            crate::zen::image::JournalEntry::Image(_) => {
-                lines.push(highlight_tags_line(&entry.entry.display()));
-            }
+        for l in entry.text.lines() {
+            lines.push(highlight_tags_line(l));
         }
 
         lines.push(Line::from(Span::styled(
