@@ -41,10 +41,12 @@ for lbl in $labels; do
   fi
 done
 
-if [ "$automerge" != true ]; then
-  echo "No automerge label found"
+AUTHOR="${PR_AUTHOR:-$(jq -r '.pull_request.user.login' "$EVENT_PATH" 2>/dev/null)}"
+if [ "$automerge" != true ] && [ "$AUTHOR" != "BrandonEssex" ]; then
+  echo "No automerge label and not authored by BrandonEssex"
   exit 0
 fi
+
 
 merge_status="unknown"
 if gh pr merge "$PR_NUMBER" --squash --auto --repo "$GITHUB_REPOSITORY"; then
