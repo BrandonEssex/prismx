@@ -1,12 +1,16 @@
 use std::collections::HashMap;
 use std::future::Future;
-use std::sync::{atomic::{AtomicU64, Ordering}, Mutex};
+use std::pin::Pin;
+use std::sync::{
+    atomic::{AtomicU64, Ordering},
+    Mutex,
+};
 
 use once_cell::sync::Lazy;
 use crossbeam_channel::{unbounded, Sender};
 use tokio::runtime::{Handle, Runtime};
 
-use crate::tasks::types::{TaskId, TaskHandle};
+use crate::tasks::types::{TaskHandle, TaskId};
 
 static TASK_COUNTER: AtomicU64 = AtomicU64::new(1);
 static TASK_REGISTRY: Lazy<Mutex<HashMap<TaskId, (String, TaskHandle)>>> =
@@ -15,7 +19,7 @@ static TASK_REGISTRY: Lazy<Mutex<HashMap<TaskId, (String, TaskHandle)>>> =
 struct FallbackTask {
     id: TaskId,
     name: String,
-    fut: Box<dyn Future<Output = ()> + Send + 'static>,
+    fut: Pin<Box<dyn Future<Output = ()> + Send + 'static>>,
 }
 
 static FALLBACK_SENDER: Lazy<Sender<FallbackTask>> = Lazy::new(|| {
@@ -26,7 +30,7 @@ static FALLBACK_SENDER: Lazy<Sender<FallbackTask>> = Lazy::new(|| {
             let rt = Runtime::new().expect("runtime");
             for task in rx {
                 tracing::info!("[task] executing {}: {}", task.id, task.name);
-                rt.block_on(Box::pin(task.fut));
+                rt.block_on(task.fut);
                 TASK_REGISTRY.lock().unwrap().remove(&task.id);
             }
         })
@@ -34,7 +38,6 @@ static FALLBACK_SENDER: Lazy<Sender<FallbackTask>> = Lazy::new(|| {
     tx
 });
 
-/// Spawn an asynchronous task and track it in the registry.
 pub fn spawn_task<Fut>(name: impl Into<String>, fut: Fut) -> TaskId
 where
     Fut: Future<Output = ()> + Send + 'static,
@@ -54,7 +57,7 @@ where
             .send(FallbackTask {
                 id,
                 name: name_str.clone(),
-                fut: Box::new(fut),
+                fut: Box::pin(fut),
             })
             .expect("send to worker");
         TASK_REGISTRY
