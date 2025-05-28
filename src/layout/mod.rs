@@ -320,6 +320,7 @@ fn layout_recursive_safe(
     (max_y, min_x_span.min(x), max_x_span.max(x + label_width))
 }
 
+#[allow(dead_code)]
 fn shift_subtree(id: NodeID, dx: i16, out: &mut HashMap<NodeID, Coords>, nodes: &NodeMap) {
     if dx == 0 {
         return;

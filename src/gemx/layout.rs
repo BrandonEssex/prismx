@@ -106,7 +106,7 @@ pub fn apply_layout(nodes: &mut NodeMap, roots: &[NodeID]) {
                     let child_ids = n.children.clone();
                     let child_y = n.y;
                     i += 1;
-                    drop(n);
+                    let _ = n;
                     arrange_horizontally(
                         nodes,
                         &child_ids,
