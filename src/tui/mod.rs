@@ -654,6 +654,16 @@ pub fn launch_ui() -> std::io::Result<()> {
                                 crate::gemx::interaction::end_drag(&mut state);
                             }
                         }
+                        MouseEventKind::Moved => {
+                            let mut hover = None;
+                            for (idx, (rect, _)) in state.dock_entry_bounds.iter().enumerate() {
+                                if rect_contains(*rect, me.column, me.row) {
+                                    hover = Some(idx);
+                                    break;
+                                }
+                            }
+                            state.dock_hover_index = hover;
+                        }
                         _ => {}
                     }
                 }

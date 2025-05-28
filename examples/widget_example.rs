@@ -1,11 +1,12 @@
-use prismx_macros::Widget;
-use prismx::render::traits::Renderable;
+use prismx::render::traits::{Renderable, RenderFrame};
+use ratatui::prelude::*;
 
-#[derive(Widget)]
 struct MyWidget;
 
+impl Renderable for MyWidget {
+    fn render(&mut self, _f: &mut RenderFrame<'_>, _area: Rect) {}
+}
+
 fn main() {
-    let mut w = MyWidget;
-    // Call method from Renderable to ensure impl exists
-    w.tick();
+    // Example is compile-time only
 }

@@ -2,10 +2,10 @@ use ratatui::{
     backend::Backend,
     layout::Rect,
     style::{Color, Modifier, Style},
-    widgets::{Block, Borders, Paragraph},
+    widgets::{Block, Borders, Paragraph, Clear},
     Frame,
 };
-use crate::state::{AppState, DockLayout};
+use crate::state::{AppState, DockLayout, FavoriteEntry};
 
 pub fn render_favorites_dock<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppState) {
     if !state.favorite_dock_enabled {
@@ -68,5 +68,40 @@ pub fn render_favorites_dock<B: Backend>(f: &mut Frame<B>, area: Rect, state: &m
         let underscore_len = area.width.saturating_sub(3) as usize;
         let bottom_line = format!("  |{}", "_".repeat(underscore_len));
         f.render_widget(Paragraph::new(bottom_line).style(base_style), Rect::new(0, bottom_y, area.width, 1));
+    }
+
+    render_dock_preview(f, area, state, &favorites, horizontal);
+}
+
+fn render_dock_preview<B: Backend>(
+    f: &mut Frame<B>,
+    area: Rect,
+    state: &mut AppState,
+    favorites: &[FavoriteEntry],
+    horizontal: bool,
+) {
+    if let Some(idx) = state.dock_hover_index {
+        if let Some((rect, _)) = state.dock_entry_bounds.get(idx) {
+            if let Some(entry) = favorites.get(idx) {
+                let text = format!("{} {}", entry.icon, entry.command);
+                let width = text.len() as u16 + 2;
+                let x;
+                let y;
+                if horizontal {
+                    x = rect.x.saturating_sub(1);
+                    y = rect.y.saturating_sub(3);
+                } else {
+                    x = rect.right() + 1;
+                    y = rect.y;
+                }
+                let w = width.min(area.width.saturating_sub(x));
+                let h = 3u16;
+                let rect = Rect::new(x.min(area.right().saturating_sub(w)), y.max(area.top()), w, h);
+                let block = Block::default().borders(Borders::ALL).style(Style::default().bg(Color::Black).fg(Color::White));
+                f.render_widget(Clear, rect);
+                f.render_widget(block, rect);
+                f.render_widget(Paragraph::new(text), Rect::new(rect.x + 1, rect.y + 1, rect.width.saturating_sub(2), 1));
+            }
+        }
     }
 }
