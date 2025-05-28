@@ -1,3 +1,3 @@
-# Patch 25.61c – no_std Compatibility Pass
+# Patch 25.61c – Core Module no_std Compatibility
 
-Audits PrismX core for no_std readiness and prepares for embedded targets or reduced binary footprint.
+Refactors `core/` logic to support `#![no_std]`, gated via feature flag.

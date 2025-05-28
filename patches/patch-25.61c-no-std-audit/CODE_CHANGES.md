@@ -1,5 +1,5 @@
 ## Code Changes
 
-- Replace `std::collections` with `alloc` where possible
-- Gate heavy modules with feature flags
-- Abstract `fs` or `env` use into optional paths
+- Add `#![cfg_attr(not(feature = "std"), no_std)]`
+- Replace `std::collections` with `alloc`
+- Separate TUI/render code behind `#[cfg(std)]`
