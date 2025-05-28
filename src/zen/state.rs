@@ -138,6 +138,7 @@ impl AppState {
                             text: text.to_string(),
                             prev_text: None,
                             frame: 3,
+                            tags: crate::zen::utils::parse_tags(text),
                         })
                 })
                 .collect();
@@ -148,7 +149,12 @@ impl AppState {
         let _ = std::fs::create_dir_all("journals");
         let path = format!("journals/{}.prismx", chrono::Local::now().format("%Y-%m-%d"));
         if let Ok(mut file) = OpenOptions::new().create(true).append(true).open(&path) {
-            let _ = writeln!(file, "{}|{}", entry.timestamp.to_rfc3339(), entry.text);
+            let _ = writeln!(
+                file,
+                "{}|{}",
+                entry.timestamp.to_rfc3339(),
+                entry.entry.raw_text()
+            );
         }
     }
 
@@ -163,7 +169,7 @@ impl AppState {
     // PATCHED: Required methods from zen::journal.rs
     pub fn start_edit_journal_entry(&mut self, index: usize) {
         if let Some(entry) = self.zen_journal_entries.get(index) {
-            self.zen_draft.text = entry.text.clone();
+            self.zen_draft.text = entry.entry.raw_text();
             self.zen_draft.editing = Some(index);
         }
     }
@@ -177,16 +183,16 @@ impl AppState {
         if let Some(entry) = self.zen_journal_entries.get_mut(index) {
             entry.prev_text = Some(entry.text.clone());
             entry.text = text.to_string();
+            entry.tags = crate::zen::utils::parse_tags(text);
         }
     }
 
     pub fn filtered_journal_entries(&self) -> Vec<&ZenJournalEntry> {
-        use crate::zen::utils::extract_tags;
         self.zen_journal_entries
             .iter()
             .filter(|e| {
                 if let Some(tag) = &self.zen_tag_filter {
-                    extract_tags(&e.text).iter().any(|t| t.eq_ignore_ascii_case(tag))
+                    e.tags.iter().any(|t| t.eq_ignore_ascii_case(tag))
                 } else {
                     true
                 }
@@ -199,19 +205,19 @@ impl AppState {
     }
 
     pub fn toggle_summary_view(&mut self) {
-        use crate::state::{ZenSummaryMode, ZenViewMode};
-        match self.zen_view_mode {
-            ZenViewMode::Summary => {
+        use crate::state::{ZenSummaryMode, ZenLayoutMode};
+        match self.zen_layout_mode {
+            ZenLayoutMode::Summary => {
                 self.zen_summary_mode = match self.zen_summary_mode {
                     ZenSummaryMode::Daily => ZenSummaryMode::Weekly,
                     ZenSummaryMode::Weekly => {
-                        self.zen_view_mode = ZenViewMode::Journal;
+                        self.zen_layout_mode = ZenLayoutMode::Journal;
                         ZenSummaryMode::Daily
                     }
                 };
             }
             _ => {
-                self.zen_view_mode = ZenViewMode::Summary;
+                self.zen_layout_mode = ZenLayoutMode::Summary;
                 self.zen_summary_mode = ZenSummaryMode::Daily;
             }
         }

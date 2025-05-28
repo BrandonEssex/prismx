@@ -3,6 +3,8 @@ use std::collections::HashMap;
 use std::fs;
 use std::sync::Mutex;
 
+pub mod zen;
+
 static CURRENT_THEME: Mutex<&str> = Mutex::new("dark");
 
 pub fn toggle_theme() {
