@@ -9,7 +9,6 @@ pub mod module_icon;
 pub mod favorites;
 pub mod zoom_overlay;
 pub mod traits;
-pub mod settings;
 
 pub use crate::zen::render::render_zen;
 pub use status::render_status_bar;
@@ -21,6 +20,6 @@ pub use module_icon::render_module_icon;
 pub use favorites::render_favorites_dock;
 pub use zoom_overlay::render_zoom_overlay;
 pub use traits::Renderable;
-pub use crate::render::settings::render_settings;
+pub use crate::settings::render::render_settings;
 pub use crate::settings::{SETTING_TOGGLES, SettingToggle, settings_len};
 
