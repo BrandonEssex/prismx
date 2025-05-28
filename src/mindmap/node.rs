@@ -1,12 +1,21 @@
+#[derive(Debug, Clone)]
+pub struct Node {
+    pub label: String,
+}
+
 pub struct Mindmap {
-    pub nodes: Vec<String>,
+    pub nodes: Vec<Node>,
     pub active_index: usize,
 }
 
 impl Mindmap {
     pub fn new() -> Self {
         Self {
-            nodes: vec!["Root".into(), "Idea A".into(), "Idea B".into()],
+            nodes: vec![
+                Node { label: "Root".into() },
+                Node { label: "Idea A".into() },
+                Node { label: "Idea B".into() },
+            ],
             active_index: 0,
         }
     }
