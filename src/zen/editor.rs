@@ -41,7 +41,21 @@ pub fn handle_key(state: &mut AppState, key: KeyCode) {
             }
         }
         KeyCode::Enter => {
-            finalize_entry(state);
+            let text = state.zen_draft.text.trim().to_string();
+            if text == "/scroll" {
+                crate::ui::input::toggle_zen_view(state);
+                state.zen_draft.text.clear();
+            } else if text.starts_with("/edit ") {
+                if let Ok(idx) = text[6..].trim().parse::<usize>() {
+                    state.start_edit_journal_entry(idx);
+                }
+                state.zen_draft.text.clear();
+            } else if text == "/cancel" {
+                state.cancel_edit_journal_entry();
+                state.zen_draft.text.clear();
+            } else {
+                finalize_entry(state);
+            }
         }
         _ => {}
     }

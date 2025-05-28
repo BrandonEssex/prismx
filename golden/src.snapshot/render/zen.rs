@@ -57,7 +57,7 @@ pub fn render_history<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState
         let mut lines: Vec<Line> = Vec::new();
 
         // Time-grouped label
-        if matches!(state.zen_view_mode, crate::state::view::ZenViewMode::Summary) {
+        if matches!(state.zen_layout_mode, crate::state::view::ZenLayoutMode::Summary) {
             let label = match state.zen_summary_mode {
                 crate::state::ZenSummaryMode::Weekly => {
                     format!("Week {}", entry.timestamp.iso_week().week())
