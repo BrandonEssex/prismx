@@ -1,3 +1,4 @@
-# Patch 25.67p – Bezel Fade Overlay for Mindmap Viewport
+# Patch 25.67p – Bezel Fade on Viewport Edge
 
-Adds dark fade overlays near top/bottom edges when zoomed, signaling scroll boundaries.
+Add dark fade overlays near the top and bottom when the mindmap can be scrolled.
+This hints to the user that more content exists offscreen.
