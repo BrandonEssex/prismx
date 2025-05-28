@@ -10,6 +10,7 @@ use crate::node::{NodeID, NodeMap};
 use crate::state::AppState;
 use crate::canvas::prism::render_prism;
 use crate::beamx::render_full_border;
+use crate::ui::components::mindmap::render_title_bar;
 use crate::ui::beamx::{BeamX, BeamXStyle, BeamXMode, BeamXAnimationMode};
 use crate::ui::animate;
 use std::time::{SystemTime, UNIX_EPOCH};
@@ -464,6 +465,15 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppStat
     }
 
     render_full_border(f, area, &style, true, !state.debug_border);
+    render_title_bar(f, area, state);
+    let tick = if std::env::var("PRISMX_TEST").is_ok() {
+        0
+    } else {
+        (SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap_or_default()
+            .as_millis() / 300) as u64
+    };
     let mut bx_style = BeamXStyle::from(BeamXMode::Default);
     let (b, s, p) = state.beamx_panel_theme.palette();
     bx_style.border_color = b;

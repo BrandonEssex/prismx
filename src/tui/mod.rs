@@ -58,6 +58,11 @@ pub fn draw(
         state.module_switcher_closing = true;
         state.module_switcher_animation_frame = 0;
     }
+    if state.mode != state.prev_mode {
+        if state.mode == "gemx" {
+            state.mindmap_title_frames = 6;
+        }
+    }
 
     terminal.draw(|f| {
         let full = f.size();
@@ -175,6 +180,7 @@ pub fn draw(
     }
     state.prev_module_switcher_open = state.module_switcher_open;
     state.prev_show_spotlight = state.show_spotlight;
+    state.prev_mode = state.mode.clone();
     Ok(())
 }
 
