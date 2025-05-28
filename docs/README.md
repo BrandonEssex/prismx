@@ -49,6 +49,15 @@ git clone https://github.com/your-org/prismx
 cd prismx
 cargo build --release
 ./target/release/prismx
+### Build (WebAssembly)
+
+```bash
+cd crates/prismx-wasm
+wasm-pack build --target web
+```
+
+See [crates/prismx-wasm](../crates/prismx-wasm) for source.
+
 Prebuilt binaries coming soon for Linux (deb/rpm), macOS (arm64/x64), and Windows.
 ⚙️ Quick Start
 
