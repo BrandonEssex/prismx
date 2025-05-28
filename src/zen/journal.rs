@@ -8,7 +8,8 @@ use ratatui::{
 use chrono::{Datelike, Local};
 use crate::config::theme::ThemeConfig;
 use crate::state::AppState;
-use crate::state::view::{ZenLayoutMode, ZenViewMode};
+use crate::state::view::ZenLayoutMode;
+use crate::state::ZenViewMode;
 use crate::zen::utils::{highlight_tags_line, extract_tags, parse_tags};
 use crate::beamx::render_full_border;
 

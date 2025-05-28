@@ -1,7 +1,7 @@
 use crossterm::event::KeyCode;
 use crate::state::AppState;
 use crate::state::ZenJournalEntry;
-use crate::zen::image::JournalEntry;
+use crate::zen::utils::parse_tags;
 
 /// Handle key input for Zen compose mode.
 pub fn handle_key(state: &mut AppState, key: KeyCode) {
@@ -13,6 +13,7 @@ pub fn handle_key(state: &mut AppState, key: KeyCode) {
                     timestamp: chrono::Local::now(),
                     text: String::new(),
                     prev_text: None,
+                    tags: vec![],
                 };
                 state.zen_journal_entries.push(entry);
                 state.zen_draft.editing = Some(state.zen_journal_entries.len() - 1);
@@ -59,13 +60,11 @@ pub fn handle_key(state: &mut AppState, key: KeyCode) {
                     if crate::config::theme::ThemeConfig::load().zen_breathe() {
                         std::thread::sleep(std::time::Duration::from_millis(150));
                     }
-                    let content = JournalEntry::from_input(&text)
-                        .unwrap_or(JournalEntry::Text(text.clone()));
                     let entry = ZenJournalEntry {
                         timestamp: chrono::Local::now(),
                         text: text.clone(),
                         prev_text: None,
-                        tags: crate::zen::utils::parse_tags(&text),
+                        tags: parse_tags(&text),
                     };
                     state.zen_journal_entries.push(entry.clone());
                     state.append_journal_entry(&entry);
@@ -104,6 +103,7 @@ fn finalize_entry(state: &mut AppState) {
             timestamp: chrono::Local::now(),
             text: text.clone(),
             prev_text: None,
+            tags: parse_tags(&text),
         };
         state.zen_journal_entries.push(entry.clone());
         state.append_journal_entry(&entry);
