@@ -14,6 +14,9 @@ pub struct Coords {
 }
 
 pub const SIBLING_SPACING_X: i16 = 3;
+/// Minimum horizontal spacing applied between sibling nodes
+/// to avoid visual clumping during layout drawing.
+pub const MIN_SIBLING_SPACING_X: i16 = 1;
 pub const MIN_NODE_GAP: i16 = 3;
 /// Vertical spacing between parent and child nodes.
 /// Increased for better readability in auto-arrange mode.
@@ -27,6 +30,23 @@ pub const SNAP_GRID_X: i16 = 4;
 pub const SNAP_GRID_Y: i16 = 2;
 pub const RESERVED_ZONE_W: i16 = 6;
 pub const RESERVED_ZONE_H: i16 = 6;
+
+/// Estimate the width and height of a label in grid units.
+///
+/// Returns `(width, height)` where width is the longest line length plus a
+/// padding of 2 characters and height is the number of lines.
+pub fn label_bounds(label: &str) -> (i16, i16) {
+    let mut width = 0i16;
+    let mut height = 0i16;
+    for line in label.lines() {
+        height += 1;
+        width = width.max(line.chars().count() as i16);
+    }
+    if height == 0 {
+        height = 1;
+    }
+    (width + 2, height)
+}
 
 pub fn spacing_for_zoom(zoom: f32) -> (i16, i16) {
     if zoom < 0.7 {
@@ -42,7 +62,7 @@ pub fn subtree_span(nodes: &NodeMap, id: NodeID) -> i16 {
             return 0;
         }
         if let Some(node) = nodes.get(&nid) {
-            let label_w = node.label.len() as i16 + 2;
+            let (label_w, _) = label_bounds(&node.label);
             if node.collapsed || node.children.is_empty() {
                 return label_w;
             }
@@ -203,7 +223,11 @@ pub fn layout_nodes(
     if auto_arrange {
         use std::collections::HashSet;
         let mut used: HashSet<(i16, i16)> = HashSet::new();
-        for pos in coords.values_mut() {
+        for (id, pos) in coords.iter_mut() {
+            let (bw, bh) = nodes
+                .get(id)
+                .map(|n| label_bounds(&n.label))
+                .unwrap_or((2, 1));
             loop {
                 if pos.x == 0 {
                     pos.x += SNAP_GRID_X;
@@ -211,8 +235,24 @@ pub fn layout_nodes(
                 if pos.y == 0 {
                     pos.y += SNAP_GRID_Y;
                 }
-                let key = (pos.x, pos.y);
-                if used.insert(key) {
+                let mut collision = false;
+                for dx in 0..bw {
+                    for dy in 0..bh {
+                        if used.contains(&(pos.x + dx, pos.y + dy)) {
+                            collision = true;
+                            break;
+                        }
+                    }
+                    if collision {
+                        break;
+                    }
+                }
+                if !collision {
+                    for dx in 0..bw {
+                        for dy in 0..bh {
+                            used.insert((pos.x + dx, pos.y + dy));
+                        }
+                    }
                     break;
                 }
                 pos.x += SNAP_GRID_X;
@@ -273,14 +313,14 @@ fn layout_recursive_safe(
     };
     roles.insert(node_id, role);
 
-    let label_width = node.label.len() as i16 + 2;
+    let (label_width, label_height) = label_bounds(&node.label);
     out.insert(node_id, Coords { x, y });
 
     if node.collapsed || node.children.is_empty() {
-        return (y, x, x + label_width);
+        return (y + label_height - 1, x, x + label_width);
     }
 
-    let child_y = y + CHILD_SPACING_Y;
+    let child_y = y + label_height + (CHILD_SPACING_Y - 1);
 
     let mut max_y = y;
     let mut min_x_span = x;
@@ -289,12 +329,12 @@ fn layout_recursive_safe(
     let mut col_x = x;
     let mut col_y = child_y;
     let mut column_width = 0;
-    for child_id in node.children.iter() {
+    for (index, child_id) in node.children.iter().enumerate() {
         let child_h = subtree_depth(nodes, *child_id) * CHILD_SPACING_Y + 1;
         let subtree_w = subtree_span(nodes, *child_id);
         let label_w_child = nodes
             .get(child_id)
-            .map(|c| c.label.len() as i16 + 2)
+            .map(|c| label_bounds(&c.label).0)
             .unwrap_or(2);
         let child_w = subtree_w.max(label_w_child + MIN_NODE_GAP);
         if col_y + child_h > term_height {
@@ -308,10 +348,11 @@ fn layout_recursive_safe(
             tracing::debug!("overflow node {} beyond height {}", child_id, term_height);
         }
 
+        let offset_x = index as i16 * MIN_SIBLING_SPACING_X;
         let (cy, mi, ma) = layout_recursive_safe(
             nodes,
             *child_id,
-            col_x,
+            col_x + offset_x,
             col_y,
             _term_width,
             term_height,
