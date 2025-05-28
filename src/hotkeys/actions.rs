@@ -65,6 +65,8 @@ pub fn save(state: &mut AppState) {
 
 pub fn mode_zen(state: &mut AppState) {
     state.mode = "zen".into();
+    state.zen_layout_mode = crate::state::view::ZenLayoutMode::Compose;
+    state.zen_view_mode = crate::state::ZenViewMode::Write;
 }
 
 pub fn zen_toggle_theme(state: &mut AppState) {
