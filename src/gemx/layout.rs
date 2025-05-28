@@ -1,6 +1,8 @@
 use crate::node::{NodeID, NodeMap};
 use crate::state::AppState;
+use std::collections::hash_map::DefaultHasher;
 use std::collections::HashSet;
+use std::hash::{Hash, Hasher};
 use std::sync::atomic::{AtomicU8, Ordering};
 
 /// Layout mode selector for GemX.
@@ -31,6 +33,16 @@ pub fn toggle_mode() {
 /// Set the layout mode explicitly.
 pub fn set_mode(mode: LayoutMode) {
     MODE.store(mode as u8, Ordering::Relaxed);
+}
+
+
+fn graph_fingerprint(nodes: &NodeMap) -> (usize, u64) {
+    let mut pairs: Vec<(NodeID, Option<NodeID>)> =
+        nodes.iter().map(|(&id, n)| (id, n.parent)).collect();
+    pairs.sort_by_key(|p| p.0);
+    let mut hasher = DefaultHasher::new();
+    pairs.hash(&mut hasher);
+    (pairs.len(), hasher.finish())
 }
 
 /// Fallback centering with recursion depth guard.
@@ -94,12 +106,23 @@ fn clamp_overlaps(nodes: &mut NodeMap) {
 }
 
 /// Apply layout to the provided nodes according to the current mode.
-pub fn apply_layout(nodes: &mut NodeMap, roots: &[NodeID]) {
-    let orphans = find_orphans(nodes, roots);
+pub fn apply_layout(state: &mut AppState) {
+    let nodes = &mut state.nodes;
+    let roots = state.root_nodes.clone();
+
+    // Smart reflow key (prevents unnecessary layout)
+    let key = graph_fingerprint(nodes);
+    if state.layout_key == key {
+        return;
+    }
+    state.layout_key = key;
+
+    let orphans = find_orphans(nodes, &roots);
+
     match current_mode() {
         LayoutMode::Tree => {
             let mut y = crate::layout::GEMX_HEADER_HEIGHT + 1;
-            for &id in roots {
+            for &id in &roots {
                 arrange_horizontally(nodes, &[id], y);
                 y += crate::layout::CHILD_SPACING_Y;
             }
@@ -107,12 +130,11 @@ pub fn apply_layout(nodes: &mut NodeMap, roots: &[NodeID]) {
         LayoutMode::Grid => {
             let cols = crate::layout::FREE_GRID_COLUMNS as i16;
             let mut i = 0i16;
-            for &id in roots {
+            for &id in &roots {
                 if let Some(n) = nodes.get_mut(&id) {
                     n.x = (i % cols) * crate::layout::SIBLING_SPACING_X;
                     n.y = (i / cols) * crate::layout::CHILD_SPACING_Y
-                        + crate::layout::GEMX_HEADER_HEIGHT
-                        + 1;
+                        + crate::layout::GEMX_HEADER_HEIGHT + 1;
                     i += 1;
                 }
             }
@@ -120,16 +142,14 @@ pub fn apply_layout(nodes: &mut NodeMap, roots: &[NodeID]) {
         LayoutMode::Hybrid => {
             let cols = crate::layout::FREE_GRID_COLUMNS as i16;
             let mut i = 0i16;
-            for &id in roots {
+            for &id in &roots {
                 if let Some(n) = nodes.get_mut(&id) {
                     n.x = (i % cols) * crate::layout::SIBLING_SPACING_X;
                     n.y = (i / cols) * crate::layout::CHILD_SPACING_Y
-                        + crate::layout::GEMX_HEADER_HEIGHT
-                        + 1;
+                        + crate::layout::GEMX_HEADER_HEIGHT + 1;
                     let child_ids = n.children.clone();
                     let child_y = n.y;
                     i += 1;
-                    let _ = n;
                     arrange_horizontally(
                         nodes,
                         &child_ids,
