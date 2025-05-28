@@ -1,5 +1,5 @@
 ## Code Changes
 
-- Create `Renderable` trait
-- Move drawing logic from GemX, Zen into impls
-- Allow generic draw loops for dynamic views
+- Define `trait Renderable` with `fn render(...)`
+- Implement for ZenView, ModuleSwitcher, etc.
+- Call via polymorphic trait in main loop

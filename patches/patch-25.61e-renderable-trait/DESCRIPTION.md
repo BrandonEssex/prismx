@@ -1,3 +1,3 @@
-# Patch 25.61e – Trait-Based Rendering Pipeline
+# Patch 25.61e – Renderable Trait Abstraction
 
-Introduces a `Renderable` trait. Refactors GemX, Zen, and Spotlight into trait-based draw modules for modularity and extensibility.
+Introduces `Renderable` trait and updates all UI views to use it.
