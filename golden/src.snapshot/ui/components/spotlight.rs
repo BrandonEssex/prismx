@@ -3,7 +3,7 @@ use ratatui::{
     layout::Rect,
     style::{Color, Modifier, Style},
     text::{Line, Span},
-    widgets::{Block, Borders, Paragraph, Clear},
+    widgets::{Block, Borders, Paragraph, Clear, Wrap},
     Frame,
 };
 
@@ -85,7 +85,7 @@ pub fn render_spotlight<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut Ap
 
     for (i, (suggestion, score)) in matches.iter().take(5).enumerate() {
         let y = y_offset + 2 + (i as u16 * 2);
-        if y >= area.y + area.height.saturating_sub(1) {
+        if y >= area.y + area.height.saturating_sub(2) {
             break;
         }
         let mut style = spot_style.fg(cfg.input_fg());
@@ -93,16 +93,30 @@ pub fn render_spotlight<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut Ap
             style = cfg.highlight_style().add_modifier(Modifier::UNDERLINED);
         }
         let icon = command_icon(suggestion);
-        let mut spans = vec![Span::styled(icon, style) , Span::raw(" "), Span::styled(*suggestion, style)];
+        let mut label_spans = vec![
+            Span::styled(icon, style),
+            Span::raw(" "),
+            Span::styled(*suggestion, style),
+        ];
         #[cfg(debug_assertions)]
         {
-            spans.push(Span::raw(" "));
-            spans.push(Span::styled(format!("{}", score), style.add_modifier(Modifier::DIM)));
+            label_spans.push(Span::raw(" "));
+            label_spans.push(Span::styled(format!("{}", score), style.add_modifier(Modifier::DIM)));
         }
-        let line = Line::from(spans);
-        f.render_widget(
-            Paragraph::new(line).style(style),
-            Rect::new(x_offset, y, width, 1),
-        );
+        let label_line = Line::from(label_spans);
+        f.render_widget(Paragraph::new(label_line).style(style), Rect::new(x_offset, y, width, 1));
+
+        if let Some((desc, _)) = command_preview(suggestion) {
+            let desc_line = Line::from(vec![
+                Span::raw("  "),
+                Span::styled(desc, style.add_modifier(Modifier::DIM)),
+            ]);
+            f.render_widget(
+                Paragraph::new(desc_line)
+                    .style(style)
+                    .wrap(Wrap { trim: true }),
+                Rect::new(x_offset, y + 1, width, 1),
+            );
+        }
     }
 }

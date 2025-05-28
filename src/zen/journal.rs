@@ -9,8 +9,7 @@ use chrono::{Datelike, Local};
 use crate::config::theme::ThemeConfig;
 use crate::state::AppState;
 use crate::state::view::ZenLayoutMode;
-use crate::state::ZenViewMode;
-use crate::zen::utils::{highlight_tags_line, extract_tags, parse_tags};
+use crate::zen::utils::highlight_tags_line;
 use crate::beamx::render_full_border;
 
 /// Public render entry point for Journal view
@@ -36,7 +35,7 @@ pub fn render_history<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState
     let mut blocks: Vec<(u16, Paragraph)> = Vec::new();
     let mut current_label = String::new();
 
-    for (idx, entry) in entries.iter().enumerate().rev() {
+    for (idx, entry) in entries.iter().enumerate() {
         let mut lines: Vec<Line> = Vec::new();
 
         if matches!(state.zen_layout_mode, ZenLayoutMode::Summary) {
@@ -99,13 +98,26 @@ pub fn render_history<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState
                 .borders(Borders::ALL);
         }
 
+        let h = lines.len() as u16;
         let para = Paragraph::new(lines).block(block);
-        let h = 5; // estimated height
         blocks.push((h, para));
     }
 
+    let total_height: u16 = blocks
+        .iter()
+        .map(|(h, _)| *h + 1)
+        .sum::<u16>()
+        .saturating_sub(1);
+    let overflow = total_height.saturating_sub(area.height);
+    let mut skip = overflow.saturating_sub(state.scroll_offset.min(overflow as usize) as u16);
+
     let mut y = area.bottom();
     for (h, para) in blocks.into_iter().rev() {
+        let block_height = h + 1;
+        if skip >= block_height {
+            skip -= block_height;
+            continue;
+        }
         if y < area.y + h {
             break;
         }
