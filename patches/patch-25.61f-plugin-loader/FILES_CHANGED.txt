@@ -1,0 +1,2 @@
++ src/plugins/loader.rs
+~ src/plugins/mod.rs

@@ -1,5 +1,5 @@
 ## Code Changes
 
-- Add `libloading` crate
-- Create `~/.prismx/plugins/` scan loader
-- Define `PrismPlugin` trait interface
+- Load shared libs from `./plugins`
+- Bind `register()` function symbol
+- Store plugin in plugin state list
