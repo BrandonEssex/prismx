@@ -30,6 +30,15 @@ pub fn handle_log_keys(state: &mut AppState, code: KeyCode, mods: KeyModifiers) 
     }
 }
 
+/// Route keystrokes while in Zen mode to the editor handler.
+pub fn route_zen_keys(state: &mut AppState, code: KeyCode, _mods: KeyModifiers) -> bool {
+    if state.mode == "zen" {
+        crate::zen::editor::handle_key(state, code);
+        return true;
+    }
+    false
+}
+
 /// Toggle Zen Write/Review view.
 pub fn toggle_zen_view(state: &mut AppState) {
     state.zen_view_mode = match state.zen_view_mode {
