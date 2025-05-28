@@ -1,0 +1,4 @@
+- src/plugins.rs → src/plugins/mod.rs
++ src/plugins/loader.rs
++ src/plugins/interface.rs
++ src/plugins/state.rs
