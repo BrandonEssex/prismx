@@ -69,6 +69,28 @@ pub fn arrange_horizontally(nodes: &mut NodeMap, ids: &[NodeID], y: i16) {
     }
 }
 
+fn find_orphans(nodes: &NodeMap, roots: &[NodeID]) -> Vec<NodeID> {
+    use std::collections::{HashSet, VecDeque};
+
+    let mut reachable = HashSet::new();
+    let mut stack: VecDeque<NodeID> = roots.iter().copied().collect();
+    while let Some(id) = stack.pop_front() {
+        if reachable.insert(id) {
+            if let Some(n) = nodes.get(&id) {
+                for child in &n.children {
+                    stack.push_back(*child);
+                }
+            }
+        }
+    }
+
+    nodes
+        .keys()
+        .copied()
+        .filter(|id| !reachable.contains(id))
+        .collect()
+}
+
 /// Simple overlap clamp used by the experimental layout modes.
 fn clamp_overlaps(nodes: &mut NodeMap) {
     let mut used = HashSet::new();
@@ -87,11 +109,16 @@ fn clamp_overlaps(nodes: &mut NodeMap) {
 pub fn apply_layout(state: &mut AppState) {
     let nodes = &mut state.nodes;
     let roots = state.root_nodes.clone();
+
+    // Smart reflow key (prevents unnecessary layout)
     let key = graph_fingerprint(nodes);
     if state.layout_key == key {
         return;
     }
     state.layout_key = key;
+
+    let orphans = find_orphans(nodes, &roots);
+
     match current_mode() {
         LayoutMode::Tree => {
             let mut y = crate::layout::GEMX_HEADER_HEIGHT + 1;
@@ -107,8 +134,7 @@ pub fn apply_layout(state: &mut AppState) {
                 if let Some(n) = nodes.get_mut(&id) {
                     n.x = (i % cols) * crate::layout::SIBLING_SPACING_X;
                     n.y = (i / cols) * crate::layout::CHILD_SPACING_Y
-                        + crate::layout::GEMX_HEADER_HEIGHT
-                        + 1;
+                        + crate::layout::GEMX_HEADER_HEIGHT + 1;
                     i += 1;
                 }
             }
@@ -120,12 +146,10 @@ pub fn apply_layout(state: &mut AppState) {
                 if let Some(n) = nodes.get_mut(&id) {
                     n.x = (i % cols) * crate::layout::SIBLING_SPACING_X;
                     n.y = (i / cols) * crate::layout::CHILD_SPACING_Y
-                        + crate::layout::GEMX_HEADER_HEIGHT
-                        + 1;
+                        + crate::layout::GEMX_HEADER_HEIGHT + 1;
                     let child_ids = n.children.clone();
                     let child_y = n.y;
                     i += 1;
-                    let _ = n;
                     arrange_horizontally(
                         nodes,
                         &child_ids,
@@ -134,6 +158,11 @@ pub fn apply_layout(state: &mut AppState) {
                 }
             }
         }
+    }
+
+    if !orphans.is_empty() {
+        let y = crate::layout::GEMX_HEADER_HEIGHT - 1;
+        arrange_horizontally(nodes, &orphans, y);
     }
 
     clamp_overlaps(nodes);
