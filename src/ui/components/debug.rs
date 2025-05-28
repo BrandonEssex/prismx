@@ -6,11 +6,11 @@ use crate::state::PluginTagFilter;
 
 use ratatui::{
     backend::Backend,
-    layout::Rect,
     style::{Color, Style},
     widgets::{Block, Borders, Paragraph},
     Frame,
 };
+use crate::ui::layout::Rect;
 
 use crate::layout::subtree_depth;
 

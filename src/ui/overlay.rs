@@ -1,9 +1,9 @@
 use ratatui::{
     backend::Backend,
-    layout::Rect,
     widgets::{Block, Borders, Paragraph},
     Frame,
 };
+use crate::ui::layout::Rect;
 
 use crate::state::AppState;
 
