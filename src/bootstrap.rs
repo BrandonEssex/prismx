@@ -1,5 +1,5 @@
 pub fn start() -> std::io::Result<()> {
-    crate::logging::init_logger();
+    crate::logger::init_logger();
     tracing::info!("PrismX logging started");
     tracing::info!("Application bootstrap");
     crate::tui::launch_ui()
