@@ -15,8 +15,24 @@ impl AppState {
     }
 
     pub fn set_selected(&mut self, id: Option<NodeID>) {
+        if let Some(prev) = self.selected {
+            if Some(prev) != id {
+                self.selection_trail.push_back((prev, Instant::now()));
+                if self.selection_trail.len() > 8 {
+                    self.selection_trail.pop_front();
+                }
+            }
+        }
         self.selected = id;
         self.last_promoted_root = None;
+    }
+
+    pub fn selection_age(&self, id: NodeID) -> Option<u128> {
+        self.selection_trail
+            .iter()
+            .rev()
+            .find(|(nid, _)| *nid == id)
+            .map(|(_, t)| t.elapsed().as_millis())
     }
 
     pub fn dock_focus_prev(&mut self) {
@@ -230,6 +246,30 @@ impl AppState {
                 depth += 1;
             }
         }
+    }
+
+    /// Return a list of node IDs that are not reachable from any root.
+    pub fn disconnected_nodes(&self) -> Vec<NodeID> {
+        use std::collections::{HashSet, VecDeque};
+
+        let mut reachable = HashSet::new();
+        let mut stack: VecDeque<NodeID> = self.root_nodes.iter().copied().collect();
+        while let Some(id) = stack.pop_front() {
+            if reachable.insert(id) {
+                if let Some(n) = self.nodes.get(&id) {
+                    for child in &n.children {
+                        stack.push_back(*child);
+                    }
+                }
+            }
+        }
+
+        self
+            .nodes
+            .keys()
+            .copied()
+            .filter(|id| !reachable.contains(id))
+            .collect()
     }
 
     pub fn ensure_grid_positions(&mut self) {

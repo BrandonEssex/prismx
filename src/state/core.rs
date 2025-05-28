@@ -13,6 +13,7 @@ pub struct LayoutSnapshot {
     pub nodes: NodeMap,
     pub root_nodes: Vec<NodeID>,
     pub selected: Option<NodeID>,
+    pub selection_trail: VecDeque<(NodeID, Instant)>,
 }
 
 #[derive(Clone, Default)]
@@ -86,6 +87,7 @@ pub struct AppState {
     pub root_nodes: Vec<NodeID>,
     pub last_promoted_root: Option<NodeID>,
     pub selected: Option<NodeID>,
+    pub selection_trail: VecDeque<(NodeID, Instant)>,
     pub spotlight_input: String,
     pub show_spotlight: bool,
     pub prev_show_spotlight: bool,
@@ -129,6 +131,7 @@ pub struct AppState {
     pub layout_roles: HashMap<NodeID, LayoutRole>,
     pub layout_warning_logged: bool,
     pub layout_fail_count: u8,
+    pub layout_key: (usize, u64),
     pub debug_input_mode: bool,
     pub debug_border: bool,
     pub debug_overlay: bool,
@@ -211,6 +214,7 @@ impl Default for AppState {
             root_nodes: vec![node_a, node_b],
             last_promoted_root: None,
             selected: Some(node_a),
+            selection_trail: VecDeque::new(),
             spotlight_input: String::new(),
             show_spotlight: false,
             prev_show_spotlight: false,
@@ -254,6 +258,7 @@ impl Default for AppState {
             layout_roles: HashMap::new(),
             layout_warning_logged: false,
             layout_fail_count: 0,
+            layout_key: (0, 0),
             debug_input_mode: true,
             debug_border: std::env::var("PRISMX_DEBUG_BORDER").is_ok(),
             debug_overlay: false,
