@@ -1,5 +1,5 @@
 ## Code Changes
 
-- Add `serde`, `toml`, and `serde_with`
-- Create `~/.config/prismx/config.toml`
-- Add version tag to config format
+- Add `serde`, `toml`, `serde_derive`
+- Load `config.toml` on boot
+- Parse theme, module, logging level

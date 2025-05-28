@@ -1,3 +1,3 @@
-# Patch 25.61d – Serde Config Save/Load + Versioning
+# Patch 25.61d – Serde Config Loader
 
-Adds TOML config saving/loading with version-aware fallback for layouts, settings, and theme preferences.
+Adds TOML-based config loader for user settings and default preferences.
