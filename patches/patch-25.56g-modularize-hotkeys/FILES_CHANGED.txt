@@ -1,0 +1,4 @@
+- src/hotkeys.rs → src/hotkeys/mod.rs
++ src/hotkeys/bindings.rs
++ src/hotkeys/actions.rs
++ src/hotkeys/dispatcher.rs
