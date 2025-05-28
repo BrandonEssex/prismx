@@ -27,7 +27,7 @@ impl<'a> Renderable for GemxRenderer<'a> {
             draw_lanes(f, area);
         }
         // Apply layout before rendering
-        apply_layout(&mut state.nodes, &state.root_nodes);
+        apply_layout(state);
         // Render main GemX view
         render_gemx(f, area, state);
     }
