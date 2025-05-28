@@ -17,7 +17,7 @@ use crate::render::{
     render_module_icon,
     render_favorites_dock,
 };
-use crate::ui::components::module::render_module_switcher;
+use crate::module_switcher::{handle_module_switcher_keys, render_module_switcher};
 
 fn rect_contains(rect: ratatui::layout::Rect, x: u16, y: u16) -> bool {
     x >= rect.x && x < rect.x + rect.width && y >= rect.y && y < rect.y + rect.height
@@ -30,7 +30,7 @@ use crate::ui::components::debug::render_debug;
 use crate::ui::components::logs::render_logs;
 use crate::ui::input;
 
-mod hotkeys;
+pub mod hotkeys;
 use hotkeys::match_hotkey;
 use crate::shortcuts::{match_shortcut, Shortcut};
 use std::time::Duration;
@@ -341,23 +341,7 @@ pub fn launch_ui() -> std::io::Result<()> {
                 }
 
                 // 🧭 Module switcher
-                if state.module_switcher_open {
-                    match code {
-                        KeyCode::Tab => {
-                            state.module_switcher_index = (state.module_switcher_index + 1) % 4;
-                            tracing::debug!("[INPUT] module switcher index {}", state.module_switcher_index);
-                        }
-                        KeyCode::Enter => {
-                            state.mode = state.get_module_by_index().into();
-                            state.module_switcher_open = false;
-                            tracing::info!("[INPUT] mode switched to {}", state.mode);
-                        }
-                        KeyCode::Esc => {
-                            state.module_switcher_open = false;
-                            tracing::debug!("[INPUT] module switcher closed");
-                        }
-                        _ => {}
-                    }
+                if handle_module_switcher_keys(&mut state, code, modifiers) {
                     draw(&mut terminal, &mut state, &last_key)?;
                     continue;
                 }
@@ -398,10 +382,6 @@ pub fn launch_ui() -> std::io::Result<()> {
                     state.undo();
                 } else if match_hotkey("redo", code, modifiers, &state) {
                     state.redo();
-                } else if match_hotkey("open_module_switcher", code, modifiers, &state) {
-                    state.module_switcher_open = true;
-                    state.module_switcher_index = 0;
-                    tracing::info!("[INPUT] module switcher opened");
                 } else if match_hotkey("start_drag", code, modifiers, &state) {
                     if state.selected_drag_source.is_some() {
                         if let Some(target) = state.selected {
