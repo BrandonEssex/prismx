@@ -1,0 +1,4 @@
+- src/ui/layout.rs → src/ui/layout/mod.rs
++ src/ui/layout/base.rs
++ src/ui/layout/grid.rs
++ src/ui/layout/helpers.rs
