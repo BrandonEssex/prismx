@@ -41,3 +41,9 @@ regex = "1"
 # [[bin]]
 # name = "wasm_build"
 # path = "build/wasm_build.rs"
+
+[workspace]
+members = [
+    "crates/prismx-wasm",
+    ".",
+]
