@@ -210,6 +210,8 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppStat
                         }
                     }
 
+                    x = x.clamp(0, max_x);
+                    y = y.clamp(base_y, max_y);
                     n.x = x;
                     n.y = y;
 
