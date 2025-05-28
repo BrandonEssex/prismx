@@ -1,4 +1,3 @@
-// src/render/settings.rs
 use ratatui::{
     backend::Backend,
     layout::Rect,
@@ -10,7 +9,7 @@ use ratatui::{
 
 use crate::state::AppState;
 use crate::config::theme::ThemeConfig;
-use crate::settings::{SETTING_TOGGLES, settings_len};
+use super::{layout::settings_area, toggle::SETTING_TOGGLES};
 
 pub fn render_settings<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
     let theme = ThemeConfig::load();
@@ -40,26 +39,15 @@ pub fn render_settings<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppStat
             Span::styled(format!("{} {} {}", check, t.icon, label), style),
         ]));
 
-        // Spacer lines after specific entries
         if i == 2 || i == 3 {
             lines.push(Line::default());
         }
     }
 
-    let content_width = lines
-        .iter()
-        .map(|l| l.width() as u16)
-        .max()
-        .unwrap_or(0)
-        .saturating_add(4);
-
-    let width = content_width.min(area.width);
-    let height = lines.len() as u16 + 2;
-    let x = area.x + (area.width.saturating_sub(width)) / 2;
-    let y = area.y + (area.height.saturating_sub(height)) / 2;
+    let rect = settings_area(area, &lines);
 
     let block = Block::default().title("Settings").borders(Borders::ALL);
     let content = Paragraph::new(lines).block(block).wrap(Wrap { trim: false });
 
-    f.render_widget(content, Rect::new(x, y, width, height));
+    f.render_widget(content, rect);
 }
