@@ -1,0 +1,4 @@
+- src/settings.rs → src/settings/mod.rs
++ src/settings/toggle.rs
++ src/settings/layout.rs
++ src/settings/render.rs
