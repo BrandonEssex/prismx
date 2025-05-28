@@ -11,6 +11,13 @@ labels=$(echo "$info" | jq -r '.labels[].name')
 
 echo "PR #$pr_number from $author on $head_ref"
 
+# Create label if it doesn't exist
+if ! gh label list --limit 100 | grep -q "^$label"; then
+  echo "Label '$label' not found — creating it..."
+  gh label create "$label" --description "Auto-applied to Codex-generated PRs" --color "1D76DB"
+fi
+
+# Apply if not present
 if echo "$labels" | grep -q "^$label$"; then
   echo "Label already present; skipping"
   exit 0
@@ -22,4 +29,3 @@ if [[ "$author" == "ChatGPT Connector" || "$head_ref" == codex/* ]]; then
 else
   echo "No labeling criteria met"
 fi
-
