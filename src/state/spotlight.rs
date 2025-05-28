@@ -78,6 +78,7 @@ impl AppState {
                     self.mode = "zen".into();
                     self.zen_layout_mode = crate::state::view::ZenLayoutMode::Compose;
                     self.zen_view_mode = crate::state::ZenViewMode::Write;
+                    self.scroll_offset = 0;
                 },
                 "settings" => self.mode = "settings".into(),
                 "gemx" => self.mode = "gemx".into(),
@@ -89,6 +90,7 @@ impl AppState {
                     self.mode = "zen".into();
                     self.zen_layout_mode = crate::state::view::ZenLayoutMode::Compose;
                     self.zen_view_mode = crate::state::ZenViewMode::Write;
+                    self.scroll_offset = 0;
                 },
                 "mode gemx" => self.mode = "gemx".into(),
                 "arrange" => self.auto_arrange = true,
@@ -119,6 +121,7 @@ impl AppState {
                         self.mode = "zen".into();
                         self.zen_layout_mode = crate::state::view::ZenLayoutMode::Compose;
                         self.zen_view_mode = crate::state::ZenViewMode::Write;
+                        self.scroll_offset = 0;
                     }
                 }
                 "clear" => self.zen_buffer = vec![String::new()],
