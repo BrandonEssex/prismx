@@ -6,33 +6,32 @@ use crate::screen::gemx::render_gemx;
 use crate::layout::BASE_SPACING_X;
 use crate::gemx::layout::{apply_layout, set_mode};
 use crate::config::theme::ThemeConfig;
+use std::cell::RefCell;
 
 /// Wrapper implementing [`Renderable`] for the GemX screen.
 pub struct GemxRenderer<'a> {
-    pub state: &'a mut AppState,
+    pub state: RefCell<&'a mut AppState>,
 }
 
 impl<'a> GemxRenderer<'a> {
     pub fn new(state: &'a mut AppState) -> Self {
         let cfg = ThemeConfig::load();
         set_mode(cfg.layout_mode());
-        Self { state }
+        Self { state: RefCell::new(state) }
     }
 }
 
 impl<'a> Renderable for GemxRenderer<'a> {
-    fn render_frame<B: Backend>(&mut self, f: &mut Frame<B>, area: Rect) {
-        if self.state.mindmap_lanes {
+    fn render<B: Backend>(&self, f: &mut Frame<B>, area: Rect) {
+        let mut state = self.state.borrow_mut();
+        if state.mindmap_lanes {
             draw_lanes(f, area);
         }
-        // Apply layout before rendering
-        apply_layout(&mut self.state.nodes, &self.state.root_nodes);
-        // Render main GemX view
-        render_gemx(f, area, self.state);
-    }
-
-    fn tick(&mut self) {
-        crate::triage::state::update_pipeline(self.state);
+        {
+            let roots = state.root_nodes.clone();
+            apply_layout(&mut state.nodes, &roots);
+        }
+        render_gemx(f, area, &mut state);
     }
 }
 

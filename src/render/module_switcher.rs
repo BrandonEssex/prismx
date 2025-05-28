@@ -7,6 +7,9 @@ use ratatui::{
     Frame,
 };
 
+use crate::render::traits::Renderable;
+use crate::state::AppState;
+
 pub fn render_module_switcher<B: Backend>(f: &mut Frame<B>, area: Rect, index: usize) {
     let modules = [
         ("💭", "Mindmap"),
@@ -58,4 +61,21 @@ pub fn render_module_switcher<B: Backend>(f: &mut Frame<B>, area: Rect, index: u
         .wrap(Wrap { trim: false });
 
     f.render_widget(content, Rect::new(x, y, width, height));
+}
+
+/// Renderable wrapper for the module switcher overlay.
+pub struct ModuleSwitcher<'a> {
+    pub state: &'a AppState,
+}
+
+impl<'a> ModuleSwitcher<'a> {
+    pub fn new(state: &'a AppState) -> Self {
+        Self { state }
+    }
+}
+
+impl<'a> Renderable for ModuleSwitcher<'a> {
+    fn render<B: Backend>(&self, f: &mut Frame<B>, area: Rect) {
+        render_module_switcher(f, area, self.state.module_switcher_index);
+    }
 }

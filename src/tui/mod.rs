@@ -10,14 +10,15 @@ use crate::state::view::ZenViewMode;
 use crate::state::{AppState, SimInput};
 use crate::render::{
     render_status_bar,
-    render_zen,
     render_shortcuts_overlay,
     render_spotlight,
     render_triage,
     render_module_icon,
     render_favorites_dock,
+    ZenView,
+    ModuleSwitcherView,
+    Renderable,
 };
-use crate::ui::components::module::render_module_switcher;
 
 fn rect_contains(rect: ratatui::layout::Rect, x: u16, y: u16) -> bool {
     x >= rect.x && x < rect.x + rect.width && y >= rect.y && y < rect.y + rect.height
@@ -71,7 +72,7 @@ pub fn draw<B: Backend>(terminal: &mut Terminal<B>, state: &mut AppState, _last_
             .split(layout_chunks[0]);
 
         match state.mode.as_str() {
-            "zen" => render_zen(f, vertical[0], state),
+            "zen" => ZenView::new(state).render(f, vertical[0]),
             "gemx" => render_gemx(f, vertical[0], state),
             "settings" => render_settings(f, vertical[0], state),
             "triage" => render_triage(f, vertical[0], state),
@@ -87,7 +88,7 @@ pub fn draw<B: Backend>(terminal: &mut Terminal<B>, state: &mut AppState, _last_
         }
 
         if state.module_switcher_open || state.module_switcher_closing {
-            render_module_switcher(f, vertical[0], &state);
+            ModuleSwitcherView::new(state).render(f, vertical[0]);
         }
 
         if state.show_spotlight {
