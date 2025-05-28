@@ -608,15 +608,12 @@ pub fn launch_ui() -> std::io::Result<()> {
                         }
                     }
 
-                    k @ _ if state.mode == "zen"
-                        && state.zen_layout_mode == ZenLayoutMode::Compose
-                        && state.zen_view_mode == ZenViewMode::Write =>
-                    {
-                        crate::zen::editor::handle_key(&mut state, k);
+                    k @ _ if state.mode == "zen" => {
+                        input::route_zen_keys(&mut state, k, modifiers);
                     }
                     _ => {}
                 }
-            }    
+            }
                 Event::Mouse(me) => {
                     use crossterm::event::{MouseButton, MouseEventKind};
                     match me.kind {

@@ -1,10 +1,18 @@
 use crossterm::event::KeyCode;
-use crate::state::AppState;
-use crate::state::ZenJournalEntry;
+use crate::state::{AppState, ZenJournalEntry};
+use crate::state::view::ZenLayoutMode;
+use crate::state::ZenViewMode;
 use crate::zen::utils::parse_tags;
 
 /// Handle key input for Zen compose mode.
 pub fn handle_key(state: &mut AppState, key: KeyCode) {
+    tracing::info!("[ZEN] handle_key {:?}", key);
+    if state.zen_layout_mode != ZenLayoutMode::Compose
+        || state.zen_view_mode != ZenViewMode::Write
+    {
+        return;
+    }
+
     match key {
         KeyCode::Char(c) => {
             // Spawn a new entry on first character when not editing
@@ -56,21 +64,7 @@ pub fn handle_key(state: &mut AppState, key: KeyCode) {
                 state.cancel_edit_journal_entry();
                 state.zen_draft.text.clear();
             } else {
-                if !text.is_empty() {
-                    if crate::config::theme::ThemeConfig::load().zen_breathe() {
-                        std::thread::sleep(std::time::Duration::from_millis(150));
-                    }
-                    let entry = ZenJournalEntry {
-                        timestamp: chrono::Local::now(),
-                        text: text.clone(),
-                        prev_text: None,
-                        tags: parse_tags(&text),
-                    };
-                    state.zen_journal_entries.push(entry.clone());
-                    state.append_journal_entry(&entry);
-                }
-                state.zen_draft.text.clear();
-                state.zen_draft.editing = None;
+                finalize_entry(state);
             }
         }
         _ => {}
