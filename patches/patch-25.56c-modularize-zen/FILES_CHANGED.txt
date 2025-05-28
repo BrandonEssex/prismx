@@ -1,0 +1,4 @@
+- src/zen.rs → src/zen/mod.rs
++ src/zen/editor.rs
++ src/zen/state.rs
++ src/zen/view.rs
