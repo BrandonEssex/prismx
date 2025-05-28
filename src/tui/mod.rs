@@ -1,5 +1,6 @@
 use ratatui::Terminal;
-use ratatui::backend::{Backend, CrosstermBackend};
+use ratatui::backend::CrosstermBackend;
+use std::io::Stdout;
 use crossterm::{
     event::{self, Event, KeyCode, KeyEvent, KeyModifiers, EnableMouseCapture, DisableMouseCapture},
     execute,
@@ -10,14 +11,15 @@ use crate::state::view::ZenViewMode;
 use crate::state::{AppState, SimInput};
 use crate::render::{
     render_status_bar,
-    render_zen,
     render_shortcuts_overlay,
     render_spotlight,
     render_triage,
     render_module_icon,
     render_favorites_dock,
+    Renderable,
+    ZenView,
+    ModuleSwitcher,
 };
-use crate::ui::components::module::render_module_switcher;
 
 fn rect_contains(rect: ratatui::layout::Rect, x: u16, y: u16) -> bool {
     x >= rect.x && x < rect.x + rect.width && y >= rect.y && y < rect.y + rect.height
@@ -34,7 +36,11 @@ use crate::hotkeys::match_hotkey;
 use crate::shortcuts::{match_shortcut, Shortcut};
 use std::time::Duration;
 
-pub fn draw<B: Backend>(terminal: &mut Terminal<B>, state: &mut AppState, _last_key: &str) -> std::io::Result<()> {
+pub fn draw(
+    terminal: &mut Terminal<CrosstermBackend<Stdout>>,
+    state: &mut AppState,
+    _last_key: &str,
+) -> std::io::Result<()> {
     use ratatui::layout::{Constraint, Direction, Layout, Rect};
     use ratatui::widgets::Paragraph;
 
@@ -70,8 +76,9 @@ pub fn draw<B: Backend>(terminal: &mut Terminal<B>, state: &mut AppState, _last_
             .constraints([Constraint::Min(1), Constraint::Length(3)])
             .split(layout_chunks[0]);
 
+        let mut views: Vec<Box<dyn Renderable>> = Vec::new();
         match state.mode.as_str() {
-            "zen" => render_zen(f, vertical[0], state),
+            "zen" => views.push(Box::new(ZenView::new(state))),
             "gemx" => render_gemx(f, vertical[0], state),
             "settings" => render_settings(f, vertical[0], state),
             "triage" => render_triage(f, vertical[0], state),
@@ -82,12 +89,16 @@ pub fn draw<B: Backend>(terminal: &mut Terminal<B>, state: &mut AppState, _last_
             }
         }
 
-        if state.show_keymap && layout_chunks.len() > 1 {
-            render_shortcuts_overlay(f, layout_chunks[1]);
+        if state.module_switcher_open || state.module_switcher_closing {
+            views.push(Box::new(ModuleSwitcher::new(state)));
         }
 
-        if state.module_switcher_open || state.module_switcher_closing {
-            render_module_switcher(f, vertical[0], &state);
+        for mut view in views {
+            view.render(f, vertical[0]);
+        }
+
+        if state.show_keymap && layout_chunks.len() > 1 {
+            render_shortcuts_overlay(f, layout_chunks[1]);
         }
 
         if state.show_spotlight {
