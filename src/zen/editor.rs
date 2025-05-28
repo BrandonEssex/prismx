@@ -54,7 +54,21 @@ pub fn handle_key(state: &mut AppState, key: KeyCode) {
                 state.cancel_edit_journal_entry();
                 state.zen_draft.text.clear();
             } else {
-                finalize_entry(state);
+                if !text.is_empty() {
+                    if crate::config::theme::ThemeConfig::load().zen_breathe() {
+                        std::thread::sleep(std::time::Duration::from_millis(150));
+                    }
+                    let entry = ZenJournalEntry {
+                        timestamp: chrono::Local::now(),
+                        text: text.clone(),
+                        prev_text: None,
+                        tags: crate::zen::utils::parse_tags(&text),
+                    };
+                    state.zen_journal_entries.push(entry.clone());
+                    state.append_journal_entry(&entry);
+                }
+                state.zen_draft.text.clear();
+                state.zen_draft.editing = None;
             }
         }
         _ => {}
