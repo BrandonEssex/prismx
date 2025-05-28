@@ -63,6 +63,26 @@ pub fn handle_key(state: &mut AppState, key: KeyCode) {
             } else if text == "/cancel" {
                 state.cancel_edit_journal_entry();
                 state.zen_draft.text.clear();
+            } else if text == "/plugins" {
+                use crate::plugin::registry;
+                let list = registry::registry();
+                if list.is_empty() {
+                    state.status_message = "No plugins loaded".into();
+                } else {
+                    let lines: Vec<String> = list
+                        .iter()
+                        .map(|p| {
+                            if let Some(ref path) = p.path {
+                                format!("{} v{} ({})", p.name, p.version, path)
+                            } else {
+                                format!("{} v{}", p.name, p.version)
+                            }
+                        })
+                        .collect();
+                    state.status_message = lines.join(", ");
+                }
+                state.status_message_last_updated = Some(std::time::Instant::now());
+                state.zen_draft.text.clear();
             } else {
                 finalize_entry(state);
             }
