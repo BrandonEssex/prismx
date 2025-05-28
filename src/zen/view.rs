@@ -2,23 +2,24 @@
 use ratatui::prelude::*;
 use crate::canvas::prism::render_prism;
 use crate::state::{AppState};
-use crate::state::view::ZenViewMode;
+use crate::state::view::ZenLayoutMode;
+use crate::state::ZenViewMode;
 use crate::zen::journal::{render_zen_journal, render_history};
 use crate::beamx::render_full_border;
 
 /// Dispatches the correct Zen view mode renderer
 pub fn render_zen<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
-    match state.zen_view_mode {
-        ZenViewMode::Journal => {
+    match state.zen_layout_mode {
+        ZenLayoutMode::Journal => {
             render_zen_journal(f, area, state);
         }
-        ZenViewMode::Classic => {
+        ZenLayoutMode::Classic => {
             render_classic(f, area, state);
         }
-        ZenViewMode::Summary => {
+        ZenLayoutMode::Summary => {
             render_zen_journal(f, area, state);
         }
-        ZenViewMode::Split => {
+        ZenLayoutMode::Split => {
             let mid = area.width / 2;
             let left = Rect {
                 x: area.x,
@@ -35,7 +36,7 @@ pub fn render_zen<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
             render_classic(f, left, state);
             render_zen_journal(f, right, state);
         }
-        ZenViewMode::Compose => {
+        ZenLayoutMode::Compose => {
             let tick = (std::time::SystemTime::now()
                 .duration_since(std::time::UNIX_EPOCH)
                 .unwrap_or_default()
@@ -70,13 +71,17 @@ pub fn render_classic<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState
 pub fn render_compose<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState, tick: u64) {
     use ratatui::layout::{Constraint, Direction, Layout};
 
-    let chunks = Layout::default()
-        .direction(Direction::Vertical)
-        .constraints([Constraint::Percentage(75), Constraint::Percentage(25)].as_ref())
-        .split(area);
+    if state.zen_view_mode == crate::state::ZenViewMode::Write {
+        let chunks = Layout::default()
+            .direction(Direction::Vertical)
+            .constraints([Constraint::Percentage(75), Constraint::Percentage(25)].as_ref())
+            .split(area);
 
-    render_history(f, chunks[0], state);
-    render_input(f, chunks[1], state, tick);
+        render_history(f, chunks[0], state);
+        render_input(f, chunks[1], state, tick);
+    } else {
+        render_history(f, area, state);
+    }
 
     render_full_border(f, area, &state.beam_style_for_mode(&state.mode), true, false);
 }

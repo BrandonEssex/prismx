@@ -2,23 +2,23 @@
 use ratatui::prelude::*;
 use crate::canvas::prism::render_prism;
 use crate::state::{AppState};
-use crate::state::view::ZenViewMode;
+use crate::state::view::ZenLayoutMode;
 use crate::zen::journal::{render_zen_journal, render_history};
 use crate::beamx::render_full_border;
 
 /// Dispatches the correct Zen view mode renderer
 pub fn render_zen<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
     match state.zen_view_mode {
-        ZenViewMode::Journal => {
+        ZenLayoutMode::Journal => {
             render_zen_journal(f, area, state);
         }
-        ZenViewMode::Classic => {
+        ZenLayoutMode::Classic => {
             render_classic(f, area, state);
         }
-        ZenViewMode::Summary => {
+        ZenLayoutMode::Summary => {
             render_zen_journal(f, area, state);
         }
-        ZenViewMode::Split => {
+        ZenLayoutMode::Split => {
             let mid = area.width / 2;
             let left = Rect {
                 x: area.x,
@@ -35,7 +35,7 @@ pub fn render_zen<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
             render_classic(f, left, state);
             render_zen_journal(f, right, state);
         }
-        ZenViewMode::Compose => {
+        ZenLayoutMode::Compose => {
             let tick = (std::time::SystemTime::now()
                 .duration_since(std::time::UNIX_EPOCH)
                 .unwrap_or_default()

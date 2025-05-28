@@ -6,8 +6,8 @@ use crossterm::{
     terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
 };
 use std::io::stdout;
-use crate::state::view::ZenViewMode;
-use crate::state::{AppState, SimInput};
+use crate::state::view::ZenLayoutMode;
+use crate::state::{AppState, SimInput, ZenViewMode};
 use crate::render::{
     render_status_bar,
     render_zen,
@@ -443,12 +443,12 @@ pub fn launch_ui() -> std::io::Result<()> {
                     && modifiers.contains(KeyModifiers::SHIFT)
                     && state.mode == "zen"
                 {
-                    state.zen_view_mode = match state.zen_view_mode {
-                        ZenViewMode::Journal => ZenViewMode::Classic,
-                        ZenViewMode::Classic => ZenViewMode::Split,
-                        ZenViewMode::Split => ZenViewMode::Summary,
-                        ZenViewMode::Summary => ZenViewMode::Journal,
-                        ZenViewMode::Compose => ZenViewMode::Journal,
+                    state.zen_layout_mode = match state.zen_layout_mode {
+                        ZenLayoutMode::Journal => ZenLayoutMode::Classic,
+                        ZenLayoutMode::Classic => ZenLayoutMode::Split,
+                        ZenLayoutMode::Split => ZenLayoutMode::Summary,
+                        ZenLayoutMode::Summary => ZenLayoutMode::Journal,
+                        ZenLayoutMode::Compose => ZenLayoutMode::Journal,
                     };
                 } else if code == KeyCode::Char('t')
                     && modifiers == KeyModifiers::CONTROL
@@ -457,7 +457,7 @@ pub fn launch_ui() -> std::io::Result<()> {
                     state.zen_toolbar_open = !state.zen_toolbar_open;
                     state.zen_toolbar_index = 0;
                 } else if code == KeyCode::Tab
-                    && modifiers == KeyModifiers::ALT
+                    && modifiers == KeyModifiers::CONTROL
                     && state.mode == "zen"
                 {
                     input::toggle_zen_view(&mut state);
@@ -500,7 +500,8 @@ pub fn launch_ui() -> std::io::Result<()> {
                 match code {
                     KeyCode::Esc => {
                         if state.mode == "zen"
-                            && state.zen_view_mode == ZenViewMode::Compose
+                            && state.zen_layout_mode == ZenLayoutMode::Compose
+                            && state.zen_view_mode == ZenViewMode::Write
                             && state.zen_draft.editing.is_some()
                         {
                             state.cancel_edit_journal_entry();
@@ -611,21 +612,24 @@ pub fn launch_ui() -> std::io::Result<()> {
 
                     KeyCode::Char(c)
                         if state.mode == "zen"
-                            && state.zen_view_mode == ZenViewMode::Compose =>
+                            && state.zen_layout_mode == ZenLayoutMode::Compose
+                            && state.zen_view_mode == ZenViewMode::Write =>
                     {
                         state.zen_draft.text.push(c);
                     }
 
                     KeyCode::Backspace
                         if state.mode == "zen"
-                            && state.zen_view_mode == ZenViewMode::Compose =>
+                            && state.zen_layout_mode == ZenLayoutMode::Compose
+                            && state.zen_view_mode == ZenViewMode::Write =>
                     {
                         state.zen_draft.text.pop();
                     }
 
                     KeyCode::Enter
                         if state.mode == "zen"
-                            && state.zen_view_mode == ZenViewMode::Compose =>
+                            && state.zen_layout_mode == ZenLayoutMode::Compose
+                            && state.zen_view_mode == ZenViewMode::Write =>
                     {
                         let text = state.zen_draft.text.trim().to_string();
 
