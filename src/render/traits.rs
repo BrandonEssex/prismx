@@ -11,3 +11,6 @@ pub trait Renderable {
     fn render(&mut self, f: &mut RenderFrame<'_>, area: Rect);
 }
 
+/// Marker trait for UI widgets.
+pub trait Widget: Renderable {}
+
