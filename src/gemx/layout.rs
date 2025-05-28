@@ -95,13 +95,33 @@ fn find_orphans(nodes: &NodeMap, roots: &[NodeID]) -> Vec<NodeID> {
 fn clamp_overlaps(nodes: &mut NodeMap) {
     let mut used = HashSet::new();
     for node in nodes.values_mut() {
+        let (bw, bh) = crate::layout::label_bounds(&node.label);
         let mut pos = (node.x, node.y);
-        while used.contains(&pos) {
+        loop {
+            let mut collision = false;
+            for dx in 0..bw {
+                for dy in 0..bh {
+                    if used.contains(&(pos.0 + dx, pos.1 + dy)) {
+                        collision = true;
+                        break;
+                    }
+                }
+                if collision {
+                    break;
+                }
+            }
+            if !collision {
+                for dx in 0..bw {
+                    for dy in 0..bh {
+                        used.insert((pos.0 + dx, pos.1 + dy));
+                    }
+                }
+                break;
+            }
             pos.0 += crate::layout::SIBLING_SPACING_X;
         }
         node.x = pos.0;
         node.y = pos.1;
-        used.insert(pos);
     }
 }
 
