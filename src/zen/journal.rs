@@ -33,7 +33,7 @@ pub fn render_history<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState
     }
 
     let entries = state.filtered_journal_entries();
-    let mut blocks: Vec<(u16, Paragraph)> = Vec::new();
+    let mut blocks: Vec<(u16, Paragraph, u8)> = Vec::new();
     let mut current_label = String::new();
 
     for (idx, entry) in entries.iter().enumerate().rev() {
@@ -100,18 +100,24 @@ pub fn render_history<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState
                 .borders(Borders::ALL);
         }
 
+        let ratio = entry.frame as f32 / 3.0;
+        for line in lines.iter_mut() {
+            crate::ui::animate::fade_line_ratio(line, ratio);
+        }
+
         let para = Paragraph::new(lines).block(block);
         let h = 5; // estimated height
-        blocks.push((h, para));
+        blocks.push((h, para, entry.frame));
     }
 
     let mut y = area.bottom();
-    for (h, para) in blocks.into_iter().rev() {
+    for (h, para, frame) in blocks.into_iter().rev() {
         if y < area.y + h {
             break;
         }
         y -= h;
-        let rect = Rect::new(area.x + padding, y, usable_width, h);
+        let indent = if frame < 3 { 3 - frame as u16 } else { 0 };
+        let rect = Rect::new(area.x + padding + indent, y, usable_width - indent, h);
         f.render_widget(para, rect);
         if y > area.y {
             y -= 1;

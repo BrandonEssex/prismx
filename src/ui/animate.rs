@@ -104,3 +104,12 @@ pub fn fade_line(line: &mut ratatui::text::Line<'_>, age_ms: u128, duration_ms: 
         span.patch_style(Style::default().fg(scale_color(fg, ratio)));
     }
 }
+
+/// Fade a line based on an explicit 0.0-1.0 ratio.
+pub fn fade_line_ratio(line: &mut ratatui::text::Line<'_>, ratio: f32) {
+    let r = ratio.clamp(0.0, 1.0);
+    for span in &mut line.spans {
+        let fg = span.style.fg.unwrap_or(Color::White);
+        span.patch_style(Style::default().fg(scale_color(fg, r)));
+    }
+}

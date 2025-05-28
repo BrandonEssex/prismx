@@ -137,6 +137,7 @@ impl AppState {
                             timestamp: dt.with_timezone(&chrono::Local),
                             text: text.to_string(),
                             prev_text: None,
+                            frame: 3,
                         })
                 })
                 .collect();
@@ -212,6 +213,15 @@ impl AppState {
             _ => {
                 self.zen_view_mode = ZenViewMode::Summary;
                 self.zen_summary_mode = ZenSummaryMode::Daily;
+            }
+        }
+    }
+
+    /// Advance animation frames for new journal entries.
+    pub fn tick_journal_entry_frames(&mut self) {
+        for entry in &mut self.zen_journal_entries {
+            if entry.frame < 3 {
+                entry.frame += 1;
             }
         }
     }
