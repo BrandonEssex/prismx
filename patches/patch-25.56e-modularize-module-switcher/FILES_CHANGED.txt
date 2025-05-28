@@ -1,0 +1,4 @@
+- src/module_switcher.rs → src/module_switcher/mod.rs
++ src/module_switcher/input.rs
++ src/module_switcher/control.rs
++ src/module_switcher/ui.rs
