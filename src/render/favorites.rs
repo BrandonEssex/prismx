@@ -2,12 +2,14 @@ use ratatui::{
     backend::Backend,
     layout::Rect,
     style::{Color, Modifier, Style},
-    widgets::{Block, Borders, Paragraph, Clear},
+    widgets::{Paragraph, Clear},
     Frame,
 };
 use crate::state::{AppState, DockLayout, FavoriteEntry};
 use crate::config::theme::ThemeConfig;
 use crate::ui::animate;
+use crate::ui::borders::draw_rounded_border;
+use crate::theme::characters::{HORIZONTAL, VERTICAL};
 use std::time::{SystemTime, UNIX_EPOCH};
 
 pub fn render_favorites_dock<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppState) {
@@ -44,8 +46,7 @@ pub fn render_favorites_dock<B: Backend>(f: &mut Frame<B>, area: Rect, state: &m
         // shift dock up slightly so icons never overlap the status bar
         let y = area.height.saturating_sub(height + 4);
 
-        let border = Block::default().borders(Borders::ALL).style(base_style);
-        f.render_widget(border, Rect::new(x - 1, y - 1, width, height));
+        draw_rounded_border(f, Rect::new(x - 1, y - 1, width, height), base_style);
         for (i, entry) in favorites.iter().enumerate() {
             let gx = x + i as u16 * 3;
             let rect = Rect::new(gx, y, 2, 1);
@@ -67,7 +68,7 @@ pub fn render_favorites_dock<B: Backend>(f: &mut Frame<B>, area: Rect, state: &m
         }
         // leave extra padding above the footer
         let base_y = area.height.saturating_sub(favorites.len() as u16 + 3);
-        f.render_widget(Paragraph::new("\\__").style(base_style), Rect::new(0, base_y - 1, 3, 1));
+        f.render_widget(Paragraph::new(format!("{}{}", VERTICAL, HORIZONTAL)).style(base_style), Rect::new(0, base_y - 1, 2, 1));
         for (i, entry) in favorites.iter().enumerate() {
             let gy = base_y + i as u16;
             let mut style = if Some(i) == state.dock_focus_index {
@@ -82,14 +83,14 @@ pub fn render_favorites_dock<B: Backend>(f: &mut Frame<B>, area: Rect, state: &m
                     Style::default().fg(accent).add_modifier(Modifier::REVERSED)
                 };
             }
-            let line = format!("{} |", entry.icon);
-            let rect = Rect::new(0, gy, 5, 1);
+            let line = format!("{} {}", entry.icon, VERTICAL);
+            let rect = Rect::new(0, gy, 4, 1);
             f.render_widget(Paragraph::new(line).style(style), rect);
             state.dock_entry_bounds.push((rect, entry.command.to_string()));
         }
         let bottom_y = base_y + favorites.len() as u16;
         let underscore_len = area.width.saturating_sub(3) as usize;
-        let bottom_line = format!("  |{}", "_".repeat(underscore_len));
+        let bottom_line = format!("{}{}{}", VERTICAL, HORIZONTAL.repeat(underscore_len), VERTICAL);
         f.render_widget(Paragraph::new(bottom_line).style(base_style), Rect::new(0, bottom_y, area.width, 1));
     }
 
@@ -124,10 +125,10 @@ fn render_dock_preview<B: Backend>(
                 let w = width.min(area.width.saturating_sub(x));
                 let h = 3u16;
                 let rect = Rect::new(x.min(area.right().saturating_sub(w)), y.max(area.top()), w, h);
-                let block = Block::default().borders(Borders::ALL).style(Style::default().bg(Color::Black).fg(Color::White));
+                let block_style = Style::default().bg(Color::Black).fg(Color::White);
                 f.render_widget(Clear, rect);
-                f.render_widget(block, rect);
-                f.render_widget(Paragraph::new(text), Rect::new(rect.x + 1, rect.y + 1, rect.width.saturating_sub(2), 1));
+                draw_rounded_border(f, rect, block_style);
+                f.render_widget(Paragraph::new(text).style(block_style), Rect::new(rect.x + 1, rect.y + 1, rect.width.saturating_sub(2), 1));
             }
         }
     }

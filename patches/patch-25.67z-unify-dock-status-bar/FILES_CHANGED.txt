@@ -1,0 +1,4 @@
+- src/ui/borders.rs
+- src/ui/status.rs
+- src/ui/dock.rs
+- src/theme/characters.rs

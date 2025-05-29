@@ -103,15 +103,15 @@ pub fn render_history<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState
         blocks.push((h, para));
     }
 
+    let visible_height = area.height.saturating_sub(1);
     let total_height: u16 = blocks
         .iter()
         .map(|(h, _)| *h + 1)
         .sum::<u16>()
         .saturating_sub(1);
-    let overflow = total_height.saturating_sub(area.height);
+    let overflow = total_height.saturating_sub(visible_height);
     let mut skip = overflow.saturating_sub(state.scroll_offset.min(overflow as usize) as u16);
-
-    let mut y = area.bottom();
+    let mut y = area.y + visible_height;
     for (h, para) in blocks.into_iter().rev() {
         let block_height = h + 1;
         if skip >= block_height {
