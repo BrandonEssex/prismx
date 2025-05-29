@@ -72,9 +72,11 @@ pub fn apply(state: &mut AppState, snap: PersistedLayout) {
         .map(|n| (n.id, Node::from(n)))
         .collect::<HashMap<_, _>>();
     state.root_nodes = snap.root_nodes;
-    state.selected = snap.selected;
+    state.set_selected(snap.selected);
     state.zoom_scale = snap.zoom;
     state.scroll_x = snap.scroll_x;
     state.scroll_y = snap.scroll_y;
+    state.scroll_target_x = snap.scroll_x;
+    state.scroll_target_y = snap.scroll_y;
     state.drawing_root = snap.drawing_root;
 }
