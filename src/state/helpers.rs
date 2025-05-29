@@ -451,6 +451,7 @@ impl AppState {
             self.spotlight_input = entry.command.to_string();
             self.show_spotlight = true;
             self.favorite_focus_index = Some(index);
+            self.dock_pulse_frames = 6;
             self.status_message = entry.command.to_string();
             self.status_message_last_updated = Some(std::time::Instant::now());
         }
