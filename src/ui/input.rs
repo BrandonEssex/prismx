@@ -1,6 +1,7 @@
 use crossterm::event::{KeyCode, KeyModifiers};
 
-use crate::state::AppState;
+use crate::state::{AppState, ZenViewMode};
+use crate::state::view::ZenLayoutMode;
 
 /// Handle key events when the log viewer is active.
 /// Returns true if the input was processed.
@@ -32,7 +33,10 @@ pub fn handle_log_keys(state: &mut AppState, code: KeyCode, mods: KeyModifiers) 
 
 /// Route keystrokes while in Zen mode to the editor handler.
 pub fn route_zen_keys(state: &mut AppState, code: KeyCode, _mods: KeyModifiers) -> bool {
-    if state.mode == "zen" {
+    if state.mode == "zen"
+        && state.zen_layout_mode == ZenLayoutMode::Compose
+        && state.zen_view_mode == ZenViewMode::Write
+    {
         crate::zen::editor::handle_key(state, code);
         return true;
     }
