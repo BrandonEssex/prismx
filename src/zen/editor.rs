@@ -22,6 +22,7 @@ pub fn handle_key(state: &mut AppState, key: KeyCode) {
                     text: String::new(),
                     prev_text: None,
                     tags: vec![],
+                    frame: 0,
                 };
                 state.zen_journal_entries.push(entry);
                 state.zen_draft.editing = Some(state.zen_journal_entries.len() - 1);
@@ -126,6 +127,7 @@ pub fn handle_key(state: &mut AppState, key: KeyCode) {
                     prev_text: None,
                     frame: 0,
                     tags: parse_tags(&text),
+                    frame: 0,
                 };
                 state.zen_journal_entries.push(entry.clone());
                 state.append_journal_entry(&entry);
