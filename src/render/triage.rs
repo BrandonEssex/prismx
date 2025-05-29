@@ -1,7 +1,7 @@
 use ratatui::{backend::Backend, layout::Rect, Frame};
 use crate::beamx::render_full_border;
 use crate::state::AppState;
-use crate::ui::beamx::{BeamX, BeamXStyle, BeamXMode, BeamXAnimationMode};
+use crate::ui::beamx::{render_beam, BeamXStyle, BeamXMode};
 use crate::triage::render_triage_panel as render_panel;
 use std::time::{SystemTime, UNIX_EPOCH};
 
@@ -18,12 +18,7 @@ pub fn render_triage<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppSt
     bx_style.border_color = b;
     bx_style.status_color = s;
     bx_style.prism_color = p;
-    let beamx = BeamX {
-        tick,
-        enabled: false,
-        mode: BeamXMode::Triage,
-        style: bx_style,
-        animation: BeamXAnimationMode::PulseEntryRadiate,
-    };
-    beamx.render(f, area);
+    if state.beamx_panel_visible {
+        render_beam(f, area, tick, &bx_style);
+    }
 }

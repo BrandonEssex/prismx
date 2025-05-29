@@ -53,6 +53,14 @@ pub fn draw(
         state.spotlight_animation_frame = 0;
     }
 
+    if state.show_keymap && !state.prev_show_keymap {
+        state.keymap_animation_frame = 0;
+    }
+    if !state.show_keymap && state.prev_show_keymap {
+        state.keymap_closing = true;
+        state.keymap_animation_frame = 0;
+    }
+
     if state.module_switcher_open && !state.prev_module_switcher_open {
         state.module_switcher_animation_frame = 0;
     }
@@ -68,18 +76,10 @@ pub fn draw(
 
     terminal.draw(|f| {
         let full = f.size();
-        let layout_chunks = if state.show_keymap {
-            Layout::default().direction(Direction::Horizontal)
-                .constraints([Constraint::Min(50), Constraint::Length(30)].as_ref())
-                .split(full)
-        } else {
-            std::rc::Rc::from(vec![full])
-        };
-
         let vertical = Layout::default()
             .direction(Direction::Vertical)
             .constraints([Constraint::Min(1), Constraint::Length(3)])
-            .split(layout_chunks[0]);
+            .split(full);
 
         let mut views: Vec<Box<dyn Renderable>> = Vec::new();
         match state.mode.as_str() {
@@ -102,47 +102,15 @@ pub fn draw(
             view.render(f, vertical[0]);
         }
 
-        if state.show_keymap && layout_chunks.len() > 1 {
-            render_shortcuts_overlay(f, layout_chunks[1]);
+        if state.show_keymap || state.keymap_closing {
+            render_shortcuts_overlay(f, vertical[0], state);
         }
 
         if state.show_spotlight {
             render_spotlight(f, vertical[0], state);
         }
 
-        if let Some(last) = state.status_message_last_updated {
-            if last.elapsed() > Duration::from_secs(4) {
-                state.status_message.clear();
-                state.status_message_last_updated = None;
-            }
-        }
-
-        let default_status = if state.mode == "zen" {
-            let name = &state.zen_current_filename;
-            let word_count: usize = state
-                .zen_buffer
-                .iter()
-                .map(|l| l.split_whitespace().count())
-                .sum();
-            if state.zen_dirty {
-                format!("📄 {} ✍️ {} words ✎", name, word_count)
-            } else {
-                format!("📄 {} ✍️ {} words", name, word_count)
-            }
-        } else {
-            format!(
-                "Mode: {} | Triage: {} | Spotlight: {} | Help: {}",
-                crate::render::module_icon::module_label(&state.mode),
-                state.show_triage,
-                state.show_spotlight,
-                state.show_keymap,
-            )
-        };
-        let display_string = if state.status_message.is_empty() {
-            default_status
-        } else {
-            state.status_message.clone()
-        };
+        // status bar is rendered separately based on AppState
         render_module_icon(f, full, &state.mode);
         render_favorites_dock(f, full, state);
         if state.show_logs {
@@ -164,12 +132,20 @@ pub fn draw(
 
         crate::ui::components::debug::render_debug(f, full, state);
 
-        render_status_bar(f, vertical[1], display_string.as_str());
+        render_status_bar(f, vertical[1], state);
     })?;
     if state.spotlight_just_opened {
         state.spotlight_animation_frame += 1;
         if state.spotlight_animation_frame >= 3 {
             state.spotlight_just_opened = false;
+        }
+    }
+    if state.show_keymap && state.keymap_animation_frame < 3 {
+        state.keymap_animation_frame += 1;
+    } else if state.keymap_closing {
+        state.keymap_animation_frame += 1;
+        if state.keymap_animation_frame >= 3 {
+            state.keymap_closing = false;
         }
     }
     if state.module_switcher_open && state.module_switcher_animation_frame < 3 {
@@ -182,6 +158,7 @@ pub fn draw(
     }
     state.prev_module_switcher_open = state.module_switcher_open;
     state.prev_show_spotlight = state.show_spotlight;
+    state.prev_show_keymap = state.show_keymap;
     state.prev_mode = state.mode.clone();
     Ok(())
 }

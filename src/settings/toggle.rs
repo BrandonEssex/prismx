@@ -1,5 +1,6 @@
 use crate::beam_color::BeamColor;
 use crate::state::AppState;
+use crate::theme::fonts::FontStyle;
 use super::save_user_settings;
 use std::sync::atomic::{AtomicU8, Ordering};
 
@@ -51,12 +52,20 @@ fn toggle_beamx_panel_visibility(s: &mut AppState) { s.beamx_panel_visible = !s.
 fn is_mindmap_lanes(s: &AppState) -> bool { s.mindmap_lanes }
 fn toggle_mindmap_lanes(s: &mut AppState) { s.mindmap_lanes = !s.mindmap_lanes; save_user_settings(s); }
 
+fn toggle_font_style(s: &mut AppState) { s.font_style = s.font_style.next(); save_user_settings(s); }
+fn font_style_enabled(_: &AppState) -> bool { true }
+
+fn is_beam_animation(s: &AppState) -> bool { s.beam_animation }
+fn toggle_beam_animation(s: &mut AppState) { s.beam_animation = !s.beam_animation; save_user_settings(s); }
+
 pub static SETTING_TOGGLES: &[SettingToggle] = &[
+    SettingToggle { icon: "🔠", label: "Font Style", is_enabled: font_style_enabled, toggle: toggle_font_style },
     SettingToggle { icon: "🐞", label: "Debug Input Mode", is_enabled: is_debug_mode, toggle: toggle_debug_mode },
-    SettingToggle { icon: "🤖", label: "Auto-Arrange", is_enabled: is_auto_arrange, toggle: toggle_auto_arrange },
-    SettingToggle { icon: "🔒", label: "Lock Zoom Scale", is_enabled: is_zoom_locked, toggle: toggle_zoom_lock },
+    SettingToggle { icon: "⚡", label: "Beam Animations", is_enabled: is_beam_animation, toggle: toggle_beam_animation },
     SettingToggle { icon: "🎨", label: "Theme Preset", is_enabled: |_| true, toggle: toggle_theme },
     SettingToggle { icon: "💠", label: "BeamX Panel", is_enabled: is_beamx_panel_visible, toggle: toggle_beamx_panel_visibility },
+    SettingToggle { icon: "🤖", label: "Auto-Arrange", is_enabled: is_auto_arrange, toggle: toggle_auto_arrange },
+    SettingToggle { icon: "🔒", label: "Lock Zoom Scale", is_enabled: is_zoom_locked, toggle: toggle_zoom_lock },
     SettingToggle { icon: "✨", label: "Mindmap Lanes", is_enabled: is_mindmap_lanes, toggle: toggle_mindmap_lanes },
 ];
 

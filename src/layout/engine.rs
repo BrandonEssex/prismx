@@ -1,5 +1,7 @@
 use crate::node::{NodeID, NodeMap};
 use crate::layout::{CHILD_SPACING_Y, SIBLING_SPACING_X};
+use crate::theme::layout::spacing_scale;
+use std::collections::HashMap;
 
 /// Recursively position nodes so children appear beneath their parent.
 ///
@@ -16,19 +18,38 @@ pub fn layout_vertical(nodes: &mut NodeMap, root: NodeID) {
             }
         }
     }
-    walk(nodes, root, nodes.get(&root).map(|n| n.x).unwrap_or(0), nodes.get(&root).map(|n| n.y).unwrap_or(0));
+
+    walk(
+        nodes,
+        root,
+        nodes.get(&root).map(|n| n.x).unwrap_or(0),
+        nodes.get(&root).map(|n| n.y).unwrap_or(0),
+    );
 }
 
 /// Calculate the depth of each subtree.
-pub fn compute_depths(nodes: &NodeMap) -> std::collections::HashMap<NodeID, usize> {
+pub fn compute_depths(nodes: &NodeMap) -> HashMap<NodeID, usize> {
     fn depth(nodes: &NodeMap, id: NodeID) -> usize {
         if let Some(n) = nodes.get(&id) {
-            if n.children.is_empty() { 1 } else { 1 + n.children.iter().map(|c| depth(nodes, *c)).max().unwrap_or(0) }
-        } else { 0 }
+            if n.children.is_empty() {
+                1
+            } else {
+                1 + n.children.iter().map(|c| depth(nodes, *c)).max().unwrap_or(0)
+            }
+        } else {
+            0
+        }
     }
-    let mut map = std::collections::HashMap::new();
+
+    let mut map = HashMap::new();
     for id in nodes.keys().copied() {
         map.insert(id, depth(nodes, id));
     }
     map
+}
+
+/// Public wrapper used by renderers to compute character spacing
+/// for a given zoom level.
+pub fn spacing_for_zoom(zoom: f32) -> (i16, i16) {
+    spacing_scale(zoom)
 }

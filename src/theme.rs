@@ -5,6 +5,10 @@ use std::sync::Mutex;
 
 pub mod zen;
 pub mod colors;
+pub mod fonts;
+pub mod previews;
+pub mod layout;
+pub mod characters;
 
 static CURRENT_THEME: Mutex<&str> = Mutex::new("dark");
 

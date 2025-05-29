@@ -24,7 +24,7 @@ impl<'a> Renderable for GemxRenderer<'a> {
     fn render(&mut self, f: &mut RenderFrame<'_>, area: Rect) {
         let state = &mut *self.state;
         if state.mindmap_lanes {
-            draw_lanes(f, area);
+            draw_lanes(f, area, state.zoom_scale);
         }
         // Apply layout before rendering
         apply_layout(state);
@@ -33,7 +33,7 @@ impl<'a> Renderable for GemxRenderer<'a> {
     }
 }
 
-fn draw_lanes(f: &mut RenderFrame<'_>, area: Rect) {
+fn draw_lanes(f: &mut RenderFrame<'_>, area: Rect, zoom: f32) {
     let theme = ThemeConfig::load();
     let lane_color = theme.dim_color();
     let lane_style = Style::default().bg(lane_color);
@@ -51,8 +51,11 @@ fn draw_lanes(f: &mut RenderFrame<'_>, area: Rect) {
         y += lane_height;
     }
 
+    if zoom < 0.7 {
+        return;
+    }
     let dot = Paragraph::new("┆").style(Style::default().fg(lane_color));
-    let step = BASE_SPACING_X as u16;
+    let step = ((BASE_SPACING_X as f32 * zoom).round() as u16).max(1);
     let mut x = step;
     while x < area.width.saturating_sub(1) {
         for row in 0..area.height {
