@@ -127,7 +127,6 @@ pub fn handle_key(state: &mut AppState, key: KeyCode) {
                     prev_text: None,
                     frame: 0,
                     tags: parse_tags(&text),
-                    frame: 0,
                 };
                 state.zen_journal_entries.push(entry.clone());
                 state.append_journal_entry(&entry);
@@ -170,6 +169,7 @@ fn finalize_entry(state: &mut AppState) {
             text: text.clone(),
             prev_text: None,
             tags: parse_tags(&text),
+            frame: 0,
         };
         state.zen_journal_entries.push(entry.clone());
         state.append_journal_entry(&entry);
