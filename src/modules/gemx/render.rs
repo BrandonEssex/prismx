@@ -4,26 +4,36 @@ use crate::layout::engine::layout_vertical;
 use crate::ui::lines::draw_line;
 
 /// Render a simple mindmap using the vertical layout engine.
-pub fn render<B: Backend>(f: &mut Frame<B>, area: Rect, nodes: &mut NodeMap, roots: &[NodeID]) {
-    for &root in roots { layout_vertical(nodes, root); }
+pub fn render<B: Backend>(
+    f: &mut Frame<B>,
+    area: Rect,
+    nodes: &mut NodeMap,
+    roots: &[NodeID],
+    debug: bool,
+) {
+    for &root in roots {
+        layout_vertical(nodes, root);
+    }
 
-    // Draw connections first
-    let mut connections = Vec::new();
-    let all_ids: Vec<NodeID> = nodes.keys().copied().collect();
-    for id in all_ids {
-        if let Some(node) = nodes.get(&id) {
-            for child_id in &node.children {
-                if let Some(child) = nodes.get(child_id) {
-                    connections.push(((node.x, node.y), (child.x, child.y)));
+    if debug {
+        // Draw connections first
+        let mut connections = Vec::new();
+        let all_ids: Vec<NodeID> = nodes.keys().copied().collect();
+        for id in all_ids {
+            if let Some(node) = nodes.get(&id) {
+                for child_id in &node.children {
+                    if let Some(child) = nodes.get(child_id) {
+                        connections.push(((node.x, node.y), (child.x, child.y)));
+                    }
                 }
             }
         }
-    }
 
-    for ((sx, sy), (ex, ey)) in connections {
-        let ox = area.x as i16;
-        let oy = area.y as i16;
-        draw_line(f, (sx + ox, sy + oy), (ex + ox, ey + oy));
+        for ((sx, sy), (ex, ey)) in connections {
+            let ox = area.x as i16;
+            let oy = area.y as i16;
+            draw_line(f, (sx + ox, sy + oy), (ex + ox, ey + oy));
+        }
     }
 
     // Draw nodes
