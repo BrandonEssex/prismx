@@ -4,6 +4,7 @@ use std::fs;
 use std::sync::Mutex;
 
 pub mod zen;
+pub mod colors;
 
 static CURRENT_THEME: Mutex<&str> = Mutex::new("dark");
 
