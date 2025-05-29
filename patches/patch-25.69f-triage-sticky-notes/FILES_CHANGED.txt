@@ -1,0 +1,4 @@
+- src/modules/triage/mod.rs
+- src/modules/triage/sticky.rs
+- src/theme/colors.rs
+- src/ui/drag.rs
