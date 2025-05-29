@@ -6,3 +6,4 @@ pub mod components;
 pub mod render;
 pub mod overlay;
 pub mod input;
+pub mod status;
