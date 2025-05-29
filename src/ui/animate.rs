@@ -111,6 +111,7 @@ pub fn fade_line_ratio(line: &mut ratatui::text::Line<'_>, ratio: f32) {
     for span in &mut line.spans {
         let fg = span.style.fg.unwrap_or(Color::White);
         span.patch_style(Style::default().fg(scale_color(fg, r)));
+    }
 }
 
 /// Return a style that fades over `duration_ms` while shimmering each `tick`.
