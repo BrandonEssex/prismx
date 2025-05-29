@@ -153,15 +153,14 @@ pub fn render_full_border<B: Backend>(
     let beam_x = area.right() - 1;
     let arrow_top_y = area.top();
     let arrow_bottom_y = area.top() + 4;
-    let skip_y_range = (arrow_top_y + 1)..arrow_bottom_y;
+    let skip_y_range = (arrow_top_y + 1)..=arrow_bottom_y;
     for y in area.y + 1..bottom {
         let p = Paragraph::new("┃").style(fg);
         f.render_widget(p, Rect::new(area.x, y, 1, 1));
-        if trim_right {
-            if beamx_enabled && skip_y_range.contains(&y) {
-                continue;
-            }
-        } else if beamx_enabled && right == beam_x && (y == arrow_top_y + 1 || y == arrow_bottom_y) {
+        if beamx_enabled && right == beam_x && skip_y_range.contains(&y) {
+            continue;
+        }
+        if trim_right && skip_y_range.contains(&y) {
             continue;
         }
         let p2 = Paragraph::new("┃").style(fg);

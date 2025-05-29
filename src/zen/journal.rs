@@ -96,6 +96,10 @@ pub fn render_history<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState
             block = block
                 .border_style(Style::default().fg(Color::DarkGray))
                 .borders(Borders::ALL);
+        } else if Some(idx) == state.zen_history_index {
+            block = block
+                .border_style(Style::default().fg(Color::Gray))
+                .borders(Borders::ALL);
         }
 
 for entry in entries.iter().rev() {
@@ -128,6 +132,34 @@ for entry in entries.iter().rev() {
             crate::ui::animate::fade_line(line, age, 150);
         }
     }
+
+    let visible_height = area.height.saturating_sub(1);
+    let total_height: u16 = blocks
+        .iter()
+        .map(|(h, _)| *h + 1)
+        .sum::<u16>()
+        .saturating_sub(1);
+    let overflow = total_height.saturating_sub(visible_height);
+    let mut skip = overflow.saturating_sub(state.scroll_offset.min(overflow as usize) as u16);
+
+    let mut y = area.y + visible_height;
+    for (h, para) in blocks.into_iter().rev() {
+        let block_height = h + 1;
+        if skip >= block_height {
+            skip -= block_height;
+            continue;
+        }
+        if y < area.y + h {
+            break;
+        }
+        y -= h;
+        let rect = Rect::new(area.x + padding, y, usable_width, h);
+        f.render_widget(para, rect);
+        if y > area.y {
+            y -= 1;
+        }
+    }
+
 
     let mut block = Block::default().borders(Borders::NONE);
     if Some(entry.timestamp) == state.zen_draft.editing.map(|idx| state.zen_journal_entries[idx].timestamp) {

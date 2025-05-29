@@ -1,6 +1,7 @@
 // src/settings.rs
 use crate::beam_color::BeamColor;
 use crate::state::AppState;
+use crate::theme::fonts::FontStyle;
 use serde::{Deserialize, Serialize};
 use std::fs;
 
@@ -18,6 +19,8 @@ pub struct UserSettings {
     pub beamx_panel_theme: BeamColor,
     pub beamx_panel_visible: bool,
     pub mindmap_lanes: bool,
+    pub font_style: FontStyle,
+    pub beam_animation: bool,
 }
 
 impl Default for UserSettings {
@@ -35,6 +38,8 @@ impl Default for UserSettings {
             beamx_panel_theme: BeamColor::Prism,
             beamx_panel_visible: crate::state::default_beamx_panel_visible(),
             mindmap_lanes: true,
+            font_style: FontStyle::Regular,
+            beam_animation: true,
         }
     }
 }
@@ -63,6 +68,8 @@ pub fn save_user_settings(state: &AppState) {
         beamx_panel_theme: state.beamx_panel_theme,
         beamx_panel_visible: state.beamx_panel_visible,
         mindmap_lanes: state.mindmap_lanes,
+        font_style: state.font_style,
+        beam_animation: state.beam_animation,
     };
 
     if let Ok(serialized) = toml::to_string(&config) {

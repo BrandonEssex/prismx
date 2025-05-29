@@ -6,3 +6,8 @@ pub mod components;
 pub mod render;
 pub mod overlay;
 pub mod input;
+pub mod lines;
+pub mod borders;
+pub mod status;
+pub mod dock;
+pub mod drag;

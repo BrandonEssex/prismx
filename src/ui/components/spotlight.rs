@@ -13,7 +13,6 @@ use crate::ui::layout::Rect;
 use crate::state::AppState;
 use crate::spotlight::{command_preview, command_suggestions_scored};
 use crate::spotlight::result::command_icon;
-use crate::theme;
 use crate::config::theme::ThemeConfig;
 
 pub fn render_spotlight<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppState) {
@@ -26,6 +25,7 @@ pub fn render_spotlight<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut Ap
     let raw_input = if input.is_empty() { "<type command>" } else { input };
     let display_input = format!("{}{}", raw_input, caret);
     let cfg = ThemeConfig::load();
+    let palette = cfg.spotlight_palette();
     let base_width = area.width.min(60);
     let min_width = UnicodeWidthStr::width(display_input.as_str()) as u16 + 3; // "> " prefix
     let width = base_width.min(min_width.max(3));
@@ -44,8 +44,6 @@ pub fn render_spotlight<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut Ap
     }
     // Ensure Spotlight stays above the status bar
     height = height.min(area.height.saturating_sub(1));
-    let suggestion_count = matches.len().min(5) as u16;
-    let total_height = height + suggestion_count * 2;
     let spotlight_area = Rect::new(x_offset, y_offset, width, height);
 
     let border_color = Color::Cyan;
@@ -53,15 +51,15 @@ pub fn render_spotlight<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut Ap
     let block = Block::default()
         .title("Spotlight")
         .borders(Borders::ALL)
-        .style(Style::default().fg(border_color).bg(Color::Black));
+        .style(Style::default().fg(border_color).bg(palette.background));
 
-    let spot_style = theme::get_style("spotlight");
+    let spot_style = Style::default()
+        .fg(palette.foreground)
+        .bg(palette.background);
     let mut lines = vec![
         Line::styled(
             format!("> {}", display_input),
-            spot_style
-                .fg(cfg.input_fg())
-                .add_modifier(Modifier::BOLD),
+            spot_style.add_modifier(Modifier::BOLD),
         ),
     ];
 
@@ -70,15 +68,15 @@ pub fn render_spotlight<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut Ap
             lines.push(Line::from(vec![
                 Span::styled(
                     "→ ",
-                    Style::default().fg(Color::Cyan).bg(Color::Black),
+                    Style::default().fg(cfg.accent_color()).bg(palette.background),
                 ),
                 Span::styled(
                     msg,
-                    Style::default().fg(Color::White).bg(Color::Black),
+                    Style::default().fg(palette.foreground).bg(palette.background),
                 ),
             ]));
         } else {
-            let style = Style::default().fg(Color::Red).bg(Color::Black);
+            let style = Style::default().fg(Color::Red).bg(palette.background);
             lines.push(Line::from(vec![
                 Span::styled("⚠ ", style),
                 Span::styled(msg, style),
@@ -90,11 +88,12 @@ pub fn render_spotlight<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut Ap
         .block(block)
         .wrap(Wrap { trim: false });
 
-    // Clear background area and render solid black base layer
-    let bg_rect = Rect::new(x_offset, y_offset, width, total_height);
+    // Clear background area and render base layer
+    let clear_height = height + 10; // always clear room for suggestions
+    let bg_rect = Rect::new(x_offset, y_offset, width, clear_height);
     f.render_widget(Clear, bg_rect);
     f.render_widget(
-        Block::default().style(Style::default().bg(Color::Black)),
+        Block::default().style(Style::default().bg(palette.background)),
         bg_rect,
     );
 
@@ -105,9 +104,12 @@ pub fn render_spotlight<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut Ap
         if y >= area.y + area.height.saturating_sub(2) {
             break;
         }
-        let mut style = spot_style.fg(cfg.input_fg());
+        let mut style = spot_style;
         if Some(i) == state.spotlight_suggestion_index {
-            style = cfg.highlight_style().add_modifier(Modifier::UNDERLINED);
+            style = Style::default()
+                .fg(palette.foreground)
+                .bg(palette.active_background)
+                .add_modifier(Modifier::BOLD);
         }
         let icon = command_icon(suggestion);
         let mut label_spans = vec![

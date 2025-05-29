@@ -115,21 +115,17 @@ pub fn node_at_position(state: &AppState, x: u16, y: u16) -> Option<NodeID> {
         }
     }
 
-    for (&id, &Coords { x: nx, y: ny }) in &layout {
-        let zoom = state.zoom_scale as f32;
-        let (bsx, bsy) = spacing_for_zoom(state.zoom_scale);
-        let draw_x = ((nx as f32 - state.scroll_x as f32) * bsx as f32 * zoom)
-            .round()
-            .max(0.0) as u16;
-        let draw_y = ((ny as f32 - state.scroll_y as f32) * bsy as f32 * zoom)
-            .round()
-            .max(0.0) as u16;
+    let zoom = state.zoom_scale as f32;
+    let (bsx, bsy) = spacing_for_zoom(state.zoom_scale);
+    let wx = (state.scroll_x as f32 + (x as f32 / (bsx as f32 * zoom))).round() as i16;
+    let wy = (state.scroll_y as f32 + (y as f32 / (bsy as f32 * zoom))).round() as i16;
 
-        if draw_y == y {
+    for (&id, &Coords { x: nx, y: ny }) in &layout {
+        if wy == ny {
             let node = &state.nodes[&id];
-            let start_x = draw_x;
-            let end_x = start_x + node.label.len() as u16 + 2;
-            if x >= start_x && x < end_x {
+            let start_x = nx as i16;
+            let end_x = start_x + node.label.len() as i16 + 2;
+            if wx >= start_x && wx < end_x {
                 return Some(id);
             }
         }
@@ -139,6 +135,8 @@ pub fn node_at_position(state: &AppState, x: u16, y: u16) -> Option<NodeID> {
 
 /// Begin dragging the specified node from mouse coords.
 pub fn start_drag(state: &mut AppState, id: NodeID, x: u16, y: u16) {
+    // Always update the selection even when drag is blocked by auto-arrange
+    state.set_selected(Some(id));
     if state.auto_arrange {
         state.status_message = "Drag disabled while auto-arrange is enabled".into();
         state.status_message_last_updated = Some(Instant::now());

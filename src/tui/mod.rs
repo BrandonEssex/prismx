@@ -53,6 +53,14 @@ pub fn draw(
         state.spotlight_animation_frame = 0;
     }
 
+    if state.show_keymap && !state.prev_show_keymap {
+        state.keymap_animation_frame = 0;
+    }
+    if !state.show_keymap && state.prev_show_keymap {
+        state.keymap_closing = true;
+        state.keymap_animation_frame = 0;
+    }
+
     if state.module_switcher_open && !state.prev_module_switcher_open {
         state.module_switcher_animation_frame = 0;
     }
@@ -68,18 +76,10 @@ pub fn draw(
 
     terminal.draw(|f| {
         let full = f.size();
-        let layout_chunks = if state.show_keymap {
-            Layout::default().direction(Direction::Horizontal)
-                .constraints([Constraint::Min(50), Constraint::Length(30)].as_ref())
-                .split(full)
-        } else {
-            std::rc::Rc::from(vec![full])
-        };
-
         let vertical = Layout::default()
             .direction(Direction::Vertical)
             .constraints([Constraint::Min(1), Constraint::Length(3)])
-            .split(layout_chunks[0]);
+            .split(full);
 
         let mut views: Vec<Box<dyn Renderable>> = Vec::new();
         match state.mode.as_str() {
@@ -102,47 +102,15 @@ pub fn draw(
             view.render(f, vertical[0]);
         }
 
-        if state.show_keymap && layout_chunks.len() > 1 {
-            render_shortcuts_overlay(f, layout_chunks[1]);
+        if state.show_keymap || state.keymap_closing {
+            render_shortcuts_overlay(f, vertical[0], state);
         }
 
         if state.show_spotlight {
             render_spotlight(f, vertical[0], state);
         }
 
-        if let Some(last) = state.status_message_last_updated {
-            if last.elapsed() > Duration::from_secs(4) {
-                state.status_message.clear();
-                state.status_message_last_updated = None;
-            }
-        }
-
-        let default_status = if state.mode == "zen" {
-            let name = &state.zen_current_filename;
-            let word_count: usize = state
-                .zen_buffer
-                .iter()
-                .map(|l| l.split_whitespace().count())
-                .sum();
-            if state.zen_dirty {
-                format!("📄 {} ✍️ {} words ✎", name, word_count)
-            } else {
-                format!("📄 {} ✍️ {} words", name, word_count)
-            }
-        } else {
-            format!(
-                "Mode: {} | Triage: {} | Spotlight: {} | Help: {}",
-                crate::render::module_icon::module_label(&state.mode),
-                state.show_triage,
-                state.show_spotlight,
-                state.show_keymap,
-            )
-        };
-        let display_string = if state.status_message.is_empty() {
-            default_status
-        } else {
-            state.status_message.clone()
-        };
+        // status bar is rendered separately based on AppState
         render_module_icon(f, full, &state.mode);
         render_favorites_dock(f, full, state);
         if state.show_logs {
@@ -164,12 +132,20 @@ pub fn draw(
 
         crate::ui::components::debug::render_debug(f, full, state);
 
-        render_status_bar(f, vertical[1], display_string.as_str());
+        render_status_bar(f, vertical[1], state);
     })?;
     if state.spotlight_just_opened {
         state.spotlight_animation_frame += 1;
         if state.spotlight_animation_frame >= 3 {
             state.spotlight_just_opened = false;
+        }
+    }
+    if state.show_keymap && state.keymap_animation_frame < 3 {
+        state.keymap_animation_frame += 1;
+    } else if state.keymap_closing {
+        state.keymap_animation_frame += 1;
+        if state.keymap_animation_frame >= 3 {
+            state.keymap_closing = false;
         }
     }
     if state.module_switcher_open && state.module_switcher_animation_frame < 3 {
@@ -183,6 +159,7 @@ pub fn draw(
     state.prev_module_switcher_open = state.module_switcher_open;
     state.prev_show_spotlight = state.show_spotlight;
     state.tick_journal_entry_frames();
+    state.prev_show_keymap = state.show_keymap;
     state.prev_mode = state.mode.clone();
     Ok(())
 }
@@ -526,6 +503,8 @@ pub fn launch_ui() -> std::io::Result<()> {
                             state.zen_draft.text.clear();
                         } else if state.mode == "plugin" && state.show_plugin_preview {
                             state.show_plugin_preview = false;
+                        } else if state.mode == "triage" && state.triage_tag_filter.is_some() {
+                            state.triage_set_filter(None);
                         } else {
                             state.mode = "gemx".into();
                             tracing::info!("[INPUT] mode switched to gemx");
@@ -588,6 +567,43 @@ pub fn launch_ui() -> std::io::Result<()> {
                     KeyCode::Tab if state.mode == "plugin" && !state.show_plugin_preview => {
                         state.plugin_tag_filter = state.plugin_tag_filter.next();
                         state.plugin_registry_index = 0;
+                    }
+
+                    // --- Triage navigation ---
+                    KeyCode::Up if state.mode == "triage" => {
+                        state.triage_focus_prev();
+                        state.triage_recalc_counts();
+                    }
+                    KeyCode::Down if state.mode == "triage" => {
+                        state.triage_focus_next();
+                        state.triage_recalc_counts();
+                    }
+                    KeyCode::Enter if state.mode == "triage" => {
+                        state.triage_view_mode = match state.triage_view_mode {
+                            crate::state::TriageViewMode::Feed => crate::state::TriageViewMode::Actions,
+                            crate::state::TriageViewMode::Actions => crate::state::TriageViewMode::Feed,
+                        };
+                    }
+                    KeyCode::Char('d') if state.mode == "triage" && modifiers == KeyModifiers::CONTROL => {
+                        state.triage_delete_current();
+                        state.triage_recalc_counts();
+                    }
+                    KeyCode::Char('1') if state.mode == "triage" && modifiers == KeyModifiers::CONTROL => {
+                        state.triage_toggle_tag("#now");
+                        state.triage_recalc_counts();
+                        state.triage_set_filter(Some("#now"));
+                    }
+                    KeyCode::Char('2') if state.mode == "triage" && modifiers == KeyModifiers::CONTROL => {
+                        state.triage_toggle_tag("#triton");
+                        state.triage_recalc_counts();
+                        state.triage_set_filter(Some("#triton"));
+                    }
+                    KeyCode::Char('3') if state.mode == "triage" && modifiers == KeyModifiers::CONTROL => {
+                        state.triage_toggle_tag("#done");
+                        state.triage_recalc_counts();
+                        state.triage_set_filter(Some("#done"));
+                    }
+
                     }
 
                     KeyCode::Up if state.favorite_dock_enabled && modifiers == KeyModifiers::NONE => {

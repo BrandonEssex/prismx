@@ -63,10 +63,28 @@ pub fn render_triage_panel<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut
     // --- Left Feed ---
     let mut lines = Vec::new();
 
-    for entry in &state.triage_entries {
+    let filter_label = match &state.triage_tag_filter {
+        Some(tag) => tag.to_uppercase(),
+        None => "ALL".into(),
+    };
+    lines.push(Line::from(Span::styled(
+        format!("Filter: {}", filter_label),
+        Style::default().fg(Color::Yellow),
+    )));
+    lines.push(Line::from(""));
+
+    
+
+    for (idx, entry) in state.triage_entries.iter().enumerate() {
         if entry.archived { continue; }
+        if let Some(tag) = &state.triage_tag_filter {
+            if !entry.tags.iter().any(|t| t.eq_ignore_ascii_case(tag)) { continue; }
+        }
 
         let mut entry_style = Style::default();
+        if idx == state.triage_focus_index {
+            entry_style = entry_style.add_modifier(Modifier::BOLD);
+        }
         if entry.resolved {
             entry_style = entry_style
                 .fg(Color::DarkGray)

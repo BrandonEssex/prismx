@@ -1,6 +1,7 @@
 use serde::{Deserialize, Serialize};
 use std::fs;
 use ratatui::style::{Color, Style};
+use crate::theme::colors::SpotlightPalette;
 
 #[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct ThemeConfig {
@@ -102,5 +103,9 @@ impl ThemeConfig {
     /// Return a readable foreground color based on theme mode
     pub fn input_fg(&self) -> Color {
         if self.dark_mode { Color::White } else { Color::Black }
+    }
+
+    pub fn spotlight_palette(&self) -> SpotlightPalette {
+        SpotlightPalette::for_mode(self.dark_mode)
     }
 }
