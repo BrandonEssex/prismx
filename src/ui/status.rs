@@ -53,7 +53,9 @@ pub fn render_status<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState)
     let mut text = if !state.status_message.is_empty() {
         state.status_message.clone()
     } else if state.show_keymap {
-        SHORTCUTS
+        let module_name = state.mode.to_string(); // assumes Mode implements ToString
+        let shortcuts = crate::ui::shortcuts::shortcuts_for(&module_name);
+        shortcuts
             .iter()
             .take(3)
             .map(|(k, a)| format!("{k}: {a}"))
