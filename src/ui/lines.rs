@@ -19,9 +19,15 @@ pub fn draw_line<B: Backend>(f: &mut Frame<B>, start: (i16, i16), end: (i16, i16
             f.render_widget(Paragraph::new("─"), rect);
         }
     } else {
-        // Draw an elbow using vertical then horizontal segment
+        // Draw an elbow using vertical then horizontal segment with proper corner
         draw_line(f, start, (sx, ey));
-        let glyph = if (sx < ex && sy < ey) || (sx > ex && sy > ey) { "┌" } else { "└" };
+        let glyph = if sy < ey {
+            if sx < ex { "┌" } else { "┐" }
+        } else if sx < ex {
+            "└"
+        } else {
+            "┘"
+        };
         f.render_widget(Paragraph::new(glyph), Rect::new(sx as u16, ey as u16, 1, 1));
         draw_line(f, (sx, ey), end);
     }
