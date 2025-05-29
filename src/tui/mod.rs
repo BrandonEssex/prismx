@@ -649,7 +649,7 @@ pub fn launch_ui() -> std::io::Result<()> {
                     }
                     _ => {}
                 }
-            }
+            
                 Event::Mouse(me) => {
                     use crossterm::event::{MouseButton, MouseEventKind};
                     match me.kind {
