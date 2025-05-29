@@ -130,8 +130,8 @@ impl From<BeamXMode> for BeamXStyle {
                 bottom_left: "⬈",
                 left: "⥤",
                 right: "⥢",
-                top_right: "⬋",
-                bottom_right: "⬉",
+                top_right: "↙",
+                bottom_right: "↖",
                 pulse: &DEFAULT_PULSE,
             },
             BeamXMode::Default => Self {
@@ -142,8 +142,8 @@ impl From<BeamXMode> for BeamXStyle {
                 bottom_left: "⬈",
                 left: "⥤",
                 right: "⥢",
-                top_right: "⬋",
-                bottom_right: "⬉",
+                top_right: "↙",
+                bottom_right: "↖",
                 pulse: &DEFAULT_PULSE,
             },
         }
