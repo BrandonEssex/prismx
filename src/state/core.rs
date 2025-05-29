@@ -364,6 +364,7 @@ impl Default for AppState {
 
         state.update_zen_word_count();
         state.load_today_journal();
+        crate::modules::triage::feed::sync_from_zen(&mut state);
         state.audit_node_graph();
 
         if let Some(layout) = crate::config::load_config().layout {
