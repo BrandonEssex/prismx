@@ -137,7 +137,8 @@ pub fn handle_key(state: &mut AppState, key: KeyCode) {
 
             state.status_message_last_updated = Some(std::time::Instant::now());
         }
-
+    }
+}
 
 fn finalize_entry(state: &mut AppState) {
     let text = state.zen_draft.text.trim().to_string();
