@@ -10,7 +10,6 @@ use crate::node::{NodeID, NodeMap};
 use crate::state::AppState;
 use crate::canvas::prism::render_prism;
 use crate::beamx::render_full_border;
-use crate::ui::components::mindmap::render_title_bar;
 use crate::ui::beamx::{BeamX, BeamXStyle, BeamXMode, BeamXAnimationMode};
 use crate::ui::animate;
 use std::time::{SystemTime, UNIX_EPOCH};
