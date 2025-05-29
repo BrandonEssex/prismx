@@ -4,6 +4,7 @@ use crate::node::{NodeID, NodeMap};
 pub mod roles;
 pub mod fallback;
 pub mod snapshot;
+pub mod engine;
 
 pub use roles::recalculate_roles;
 

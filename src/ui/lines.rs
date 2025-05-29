@@ -1,0 +1,28 @@
+use ratatui::{prelude::*, widgets::Paragraph};
+
+/// Draw a straight line between two points using simple box-drawing glyphs.
+pub fn draw_line<B: Backend>(f: &mut Frame<B>, start: (i16, i16), end: (i16, i16)) {
+    let (sx, sy) = start;
+    let (ex, ey) = end;
+    if sx == ex {
+        let y0 = sy.min(ey);
+        let y1 = sy.max(ey);
+        for y in y0..=y1 {
+            let rect = Rect::new(sx as u16, y as u16, 1, 1);
+            f.render_widget(Paragraph::new("│"), rect);
+        }
+    } else if sy == ey {
+        let x0 = sx.min(ex);
+        let x1 = sx.max(ex);
+        for x in x0..=x1 {
+            let rect = Rect::new(x as u16, sy as u16, 1, 1);
+            f.render_widget(Paragraph::new("─"), rect);
+        }
+    } else {
+        // Draw an elbow using vertical then horizontal segment
+        draw_line(f, start, (sx, ey));
+        let glyph = if (sx < ex && sy < ey) || (sx > ex && sy > ey) { "┌" } else { "└" };
+        f.render_widget(Paragraph::new(glyph), Rect::new(sx as u16, ey as u16, 1, 1));
+        draw_line(f, (sx, ey), end);
+    }
+}
