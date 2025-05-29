@@ -1,0 +1,2 @@
+- src/modules/spotlight/render.rs
+- src/theme/layout.rs
