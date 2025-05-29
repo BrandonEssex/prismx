@@ -10,6 +10,7 @@ use crate::node::{NodeID, NodeMap};
 use crate::state::AppState;
 use crate::canvas::prism::render_prism;
 use crate::beamx::render_full_border;
+use crate::ui::components::mindmap::render_title_bar;
 use crate::ui::beamx::{BeamX, BeamXStyle, BeamXMode, BeamXAnimationMode};
 use crate::ui::animate;
 use std::time::{SystemTime, UNIX_EPOCH};
@@ -61,7 +62,7 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppStat
 
     if let Some(sel) = state.selected {
         if !state.nodes.contains_key(&sel) {
-            state.set_selected(None);
+            state.selected = None;
         }
     }
     if state.selected.is_none() {
