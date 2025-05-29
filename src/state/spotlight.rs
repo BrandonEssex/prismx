@@ -1,4 +1,5 @@
 use super::core::{AppState, DockLayout, SimInput};
+use crate::config::theme::ThemeConfig;
 
 impl AppState {
     pub fn exit_spotlight(&mut self) {
@@ -6,6 +7,44 @@ impl AppState {
         self.show_spotlight = false;
         self.spotlight_just_opened = false;
         self.spotlight_suggestion_index = None;
+    }
+
+    /// Handle a spotlight command if recognized. Returns true if handled.
+    pub fn handle_spotlight_command(&mut self, cmd: &str) -> bool {
+        match cmd {
+            "zen" => {
+                self.mode = "zen".into();
+                self.zen_layout_mode = crate::state::view::ZenLayoutMode::Compose;
+                self.zen_view_mode = crate::state::ZenViewMode::Write;
+                self.scroll_offset = 0;
+                true
+            }
+            "triage" => {
+                self.mode = "triage".into();
+                true
+            }
+            "scroll" => {
+                if self.mode != "zen" {
+                    self.mode = "zen".into();
+                    self.zen_layout_mode = crate::state::view::ZenLayoutMode::Compose;
+                    self.zen_view_mode = crate::state::ZenViewMode::Write;
+                }
+                crate::ui::input::toggle_zen_view(self);
+                true
+            }
+            _ if cmd.starts_with("theme ") => {
+                let val = cmd.trim_start_matches("theme ").trim();
+                if val.eq_ignore_ascii_case("peaceful") {
+                    let mut cfg = ThemeConfig::load();
+                    cfg.zen_peaceful = true;
+                    cfg.save();
+                    true
+                } else {
+                    false
+                }
+            }
+            _ => false,
+        }
     }
 
     pub fn execute_spotlight_command(&mut self) {
@@ -21,6 +60,10 @@ impl AppState {
         }
         self.spotlight_history_index = None;
         self.spotlight_suggestion_index = None;
+        if self.handle_spotlight_command(cmd) {
+            self.exit_spotlight();
+            return;
+        }
         if cmd == "start pomodoro" {
             self.plugin_host.start_pomodoro();
         } else if cmd.starts_with("countdown ") {
