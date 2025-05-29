@@ -96,6 +96,10 @@ pub fn render_history<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState
             block = block
                 .border_style(Style::default().fg(Color::DarkGray))
                 .borders(Borders::ALL);
+        } else if Some(idx) == state.zen_history_index {
+            block = block
+                .border_style(Style::default().fg(Color::Gray))
+                .borders(Borders::ALL);
         }
 
         let h = lines.len() as u16;

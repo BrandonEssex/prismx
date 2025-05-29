@@ -43,6 +43,36 @@ pub fn handle_key(state: &mut AppState, key: KeyCode) {
                 finalize_entry(state);
             }
         }
+        KeyCode::Up => {
+            if state.zen_draft.text.is_empty() && state.zen_draft.editing.is_none() {
+                let len = state.zen_journal_entries.len();
+                if len > 0 {
+                    let idx = state.zen_history_index.unwrap_or(len).saturating_sub(1);
+                    state.zen_history_index = Some(idx);
+                    state.scroll_offset = len.saturating_sub(1) - idx;
+                }
+            }
+        }
+        KeyCode::Down => {
+            if state.zen_draft.text.is_empty() && state.zen_draft.editing.is_none() {
+                if let Some(mut idx) = state.zen_history_index {
+                    let len = state.zen_journal_entries.len();
+                    if idx + 1 < len {
+                        idx += 1;
+                        state.zen_history_index = Some(idx);
+                        state.scroll_offset = len.saturating_sub(1) - idx;
+                    } else {
+                        state.zen_history_index = None;
+                        state.scroll_offset = 0;
+                    }
+                }
+            }
+        }
+        KeyCode::Esc => {
+            state.cancel_edit_journal_entry();
+            state.zen_history_index = None;
+            state.zen_draft.text.clear();
+        }
         KeyCode::Backspace => {
             state.zen_draft.text.pop();
             if let Some(idx) = state.zen_draft.editing {
@@ -52,7 +82,11 @@ pub fn handle_key(state: &mut AppState, key: KeyCode) {
         }
         KeyCode::Enter => {
             let text = state.zen_draft.text.trim().to_string();
-            if text == "/scroll" {
+            if text.is_empty() && state.zen_draft.editing.is_none() {
+                if let Some(idx) = state.zen_history_index.take() {
+                    state.start_edit_journal_entry(idx);
+                }
+            } else if text == "/scroll" {
                 crate::ui::input::toggle_zen_view(state);
                 state.zen_draft.text.clear();
             } else if text.starts_with("/edit ") {
