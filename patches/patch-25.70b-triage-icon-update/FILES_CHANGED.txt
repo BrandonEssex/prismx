@@ -1,0 +1,3 @@
+- src/ui/dock.rs
+- src/modules/triage/mod.rs
+- src/modules/spotlight/commands.rs
