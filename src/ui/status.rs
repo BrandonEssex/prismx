@@ -3,7 +3,7 @@ use crate::ui::layout::Rect;
 use crate::state::AppState;
 use crate::ui::borders::draw_rounded_border;
 use crate::render::module_icon::{module_icon, module_label};
-use crate::ui::shortcuts::SHORTCUTS;
+use crate::ui::shortcuts::shortcuts_for;
 
 /// Utility to generate a default status string for the current mode.
 pub fn status_line(state: &AppState) -> String {
