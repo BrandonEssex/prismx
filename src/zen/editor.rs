@@ -146,6 +146,7 @@ fn finalize_entry(state: &mut AppState) {
         state.edit_journal_entry(idx, &text);
         let entry = state.zen_journal_entries[idx].clone();
         state.append_journal_entry(&entry);
+        crate::modules::triage::feed::capture_zen_entry(state, &entry);
     } else {
         let entry = ZenJournalEntry {
             timestamp: chrono::Local::now(),
@@ -155,6 +156,7 @@ fn finalize_entry(state: &mut AppState) {
         };
         state.zen_journal_entries.push(entry.clone());
         state.append_journal_entry(&entry);
+        crate::modules::triage::feed::capture_zen_entry(state, &entry);
     }
 
     state.zen_draft.text.clear();

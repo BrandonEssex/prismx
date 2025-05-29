@@ -4,6 +4,7 @@ pub mod state;
 
 pub mod countdown;
 pub mod pomodoro;
+pub mod api;
 
 pub use interface::{PluginFrame, PluginRender};
 pub use state::PluginHost;
