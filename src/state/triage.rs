@@ -7,4 +7,57 @@ impl AppState {
         if handle_inline_command(self, text) { return; }
         capture_entry(self, source, text);
     }
+
+    /// Move triage focus to previous visible entry.
+    pub fn triage_focus_prev(&mut self) {
+        let visible: Vec<usize> = self
+            .triage_entries
+            .iter()
+            .enumerate()
+            .filter(|(_, e)| !e.archived)
+            .map(|(i, _)| i)
+            .collect();
+        if visible.is_empty() { return; }
+        let current_pos = visible
+            .iter()
+            .position(|&i| i == self.triage_focus_index)
+            .unwrap_or(0);
+        let new_pos = if current_pos == 0 { visible.len() - 1 } else { current_pos - 1 };
+        self.triage_focus_index = visible[new_pos];
+    }
+
+    /// Move triage focus to next visible entry.
+    pub fn triage_focus_next(&mut self) {
+        let visible: Vec<usize> = self
+            .triage_entries
+            .iter()
+            .enumerate()
+            .filter(|(_, e)| !e.archived)
+            .map(|(i, _)| i)
+            .collect();
+        if visible.is_empty() { return; }
+        let current_pos = visible
+            .iter()
+            .position(|&i| i == self.triage_focus_index)
+            .unwrap_or(0);
+        let new_pos = (current_pos + 1) % visible.len();
+        self.triage_focus_index = visible[new_pos];
+    }
+
+    /// Archive the currently focused triage entry.
+    pub fn triage_delete_current(&mut self) {
+        if let Some(entry) = self.triage_entries.get_mut(self.triage_focus_index) {
+            entry.archived = true;
+        }
+        // move focus to next available entry
+        self.triage_focus_next();
+    }
+
+    /// Update cached tag counts used in status views.
+    pub fn triage_recalc_counts(&mut self) {
+        let (n, t, d) = crate::triage::state::tag_counts(self);
+        self.triage_summary.now = n;
+        self.triage_summary.triton = t;
+        self.triage_summary.done = d;
+    }
 }

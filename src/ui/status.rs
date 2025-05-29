@@ -34,8 +34,8 @@ pub fn status_line(state: &AppState) -> String {
             let (now, triton, done) = crate::triage::state::tag_counts(state);
             let current = state
                 .triage_entries
-                .iter()
-                .find(|e| !e.archived)
+                .get(state.triage_focus_index)
+                .filter(|e| !e.archived)
                 .map(|e| e.text.clone())
                 .unwrap_or_default();
             format!("#NOW:{} #TRITON:{} #DONE:{} | {}", now, triton, done, current)
