@@ -585,6 +585,18 @@ pub fn launch_ui() -> std::io::Result<()> {
                         state.triage_delete_current();
                         state.triage_recalc_counts();
                     }
+                    KeyCode::Char('1') if state.mode == "triage" && modifiers == KeyModifiers::CONTROL => {
+                        state.triage_toggle_tag("#now");
+                        state.triage_recalc_counts();
+                    }
+                    KeyCode::Char('2') if state.mode == "triage" && modifiers == KeyModifiers::CONTROL => {
+                        state.triage_toggle_tag("#triton");
+                        state.triage_recalc_counts();
+                    }
+                    KeyCode::Char('3') if state.mode == "triage" && modifiers == KeyModifiers::CONTROL => {
+                        state.triage_toggle_tag("#done");
+                        state.triage_recalc_counts();
+                    }
 
                     KeyCode::Up if state.favorite_dock_enabled && modifiers == KeyModifiers::NONE => {
                         state.dock_focus_prev();
