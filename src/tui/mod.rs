@@ -117,32 +117,7 @@ pub fn draw(
             }
         }
 
-        let default_status = if state.mode == "zen" {
-            let name = &state.zen_current_filename;
-            let word_count: usize = state
-                .zen_buffer
-                .iter()
-                .map(|l| l.split_whitespace().count())
-                .sum();
-            if state.zen_dirty {
-                format!("📄 {} ✍️ {} words ✎", name, word_count)
-            } else {
-                format!("📄 {} ✍️ {} words", name, word_count)
-            }
-        } else {
-            format!(
-                "Mode: {} | Triage: {} | Spotlight: {} | Help: {}",
-                crate::render::module_icon::module_label(&state.mode),
-                state.show_triage,
-                state.show_spotlight,
-                state.show_keymap,
-            )
-        };
-        let display_string = if state.status_message.is_empty() {
-            default_status
-        } else {
-            state.status_message.clone()
-        };
+        // status bar is rendered separately based on AppState
         render_module_icon(f, full, &state.mode);
         render_favorites_dock(f, full, state);
         if state.show_logs {
@@ -164,7 +139,7 @@ pub fn draw(
 
         crate::ui::components::debug::render_debug(f, full, state);
 
-        render_status_bar(f, vertical[1], display_string.as_str());
+        render_status_bar(f, vertical[1], state);
     })?;
     if state.spotlight_just_opened {
         state.spotlight_animation_frame += 1;

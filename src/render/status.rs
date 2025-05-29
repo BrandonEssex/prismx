@@ -1,9 +1,7 @@
-use ratatui::{backend::Backend, layout::Rect, style::Style, widgets::{Block, Borders, Paragraph}, Frame};
+use ratatui::{backend::Backend, layout::Rect, Frame};
+use crate::state::AppState;
+use crate::ui::status::render_status;
 
-pub fn render_status_bar<B: Backend>(f: &mut Frame<B>, area: Rect, status: &str) {
-    let block = Block::default().borders(Borders::ALL).title("Status");
-    let content = Paragraph::new(status).style(Style::default());
-    f.render_widget(block, area);
-    let inner_width = area.width.saturating_sub(2);
-    f.render_widget(content, Rect::new(area.x + 1, area.y + 1, inner_width, 1));
+pub fn render_status_bar<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
+    render_status(f, area, state);
 }
