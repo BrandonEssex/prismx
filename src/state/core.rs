@@ -184,6 +184,8 @@ pub struct AppState {
     pub zen_icon_glyph: Option<String>,
     pub beamx_panel_theme: crate::beam_color::BeamColor,
     pub beamx_panel_visible: bool,
+    pub font_style: crate::theme::fonts::FontStyle,
+    pub beam_animation: bool,
     pub triage_view_mode: crate::state::TriageViewMode,
     pub plugin_view_mode: crate::state::PluginViewMode,
     pub plugin_tag_filter: crate::state::PluginTagFilter,
@@ -316,6 +318,8 @@ impl Default for AppState {
             zen_icon_glyph: None,
             beamx_panel_theme: crate::beam_color::BeamColor::Prism,
             beamx_panel_visible: default_beamx_panel_visible(),
+            font_style: crate::theme::fonts::FontStyle::Regular,
+            beam_animation: true,
             triage_view_mode: crate::state::TriageViewMode::default(),
             plugin_view_mode: crate::state::PluginViewMode::default(),
             plugin_tag_filter: crate::state::PluginTagFilter::default(),
@@ -339,6 +343,8 @@ impl Default for AppState {
         state.beamx_panel_theme = config.beamx_panel_theme;
         state.beamx_panel_visible = config.beamx_panel_visible;
         state.mindmap_lanes = config.mindmap_lanes;
+        state.font_style = config.font_style;
+        state.beam_animation = config.beam_animation;
 
         for node in state.nodes.values_mut() {
             if node.label.starts_with("[F]") {
