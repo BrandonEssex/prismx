@@ -23,3 +23,11 @@ impl SpotlightPalette {
         }
     }
 }
+
+/// Default background colors for sticky notes in the Triage panel.
+pub const STICKY_COLORS: [Color; 4] = [
+    Color::Rgb(252, 234, 170), // yellow
+    Color::Rgb(250, 210, 180), // peach
+    Color::Rgb(210, 240, 180), // green
+    Color::Rgb(200, 220, 250), // blue
+];
