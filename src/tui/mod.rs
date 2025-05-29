@@ -566,6 +566,26 @@ pub fn launch_ui() -> std::io::Result<()> {
                         state.plugin_registry_index = 0;
                     }
 
+                    // --- Triage navigation ---
+                    KeyCode::Up if state.mode == "triage" => {
+                        state.triage_focus_prev();
+                        state.triage_recalc_counts();
+                    }
+                    KeyCode::Down if state.mode == "triage" => {
+                        state.triage_focus_next();
+                        state.triage_recalc_counts();
+                    }
+                    KeyCode::Enter if state.mode == "triage" => {
+                        state.triage_view_mode = match state.triage_view_mode {
+                            crate::state::TriageViewMode::Feed => crate::state::TriageViewMode::Actions,
+                            crate::state::TriageViewMode::Actions => crate::state::TriageViewMode::Feed,
+                        };
+                    }
+                    KeyCode::Char('d') if state.mode == "triage" && modifiers == KeyModifiers::CONTROL => {
+                        state.triage_delete_current();
+                        state.triage_recalc_counts();
+                    }
+
                     KeyCode::Up if state.favorite_dock_enabled && modifiers == KeyModifiers::NONE => {
                         state.dock_focus_prev();
                         if state.mode == "gemx" { state.move_focus_up(); }

@@ -66,6 +66,7 @@ pub fn render_triage_panel<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut
     // Render active tag filters (#TRITON, #DONE, etc.) if present
     use std::collections::BTreeSet;
     let mut active_tags: BTreeSet<String> = BTreeSet::new();
+    let mut visible_idx = 0usize;
     for entry in &state.triage_entries {
         if entry.archived { continue; }
         for tag in &entry.tags {
@@ -85,6 +86,9 @@ pub fn render_triage_panel<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut
         if entry.archived { continue; }
 
         let mut entry_style = Style::default();
+        if visible_idx == state.triage_focus_index {
+            entry_style = entry_style.add_modifier(Modifier::BOLD);
+        }
         if entry.resolved {
             entry_style = entry_style
                 .fg(Color::DarkGray)
@@ -113,6 +117,7 @@ pub fn render_triage_panel<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut
         }
 
         lines.push(Line::from(""));
+        visible_idx += 1;
     }
 
     if lines.is_empty() {
