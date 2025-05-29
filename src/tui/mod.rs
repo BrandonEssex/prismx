@@ -110,7 +110,7 @@ pub fn draw(
             render_spotlight(f, vertical[0], state);
         }
 
-
+        // status bar is rendered separately based on AppState
         render_module_icon(f, full, &state.mode);
         render_favorites_dock(f, full, state);
         if state.show_logs {
