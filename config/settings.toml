@@ -1,5 +1,5 @@
-auto_arrange = true
-debug_input_mode = false
+auto_arrange = false
+debug_input_mode = true
 dock_layout = "vertical"
 gemx_beam_color = "Aqua"
 zen_beam_color = "Aqua"
