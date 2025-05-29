@@ -158,6 +158,7 @@ pub fn draw(
     }
     state.prev_module_switcher_open = state.module_switcher_open;
     state.prev_show_spotlight = state.show_spotlight;
+    state.tick_journal_entry_frames();
     state.prev_show_keymap = state.show_keymap;
     state.prev_mode = state.mode.clone();
     Ok(())

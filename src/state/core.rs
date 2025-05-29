@@ -71,6 +71,7 @@ pub struct ZenJournalEntry {
     pub timestamp: chrono::DateTime<chrono::Local>,
     pub text: String,
     pub prev_text: Option<String>,
+    pub frame: u8,
     pub tags: Vec<String>,
 }
 

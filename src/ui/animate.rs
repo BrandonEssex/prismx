@@ -105,8 +105,17 @@ pub fn fade_line(line: &mut ratatui::text::Line<'_>, age_ms: u128, duration_ms: 
     }
 }
 
+/// Fade a line based on an explicit 0.0-1.0 ratio.
+pub fn fade_line_ratio(line: &mut ratatui::text::Line<'_>, ratio: f32) {
+    let r = ratio.clamp(0.0, 1.0);
+    for span in &mut line.spans {
+        let fg = span.style.fg.unwrap_or(Color::White);
+        span.patch_style(Style::default().fg(scale_color(fg, r)));
+}
+
 /// Return a style that fades over `duration_ms` while shimmering each `tick`.
 pub fn glow_trail(color: Color, tick: u64, age_ms: u128, duration_ms: u128) -> Style {
     let ratio = 1.0 - (age_ms.min(duration_ms) as f32) / (duration_ms as f32);
     shimmer(scale_color(color, ratio), tick)
+
 }
