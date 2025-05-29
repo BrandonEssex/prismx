@@ -1,13 +1,84 @@
+use chrono::{Local, Duration};
 use ratatui::prelude::*;
 use ratatui::widgets::{Block, Borders, Paragraph};
 use ratatui::layout::{Layout, Constraint, Direction};
 use ratatui::text::{Line, Span};
+use std::collections::{BTreeMap, HashSet};
 
 use crate::beamx::render_full_border;
 use crate::state::AppState;
 use crate::triage::state::{TriageEntry, TriageSource};
 
-use std::collections::BTreeMap;
+/// Calculate consecutive days with at least one `#DONE` entry.
+pub fn completion_streak(entries: &[TriageEntry]) -> usize {
+    let days: HashSet<_> = entries
+        .iter()
+        .filter(|e| e.tags.iter().any(|t| t == "#done"))
+        .map(|e| e.created.date_naive())
+        .collect();
+    let mut streak = 0usize;
+    let mut day = Local::now().date_naive();
+    loop {
+        if days.contains(&day) {
+            streak += 1;
+            day -= Duration::days(1);
+        } else {
+            break;
+        }
+    }
+    streak
+}
+
+/// Return counts of `#DONE` entries for the last `n` days.
+fn done_counts_last_n_days(entries: &[TriageEntry], n: usize) -> Vec<usize> {
+    let today = Local::now().date_naive();
+    (0..n)
+        .map(|i| {
+            let day = today - Duration::days((n - 1 - i) as i64);
+            entries
+                .iter()
+                .filter(|e| {
+                    e.tags.iter().any(|t| t == "#done") && e.created.date_naive() == day
+                })
+                .count()
+        })
+        .collect()
+}
+
+/// Render a small sparkline using Unicode blocks for the provided counts.
+fn sparkline_from_counts(counts: &[usize]) -> String {
+    const BLOCKS: &[char] = &['▁', '▂', '▃', '▄', '▅', '▆', '▇', '█'];
+    let max = counts.iter().copied().max().unwrap_or(0);
+    counts
+        .iter()
+        .map(|&c| {
+            let idx = if max == 0 {
+                0
+            } else {
+                (c * (BLOCKS.len() - 1) + max - 1) / max
+            };
+            BLOCKS[idx]
+        })
+        .collect()
+}
+
+/// Generate a sparkline string for the last `n` days of completions.
+pub fn done_sparkline(entries: &[TriageEntry], n: usize) -> String {
+    let counts = done_counts_last_n_days(entries, n);
+    sparkline_from_counts(&counts)
+}
+
+/// Progress bar representing ratio of completed tasks.
+pub fn progress_bar(now: usize, triton: usize, done: usize) -> String {
+    let total = now + triton + done;
+    let len = 10usize;
+    if total == 0 {
+        return format!("[{}]", " ".repeat(len));
+    }
+    let filled = ((done as f32 / total as f32) * len as f32).round() as usize;
+    let filled = filled.min(len);
+    format!("[{}{}]", "█".repeat(filled), "░".repeat(len - filled))
+}
 
 /// Render triage entries grouped by primary tags (#now, #triton, #done).
 /// When `show_icons` is true, tag headers include emoji icons.
@@ -20,7 +91,6 @@ pub fn render_grouped<B: Backend>(
     let style = state.beam_style_for_mode("triage");
     let block_style = Style::default().fg(style.border_color);
 
-    // Split area into just a body for now (no summary bar here).
     let zones = Layout::default()
         .direction(Direction::Vertical)
         .constraints([Constraint::Min(0)].as_ref())
@@ -28,7 +98,6 @@ pub fn render_grouped<B: Backend>(
 
     let body = zones[0];
 
-    // Group visible entries by tag
     let mut groups: BTreeMap<&str, Vec<(usize, &TriageEntry)>> = BTreeMap::new();
     for (idx, entry) in state.triage_entries.iter().enumerate() {
         if entry.archived {

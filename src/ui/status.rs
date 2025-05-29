@@ -4,6 +4,7 @@ use crate::state::AppState;
 use crate::ui::borders::draw_rounded_border;
 use crate::render::module_icon::{module_icon, module_label};
 use crate::ui::shortcuts::shortcuts_for;
+use crate::modules::triage::render::{completion_streak, done_sparkline, progress_bar};
 
 /// Utility to generate a default status string for the current mode.
 pub fn status_line(state: &AppState) -> String {
@@ -32,13 +33,25 @@ pub fn status_line(state: &AppState) -> String {
         }
         "triage" => {
             let (now, triton, done) = crate::triage::state::tag_counts(state);
+            let bar = progress_bar(now, triton, done);
+            let streak = completion_streak(&state.triage_entries);
+            let spark = done_sparkline(&state.triage_entries, 7);
             let current = state
                 .triage_entries
                 .get(state.triage_focus_index)
                 .filter(|e| !e.archived)
                 .map(|e| e.text.clone())
                 .unwrap_or_default();
-            format!("#NOW:{} #TRITON:{} #DONE:{} | {}", now, triton, done, current)
+            format!(
+                "#NOW:{} #TRITON:{} #DONE:{} {} 🔥{} {} | {}",
+                now,
+                triton,
+                done,
+                bar,
+                streak,
+                spark,
+                current
+            )
         }
         _ => format!("Mode: {}", state.mode),
     }
