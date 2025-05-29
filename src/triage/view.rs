@@ -63,6 +63,24 @@ pub fn render_triage_panel<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut
     // --- Left Feed ---
     let mut lines = Vec::new();
 
+    // Render active tag filters (#TRITON, #DONE, etc.) if present
+    use std::collections::BTreeSet;
+    let mut active_tags: BTreeSet<String> = BTreeSet::new();
+    for entry in &state.triage_entries {
+        if entry.archived { continue; }
+        for tag in &entry.tags {
+            active_tags.insert(tag.to_uppercase());
+        }
+    }
+    if !active_tags.is_empty() {
+        let tags = active_tags.iter().cloned().collect::<Vec<_>>().join(" ");
+        lines.push(Line::from(Span::styled(
+            format!("Filters: {}", tags),
+            Style::default().fg(Color::Yellow),
+        )));
+        lines.push(Line::from(""));
+    }
+
     for entry in &state.triage_entries {
         if entry.archived { continue; }
 
