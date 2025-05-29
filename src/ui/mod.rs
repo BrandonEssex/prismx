@@ -10,3 +10,4 @@ pub mod lines;
 pub mod borders;
 pub mod status;
 pub mod dock;
+pub mod drag;
