@@ -1,10 +1,10 @@
 auto_arrange = false
 debug_input_mode = true
 dock_layout = "vertical"
-gemx_beam_color = "Emerald"
-zen_beam_color = "Emerald"
-triage_beam_color = "Emerald"
-settings_beam_color = "Emerald"
+gemx_beam_color = "Aqua"
+zen_beam_color = "Aqua"
+triage_beam_color = "Aqua"
+settings_beam_color = "Aqua"
 zen_icon_enabled = true
 beamx_panel_theme = "Prism"
 beamx_panel_visible = true

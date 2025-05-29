@@ -1,7 +1,7 @@
 use ratatui::{prelude::*, widgets::{Block, Paragraph}, Frame};
 
 use crate::state::AppState;
-use crate::render::traits::Renderable;
+use crate::render::traits::{Renderable, RenderFrame};
 use crate::screen::gemx::render_gemx;
 use crate::layout::BASE_SPACING_X;
 use crate::gemx::layout::{apply_layout, set_mode};
@@ -21,22 +21,19 @@ impl<'a> GemxRenderer<'a> {
 }
 
 impl<'a> Renderable for GemxRenderer<'a> {
-    fn render_frame<B: Backend>(&mut self, f: &mut Frame<B>, area: Rect) {
-        if self.state.mindmap_lanes {
+    fn render(&mut self, f: &mut RenderFrame<'_>, area: Rect) {
+        let state = &mut *self.state;
+        if state.mindmap_lanes {
             draw_lanes(f, area);
         }
         // Apply layout before rendering
-        apply_layout(&mut self.state.nodes, &self.state.root_nodes);
+        apply_layout(state);
         // Render main GemX view
-        render_gemx(f, area, self.state);
-    }
-
-    fn tick(&mut self) {
-        crate::triage::state::update_pipeline(self.state);
+        render_gemx(f, area, state);
     }
 }
 
-fn draw_lanes<B: Backend>(f: &mut Frame<B>, area: Rect) {
+fn draw_lanes(f: &mut RenderFrame<'_>, area: Rect) {
     let theme = ThemeConfig::load();
     let lane_color = theme.dim_color();
     let lane_style = Style::default().bg(lane_color);

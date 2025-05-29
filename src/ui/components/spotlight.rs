@@ -2,9 +2,12 @@ use ratatui::{
     backend::Backend,
     style::{Color, Modifier, Style},
     text::{Line, Span},
-    widgets::{Block, Borders, Paragraph, Clear},
+    widgets::{Block, Borders, Paragraph, Clear, Wrap},
     Frame,
 };
+use unicode_width::UnicodeWidthStr;
+use crate::ui::animate::cursor_blink;
+use std::time::{SystemTime, UNIX_EPOCH};
 use crate::ui::layout::Rect;
 
 use crate::state::AppState;
@@ -15,18 +18,30 @@ use crate::config::theme::ThemeConfig;
 
 pub fn render_spotlight<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppState) {
     let input = &state.spotlight_input;
-    let display_input = if input.is_empty() { "<type command>" } else { input };
+    let tick = (SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap_or_default()
+        .as_millis() / 300) as u64;
+    let caret = cursor_blink(tick);
+    let raw_input = if input.is_empty() { "<type command>" } else { input };
+    let display_input = format!("{}{}", raw_input, caret);
     let cfg = ThemeConfig::load();
     let base_width = area.width.min(60);
-    let width = base_width;
-    let min_width = display_input.chars().count() as u16 + 3; // "> " + input + padding
-    let width = width.max(min_width).max(3).min(base_width);
+    let min_width = UnicodeWidthStr::width(display_input.as_str()) as u16 + 3; // "> " prefix
+    let width = base_width.min(min_width.max(3));
     let x_offset = area.x + (area.width.saturating_sub(width)) / 2;
     let y_offset = area.y + area.height / 3;
 
     let preview = command_preview(input);
     let matches = command_suggestions_scored(input);
-    let mut height = if preview.is_some() { 4 } else { 3 };
+    let line_capacity = width.saturating_sub(2); // account for "> " prefix
+    let input_width = UnicodeWidthStr::width(display_input.as_str()) as u16;
+    let mut input_lines = (input_width + line_capacity - 1) / line_capacity;
+    if input_lines == 0 { input_lines = 1; }
+    let mut height = 2 + input_lines; // borders + input lines
+    if preview.is_some() {
+        height += 1;
+    }
     // Ensure Spotlight stays above the status bar
     height = height.min(area.height.saturating_sub(1));
     let suggestion_count = matches.len().min(5) as u16;
@@ -71,7 +86,9 @@ pub fn render_spotlight<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut Ap
         }
     }
 
-    let paragraph = Paragraph::new(lines).block(block);
+    let paragraph = Paragraph::new(lines)
+        .block(block)
+        .wrap(Wrap { trim: false });
 
     // Clear background area and render solid black base layer
     let bg_rect = Rect::new(x_offset, y_offset, width, total_height);
@@ -84,8 +101,8 @@ pub fn render_spotlight<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut Ap
     f.render_widget(paragraph, spotlight_area);
 
     for (i, (suggestion, score)) in matches.iter().take(5).enumerate() {
-        let y = y_offset + 2 + (i as u16 * 2);
-        if y >= area.y + area.height.saturating_sub(1) {
+        let y = y_offset + height - 1 + (i as u16 * 2);
+        if y >= area.y + area.height.saturating_sub(2) {
             break;
         }
         let mut style = spot_style.fg(cfg.input_fg());
@@ -93,16 +110,30 @@ pub fn render_spotlight<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut Ap
             style = cfg.highlight_style().add_modifier(Modifier::UNDERLINED);
         }
         let icon = command_icon(suggestion);
-        let mut spans = vec![Span::styled(icon, style) , Span::raw(" "), Span::styled(*suggestion, style)];
+        let mut label_spans = vec![
+            Span::styled(icon, style),
+            Span::raw(" "),
+            Span::styled(*suggestion, style),
+        ];
         #[cfg(debug_assertions)]
         {
-            spans.push(Span::raw(" "));
-            spans.push(Span::styled(format!("{}", score), style.add_modifier(Modifier::DIM)));
+            label_spans.push(Span::raw(" "));
+            label_spans.push(Span::styled(format!("{}", score), style.add_modifier(Modifier::DIM)));
         }
-        let line = Line::from(spans);
-        f.render_widget(
-            Paragraph::new(line).style(style),
-            Rect::new(x_offset, y, width, 1),
-        );
+        let label_line = Line::from(label_spans);
+        f.render_widget(Paragraph::new(label_line).style(style), Rect::new(x_offset, y, width, 1));
+
+        if let Some((desc, _)) = command_preview(suggestion) {
+            let desc_line = Line::from(vec![
+                Span::raw("  "),
+                Span::styled(desc, style.add_modifier(Modifier::DIM)),
+            ]);
+            f.render_widget(
+                Paragraph::new(desc_line)
+                    .style(style)
+                    .wrap(Wrap { trim: true }),
+                Rect::new(x_offset, y + 1, width, 1),
+            );
+        }
     }
 }

@@ -19,6 +19,8 @@ pub use module_icon::render_module_icon;
 pub use favorites::render_favorites_dock;
 pub use zoom_overlay::render_zoom_overlay;
 pub use traits::Renderable;
+pub use crate::zen::view::ZenView;
+pub use crate::ui::components::module::ModuleSwitcher;
 pub use crate::settings::render::render_settings;
 pub use crate::settings::{SETTING_TOGGLES, SettingToggle, settings_len};
 

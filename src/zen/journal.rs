@@ -9,8 +9,7 @@ use chrono::{Datelike, Local};
 use crate::config::theme::ThemeConfig;
 use crate::state::AppState;
 use crate::state::view::ZenLayoutMode;
-use crate::state::ZenViewMode;
-use crate::zen::utils::{highlight_tags_line, extract_tags, parse_tags};
+use crate::zen::utils::highlight_tags_line;
 use crate::beamx::render_full_border;
 
 /// Public render entry point for Journal view
@@ -36,7 +35,7 @@ pub fn render_history<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState
     let mut blocks: Vec<(u16, Paragraph, u8)> = Vec::new();
     let mut current_label = String::new();
 
-    for (idx, entry) in entries.iter().enumerate().rev() {
+    for (idx, entry) in entries.iter().enumerate() {
         let mut lines: Vec<Line> = Vec::new();
 
         if matches!(state.zen_layout_mode, ZenLayoutMode::Summary) {
@@ -99,27 +98,77 @@ pub fn render_history<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState
                 .borders(Borders::ALL);
         }
 
-        let ratio = entry.frame as f32 / 3.0;
-        for line in lines.iter_mut() {
-            crate::ui::animate::fade_line_ratio(line, ratio);
-        }
+for entry in entries.iter().rev() {
+    let mut lines: Vec<Line> = Vec::new();
+    
+    let ts = entry.timestamp.format("%b %d, %Y – %-I:%M%p").to_string();
+    lines.push(Line::from(Span::styled(
+        ts,
+        Style::default().fg(Color::DarkGray).add_modifier(Modifier::DIM),
+    )));
 
-        let para = Paragraph::new(lines).block(block);
-        let h = 5; // estimated height
-        blocks.push((h, para, entry.frame));
+    if !entry.tags.is_empty() {
+        lines.push(highlight_tags_line(&entry.tags.join(" ")));
     }
 
-    let mut y = area.bottom();
-    for (h, para, frame) in blocks.into_iter().rev() {
-        if y < area.y + h {
-            break;
+    for l in entry.text.lines() {
+        lines.push(highlight_tags_line(l));
+    }
+
+    lines.push(Line::from(Span::styled(
+        "─".repeat(12),
+        Style::default().fg(Color::Gray).add_modifier(Modifier::DIM),
+    )));
+
+    if breathe {
+        let age = Local::now()
+            .signed_duration_since(entry.timestamp)
+            .num_milliseconds() as u128;
+        for line in lines.iter_mut() {
+            crate::ui::animate::fade_line(line, age, 150);
         }
-        y -= h;
-        let indent = if frame < 3 { 3 - frame as u16 } else { 0 };
-        let rect = Rect::new(area.x + padding + indent, y, usable_width - indent, h);
-        f.render_widget(para, rect);
-        if y > area.y {
-            y -= 1;
-        }
+    }
+
+    let mut block = Block::default().borders(Borders::NONE);
+    if Some(entry.timestamp) == state.zen_draft.editing.map(|idx| state.zen_journal_entries[idx].timestamp) {
+        block = block
+            .border_style(Style::default().fg(Color::DarkGray))
+            .borders(Borders::ALL);
+    }
+
+    let ratio = entry.frame as f32 / 3.0;
+    for line in lines.iter_mut() {
+        crate::ui::animate::fade_line_ratio(line, ratio);
+    }
+
+    let para = Paragraph::new(lines).block(block);
+    let h = 5; // estimated height
+    blocks.push((h, para, entry.frame));
+}
+
+let total_height: u16 = blocks
+    .iter()
+    .map(|(h, _, _)| *h + 1)
+    .sum::<u16>()
+    .saturating_sub(1);
+let overflow = total_height.saturating_sub(area.height);
+let mut skip = overflow.saturating_sub(state.scroll_offset.min(overflow as usize) as u16);
+
+let mut y = area.bottom();
+for (h, para, frame) in blocks.into_iter().rev() {
+    let block_height = h + 1;
+    if skip >= block_height {
+        skip -= block_height;
+        continue;
+    }
+    if y < area.y + h {
+        break;
+    }
+    y -= h;
+    let indent = if frame < 3 { 3 - frame as u16 } else { 0 };
+    let rect = Rect::new(area.x + padding + indent, y, usable_width - indent, h);
+    f.render_widget(para, rect);
+    if y > area.y {
+        y -= 1;
     }
 }

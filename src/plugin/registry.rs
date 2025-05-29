@@ -110,3 +110,34 @@ pub fn registry_filtered(filter: PluginTagFilter) -> Vec<PluginManifest> {
         Err(_) => vec![],
     }
 }
+
+// ───── Loaded Plugin Status ─────
+
+/// Metadata about a dynamically loaded plugin.
+#[derive(Clone, Debug, Default)]
+pub struct PluginStatus {
+    pub name: String,
+    pub version: String,
+    pub path: Option<String>,
+}
+
+static LOADED_PLUGINS: OnceLock<Mutex<Vec<PluginStatus>>> = OnceLock::new();
+
+/// Register a loaded plugin with the global registry. Intended to be called by
+/// dynamic plugins during their `register()` routine.
+pub fn register(name: &str, version: &str, path: Option<&str>) {
+    let lock = LOADED_PLUGINS.get_or_init(|| Mutex::new(Vec::new()));
+    lock.lock().unwrap().push(PluginStatus {
+        name: name.to_string(),
+        version: version.to_string(),
+        path: path.map(|p| p.to_string()),
+    });
+}
+
+/// Retrieve metadata for all loaded plugins.
+pub fn registry() -> Vec<PluginStatus> {
+    LOADED_PLUGINS
+        .get()
+        .map(|lock| lock.lock().unwrap().clone())
+        .unwrap_or_default()
+}

@@ -1,11 +1,16 @@
 use ratatui::{prelude::*, Frame};
+use ratatui::backend::CrosstermBackend;
+use std::io::Stdout;
 
-/// Trait for types that can render a UI frame and progress animations.
+/// Concrete frame type used throughout the UI.
+pub type RenderFrame<'a> = Frame<'a, CrosstermBackend<Stdout>>;
+
+/// Trait for lightweight view objects that know how to draw themselves.
 pub trait Renderable {
     /// Render the component to the given area.
-    fn render_frame<B: Backend>(&mut self, f: &mut Frame<B>, area: Rect);
-
-    /// Advance internal state for the next frame.
-    fn tick(&mut self);
+    fn render(&mut self, f: &mut RenderFrame<'_>, area: Rect);
 }
+
+/// Marker trait for UI widgets.
+pub trait Widget: Renderable {}
 

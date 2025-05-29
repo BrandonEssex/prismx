@@ -75,9 +75,6 @@ pub fn spawn_free_node(state: &mut AppState) {
     state.root_nodes.push(new_id);
     state.set_selected(Some(new_id));
 
-    // Viewport centering for visibility
-    crate::layout::center_on_node(state, new_id);
-
     // Graph integrity + layout role refresh
     crate::layout::roles::recalculate_roles(state);
     state.ensure_valid_roots();

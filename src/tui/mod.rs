@@ -1,5 +1,6 @@
 use ratatui::Terminal;
-use ratatui::backend::{Backend, CrosstermBackend};
+use ratatui::backend::CrosstermBackend;
+use std::io::Stdout;
 use crossterm::{
     event::{self, Event, KeyCode, KeyEvent, KeyModifiers, EnableMouseCapture, DisableMouseCapture},
     execute,
@@ -10,14 +11,15 @@ use crate::state::view::ZenLayoutMode;
 use crate::state::{AppState, SimInput, ZenViewMode};
 use crate::render::{
     render_status_bar,
-    render_zen,
     render_shortcuts_overlay,
     render_spotlight,
     render_triage,
     render_module_icon,
     render_favorites_dock,
+    Renderable,
+    ZenView,
+    ModuleSwitcher,
 };
-use crate::ui::components::module::render_module_switcher;
 
 fn rect_contains(rect: ratatui::layout::Rect, x: u16, y: u16) -> bool {
     x >= rect.x && x < rect.x + rect.width && y >= rect.y && y < rect.y + rect.height
@@ -32,13 +34,19 @@ use crate::hotkeys::match_hotkey;
 use crate::shortcuts::{match_shortcut, Shortcut};
 use std::time::Duration;
 
-pub fn draw<B: Backend>(terminal: &mut Terminal<B>, state: &mut AppState, _last_key: &str) -> std::io::Result<()> {
+pub fn draw(
+    terminal: &mut Terminal<CrosstermBackend<Stdout>>,
+    state: &mut AppState,
+    _last_key: &str,
+) -> std::io::Result<()> {
     use ratatui::layout::{Constraint, Direction, Layout, Rect};
     use ratatui::widgets::Paragraph;
 
     if !state.auto_arrange {
         state.ensure_grid_positions();
     }
+
+    state.animate_scroll();
 
     if state.show_spotlight && !state.prev_show_spotlight {
         state.spotlight_just_opened = true;
@@ -51,6 +59,11 @@ pub fn draw<B: Backend>(terminal: &mut Terminal<B>, state: &mut AppState, _last_
     if !state.module_switcher_open && state.prev_module_switcher_open {
         state.module_switcher_closing = true;
         state.module_switcher_animation_frame = 0;
+    }
+    if state.mode != state.prev_mode {
+        if state.mode == "gemx" {
+            state.mindmap_title_frames = 6;
+        }
     }
 
     terminal.draw(|f| {
@@ -68,8 +81,9 @@ pub fn draw<B: Backend>(terminal: &mut Terminal<B>, state: &mut AppState, _last_
             .constraints([Constraint::Min(1), Constraint::Length(3)])
             .split(layout_chunks[0]);
 
+        let mut views: Vec<Box<dyn Renderable>> = Vec::new();
         match state.mode.as_str() {
-            "zen" => render_zen(f, vertical[0], state),
+            "zen" => views.push(Box::new(ZenView::new(state))),
             "gemx" => render_gemx(f, vertical[0], state),
             "settings" => render_settings(f, vertical[0], state),
             "triage" => render_triage(f, vertical[0], state),
@@ -80,12 +94,16 @@ pub fn draw<B: Backend>(terminal: &mut Terminal<B>, state: &mut AppState, _last_
             }
         }
 
-        if state.show_keymap && layout_chunks.len() > 1 {
-            render_shortcuts_overlay(f, layout_chunks[1]);
+        if state.module_switcher_open || state.module_switcher_closing {
+            views.push(Box::new(ModuleSwitcher::new(state)));
         }
 
-        if state.module_switcher_open || state.module_switcher_closing {
-            render_module_switcher(f, vertical[0], &state);
+        for mut view in views {
+            view.render(f, vertical[0]);
+        }
+
+        if state.show_keymap && layout_chunks.len() > 1 {
+            render_shortcuts_overlay(f, layout_chunks[1]);
         }
 
         if state.show_spotlight {
@@ -165,6 +183,7 @@ pub fn draw<B: Backend>(terminal: &mut Terminal<B>, state: &mut AppState, _last_
     state.prev_module_switcher_open = state.module_switcher_open;
     state.prev_show_spotlight = state.show_spotlight;
     state.tick_journal_entry_frames();
+    state.prev_mode = state.mode.clone();
     Ok(())
 }
 
@@ -445,7 +464,8 @@ pub fn launch_ui() -> std::io::Result<()> {
                         ZenLayoutMode::Journal => ZenLayoutMode::Classic,
                         ZenLayoutMode::Classic => ZenLayoutMode::Split,
                         ZenLayoutMode::Split => ZenLayoutMode::Summary,
-                        ZenLayoutMode::Summary => ZenLayoutMode::Journal,
+                        ZenLayoutMode::Summary => ZenLayoutMode::Dual,
+                        ZenLayoutMode::Dual => ZenLayoutMode::Journal,
                         ZenLayoutMode::Compose => ZenLayoutMode::Journal,
                     };
                 } else if code == KeyCode::Char('t')
@@ -608,15 +628,12 @@ pub fn launch_ui() -> std::io::Result<()> {
                         }
                     }
 
-                    k @ _ if state.mode == "zen"
-                        && state.zen_layout_mode == ZenLayoutMode::Compose
-                        && state.zen_view_mode == ZenViewMode::Write =>
-                    {
-                        crate::zen::editor::handle_key(&mut state, k);
+                    k @ _ if state.mode == "zen" => {
+                        input::route_zen_keys(&mut state, k, modifiers);
                     }
                     _ => {}
                 }
-            }    
+            }
                 Event::Mouse(me) => {
                     use crossterm::event::{MouseButton, MouseEventKind};
                     match me.kind {
@@ -645,6 +662,16 @@ pub fn launch_ui() -> std::io::Result<()> {
                             if state.mode == "gemx" {
                                 crate::gemx::interaction::end_drag(&mut state);
                             }
+                        }
+                        MouseEventKind::Moved => {
+                            let mut hover = None;
+                            for (idx, (rect, _)) in state.dock_entry_bounds.iter().enumerate() {
+                                if rect_contains(*rect, me.column, me.row) {
+                                    hover = Some(idx);
+                                    break;
+                                }
+                            }
+                            state.dock_hover_index = hover;
                         }
                         _ => {}
                     }

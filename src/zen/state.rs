@@ -167,11 +167,20 @@ impl AppState {
     }
 
     pub fn filtered_journal_entries(&self) -> Vec<&ZenJournalEntry> {
-        self.zen_journal_entries
+        let filter = self
+            .zen_tag_filter
+            .as_ref()
+            .map(|t| t.trim_start_matches('#').to_lowercase());
+
+        self
+            .zen_journal_entries
             .iter()
-            .filter(|e| {
-                if let Some(tag) = &self.zen_tag_filter {
-                    e.tags.iter().any(|t| t.eq_ignore_ascii_case(tag))
+            .filter(|entry| {
+                if let Some(tag) = &filter {
+                    entry
+                        .tags
+                        .iter()
+                        .any(|t| t.trim_start_matches('#').eq_ignore_ascii_case(tag))
                 } else {
                     true
                 }

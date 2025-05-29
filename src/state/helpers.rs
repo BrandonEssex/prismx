@@ -15,8 +15,34 @@ impl AppState {
     }
 
     pub fn set_selected(&mut self, id: Option<NodeID>) {
+        if let Some(prev) = self.selected {
+            if Some(prev) != id {
+                self.selection_trail.push_back((prev, Instant::now()));
+                if self.selection_trail.len() > 8 {
+                    self.selection_trail.pop_front();
+                }
+            }
+        }
         self.selected = id;
         self.last_promoted_root = None;
+
+        if let Some(node_id) = id {
+            let prev_x = self.scroll_x;
+            let prev_y = self.scroll_y;
+            crate::layout::center_on_node(self, node_id);
+            self.scroll_target_x = self.scroll_x;
+            self.scroll_target_y = self.scroll_y;
+            self.scroll_x = prev_x;
+            self.scroll_y = prev_y;
+        }
+    }
+
+    pub fn selection_age(&self, id: NodeID) -> Option<u128> {
+        self.selection_trail
+            .iter()
+            .rev()
+            .find(|(nid, _)| *nid == id)
+            .map(|(_, t)| t.elapsed().as_millis())
     }
 
     pub fn dock_focus_prev(&mut self) {
@@ -232,6 +258,30 @@ impl AppState {
         }
     }
 
+    /// Return a list of node IDs that are not reachable from any root.
+    pub fn disconnected_nodes(&self) -> Vec<NodeID> {
+        use std::collections::{HashSet, VecDeque};
+
+        let mut reachable = HashSet::new();
+        let mut stack: VecDeque<NodeID> = self.root_nodes.iter().copied().collect();
+        while let Some(id) = stack.pop_front() {
+            if reachable.insert(id) {
+                if let Some(n) = self.nodes.get(&id) {
+                    for child in &n.children {
+                        stack.push_back(*child);
+                    }
+                }
+            }
+        }
+
+        self
+            .nodes
+            .keys()
+            .copied()
+            .filter(|id| !reachable.contains(id))
+            .collect()
+    }
+
     pub fn ensure_grid_positions(&mut self) {
         if self.auto_arrange {
             return;
@@ -331,6 +381,25 @@ impl AppState {
         }
     }
 
+    /// Animate scroll offsets toward the target values for smooth centering.
+    pub fn animate_scroll(&mut self) {
+        let dx = self.scroll_target_x - self.scroll_x;
+        if dx.abs() > 0 {
+            self.scroll_x += dx / 2;
+            if (self.scroll_x - self.scroll_target_x).abs() <= 1 {
+                self.scroll_x = self.scroll_target_x;
+            }
+        }
+        let dy = self.scroll_target_y - self.scroll_y;
+        if dy.abs() > 0 {
+            self.scroll_y += dy / 2;
+            if (self.scroll_y - self.scroll_target_y).abs() <= 1 {
+                self.scroll_y = self.scroll_target_y;
+            }
+        }
+        crate::layout::clamp_scroll(self);
+    }
+
     pub fn clear_fallback_promotions(&mut self) {
         self.fallback_promoted_this_session.clear();
         self.fallback_next_x = 6;
@@ -382,6 +451,7 @@ impl AppState {
             self.spotlight_input = entry.command.to_string();
             self.show_spotlight = true;
             self.favorite_focus_index = Some(index);
+            self.dock_pulse_frames = 6;
             self.status_message = entry.command.to_string();
             self.status_message_last_updated = Some(std::time::Instant::now());
         }

@@ -13,6 +13,7 @@ pub struct LayoutSnapshot {
     pub nodes: NodeMap,
     pub root_nodes: Vec<NodeID>,
     pub selected: Option<NodeID>,
+    pub selection_trail: VecDeque<(NodeID, Instant)>,
 }
 
 #[derive(Clone, Default)]
@@ -87,6 +88,7 @@ pub struct AppState {
     pub root_nodes: Vec<NodeID>,
     pub last_promoted_root: Option<NodeID>,
     pub selected: Option<NodeID>,
+    pub selection_trail: VecDeque<(NodeID, Instant)>,
     pub spotlight_input: String,
     pub show_spotlight: bool,
     pub prev_show_spotlight: bool,
@@ -105,6 +107,8 @@ pub struct AppState {
     pub module_switcher_animation_frame: u8,
     pub module_switcher_closing: bool,
     pub prev_module_switcher_open: bool,
+    pub prev_mode: String,
+    pub mindmap_title_frames: u8,
     pub hotkeys: HashMap<String, String>,
     pub scroll_offset: usize,
     pub max_visible_lines: usize,
@@ -118,6 +122,8 @@ pub struct AppState {
     pub zoom_locked_by_user: bool,
     pub scroll_x: i16,
     pub scroll_y: i16,
+    pub scroll_target_x: i16,
+    pub scroll_target_y: i16,
     pub snap_to_grid: bool,
     pub drawing_root: Option<NodeID>,
     pub dragging: Option<NodeID>,
@@ -130,6 +136,7 @@ pub struct AppState {
     pub layout_roles: HashMap<NodeID, LayoutRole>,
     pub layout_warning_logged: bool,
     pub layout_fail_count: u8,
+    pub layout_key: (usize, u64),
     pub debug_input_mode: bool,
     pub debug_border: bool,
     pub debug_overlay: bool,
@@ -146,10 +153,12 @@ pub struct AppState {
     pub favorite_dock_layout: DockLayout,
     pub favorite_dock_enabled: bool,
     pub dock_focus_index: Option<usize>,
+    pub dock_hover_index: Option<usize>,
     pub last_mouse_click: Option<(u16, u16)>,
     pub settings_focus_index: usize,
     pub dock_entry_bounds: Vec<(ratatui::layout::Rect, String)>,
     pub favorite_focus_index: Option<usize>,
+    pub dock_pulse_frames: u8,
     pub zen_toolbar_open: bool,
     pub zen_recent_files: Vec<String>,
     pub zen_toolbar_index: usize,
@@ -211,6 +220,7 @@ impl Default for AppState {
             root_nodes: vec![node_a, node_b],
             last_promoted_root: None,
             selected: Some(node_a),
+            selection_trail: VecDeque::new(),
             spotlight_input: String::new(),
             show_spotlight: false,
             prev_show_spotlight: false,
@@ -229,6 +239,8 @@ impl Default for AppState {
             module_switcher_animation_frame: 0,
             module_switcher_closing: false,
             prev_module_switcher_open: false,
+            prev_mode: "gemx".into(),
+            mindmap_title_frames: 0,
             hotkeys: load_hotkeys(),
             scroll_offset: 0,
             max_visible_lines: 20,
@@ -242,6 +254,8 @@ impl Default for AppState {
             zoom_locked_by_user: false,
             scroll_x: 0,
             scroll_y: 0,
+            scroll_target_x: 0,
+            scroll_target_y: 0,
             snap_to_grid: false,
             drawing_root: None,
             dragging: None,
@@ -254,6 +268,7 @@ impl Default for AppState {
             layout_roles: HashMap::new(),
             layout_warning_logged: false,
             layout_fail_count: 0,
+            layout_key: (0, 0),
             debug_input_mode: true,
             debug_border: std::env::var("PRISMX_DEBUG_BORDER").is_ok(),
             debug_overlay: false,
@@ -270,10 +285,12 @@ impl Default for AppState {
             favorite_dock_layout: DockLayout::Vertical,
             favorite_dock_enabled: true,
             dock_focus_index: None,
+            dock_hover_index: None,
             last_mouse_click: None,
             settings_focus_index: 0,
             dock_entry_bounds: Vec::new(),
             favorite_focus_index: None,
+            dock_pulse_frames: 0,
             zen_toolbar_open: false,
             zen_recent_files: vec!["README.md".into()],
             zen_toolbar_index: 0,
@@ -339,6 +356,9 @@ impl Default for AppState {
         }
 
         state.loaded_plugins = loader::discover_plugins(std::path::Path::new("plugins"));
+
+        state.scroll_target_x = state.scroll_x;
+        state.scroll_target_y = state.scroll_y;
 
         state
     }

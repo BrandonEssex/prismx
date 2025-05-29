@@ -52,12 +52,11 @@ impl AppState {
             self.root_nodes.dedup();
         }
 
-        self.selected = Some(new_id);
+        self.set_selected(Some(new_id));
         if !self.auto_arrange {
             self.ensure_grid_positions();
             crate::layout::roles::recalculate_roles(self);
         }
-        crate::layout::center_on_node(self, new_id);
         if self.nodes.get(&new_id).and_then(|n| n.parent).is_none() {
             if let Some(n) = self.nodes.get_mut(&new_id) {
                 n.parent = Some(parent_id);
@@ -102,14 +101,13 @@ impl AppState {
 
         self.nodes.insert(new_id, sibling);
         crate::log_debug!(self, "Inserted node {} → parent {:?}", new_id, parent_id);
-        self.selected = Some(new_id);
+        self.set_selected(Some(new_id));
 
         if !self.auto_arrange {
             self.ensure_grid_positions();
             crate::layout::roles::recalculate_roles(self);
         }
         self.ensure_valid_roots();
-        crate::layout::center_on_node(self, new_id);
         self.audit_node_graph();
         self.audit_ancestry();
     }
@@ -159,7 +157,6 @@ impl AppState {
 
         crate::layout::roles::recalculate_roles(self);
         self.ensure_valid_roots();
-        crate::layout::center_on_node(self, new_id);
         self.audit_node_graph();
         self.audit_ancestry();
     }

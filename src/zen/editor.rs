@@ -1,10 +1,18 @@
 use crossterm::event::KeyCode;
-use crate::state::AppState;
-use crate::state::ZenJournalEntry;
+use crate::state::{AppState, ZenJournalEntry};
+use crate::state::view::ZenLayoutMode;
+use crate::state::ZenViewMode;
 use crate::zen::utils::parse_tags;
 
 /// Handle key input for Zen compose mode.
 pub fn handle_key(state: &mut AppState, key: KeyCode) {
+    tracing::info!("[ZEN] handle_key {:?}", key);
+    if state.zen_layout_mode != ZenLayoutMode::Compose
+        || state.zen_view_mode != ZenViewMode::Write
+    {
+        return;
+    }
+
     match key {
         KeyCode::Char(c) => {
             // Spawn a new entry on first character when not editing
@@ -55,6 +63,24 @@ pub fn handle_key(state: &mut AppState, key: KeyCode) {
             } else if text == "/cancel" {
                 state.cancel_edit_journal_entry();
                 state.zen_draft.text.clear();
+            } else if text == "/plugins" {
+                use crate::plugin::registry;
+                let list = registry::registry();
+                if list.is_empty() {
+                    state.status_message = "No plugins loaded".into();
+                } else {
+                    let lines: Vec<String> = list
+                        .iter()
+                        .map(|p| {
+                            if let Some(ref path) = p.path {
+                                format!("{} v{} ({})", p.name, p.version, path)
+                            } else {
+                                format!("{} v{}", p.name, p.version)
+                            }
+                        })
+                        .collect();
+                    state.status_message = lines.join(", ");
+                }
             } else {
                 if !text.is_empty() {
                     if crate::config::theme::ThemeConfig::load().zen_breathe() {
@@ -65,7 +91,6 @@ pub fn handle_key(state: &mut AppState, key: KeyCode) {
                         text: text.clone(),
                         prev_text: None,
                         frame: 0,
-                        tags: crate::zen::utils::parse_tags(&text),
                         tags: parse_tags(&text),
                     };
                     state.zen_journal_entries.push(entry.clone());
@@ -73,6 +98,12 @@ pub fn handle_key(state: &mut AppState, key: KeyCode) {
                 }
                 state.zen_draft.text.clear();
                 state.zen_draft.editing = None;
+            }
+
+                state.status_message_last_updated = Some(std::time::Instant::now());
+                state.zen_draft.text.clear();
+            } else {
+                finalize_entry(state);
             }
         }
         _ => {}
