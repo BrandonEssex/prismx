@@ -6,7 +6,7 @@ use ratatui::{
     text::Line,
 };
 use crate::beamx::render_full_border;
-use crate::ui::beamx::{BeamX, BeamXStyle, BeamXMode, BeamXAnimationMode};
+use crate::ui::beamx::{render_beam, BeamXStyle, BeamXMode};
 use crate::state::AppState;
 use std::io::Stdout;
 
@@ -38,14 +38,9 @@ pub fn render_triage_panel(f: &mut PluginFrame<'_>, area: Rect, state: &mut AppS
     bx_style.border_color = b;
     bx_style.status_color = s;
     bx_style.prism_color = p;
-    let beamx = BeamX {
-        tick,
-        enabled: state.beamx_panel_visible,
-        mode: BeamXMode::Triage,
-        style: bx_style,
-        animation: BeamXAnimationMode::PulseEntryRadiate,
-    };
-    beamx.render(f, area);
+    if state.beamx_panel_visible {
+        render_beam(f, area, tick, &bx_style);
+    }
 
     let plugin_area = Rect::new(area.x + 1, area.y + 1, area.width - 2, area.height - 4);
     state.plugin_host.render_all(f, plugin_area);

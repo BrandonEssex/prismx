@@ -50,3 +50,23 @@ pub fn toggle_zen_view(state: &mut AppState) {
         crate::state::ZenViewMode::Review => crate::state::ZenViewMode::Write,
     };
 }
+
+/// Handle mouse input while in GemX/mindmap view.
+pub fn handle_gemx_mouse(state: &mut AppState, me: crossterm::event::MouseEvent) {
+    use crossterm::event::{MouseButton, MouseEventKind};
+
+    match me.kind {
+        MouseEventKind::Down(MouseButton::Left) => {
+            if let Some(id) = crate::gemx::interaction::node_at_position(state, me.column, me.row) {
+                crate::gemx::interaction::start_drag(state, id, me.column, me.row);
+            }
+        }
+        MouseEventKind::Drag(MouseButton::Left) => {
+            crate::gemx::interaction::drag_update(state, me.column, me.row);
+        }
+        MouseEventKind::Up(MouseButton::Left) => {
+            crate::gemx::interaction::end_drag(state);
+        }
+        _ => {}
+    }
+}

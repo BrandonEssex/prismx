@@ -5,17 +5,50 @@ use ratatui::{
     Frame,
 };
 
-use crate::ui::shortcuts::SHORTCUTS;
+use crate::ui::shortcuts::action_group;
+use crate::plugin::hook::get_hotkeys;
+use crate::ui::animate;
+use crate::state::AppState;
+use ratatui::{style::{Style, Modifier}, text::{Line, Span}, widgets::Clear};
 
-pub fn render_shortcuts_overlay<B: Backend>(f: &mut Frame<B>, area: Rect) {
-    let keys: Vec<String> = SHORTCUTS
-        .iter()
-        .map(|(k, v)| format!("{} = {}", k, v))
-        .collect();
+pub fn render_shortcuts_overlay<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
+    use std::collections::BTreeMap;
 
-    let content = Paragraph::new(keys.join("\n"))
-        .block(Block::default().title("Shortcuts").borders(Borders::ALL));
+    let mut groups: BTreeMap<&str, Vec<(String, String)>> = BTreeMap::new();
+    for (act, key) in &state.hotkeys {
+        let g = action_group(act);
+        groups.entry(g).or_default().push((key.clone(), act.replace('_', " ")));
+    }
 
-    let inner_height = area.height.saturating_sub(3);
-    f.render_widget(content, Rect::new(area.x + 1, area.y + 1, area.width - 2, inner_height));
+    for (k, v) in get_hotkeys() {
+        groups.entry("Plugins").or_default().push((k, v));
+    }
+
+    let mut lines: Vec<Line> = Vec::new();
+    for (group, items) in groups {
+        lines.push(Line::from(Span::styled(group, Style::default().add_modifier(Modifier::BOLD))));
+        for (k, v) in items {
+            lines.push(Line::from(format!("{} = {}", k, v)));
+        }
+        lines.push(Line::from(""));
+    }
+
+    let content_width = lines.iter().map(|l| l.width() as u16).max().unwrap_or(0).saturating_add(4);
+    let mut height = lines.len() as u16 + 2;
+    height = height.min(area.height.saturating_sub(1));
+    let base_width = content_width.min(area.width);
+
+    let scale = animate::soft_bounce(state.keymap_animation_frame, state.keymap_closing);
+    let width = ((base_width as f32) * scale) as u16;
+    let width = width.max(3).min(area.width);
+
+    let x = area.x + (area.width.saturating_sub(width)) / 2;
+    let y = area.y + (area.height.saturating_sub(height)) / 2;
+
+    let block = Block::default().title("Shortcuts").borders(Borders::ALL);
+    let content = Paragraph::new(lines).block(block);
+
+    let rect = Rect::new(x, y, width, height);
+    f.render_widget(Clear, rect);
+    f.render_widget(content, rect);
 }
