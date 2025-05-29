@@ -72,6 +72,29 @@ impl AppState {
         self.triage_focus_next();
     }
 
+    /// Toggle a tag on the currently focused entry.
+    pub fn triage_toggle_tag(&mut self, tag: &str) {
+        if let Some(entry) = self.triage_entries.get_mut(self.triage_focus_index) {
+            let has_tag = entry.tags.iter().any(|t| t.eq_ignore_ascii_case(tag));
+            if has_tag {
+                entry.tags.retain(|t| !t.eq_ignore_ascii_case(tag));
+                let words: Vec<String> = entry
+                    .text
+                    .split_whitespace()
+                    .filter(|w| !w.eq_ignore_ascii_case(tag))
+                    .map(|w| w.to_string())
+                    .collect();
+                entry.text = words.join(" ");
+            } else {
+                if !entry.text.is_empty() && !entry.text.ends_with(' ') {
+                    entry.text.push(' ');
+                }
+                entry.text.push_str(tag);
+                entry.tags.push(tag.to_lowercase());
+            }
+        }
+    }
+
     /// Update cached tag counts used in status views.
     pub fn triage_recalc_counts(&mut self) {
         let (n, t, d) = crate::triage::state::tag_counts(self);
