@@ -4,6 +4,7 @@ use crate::node::{NodeID, NodeMap};
 pub mod roles;
 pub mod fallback;
 pub mod snapshot;
+pub mod engine;
 
 pub use roles::recalculate_roles;
 
@@ -21,6 +22,8 @@ pub const MIN_NODE_GAP: i16 = 3;
 /// Vertical spacing between parent and child nodes.
 /// Increased for better readability in auto-arrange mode.
 pub const CHILD_SPACING_Y: i16 = 2;
+/// Guaranteed minimum vertical spacing applied between parent and child nodes.
+pub const MIN_CHILD_SPACING_Y: i16 = 1;
 pub const FREE_GRID_COLUMNS: usize = 4;
 pub const GEMX_HEADER_HEIGHT: i16 = 2;
 pub const MAX_DEPTH: usize = 32;
@@ -30,6 +33,8 @@ pub const SNAP_GRID_X: i16 = 4;
 pub const SNAP_GRID_Y: i16 = 2;
 pub const RESERVED_ZONE_W: i16 = 6;
 pub const RESERVED_ZONE_H: i16 = 6;
+/// Additional horizontal margin used when auto-arranging root clusters.
+pub const AUTO_MARGIN_X: i16 = SIBLING_SPACING_X * 2 + MIN_SIBLING_SPACING_X * 2;
 
 /// Estimate the width and height of a label in grid units.
 ///
@@ -49,11 +54,7 @@ pub fn label_bounds(label: &str) -> (i16, i16) {
 }
 
 pub fn spacing_for_zoom(zoom: f32) -> (i16, i16) {
-    if zoom < 0.7 {
-        (4, 2)
-    } else {
-        (6, 3)
-    }
+    engine::spacing_for_zoom(zoom)
 }
 
 pub fn subtree_span(nodes: &NodeMap, id: NodeID) -> i16 {
@@ -122,7 +123,7 @@ impl PackRegion {
     }
 
     pub fn insert(&mut self, size: (i16, i16)) -> (i16, i16) {
-        let margin = SIBLING_SPACING_X * 2;
+        let margin = AUTO_MARGIN_X;
         let row_padding = CHILD_SPACING_Y * 2;
         let (w, h) = size;
         if self.x + w + margin > self.max_width {
@@ -320,7 +321,8 @@ fn layout_recursive_safe(
         return (y + label_height - 1, x, x + label_width);
     }
 
-    let child_y = y + label_height + (CHILD_SPACING_Y - 1);
+    let spacing_y = CHILD_SPACING_Y.max(MIN_CHILD_SPACING_Y);
+    let child_y = y + label_height + (spacing_y - 1);
 
     let mut max_y = y;
     let mut min_x_span = x;
@@ -330,7 +332,7 @@ fn layout_recursive_safe(
     let mut col_y = child_y;
     let mut column_width = 0;
     for (index, child_id) in node.children.iter().enumerate() {
-        let child_h = subtree_depth(nodes, *child_id) * CHILD_SPACING_Y + 1;
+        let child_h = subtree_depth(nodes, *child_id) * spacing_y + 1;
         let subtree_w = subtree_span(nodes, *child_id);
         let label_w_child = nodes
             .get(child_id)
@@ -366,7 +368,7 @@ fn layout_recursive_safe(
         min_x_span = min_x_span.min(mi);
         max_x_span = max_x_span.max(ma);
 
-        col_y = cy + CHILD_SPACING_Y;
+        col_y = cy + spacing_y;
         column_width = column_width.max(child_w);
     }
 
