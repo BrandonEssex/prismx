@@ -1,24 +1,3 @@
-use ratatui::{
-    prelude::*,
-    style::{Color, Modifier, Style},
-    text::{Line, Span},
-    widgets::{Block, Borders, Paragraph},
-};
-
-use chrono::{Datelike, Local};
-use crate::config::theme::ThemeConfig;
-use crate::state::AppState;
-use crate::state::view::ZenLayoutMode;
-use crate::zen::utils::highlight_tags_line;
-use crate::beamx::render_full_border;
-
-/// Public render entry point for Journal view
-pub fn render_zen_journal<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
-    render_history(f, area, state);
-    render_full_border(f, area, &state.beam_style_for_mode(&state.mode), true, false);
-}
-
-/// Shared logic for rendering all journal entries
 pub fn render_history<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
     let padding = area.width / 4;
     let usable_width = area.width - padding * 2;
@@ -53,7 +32,6 @@ pub fn render_history<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState
                     }
                 }
             };
-
             if current_label != label {
                 lines.push(Line::from(Span::styled(
                     label.clone(),
@@ -93,89 +71,20 @@ pub fn render_history<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState
 
         let mut block = Block::default().borders(Borders::NONE);
         if Some(idx) == state.zen_draft.editing {
-            block = block
-                .border_style(Style::default().fg(Color::DarkGray))
-                .borders(Borders::ALL);
+            block = block.border_style(Style::default().fg(Color::DarkGray)).borders(Borders::ALL);
         } else if Some(idx) == state.zen_history_index {
-            block = block
-                .border_style(Style::default().fg(Color::Gray))
-                .borders(Borders::ALL);
+            block = block.border_style(Style::default().fg(Color::Gray)).borders(Borders::ALL);
         }
 
-for entry in entries.iter().rev() {
-    let mut lines: Vec<Line> = Vec::new();
-    
-    let ts = entry.timestamp.format("%b %d, %Y – %-I:%M%p").to_string();
-    lines.push(Line::from(Span::styled(
-        ts,
-        Style::default().fg(Color::DarkGray).add_modifier(Modifier::DIM),
-    )));
-
-    if !entry.tags.is_empty() {
-        lines.push(highlight_tags_line(&entry.tags.join(" ")));
-    }
-
-    for l in entry.text.lines() {
-        lines.push(highlight_tags_line(l));
-    }
-
-    lines.push(Line::from(Span::styled(
-        "─".repeat(12),
-        Style::default().fg(Color::Gray).add_modifier(Modifier::DIM),
-    )));
-
-    if breathe {
-        let age = Local::now()
-            .signed_duration_since(entry.timestamp)
-            .num_milliseconds() as u128;
+        let ratio = entry.frame as f32 / 3.0;
         for line in lines.iter_mut() {
-            crate::ui::animate::fade_line(line, age, 150);
+            crate::ui::animate::fade_line_ratio(line, ratio);
         }
+
+        let para = Paragraph::new(lines).block(block);
+        let h = 5; // estimated height
+        blocks.push((h, para, entry.frame));
     }
-
-    let visible_height = area.height.saturating_sub(1);
-    let total_height: u16 = blocks
-        .iter()
-        .map(|(h, _)| *h + 1)
-        .sum::<u16>()
-        .saturating_sub(1);
-    let overflow = total_height.saturating_sub(visible_height);
-    let mut skip = overflow.saturating_sub(state.scroll_offset.min(overflow as usize) as u16);
-
-    let mut y = area.y + visible_height;
-    for (h, para) in blocks.into_iter().rev() {
-        let block_height = h + 1;
-        if skip >= block_height {
-            skip -= block_height;
-            continue;
-        }
-        if y < area.y + h {
-            break;
-        }
-        y -= h;
-        let rect = Rect::new(area.x + padding, y, usable_width, h);
-        f.render_widget(para, rect);
-        if y > area.y {
-            y -= 1;
-        }
-    }
-
-
-    let mut block = Block::default().borders(Borders::NONE);
-    if Some(entry.timestamp) == state.zen_draft.editing.map(|idx| state.zen_journal_entries[idx].timestamp) {
-        block = block
-            .border_style(Style::default().fg(Color::DarkGray))
-            .borders(Borders::ALL);
-    }
-
-    let ratio = entry.frame as f32 / 3.0;
-    for line in lines.iter_mut() {
-        crate::ui::animate::fade_line_ratio(line, ratio);
-    }
-
-    let para = Paragraph::new(lines).block(block);
-    let h = 5; // estimated height
-    blocks.push((h, para, entry.frame));
 
     let total_height: u16 = blocks
         .iter()
