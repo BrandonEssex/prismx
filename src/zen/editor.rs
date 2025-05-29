@@ -115,34 +115,29 @@ pub fn handle_key(state: &mut AppState, key: KeyCode) {
                         .collect();
                     state.status_message = lines.join(", ");
                 }
-            } else {
-                if !text.is_empty() {
-                    if crate::config::theme::ThemeConfig::load().zen_breathe() {
-                        std::thread::sleep(std::time::Duration::from_millis(150));
-                    }
-                    let entry = ZenJournalEntry {
-                        timestamp: chrono::Local::now(),
-                        text: text.clone(),
-                        prev_text: None,
-                        frame: 0,
-                        tags: parse_tags(&text),
-                    };
-                    state.zen_journal_entries.push(entry.clone());
-                    state.append_journal_entry(&entry);
+                state.zen_draft.text.clear();
+            } else if !text.is_empty() {
+                if crate::config::theme::ThemeConfig::load().zen_breathe() {
+                    std::thread::sleep(std::time::Duration::from_millis(150));
                 }
+                let entry = ZenJournalEntry {
+                    timestamp: chrono::Local::now(),
+                    text: text.clone(),
+                    prev_text: None,
+                    frame: 0,
+                    tags: parse_tags(&text),
+                };
+                state.zen_journal_entries.push(entry.clone());
+                state.append_journal_entry(&entry);
                 state.zen_draft.text.clear();
                 state.zen_draft.editing = None;
-            }
-
-                state.status_message_last_updated = Some(std::time::Instant::now());
-                state.zen_draft.text.clear();
             } else {
                 finalize_entry(state);
             }
+
+            state.status_message_last_updated = Some(std::time::Instant::now());
         }
-        _ => {}
-    }
-}
+
 
 fn finalize_entry(state: &mut AppState) {
     let text = state.zen_draft.text.trim().to_string();

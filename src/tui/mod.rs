@@ -229,85 +229,85 @@ pub fn launch_ui() -> std::io::Result<()> {
                         }
                     }
 
-                    // 🌟 Spotlight
-                    if state.show_spotlight {
-                        match code {
-                            KeyCode::Esc => {
-                                state.show_spotlight = false;
-                                state.spotlight_history_index = None;
+                // 🌟 Spotlight
+                if state.show_spotlight {
+                    match code {
+                        KeyCode::Esc => {
+                            state.show_spotlight = false;
+                            state.spotlight_history_index = None;
+                        }
+                        KeyCode::Char(c) => {
+                            state.spotlight_input.push(c);
+                            state.spotlight_history_index = None;
+                            state.spotlight_suggestion_index = None;
+                        }
+                        KeyCode::Backspace => {
+                            state.spotlight_input.pop();
+                            state.spotlight_history_index = None;
+                            state.spotlight_suggestion_index = None;
+                        }
+                        KeyCode::Up => {
+                            let suggestions = crate::spotlight::command_suggestions(&state.spotlight_input);
+                            if !suggestions.is_empty() {
+                                let len = suggestions.len();
+                                let idx = state.spotlight_suggestion_index.unwrap_or(0);
+                                state.spotlight_suggestion_index = Some((idx + len - 1) % len);
+                            } else if state.spotlight_history.is_empty() {
+                                // nothing
+                            } else if let Some(i) = state.spotlight_history_index {
+                                if i + 1 < state.spotlight_history.len() {
+                                    state.spotlight_history_index = Some(i + 1);
+                                }
+                                if let Some(idx) = state.spotlight_history_index {
+                                    state.spotlight_input = state.spotlight_history[idx].clone();
+                                }
+                            } else {
+                                state.spotlight_history_index = Some(0);
+                                state.spotlight_input = state.spotlight_history[0].clone();
                             }
-                            KeyCode::Char(c) => {
-                                state.spotlight_input.push(c);
-                                state.spotlight_history_index = None;
-                                state.spotlight_suggestion_index = None;
-                            }
-                            KeyCode::Backspace => {
-                                state.spotlight_input.pop();
-                                state.spotlight_history_index = None;
-                                state.spotlight_suggestion_index = None;
-                            }
-                            KeyCode::Up => {
-                                let suggestions = crate::spotlight::command_suggestions(&state.spotlight_input);
-                                if !suggestions.is_empty() {
-                                    let len = suggestions.len();
-                                    let idx = state.spotlight_suggestion_index.unwrap_or(0);
-                                    state.spotlight_suggestion_index = Some((idx + len - 1) % len);
-                                } else if state.spotlight_history.is_empty() {
-                                    // nothing
-                                } else if let Some(i) = state.spotlight_history_index {
-                                    if i + 1 < state.spotlight_history.len() {
-                                        state.spotlight_history_index = Some(i + 1);
-                                    }
+                        }
+                        KeyCode::Down => {
+                            let suggestions = crate::spotlight::command_suggestions(&state.spotlight_input);
+                            if !suggestions.is_empty() {
+                                let len = suggestions.len();
+                                let idx = state.spotlight_suggestion_index.unwrap_or(len);
+                                state.spotlight_suggestion_index = Some((idx + 1) % len);
+                            } else if let Some(i) = state.spotlight_history_index {
+                                if i > 0 {
+                                    state.spotlight_history_index = Some(i - 1);
                                     if let Some(idx) = state.spotlight_history_index {
                                         state.spotlight_input = state.spotlight_history[idx].clone();
                                     }
                                 } else {
-                                    state.spotlight_history_index = Some(0);
-                                    state.spotlight_input = state.spotlight_history[0].clone();
+                                    state.spotlight_history_index = None;
+                                    state.spotlight_input.clear();
                                 }
                             }
-                            KeyCode::Down => {
-                                let suggestions = crate::spotlight::command_suggestions(&state.spotlight_input);
-                                if !suggestions.is_empty() {
-                                    let len = suggestions.len();
-                                    let idx = state.spotlight_suggestion_index.unwrap_or(len);
-                                    state.spotlight_suggestion_index = Some((idx + 1) % len);
-                                } else if let Some(i) = state.spotlight_history_index {
-                                    if i > 0 {
-                                        state.spotlight_history_index = Some(i - 1);
-                                        if let Some(idx) = state.spotlight_history_index {
-                                            state.spotlight_input = state.spotlight_history[idx].clone();
-                                        }
-                                    } else {
-                                        state.spotlight_history_index = None;
-                                        state.spotlight_input.clear();
-                                    }
-                                }
-                            }
-                            KeyCode::Right | KeyCode::Tab => {
-                                let suggestions = crate::spotlight::command_suggestions(&state.spotlight_input);
-                                if let Some(sel) = state.spotlight_suggestion_index {
-                                    if let Some(s) = suggestions.get(sel) {
-                                        state.spotlight_input = s.to_string();
-                                    }
-                                    state.spotlight_suggestion_index = None;
-                                }
-                            }
-                            KeyCode::Enter => {
-                                if let Some(sel) = state.spotlight_suggestion_index {
-                                    let suggestions = crate::spotlight::command_suggestions(&state.spotlight_input);
-                                    if let Some(s) = suggestions.get(sel) {
-                                        state.spotlight_input = s.to_string();
-                                    }
-                                }
-                                state.execute_spotlight_command();
-                            }
-                            _ => {}
                         }
-
-                        draw(&mut terminal, &mut state, &last_key)?;
-                        continue;
+                        KeyCode::Right | KeyCode::Tab => {
+                            let suggestions = crate::spotlight::command_suggestions(&state.spotlight_input);
+                            if let Some(sel) = state.spotlight_suggestion_index {
+                                if let Some(s) = suggestions.get(sel) {
+                                    state.spotlight_input = s.to_string();
+                                }
+                                state.spotlight_suggestion_index = None;
+                            }
+                        }
+                        KeyCode::Enter => {
+                            if let Some(sel) = state.spotlight_suggestion_index {
+                                let suggestions = crate::spotlight::command_suggestions(&state.spotlight_input);
+                                if let Some(s) = suggestions.get(sel) {
+                                    state.spotlight_input = s.to_string();
+                                }
+                            }
+                            state.execute_spotlight_command();
+                        }
+                        _ => {}
                     }
+
+                    draw(&mut terminal, &mut state, &last_key)?;
+                    continue;
+                }
 
                 // Alt+Space or Alt+/ toggles Spotlight
                 if (code == KeyCode::Char(' ') || code == KeyCode::Char('/'))
@@ -604,8 +604,6 @@ pub fn launch_ui() -> std::io::Result<()> {
                         state.triage_set_filter(Some("#done"));
                     }
 
-                    }
-
                     KeyCode::Up if state.favorite_dock_enabled && modifiers == KeyModifiers::NONE => {
                         state.dock_focus_prev();
                         if state.mode == "gemx" { state.move_focus_up(); }
@@ -649,7 +647,7 @@ pub fn launch_ui() -> std::io::Result<()> {
                     }
                     _ => {}
                 }
-            
+            }
                 Event::Mouse(me) => {
                     use crossterm::event::{MouseButton, MouseEventKind};
                     match me.kind {
