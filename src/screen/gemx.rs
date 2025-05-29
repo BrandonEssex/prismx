@@ -11,7 +11,7 @@ use crate::state::AppState;
 use crate::canvas::prism::render_prism;
 use crate::beamx::render_full_border;
 use crate::ui::components::mindmap::render_title_bar;
-use crate::ui::beamx::{BeamX, BeamXStyle, BeamXMode, BeamXAnimationMode};
+use crate::ui::beamx::{render_beam, BeamXStyle, BeamXMode};
 use crate::ui::animate;
 use std::time::{SystemTime, UNIX_EPOCH};
 use std::collections::{HashMap, HashSet};
@@ -479,14 +479,9 @@ pub fn render_gemx<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppStat
     bx_style.border_color = b;
     bx_style.status_color = s;
     bx_style.prism_color = p;
-    let beamx = BeamX {
-        tick,
-        enabled: state.beamx_panel_visible,
-        mode: BeamXMode::Default,
-        style: bx_style,
-        animation: BeamXAnimationMode::PulseEntryRadiate,
-    };
-    beamx.render(f, area);
+    if state.beamx_panel_visible {
+        render_beam(f, area, tick, &bx_style);
+    }
     if !drawn_at.is_empty() && !state.root_nodes.is_empty() {
         state.last_promoted_root = None;
     }
