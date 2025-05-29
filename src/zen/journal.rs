@@ -176,31 +176,31 @@ for entry in entries.iter().rev() {
     let para = Paragraph::new(lines).block(block);
     let h = 5; // estimated height
     blocks.push((h, para, entry.frame));
-}
 
-let total_height: u16 = blocks
-    .iter()
-    .map(|(h, _, _)| *h + 1)
-    .sum::<u16>()
-    .saturating_sub(1);
-let overflow = total_height.saturating_sub(area.height);
-let mut skip = overflow.saturating_sub(state.scroll_offset.min(overflow as usize) as u16);
+    let total_height: u16 = blocks
+        .iter()
+        .map(|(h, _, _)| *h + 1)
+        .sum::<u16>()
+        .saturating_sub(1);
+    let overflow = total_height.saturating_sub(area.height);
+    let mut skip = overflow.saturating_sub(state.scroll_offset.min(overflow as usize) as u16);
 
-let mut y = area.bottom();
-for (h, para, frame) in blocks.into_iter().rev() {
-    let block_height = h + 1;
-    if skip >= block_height {
-        skip -= block_height;
-        continue;
-    }
-    if y < area.y + h {
-        break;
-    }
-    y -= h;
-    let indent = if frame < 3 { 3 - frame as u16 } else { 0 };
-    let rect = Rect::new(area.x + padding + indent, y, usable_width - indent, h);
-    f.render_widget(para, rect);
-    if y > area.y {
-        y -= 1;
+    let mut y = area.bottom();
+    for (h, para, frame) in blocks.into_iter().rev() {
+        let block_height = h + 1;
+        if skip >= block_height {
+            skip -= block_height;
+            continue;
+        }
+        if y < area.y + h {
+            break;
+        }
+        y -= h;
+        let indent = if frame < 3 { 3 - frame as u16 } else { 0 };
+        let rect = Rect::new(area.x + padding + indent, y, usable_width - indent, h);
+        f.render_widget(para, rect);
+        if y > area.y {
+            y -= 1;
+        }
     }
 }
