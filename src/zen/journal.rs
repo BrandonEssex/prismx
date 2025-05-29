@@ -1,3 +1,24 @@
+use ratatui::{
+    prelude::*,
+    style::{Color, Modifier, Style},
+    text::{Line, Span},
+    widgets::{Block, Borders, Paragraph},
+};
+
+use chrono::{Datelike, Local};
+use crate::config::theme::ThemeConfig;
+use crate::state::{AppState, ZenJournalEntry};
+use crate::state::view::ZenLayoutMode;
+use crate::zen::utils::highlight_tags_line;
+use crate::beamx::render_full_border;
+
+/// Public render entry point for Journal view
+pub fn render_zen_journal<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
+    render_history(f, area, state);
+    render_full_border(f, area, &state.beam_style_for_mode(&state.mode), true, false);
+}
+
+/// Shared logic for rendering all journal entries
 pub fn render_history<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
     let padding = area.width / 4;
     let usable_width = area.width - padding * 2;
