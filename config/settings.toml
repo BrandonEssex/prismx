@@ -1,5 +1,5 @@
-auto_arrange = true
-debug_input_mode = false
+auto_arrange = false
+debug_input_mode = true
 dock_layout = "vertical"
 gemx_beam_color = "Emerald"
 zen_beam_color = "Emerald"
@@ -9,5 +9,5 @@ zen_icon_enabled = true
 beamx_panel_theme = "Prism"
 beamx_panel_visible = true
 mindmap_lanes = true
-font_style = "Regular"
+font_style = "Bold"
 beam_animation = true
