@@ -63,30 +63,26 @@ pub fn render_triage_panel<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut
     // --- Left Feed ---
     let mut lines = Vec::new();
 
-    // Render active tag filters (#TRITON, #DONE, etc.) if present
-    use std::collections::BTreeSet;
-    let mut active_tags: BTreeSet<String> = BTreeSet::new();
-    let mut visible_idx = 0usize;
-    for entry in &state.triage_entries {
-        if entry.archived { continue; }
-        for tag in &entry.tags {
-            active_tags.insert(tag.to_uppercase());
-        }
-    }
-    if !active_tags.is_empty() {
-        let tags = active_tags.iter().cloned().collect::<Vec<_>>().join(" ");
-        lines.push(Line::from(Span::styled(
-            format!("Filters: {}", tags),
-            Style::default().fg(Color::Yellow),
-        )));
-        lines.push(Line::from(""));
-    }
+    let filter_label = match &state.triage_tag_filter {
+        Some(tag) => tag.to_uppercase(),
+        None => "ALL".into(),
+    };
+    lines.push(Line::from(Span::styled(
+        format!("Filter: {}", filter_label),
+        Style::default().fg(Color::Yellow),
+    )));
+    lines.push(Line::from(""));
 
-    for entry in &state.triage_entries {
+    
+
+    for (idx, entry) in state.triage_entries.iter().enumerate() {
         if entry.archived { continue; }
+        if let Some(tag) = &state.triage_tag_filter {
+            if !entry.tags.iter().any(|t| t.eq_ignore_ascii_case(tag)) { continue; }
+        }
 
         let mut entry_style = Style::default();
-        if visible_idx == state.triage_focus_index {
+        if idx == state.triage_focus_index {
             entry_style = entry_style.add_modifier(Modifier::BOLD);
         }
         if entry.resolved {
@@ -117,7 +113,6 @@ pub fn render_triage_panel<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut
         }
 
         lines.push(Line::from(""));
-        visible_idx += 1;
     }
 
     if lines.is_empty() {

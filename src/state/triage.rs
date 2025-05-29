@@ -8,13 +8,32 @@ impl AppState {
         capture_entry(self, source, text);
     }
 
+    pub fn triage_set_filter(&mut self, tag: Option<&str>) {
+        self.triage_tag_filter = tag.map(|t| t.to_lowercase());
+        self.triage_focus_index = 0;
+    }
+
+    fn triage_matches_filter(&self, entry: &crate::triage::state::TriageEntry) -> bool {
+        if entry.archived {
+            return false;
+        }
+        if let Some(ref tag) = self.triage_tag_filter {
+            entry
+                .tags
+                .iter()
+                .any(|t| t.eq_ignore_ascii_case(tag))
+        } else {
+            true
+        }
+    }
+
     /// Move triage focus to previous visible entry.
     pub fn triage_focus_prev(&mut self) {
         let visible: Vec<usize> = self
             .triage_entries
             .iter()
             .enumerate()
-            .filter(|(_, e)| !e.archived)
+            .filter(|(_, e)| self.triage_matches_filter(e))
             .map(|(i, _)| i)
             .collect();
         if visible.is_empty() { return; }
@@ -32,7 +51,7 @@ impl AppState {
             .triage_entries
             .iter()
             .enumerate()
-            .filter(|(_, e)| !e.archived)
+            .filter(|(_, e)| self.triage_matches_filter(e))
             .map(|(i, _)| i)
             .collect();
         if visible.is_empty() { return; }
