@@ -32,11 +32,18 @@ pub fn handle_log_keys(state: &mut AppState, code: KeyCode, mods: KeyModifiers) 
 }
 
 /// Route keystrokes while in Zen mode to the editor handler.
-pub fn route_zen_keys(state: &mut AppState, code: KeyCode, _mods: KeyModifiers) -> bool {
+pub fn route_zen_keys(state: &mut AppState, code: KeyCode, mods: KeyModifiers) -> bool {
     if state.mode == "zen"
         && state.zen_layout_mode == ZenLayoutMode::Compose
         && state.zen_view_mode == ZenViewMode::Write
     {
+        if code == KeyCode::Char('d') && mods.contains(KeyModifiers::CONTROL) {
+            if let Some(idx) = state.zen_history_index.take() {
+                state.delete_journal_entry(idx);
+            }
+            return true;
+        }
+
         crate::zen::editor::handle_key(state, code);
         return true;
     }
