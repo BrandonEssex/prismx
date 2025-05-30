@@ -82,11 +82,13 @@ pub fn progress_bar(now: usize, triton: usize, done: usize) -> String {
 
 /// Render triage entries grouped by primary tags (#now, #triton, #done).
 /// When `show_icons` is true, tag headers include emoji icons.
+
 pub fn render_grouped<B: Backend>(
     f: &mut Frame<B>,
     area: Rect,
     state: &mut AppState,
     show_icons: bool,
+    collapsed: Option<&HashSet<&str>>,
 ) {
     let style = state.beam_style_for_mode("triage");
     let block_style = Style::default().fg(style.border_color);
@@ -124,17 +126,23 @@ pub fn render_grouped<B: Backend>(
             if entries.is_empty() {
                 continue;
             }
-            let header = match *tag {
-                "#now" => if show_icons { "🔥 NOW" } else { "#NOW" },
-                "#triton" => if show_icons { "🧠 TRITON" } else { "#TRITON" },
-                "#done" => if show_icons { "✅ DONE" } else { "#DONE" },
-                _ => "OTHER",
-            };
-            lines.push(Line::from(Span::styled(
-                header,
-                Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD),
-            )));
+            let collapsed = collapsed
+                .map(|c| c.contains(tag))
+                .unwrap_or(false);
+           let header = match *tag {
+               "#now" => if show_icons { "🔥 NOW" } else { "#NOW" },
+               "#triton" => if show_icons { "🧠 TRITON" } else { "#TRITON" },
+               "#done" => if show_icons { "✅ DONE" } else { "#DONE" },
+               _ => "OTHER",
+           };
+           lines.push(Line::from(Span::styled(
+               header,
+               Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD),
+           )));
             lines.push(Line::from(""));
+            if collapsed {
+                continue;
+            }
 
             for (idx, entry) in entries {
                 let mut entry_style = Style::default();
