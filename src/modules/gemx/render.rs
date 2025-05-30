@@ -1,7 +1,9 @@
 use ratatui::{prelude::*, widgets::Paragraph};
 use crate::node::{NodeID, NodeMap};
 use crate::state::AppState;
-use crate::layout::engine::{center_x, layout_vertical};
+use crate::layout::engine::{
+    center_x, layout_vertical, detect_collisions, detect_overflow,
+};
 use super::layout::{clamp_child_spacing, enforce_viewport_bounds};
 use crate::ui::lines::{
     draw_vertical_fade,
@@ -46,7 +48,27 @@ pub fn render<B: Backend>(
     for &root in roots {
         layout_vertical(nodes, root, spacing_y);
     }
+
+    let overflow_nodes = if debug {
+        detect_overflow(nodes, area)
+    } else {
+        Vec::new()
+    };
+
     enforce_viewport_bounds(nodes, area);
+
+    let collision_nodes = if debug {
+        detect_collisions(nodes)
+    } else {
+        Vec::new()
+    };
+
+    let mut problem_nodes: HashSet<NodeID> = HashSet::new();
+    if debug {
+        for id in overflow_nodes.into_iter().chain(collision_nodes.into_iter()) {
+            problem_nodes.insert(id);
+        }
+    }
 
     let zoom = state.zoom_scale as f32;
 
@@ -210,6 +232,7 @@ pub fn render<B: Backend>(
         let y = scale_y(node.y);
         if x >= 0 && y >= 0 && x < area.right() as i16 && y < area.bottom() as i16 {
             let mut text = compressed_label(&node.label, zoom);
+            let is_problem = problem_nodes.contains(&node.id);
             if state.hierarchy_icons {
                 let icon = if node.parent.is_none() {
                     ROOT_NODE
@@ -225,12 +248,18 @@ pub fn render<B: Backend>(
                 };
                 text = format!("{} {}", icon, text);
             }
+            if debug && is_problem {
+                text.push_str(" ⚠");
+            }
             let width = ((text.len() as f32) * zoom).ceil().max(1.0) as u16;
             let display = if zoom <= 0.5 { text } else { node.label.clone() };
             let rect = Rect::new(x as u16, y as u16, width, 1);
             let mut para = Paragraph::new(display.clone());
             if highlight && focus_nodes.contains(&node.id) {
                 para = para.style(trail_style(highlight_parent, tick, fade));
+            }
+            if debug && is_problem {
+                para = para.style(Style::default().fg(Color::LightRed));
             }
             f.render_widget(para, rect);
 

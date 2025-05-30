@@ -3,6 +3,7 @@ pub mod layout;
 pub mod animate;
 pub mod shortcuts;
 pub mod components;
+pub mod debug;
 pub mod render;
 pub mod overlay;
 pub mod input;

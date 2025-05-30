@@ -38,7 +38,7 @@ pub fn render_dynamic_overlay<B: Backend>(
     f.render_widget(content, Rect::new(area.x + 1, area.y + 1, area.width - 2, inner_height));
 }
 
-use crate::ui::components::debug::render_debug_panel;
+use crate::ui::debug::render_debug_panel;
 
 /// Render the developer diagnostic overlay.
 pub fn render_debug_overlay<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState, sticky: bool) {

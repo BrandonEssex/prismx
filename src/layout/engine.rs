@@ -189,3 +189,69 @@ pub fn reflow_siblings(nodes: &mut NodeMap, parent: NodeID, spacing_y: i16) {
         }
     }
 }
+
+use ratatui::layout::Rect;
+/// Return the bounding grid size (rows, columns) required to fit all nodes.
+pub fn grid_size(nodes: &NodeMap) -> (i16, i16) {
+    if nodes.is_empty() {
+        return (0, 0);
+    }
+    let mut min_x = i16::MAX;
+    let mut min_y = i16::MAX;
+    let mut max_x = i16::MIN;
+    let mut max_y = i16::MIN;
+    for n in nodes.values() {
+        let (w, h) = label_bounds(&n.label);
+        min_x = min_x.min(n.x);
+        min_y = min_y.min(n.y);
+        max_x = max_x.max(n.x + w - 1);
+        max_y = max_y.max(n.y + h - 1);
+    }
+    (max_y - min_y + 1, max_x - min_x + 1)
+}
+
+/// Detect nodes that fall outside the provided area.
+pub fn detect_overflow(nodes: &NodeMap, area: Rect) -> Vec<NodeID> {
+    let mut out = Vec::new();
+    for (&id, node) in nodes {
+        let (w, h) = label_bounds(&node.label);
+        let left = node.x;
+        let right = node.x + w - 1;
+        let top = node.y;
+        let bottom = node.y + h - 1;
+        if left < area.x as i16
+            || top < area.y as i16
+            || right > area.right() as i16 - 1
+            || bottom > area.bottom() as i16 - 1
+        {
+            out.push(id);
+        }
+    }
+    out
+}
+
+/// Detect any overlapping node labels and return the offending IDs.
+pub fn detect_collisions(nodes: &NodeMap) -> Vec<NodeID> {
+    use std::collections::HashMap;
+    let mut grid: HashMap<(i16, i16), NodeID> = HashMap::new();
+    let mut bad = Vec::new();
+    for (&id, node) in nodes {
+        let (w, h) = label_bounds(&node.label);
+        for dx in 0..w {
+            for dy in 0..h {
+                let key = (node.x + dx, node.y + dy);
+                if let Some(prev) = grid.get(&key) {
+                    if !bad.contains(&id) {
+                        bad.push(id);
+                    }
+                    if !bad.contains(prev) {
+                        bad.push(*prev);
+                    }
+                } else {
+                    grid.insert(key, id);
+                }
+            }
+        }
+    }
+    bad
+}
