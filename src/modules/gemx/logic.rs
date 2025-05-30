@@ -85,3 +85,68 @@ pub fn demote_prev_sibling(
 pub fn parent_id(nodes: &NodeMap, node_id: NodeID) -> Option<NodeID> {
     nodes.get(&node_id).and_then(|n| n.parent)
 }
+
+/// Determine how deep a node is in the hierarchy.
+pub fn node_depth(nodes: &NodeMap, node_id: NodeID) -> usize {
+    let mut depth = 0usize;
+    let mut current = nodes.get(&node_id).and_then(|n| n.parent);
+    let mut visited = std::collections::HashSet::new();
+    while let Some(pid) = current {
+        if !visited.insert(pid) {
+            break;
+        }
+        depth += 1;
+        current = nodes.get(&pid).and_then(|n| n.parent);
+        if depth > nodes.len() {
+            break;
+        }
+    }
+    depth
+}
+
+/// Merge `src` node into `tgt` when they share the same depth.
+/// Children from `src` are reparented to `tgt` and `src` is removed.
+pub fn merge_nodes(
+    nodes: &mut NodeMap,
+    roots: &mut Vec<NodeID>,
+    src: NodeID,
+    tgt: NodeID,
+) {
+    if src == tgt {
+        return;
+    }
+    if node_depth(nodes, src) != node_depth(nodes, tgt) {
+        return;
+    }
+
+    // Detach src from its parent or root list
+    if let Some(pid) = nodes.get(&src).and_then(|n| n.parent) {
+        if let Some(parent) = nodes.get_mut(&pid) {
+            parent.children.retain(|&c| c != src);
+        }
+    } else {
+        roots.retain(|&r| r != src);
+    }
+
+    if let Some(mut s) = nodes.remove(&src) {
+        let child_ids = s.children.clone();
+        if let Some(mut t) = nodes.remove(&tgt) {
+            if !t.label.is_empty() && !s.label.is_empty() {
+                t.label.push(' ');
+            }
+            t.label.push_str(&s.label);
+            for child in child_ids {
+                if let Some(c) = nodes.get_mut(&child) {
+                    c.parent = Some(tgt);
+                }
+                if !t.children.contains(&child) {
+                    t.children.push(child);
+                }
+            }
+            nodes.insert(tgt, t);
+        } else {
+            // put source back if target missing
+            nodes.insert(src, s);
+        }
+    }
+}
