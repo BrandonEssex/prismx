@@ -5,6 +5,7 @@ use crate::layout::engine::{layout_vertical, center_x};
 use crate::ui::lines::{
     draw_vertical_fade,
     draw_horizontal_shimmer,
+    draw_ghost_line,
 };
 use crate::theme::beam_color::{parent_line_color, sibling_line_color};
 use crate::beam_color::BeamColor;
@@ -82,13 +83,14 @@ pub fn render<B: Backend>(
             // vertical drop to each child
             for (cid, cx) in child_centers {
                 if let Some(child) = nodes.get(cid) {
-                    draw_vertical_fade(
-                        f,
-                        (cx + ox, beam_y + oy - scroll),
-                        (cx + ox, child.y + oy - scroll),
-                        tick,
-                        p_color,
-                    );
+                    let start = (cx + ox, beam_y + oy - scroll);
+                    let end = (cx + ox, child.y + oy - scroll);
+                    let is_ghost = child.label == "New Child" || child.label == "New Sibling";
+                    if is_ghost {
+                        draw_ghost_line(f, start, end, tick, p_color);
+                    } else {
+                        draw_vertical_fade(f, start, end, tick, p_color);
+                    }
                 }
             }
         }

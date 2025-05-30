@@ -96,3 +96,44 @@ pub fn draw_horizontal_shimmer<B: Backend>(
         f.render_widget(Paragraph::new("─").style(style), rect);
     }
 }
+
+/// Draw a ghost line using shimmer style for previewing connections.
+pub fn draw_ghost_line<B: Backend>(
+    f: &mut Frame<B>,
+    start: (i16, i16),
+    end: (i16, i16),
+    tick: u64,
+    color: Color,
+) {
+    let (sx, sy) = start;
+    let (ex, ey) = end;
+    if sx == ex {
+        let y0 = sy.min(ey);
+        let y1 = sy.max(ey);
+        for (i, y) in (y0..=y1).enumerate() {
+            let style = shimmer(scale_color(color, 0.5), tick + i as u64);
+            let rect = Rect::new(sx as u16, y as u16, 1, 1);
+            f.render_widget(Paragraph::new("│").style(style), rect);
+        }
+    } else if sy == ey {
+        let x0 = sx.min(ex);
+        let x1 = sx.max(ex);
+        for (i, x) in (x0..=x1).enumerate() {
+            let style = shimmer(scale_color(color, 0.5), tick + i as u64);
+            let rect = Rect::new(x as u16, sy as u16, 1, 1);
+            f.render_widget(Paragraph::new("─").style(style), rect);
+        }
+    } else {
+        draw_ghost_line(f, start, (sx, ey), tick, color);
+        let glyph = if sy < ey {
+            if sx < ex { "┌" } else { "┐" }
+        } else if sx < ex {
+            "└"
+        } else {
+            "┘"
+        };
+        let style = shimmer(scale_color(color, 0.5), tick);
+        f.render_widget(Paragraph::new(glyph).style(style), Rect::new(sx as u16, ey as u16, 1, 1));
+        draw_ghost_line(f, (sx, ey), end, tick, color);
+    }
+}
