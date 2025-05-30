@@ -8,6 +8,11 @@ impl AppState {
 
     pub fn add_child_node(&mut self) {
         let Some(parent_id) = self.selected else { return };
+        if !self.can_insert_node() {
+            self.status_message = "Cannot insert: empty node".into();
+            self.status_message_last_updated = Some(std::time::Instant::now());
+            return;
+        }
         if !self.nodes.contains_key(&parent_id) {
             return;
         }
@@ -76,6 +81,11 @@ impl AppState {
             Some(id) if self.nodes.contains_key(&id) => id,
             _ => return,
         };
+        if !self.can_insert_node() {
+            self.status_message = "Cannot insert: empty node".into();
+            self.status_message_last_updated = Some(std::time::Instant::now());
+            return;
+        }
         let parent_id = self.nodes.get(&selected_id).and_then(|n| n.parent);
 
         let new_id = self.next_node_id;

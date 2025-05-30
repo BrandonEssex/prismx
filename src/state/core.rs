@@ -170,6 +170,7 @@ pub struct AppState {
     pub layout_fail_count: u8,
     pub layout_key: (usize, u64),
     pub debug_input_mode: bool,
+    pub debug_allow_empty_nodes: bool,
     pub debug_border: bool,
     pub debug_overlay: bool,
     pub debug_overlay_sticky: bool,
@@ -332,6 +333,7 @@ impl Default for AppState {
             layout_fail_count: 0,
             layout_key: (0, 0),
             debug_input_mode: true,
+            debug_allow_empty_nodes: false,
             debug_border: std::env::var("PRISMX_DEBUG_BORDER").is_ok(),
             debug_overlay: false,
             debug_overlay_sticky: false,
@@ -406,6 +408,7 @@ impl Default for AppState {
         let config = crate::settings::load_user_settings();
         state.auto_arrange = config.auto_arrange;
         state.debug_input_mode = config.debug_input_mode;
+        state.debug_allow_empty_nodes = config.debug_allow_empty_nodes;
         state.favorite_dock_layout = match config.dock_layout.as_str() {
             "horizontal" => DockLayout::Horizontal,
             _ => DockLayout::Vertical,

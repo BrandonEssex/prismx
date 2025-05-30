@@ -16,14 +16,24 @@ pub fn handle_key(state: &mut AppState, code: KeyCode, mods: KeyModifiers) -> bo
         }
         // Insert sibling on Enter
         KeyCode::Enter if mods.is_empty() => {
-            state.push_undo();
-            state.handle_enter_key();
+            if state.can_insert_node() {
+                state.push_undo();
+                state.handle_enter_key();
+            } else {
+                state.status_message = "Cannot insert: empty node".into();
+                state.status_message_last_updated = Some(Instant::now());
+            }
             true
         }
         // Insert child on Tab
         KeyCode::Tab if mods.is_empty() => {
-            state.push_undo();
-            state.handle_tab_key();
+            if state.can_insert_node() {
+                state.push_undo();
+                state.handle_tab_key();
+            } else {
+                state.status_message = "Cannot insert: empty node".into();
+                state.status_message_last_updated = Some(Instant::now());
+            }
             true
         }
         // Promote or free on Shift+Tab

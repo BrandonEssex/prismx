@@ -64,6 +64,12 @@ impl SettingCategory {
 fn is_debug_mode(s: &AppState) -> bool { s.debug_input_mode }
 fn toggle_debug_mode(s: &mut AppState) { s.debug_input_mode = !s.debug_input_mode; save_user_settings(s); }
 
+fn is_allow_empty_nodes(s: &AppState) -> bool { s.debug_allow_empty_nodes }
+fn toggle_allow_empty_nodes(s: &mut AppState) {
+    s.debug_allow_empty_nodes = !s.debug_allow_empty_nodes;
+    save_user_settings(s);
+}
+
 fn is_auto_arrange(s: &AppState) -> bool { s.auto_arrange }
 fn toggle_auto_arrange(s: &mut AppState) { s.auto_arrange = !s.auto_arrange; save_user_settings(s); }
 
@@ -131,6 +137,7 @@ pub static SETTING_TOGGLES: &[SettingToggle] = &[
     SettingToggle { icon: "✨", label: "Mindmap Lanes", is_enabled: is_mindmap_lanes, toggle: toggle_mindmap_lanes, category: SettingCategory::Modules },
     SettingToggle { icon: "🧠", label: "Hierarchy Icons", is_enabled: is_hierarchy_icons, toggle: toggle_hierarchy_icons, category: SettingCategory::Modules },
     SettingToggle { icon: "🐞", label: "Debug Input Mode", is_enabled: is_debug_mode, toggle: toggle_debug_mode, category: SettingCategory::UX },
+    SettingToggle { icon: "⚠", label: "Allow Empty Nodes", is_enabled: is_allow_empty_nodes, toggle: toggle_allow_empty_nodes, category: SettingCategory::UX },
     SettingToggle { icon: "❤️", label: "Heartbeat", is_enabled: heartbeat_active, toggle: toggle_heartbeat, category: SettingCategory::UX },
 ];
 
