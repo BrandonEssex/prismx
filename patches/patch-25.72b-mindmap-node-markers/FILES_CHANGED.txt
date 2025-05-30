@@ -1,0 +1,2 @@
+- src/modules/gemx/render.rs
+- src/theme/icons.rs
