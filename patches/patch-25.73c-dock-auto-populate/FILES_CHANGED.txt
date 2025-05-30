@@ -1,0 +1,2 @@
+- src/ui/dock.rs
+- src/plugins/registry.rs
