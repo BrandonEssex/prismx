@@ -458,8 +458,11 @@ impl AppState {
     pub fn trigger_favorite(&mut self, index: usize) {
         let entries = self.favorite_entries();
         if let Some(entry) = entries.get(index) {
-            self.spotlight_input = entry.command.to_string();
-            self.show_spotlight = true;
+            let cmd = entry.command.trim().trim_start_matches('/');
+            if !self.handle_spotlight_command(cmd) {
+                self.spotlight_input = entry.command.to_string();
+                self.show_spotlight = true;
+            }
             self.favorite_focus_index = Some(index);
             self.dock_pulse_frames = 6;
             self.status_message = entry.command.to_string();
