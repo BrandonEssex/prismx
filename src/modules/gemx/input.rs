@@ -3,7 +3,8 @@ use std::time::Instant;
 use crate::state::AppState;
 use crate::gemx::interaction::{self, node_at_position, start_drag as start_move,
     drag_update, end_drag};
-use crate::modules::gemx::logic;
+use crate::modules::gemx::{logic, layout};
+use ratatui::prelude::Rect;
 
 /// Handle GemX (mindmap) specific keyboard shortcuts.
 pub fn handle_key(state: &mut AppState, code: KeyCode, mods: KeyModifiers) -> bool {
@@ -42,24 +43,101 @@ pub fn handle_key(state: &mut AppState, code: KeyCode, mods: KeyModifiers) -> bo
             state.handle_shift_tab_key();
             true
         }
-        // Alt+Left: previous sibling
-        KeyCode::Left if mods == KeyModifiers::ALT => {
-            state.focus_prev_sibling();
-            true
-        }
-        // Alt+Right: next sibling
+        // Alt+Right: insert sibling to the right
         KeyCode::Right if mods == KeyModifiers::ALT => {
-            state.focus_next_sibling();
+            if state.can_insert_node() {
+                state.push_undo();
+                state.handle_enter_key();
+                if let Some(id) = state.selected {
+                    layout::focus_new_node(state, id);
+                }
+            } else {
+                state.status_message = "Cannot insert: edit node label first".into();
+                state.status_message_last_updated = Some(Instant::now());
+            }
             true
         }
-        // Alt+Up: move to parent
-        KeyCode::Up if mods == KeyModifiers::ALT => {
-            state.move_focus_left();
-            true
-        }
-        // Alt+Down: move to first child
+        // Alt+Down: insert child below
         KeyCode::Down if mods == KeyModifiers::ALT => {
-            state.move_focus_right();
+            if state.can_insert_node() {
+                state.push_undo();
+                state.handle_tab_key();
+                if let Some(id) = state.selected {
+                    layout::focus_new_node(state, id);
+                }
+            } else {
+                state.status_message = "Cannot insert: edit node label first".into();
+                state.status_message_last_updated = Some(Instant::now());
+            }
+            true
+        }
+        // Alt+Left: insert peer beside parent
+        KeyCode::Left if mods == KeyModifiers::ALT => {
+            if state.can_insert_node() {
+                if let Some(current) = state.selected {
+                    state.push_undo();
+                    if let Some(parent_id) = logic::parent_id(&state.nodes, current) {
+                        state.set_selected(Some(parent_id));
+                        state.add_sibling_node();
+                        let new_id = state.selected.unwrap();
+                        if let Some(p) = state.nodes.get(&parent_id).cloned() {
+                            if let Some(n) = state.nodes.get_mut(&new_id) {
+                                n.x = p.x - crate::layout::SIBLING_SPACING_X;
+                                n.y = p.y;
+                            }
+                        }
+                        let (tw, th) = crossterm::terminal::size().unwrap_or((80, 20));
+                        layout::enforce_viewport_bounds(
+                            &mut state.nodes,
+                            Rect::new(0, 0, tw, th),
+                        );
+                        layout::focus_new_node(state, new_id);
+                    } else {
+                        // root node
+                        state.add_sibling_node();
+                        let new_id = state.selected.unwrap();
+                        if let Some(cur) = state.nodes.get(&current).cloned() {
+                            if let Some(n) = state.nodes.get_mut(&new_id) {
+                                n.x = cur.x - crate::layout::SIBLING_SPACING_X;
+                                n.y = cur.y;
+                            }
+                        }
+                        let (tw, th) = crossterm::terminal::size().unwrap_or((80, 20));
+                        layout::enforce_viewport_bounds(
+                            &mut state.nodes,
+                            Rect::new(0, 0, tw, th),
+                        );
+                        layout::focus_new_node(state, new_id);
+                    }
+                }
+            } else {
+                state.status_message = "Cannot insert: edit node label first".into();
+                state.status_message_last_updated = Some(Instant::now());
+            }
+            true
+        }
+        // Alt+Up: insert parent above
+        KeyCode::Up if mods == KeyModifiers::ALT => {
+            if state.can_insert_node() {
+                if let Some(current) = state.selected {
+                    state.push_undo();
+                    state.add_sibling_node();
+                    let new_id = state.selected.unwrap();
+                    logic::reparent(&mut state.nodes, &mut state.root_nodes, current, Some(new_id));
+                    if let Some(cur) = state.nodes.get(&current).cloned() {
+                        if let Some(n) = state.nodes.get_mut(&new_id) {
+                            n.x = cur.x;
+                            n.y = cur.y - crate::layout::CHILD_SPACING_Y;
+                        }
+                    }
+                    let (tw, th) = crossterm::terminal::size().unwrap_or((80, 20));
+                    layout::enforce_viewport_bounds(&mut state.nodes, Rect::new(0, 0, tw, th));
+                    layout::focus_new_node(state, new_id);
+                }
+            } else {
+                state.status_message = "Cannot insert: edit node label first".into();
+                state.status_message_last_updated = Some(Instant::now());
+            }
             true
         }
         // Ctrl+Shift+Up: promote selected node
