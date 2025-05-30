@@ -116,3 +116,42 @@ pub fn sibling_offset(index: usize, len: usize) -> i16 {
     }
     off
 }
+
+/// Reflow an existing set of siblings so they remain horizontally aligned
+/// relative to their parent. This is a lightweight helper used by the mindmap
+/// module when dynamically inserting nodes. Only the sibling positions are
+/// mutated; the parent node remains fixed in place.
+pub fn reflow_siblings(nodes: &mut NodeMap, parent: NodeID, spacing_y: i16) {
+    let Some(p) = nodes.get(&parent).cloned() else { return };
+    if p.children.is_empty() || p.collapsed {
+        return;
+    }
+
+    let spacing_y = spacing_y.max(MIN_CHILD_SPACING_Y);
+
+    // Calculate the left anchor based on the parent's center and total span
+    let total_span = subtree_span(nodes, parent);
+    let (label_w, _) = label_bounds(&p.label);
+    let mut child_x = p.x - (total_span - label_w) / 2;
+    let child_y = p.y + spacing_y;
+    let len = p.children.len();
+
+    for (i, cid) in p.children.iter().copied().enumerate() {
+        let span = subtree_span(nodes, cid);
+        let label_w_child = nodes
+            .get(&cid)
+            .map(|c| label_bounds(&c.label).0)
+            .unwrap_or(2);
+        let child_w = span.max(label_w_child + MIN_NODE_GAP);
+
+        if let Some(cnode) = nodes.get_mut(&cid) {
+            cnode.x = child_x + (span - label_w_child) / 2;
+            cnode.y = child_y;
+        }
+
+        child_x += child_w;
+        if i + 1 < len {
+            child_x += sibling_offset(i, len);
+        }
+    }
+}
