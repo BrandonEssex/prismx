@@ -1,0 +1,3 @@
+- src/ui/lines.rs
+- src/modules/gemx/render.rs
+- src/theme/characters.rs

@@ -1,5 +1,5 @@
 auto_arrange = true
-debug_input_mode = false
+debug_input_mode = true
 debug_allow_empty_nodes = false
 dock_layout = "vertical"
 gemx_beam_color = "Prism"
@@ -13,7 +13,7 @@ mindmap_lanes = true
 hierarchy_icons = true
 font_style = "Regular"
 beam_animation = true
-spotlight_auto_width = false
+spotlight_auto_width = true
 beam_shimmer = true
 zoom_grid = false
 sticky_notes = true
