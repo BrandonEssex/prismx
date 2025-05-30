@@ -1,0 +1,3 @@
+- src/ui/shortcuts.rs
+- src/ui/overlay.rs
+- src/state/core.rs
