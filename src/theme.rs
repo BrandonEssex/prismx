@@ -9,6 +9,7 @@ pub mod fonts;
 pub mod previews;
 pub mod layout;
 pub mod characters;
+pub mod beam_color;
 
 static CURRENT_THEME: Mutex<&str> = Mutex::new("dark");
 

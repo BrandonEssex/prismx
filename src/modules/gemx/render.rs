@@ -2,7 +2,12 @@ use ratatui::{prelude::*, widgets::Paragraph};
 use crate::node::{NodeID, NodeMap};
 use crate::layout::{CHILD_SPACING_Y};
 use crate::layout::engine::{layout_vertical, center_x};
-use crate::ui::lines::{draw_line, draw_line_with_arrow};
+use crate::ui::lines::{
+    draw_vertical_fade,
+    draw_horizontal_shimmer,
+};
+use crate::theme::beam_color::{parent_line_color, sibling_line_color};
+use crate::beam_color::BeamColor;
 
 /// Render a simple mindmap using the vertical layout engine.
 pub fn render<B: Backend>(
@@ -26,6 +31,14 @@ pub fn render<B: Backend>(
     if debug {
         let ox = area.x as i16;
         let oy = area.y as i16;
+        let tick = (std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap_or_default()
+            .as_millis()
+            / 300) as u64;
+        let theme = BeamColor::Prism;
+        let p_color = parent_line_color(theme);
+        let s_color = sibling_line_color(theme);
 
         for node in nodes.values() {
             if node.children.is_empty() {
@@ -36,10 +49,12 @@ pub fn render<B: Backend>(
             let beam_y = node.y + (CHILD_SPACING_Y - 1).max(1);
 
             // vertical beam from parent to sibling bar
-            draw_line(
+            draw_vertical_fade(
                 f,
                 (px + ox, node.y + 1 + oy - scroll),
                 (px + ox, beam_y + oy - scroll),
+                tick,
+                p_color,
             );
 
             // collect child centers
@@ -56,21 +71,23 @@ pub fn render<B: Backend>(
             let max_x = child_centers.iter().map(|c| c.1).max().unwrap();
 
             // horizontal connector across siblings
-            draw_line_with_arrow(
+            draw_horizontal_shimmer(
                 f,
                 (min_x + ox, beam_y + oy - scroll),
                 (max_x + ox, beam_y + oy - scroll),
-                "→",
+                tick,
+                s_color,
             );
 
             // vertical drop to each child
             for (cid, cx) in child_centers {
                 if let Some(child) = nodes.get(cid) {
-                    draw_line_with_arrow(
+                    draw_vertical_fade(
                         f,
                         (cx + ox, beam_y + oy - scroll),
                         (cx + ox, child.y + oy - scroll),
-                        "↓",
+                        tick,
+                        p_color,
                     );
                 }
             }

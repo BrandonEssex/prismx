@@ -1,4 +1,6 @@
 use ratatui::{prelude::*, widgets::Paragraph};
+use ratatui::style::Color;
+use crate::ui::animate::{shimmer, scale_color};
 
 /// Draw a straight line between two points using simple box-drawing glyphs.
 pub fn draw_line<B: Backend>(f: &mut Frame<B>, start: (i16, i16), end: (i16, i16)) {
@@ -45,5 +47,52 @@ pub fn draw_line_with_arrow<B: Backend>(
     if ex >= 0 && ey >= 0 {
         let rect = Rect::new(ex as u16, ey as u16, 1, 1);
         f.render_widget(Paragraph::new(arrow), rect);
+    }
+}
+
+/// Draw a vertical line that fades from `color` using a shimmer effect.
+pub fn draw_vertical_fade<B: Backend>(
+    f: &mut Frame<B>,
+    start: (i16, i16),
+    end: (i16, i16),
+    tick: u64,
+    color: Color,
+) {
+    let (sx, sy) = start;
+    let (ex, ey) = end;
+    if sx != ex {
+        return;
+    }
+    let y0 = sy.min(ey);
+    let y1 = sy.max(ey);
+    let len = (y1 - y0).max(1) as usize;
+    for (i, y) in (y0..=y1).enumerate() {
+        let ratio = 1.0 - i as f32 / len as f32;
+        let c = scale_color(color, ratio);
+        let style = shimmer(c, tick + i as u64);
+        let rect = Rect::new(sx as u16, y as u16, 1, 1);
+        f.render_widget(Paragraph::new("│").style(style), rect);
+    }
+}
+
+/// Draw a horizontal line that shimmers across its length.
+pub fn draw_horizontal_shimmer<B: Backend>(
+    f: &mut Frame<B>,
+    start: (i16, i16),
+    end: (i16, i16),
+    tick: u64,
+    color: Color,
+) {
+    let (sx, sy) = start;
+    let (ex, ey) = end;
+    if sy != ey {
+        return;
+    }
+    let x0 = sx.min(ex);
+    let x1 = sx.max(ex);
+    for (i, x) in (x0..=x1).enumerate() {
+        let style = shimmer(color, tick + i as u64);
+        let rect = Rect::new(x as u16, sy as u16, 1, 1);
+        f.render_widget(Paragraph::new("─").style(style), rect);
     }
 }
