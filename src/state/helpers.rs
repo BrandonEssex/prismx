@@ -419,7 +419,7 @@ impl AppState {
     pub fn favorite_entries(&self) -> Vec<FavoriteEntry> {
         let default_favorites = [
             ("⚙️", "/settings"),
-            ("📬", "/triage"),
+            ("🏥", "/triage"),
             ("💭", "/gemx"),
             ("🧘", "/zen"),
             ("🔍", "/spotlight"),
@@ -440,7 +440,7 @@ impl AppState {
             all[2].icon = "💬";
         }
         if (self.mode == "triage" || self.show_triage) && all.len() >= 2 {
-            all[1].icon = "📫";
+            all[1].icon = "🏥";
         }
         all
     }

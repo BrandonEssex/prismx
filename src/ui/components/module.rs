@@ -19,7 +19,7 @@ pub fn render_module_switcher(
     let modules = [
         ("💭", "Mindmap"),
         ("🧘", "Zen"),
-        ("🧭", "Triage"),
+        ("🏥", "Triage"),
         ("⚙️", "Settings"),
         ("🔌", "Plugins"),
     ];
