@@ -6,7 +6,9 @@ use ratatui::{
 };
 use crate::ui::layout::Rect;
 
-use crate::theme::layout::overlay_width;
+use crate::theme::layout::{overlay_width, SWITCHER_ITEM_WIDTH};
+
+use unicode_width::UnicodeWidthStr;
 
 use crate::state::AppState;
 use crate::ui::animate;
@@ -41,6 +43,11 @@ pub fn render_module_switcher(
 
     let accent = ThemeConfig::load().accent_color();
 
+    // Use a fixed width shared with Spotlight so the panel does not resize based
+    // on its content.
+    let base_width = overlay_width(area.width);
+    let item_width = SWITCHER_ITEM_WIDTH.min(base_width.saturating_sub(2));
+
     let lines: Vec<Line> = modules
         .iter()
         .enumerate()
@@ -48,25 +55,31 @@ pub fn render_module_switcher(
         .take(max_visible.min(count))
         .map(|(i, (icon, label))| {
             let selected = i == index;
-            let prefix = if selected { "> " } else { "  " };
-            let mut style = if selected {
-                animate::shimmer(accent, state.module_switcher_animation_frame as u64)
+            let text = format!("{} {}", icon, label);
+            let text_w = UnicodeWidthStr::width(text.as_str()) as u16;
+            let pad_total = item_width.saturating_sub(text_w);
+            let left = pad_total / 2;
+            let right = pad_total - left;
+            let line_str = format!(
+                "{left_pad}{text}{right_pad}",
+                left_pad = " ".repeat(left as usize),
+                right_pad = " ".repeat(right as usize)
+            );
+
+            let style = if selected {
+                Style::default()
+                    .fg(Color::Black)
+                    .bg(accent)
+                    .add_modifier(Modifier::BOLD)
             } else {
                 Style::default().fg(Color::Gray)
             };
-            if selected {
-                style = style.add_modifier(Modifier::BOLD);
-            }
-            Line::from(vec![
-                Span::styled(prefix.to_string(), style),
-                Span::styled(format!("{} {}", icon, label), style),
-            ])
+            Line::from(Span::styled(line_str, style))
         })
         .collect();
 
     // Use a fixed width shared with Spotlight so the panel does not resize based
     // on its content.
-    let base_width = overlay_width(area.width);
     let mut height = lines.len() as u16 + 2;
     height = height.min(area.height.saturating_sub(1));
 
