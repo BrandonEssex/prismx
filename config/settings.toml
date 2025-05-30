@@ -1,5 +1,5 @@
 auto_arrange = true
-debug_input_mode = false
+debug_input_mode = true
 dock_layout = "vertical"
 gemx_beam_color = "Prism"
 zen_beam_color = "Prism"
@@ -10,7 +10,7 @@ beamx_panel_theme = "Prism"
 beamx_panel_visible = true
 mindmap_lanes = true
 hierarchy_icons = true
-font_style = "Bold"
+font_style = "Regular"
 beam_animation = true
 spotlight_auto_width = false
 beam_shimmer = true
