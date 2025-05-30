@@ -18,9 +18,22 @@ pub fn clamp_zoom_scroll(state: &mut AppState) {
     let limit = (1000.0 * state.zoom_scale) as i16;
 
     // Give the user some buffer space when fully zoomed out so nodes aren't
-    // forced against the viewport edges. Padding increases as zoom decreases.
-    let pad_right = if state.zoom_scale <= 0.5 { 40 } else { 20 };
-    let pad_vert = if state.zoom_scale <= 0.5 { 20 } else { 10 };
+    // forced against the viewport edges. Padding increases as zoom decreases
+    // and is more aggressive when zoomed far out.
+    let pad_right = if state.zoom_scale <= 0.3 {
+        60
+    } else if state.zoom_scale <= 0.5 {
+        40
+    } else {
+        20
+    };
+    let pad_vert = if state.zoom_scale <= 0.3 {
+        30
+    } else if state.zoom_scale <= 0.5 {
+        20
+    } else {
+        10
+    };
 
     state.scroll_x = state.scroll_x.clamp(0, limit + pad_right);
     state.scroll_y = state.scroll_y.clamp(0, limit + pad_vert);
@@ -44,11 +57,14 @@ pub fn clamp_child_spacing(state: &AppState, roots: &[NodeID], max_h: i16) -> i1
         CHILD_SPACING_Y
     };
 
-    if state.zoom_scale <= 0.5 {
-        spacing = ((spacing as f32) * state.zoom_scale).floor() as i16;
-        if spacing < MIN_CHILD_SPACING_Y {
-            spacing = MIN_CHILD_SPACING_Y;
-        }
+    if (state.zoom_scale - 1.0).abs() < f32::EPSILON {
+        spacing = (spacing - 1).max(MIN_CHILD_SPACING_Y);
+    } else if state.zoom_scale < 1.0 {
+        spacing = ((spacing as f32) * state.zoom_scale)
+            .floor()
+            .max(MIN_CHILD_SPACING_Y as f32) as i16;
+    } else if state.zoom_scale > 1.0 {
+        spacing = ((spacing as f32) * state.zoom_scale).ceil() as i16;
     }
 
     spacing

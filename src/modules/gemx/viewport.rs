@@ -13,8 +13,20 @@ pub fn node_visible(state: &AppState, node_id: NodeID) -> bool {
     // small visibility margin so centering leaves room on the right and bottom
     // of the screen. The top margin keeps the focused node from touching the
     // header.
-    let right_pad = if zoom <= 0.5 { 4.0 } else { 2.0 };
-    let bottom_pad = if zoom <= 0.5 { 2.0 } else { 1.0 };
+    let right_pad = if zoom <= 0.3 {
+        6.0
+    } else if zoom <= 0.5 {
+        4.0
+    } else {
+        2.0
+    };
+    let bottom_pad = if zoom <= 0.3 {
+        3.0
+    } else if zoom <= 0.5 {
+        2.0
+    } else {
+        1.0
+    };
     let top_pad = if zoom <= 0.5 { 1.0 } else { 0.0 };
 
     if let Some(node) = state.nodes.get(&node_id) {
