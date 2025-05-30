@@ -4,6 +4,10 @@ pub fn spacing_scale(zoom: f32) -> (i16, i16) {
     (x, y)
 }
 
+/// Standard width for each entry in the module switcher list.
+/// This keeps icon boxes visually balanced regardless of label length.
+pub const SWITCHER_ITEM_WIDTH: u16 = 20;
+
 /// Standard width for small overlay panels like Spotlight and the module
 /// switcher.
 pub const OVERLAY_WIDTH: u16 = 60;
