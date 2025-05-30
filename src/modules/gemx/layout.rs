@@ -136,25 +136,32 @@ fn shift_subtree(nodes: &mut crate::node::NodeMap, id: NodeID, dx: i16) {
 
 /// Calculate dynamic spacing between root clusters based on available width.
 fn root_spacing(nodes: &crate::node::NodeMap, roots: &[NodeID]) -> i16 {
-    use crate::layout::{subtree_span, SIBLING_SPACING_X, MIN_SIBLING_SPACING_X, RESERVED_ZONE_W};
+    use crate::layout::{subtree_span, subtree_depth, SIBLING_SPACING_X, MIN_SIBLING_SPACING_X, RESERVED_ZONE_W};
+    use crate::layout::engine::{DEEP_BRANCH_THRESHOLD, DEEP_BRANCH_STEP_X};
 
     let (tw, _) = terminal::size().unwrap_or((80, 20));
     let max_w = tw as i16 - RESERVED_ZONE_W;
 
     let mut total = 0i16;
+    let mut extra = 0i16;
     for r in roots {
         total += subtree_span(nodes, *r);
+        let depth = subtree_depth(nodes, *r) as usize;
+        if depth > DEEP_BRANCH_THRESHOLD {
+            let add = ((depth - DEEP_BRANCH_THRESHOLD) as i16) * DEEP_BRANCH_STEP_X;
+            extra = extra.max(add);
+        }
     }
     if roots.len() > 1 {
-        total += SIBLING_SPACING_X * (roots.len() as i16 - 1);
+        total += (SIBLING_SPACING_X + extra) * (roots.len() as i16 - 1);
     }
 
     if max_w > 0 && total > max_w {
         let ratio = max_w as f32 / total as f32;
-        let spacing = ((SIBLING_SPACING_X as f32) * ratio).floor() as i16;
+        let spacing = (((SIBLING_SPACING_X + extra) as f32) * ratio).floor() as i16;
         spacing.max(MIN_SIBLING_SPACING_X)
     } else {
-        SIBLING_SPACING_X
+        SIBLING_SPACING_X + extra
     }
 }
 
