@@ -16,10 +16,16 @@ pub fn follow_focus_node(state: &mut AppState) {
 /// Clamp scroll offsets relative to zoom level to avoid jumpiness.
 pub fn clamp_zoom_scroll(state: &mut AppState) {
     let limit = (1000.0 * state.zoom_scale) as i16;
-    state.scroll_x = state.scroll_x.clamp(0, limit);
-    state.scroll_y = state.scroll_y.clamp(0, limit);
-    state.scroll_target_x = state.scroll_target_x.clamp(0, limit);
-    state.scroll_target_y = state.scroll_target_y.clamp(0, limit);
+
+    // Give the user some buffer space when fully zoomed out so nodes aren't
+    // forced against the viewport edges. Padding increases as zoom decreases.
+    let pad_right = if state.zoom_scale <= 0.5 { 40 } else { 20 };
+    let pad_vert = if state.zoom_scale <= 0.5 { 20 } else { 10 };
+
+    state.scroll_x = state.scroll_x.clamp(0, limit + pad_right);
+    state.scroll_y = state.scroll_y.clamp(0, limit + pad_vert);
+    state.scroll_target_x = state.scroll_target_x.clamp(0, limit + pad_right);
+    state.scroll_target_y = state.scroll_target_y.clamp(0, limit + pad_vert);
 }
 
 /// Determine dynamic child spacing based on total depth.
