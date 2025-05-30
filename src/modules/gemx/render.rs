@@ -14,6 +14,19 @@ use crate::beam_color::BeamColor;
 use crate::ui::beamx::{BeamXMode, BeamXStyle, InsertCursorKind, render_insert_cursor};
 use crate::theme::icons::{ROOT_NODE, CHILD_NODE, SIBLING_NODE};
 
+fn compressed_label(label: &str, zoom: f32) -> String {
+    if zoom > 0.5 {
+        return label.to_string();
+    }
+
+    let mut base = label.split(|c| c == '#' || c == '@' || c == '[').next().unwrap_or(label).trim().to_string();
+    if base.len() > 10 {
+        base.truncate(10);
+        base.push('…');
+    }
+    base
+}
+
 /// Render a simple mindmap using the vertical layout engine.
 pub fn render<B: Backend>(
     f: &mut Frame<B>,
@@ -27,6 +40,8 @@ pub fn render<B: Backend>(
     for &root in roots {
         layout_vertical(nodes, root, spacing_y);
     }
+
+    let zoom = state.zoom_scale as f32;
 
     let tick = (std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
@@ -47,23 +62,23 @@ pub fn render<B: Backend>(
         scroll = max_y - area.height as i16 + 1;
     }
 
-    if debug {
-        let ox = area.x as i16;
-        let oy = area.y as i16;
+    let scale_x = |val: i16| -> i16 { area.x as i16 + ((val as f32) * zoom).round() as i16 };
+    let scale_y = |val: i16| -> i16 { area.y as i16 + (((val - scroll) as f32) * zoom).round() as i16 };
 
+    if debug {
         for node in nodes.values() {
             if node.children.is_empty() {
                 continue;
             }
 
-            let px = center_x(nodes, node.id);
-            let beam_y = node.y + (spacing_y - 1).max(1);
+            let px = scale_x(center_x(nodes, node.id));
+            let beam_y = scale_y(node.y + (spacing_y - 1).max(1));
 
             // vertical beam from parent to sibling bar
             draw_vertical_fade(
                 f,
-                (px + ox, node.y + 1 + oy - scroll),
-                (px + ox, beam_y + oy - scroll),
+                (px, scale_y(node.y + 1)),
+                (px, beam_y),
                 tick,
                 p_color,
             );
@@ -72,7 +87,7 @@ pub fn render<B: Backend>(
             let mut child_centers = Vec::new();
             for cid in &node.children {
                 if nodes.contains_key(cid) {
-                    child_centers.push((cid, center_x(nodes, *cid)));
+                    child_centers.push((cid, scale_x(center_x(nodes, *cid))));
                 }
             }
             if child_centers.is_empty() {
@@ -84,8 +99,8 @@ pub fn render<B: Backend>(
             // horizontal connector across siblings
             draw_horizontal_shimmer(
                 f,
-                (min_x + ox, beam_y + oy - scroll),
-                (max_x + ox, beam_y + oy - scroll),
+                (min_x, beam_y),
+                (max_x, beam_y),
                 tick,
                 s_color,
             );
@@ -93,8 +108,8 @@ pub fn render<B: Backend>(
             // vertical drop to each child
             for (cid, cx) in child_centers {
                 if let Some(child) = nodes.get(cid) {
-                    let start = (cx + ox, beam_y + oy - scroll);
-                    let end = (cx + ox, child.y + oy - scroll);
+                    let start = (cx, beam_y);
+                    let end = (cx, scale_y(child.y));
                     let is_ghost = child.label == "New Child" || child.label == "New Sibling";
                     if is_ghost {
                         draw_ghost_line(f, start, end, tick, p_color);
@@ -109,20 +124,20 @@ pub fn render<B: Backend>(
     // Preview reparent link if dragging over a potential parent
     if let (Some(src), Some(tgt)) = (state.dragging, state.drag_hover_target) {
         if let (Some(s), Some(t)) = (nodes.get(&src), nodes.get(&tgt)) {
-            let sx = area.x as i16 + center_x(nodes, src);
-            let sy = area.y as i16 + s.y - scroll;
-            let tx = area.x as i16 + center_x(nodes, tgt);
-            let ty = area.y as i16 + t.y - scroll;
-            draw_anchor_trail(f, (sx, sy), (tx, ty), tick, p_color);
+            let ax = scale_x(center_x(nodes, src));
+            let ay = scale_y(s.y);
+            let bx = scale_x(center_x(nodes, tgt));
+            let by = scale_y(t.y);
+            draw_anchor_trail(f, (ax, ay), (bx, by), tick, p_color);
         }
     }
 
     // Draw nodes
     for node in nodes.values() {
-        let x = area.x as i16 + node.x;
-        let y = area.y as i16 + node.y - scroll;
+        let x = scale_x(node.x);
+        let y = scale_y(node.y);
         if x >= 0 && y >= 0 && x < area.right() as i16 && y < area.bottom() as i16 {
-            let mut text = node.label.clone();
+            let mut text = compressed_label(&node.label, zoom);
             if state.hierarchy_icons {
                 let icon = if node.parent.is_none() {
                     ROOT_NODE
@@ -138,8 +153,10 @@ pub fn render<B: Backend>(
                 };
                 text = format!("{} {}", icon, text);
             }
-            let rect = Rect::new(x as u16, y as u16, text.len() as u16, 1);
-            f.render_widget(Paragraph::new(text.clone()), rect);
+            let width = ((text.len() as f32) * zoom).ceil().max(1.0) as u16;
+            let display = if zoom <= 0.5 { text } else { node.label.clone() };
+            let rect = Rect::new(x as u16, y as u16, width, 1);
+            f.render_widget(Paragraph::new(display.clone()), rect);
 
             if node.label == "New Child" || node.label == "New Sibling" {
                 let kind = if node.label == "New Child" {
