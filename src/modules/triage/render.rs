@@ -139,7 +139,9 @@ pub fn render_grouped<B: Backend>(
             for (idx, entry) in entries {
                 let mut entry_style = Style::default();
                 if *idx == state.triage_focus_index {
-                    entry_style = entry_style.add_modifier(Modifier::BOLD);
+                    entry_style = entry_style
+                        .add_modifier(Modifier::BOLD)
+                        .bg(Color::DarkGray);
                 }
                 if entry.resolved {
                     entry_style = entry_style

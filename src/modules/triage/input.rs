@@ -2,37 +2,51 @@ use crossterm::event::{KeyCode, KeyModifiers, MouseEvent, MouseEventKind, MouseB
 use crate::state::AppState;
 
 pub fn handle_key(state: &mut AppState, code: KeyCode, mods: KeyModifiers) -> bool {
-    if !state.sticky_overlay_visible { return false; }
-    if let Some(idx) = state.sticky_focus {
-        match code {
-            KeyCode::Char(c) if mods.is_empty() || mods == KeyModifiers::SHIFT => {
-                state.sticky_notes_data[idx].body.push(c);
-                return true;
+    if state.sticky_overlay_visible {
+        if let Some(idx) = state.sticky_focus {
+            match code {
+                KeyCode::Char(c) if mods.is_empty() || mods == KeyModifiers::SHIFT => {
+                    state.sticky_notes_data[idx].body.push(c);
+                    return true;
+                }
+                KeyCode::Backspace => {
+                    state.sticky_notes_data[idx].body.pop();
+                    return true;
+                }
+                KeyCode::Left if mods.contains(KeyModifiers::SHIFT) => {
+                    state.sticky_notes_data[idx].translate(-1, 0);
+                    return true;
+                }
+                KeyCode::Right if mods.contains(KeyModifiers::SHIFT) => {
+                    state.sticky_notes_data[idx].translate(1, 0);
+                    return true;
+                }
+                KeyCode::Up if mods.contains(KeyModifiers::SHIFT) => {
+                    state.sticky_notes_data[idx].translate(0, -1);
+                    return true;
+                }
+                KeyCode::Down if mods.contains(KeyModifiers::SHIFT) => {
+                    state.sticky_notes_data[idx].translate(0, 1);
+                    return true;
+                }
+                _ => {}
             }
-            KeyCode::Backspace => {
-                state.sticky_notes_data[idx].body.pop();
-                return true;
-            }
-            KeyCode::Left if mods.contains(KeyModifiers::SHIFT) => {
-                state.sticky_notes_data[idx].translate(-1, 0);
-                return true;
-            }
-            KeyCode::Right if mods.contains(KeyModifiers::SHIFT) => {
-                state.sticky_notes_data[idx].translate(1, 0);
-                return true;
-            }
-            KeyCode::Up if mods.contains(KeyModifiers::SHIFT) => {
-                state.sticky_notes_data[idx].translate(0, -1);
-                return true;
-            }
-            KeyCode::Down if mods.contains(KeyModifiers::SHIFT) => {
-                state.sticky_notes_data[idx].translate(0, 1);
-                return true;
-            }
-            _ => {}
         }
     }
-    false
+
+    match code {
+        KeyCode::Up if mods.is_empty() => {
+            state.triage_focus_prev();
+            state.triage_recalc_counts();
+            true
+        }
+        KeyCode::Down if mods.is_empty() => {
+            state.triage_focus_next();
+            state.triage_recalc_counts();
+            true
+        }
+        _ => false,
+    }
 }
 
 pub fn handle_mouse(state: &mut AppState, me: MouseEvent) -> bool {
