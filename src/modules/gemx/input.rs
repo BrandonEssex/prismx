@@ -203,7 +203,22 @@ pub fn handle_mouse(state: &mut AppState, me: MouseEvent) -> bool {
             if let Some(id) = state.dragging {
                 end_drag(state);
                 let target = state.drag_hover_target.take();
-                logic::reparent(&mut state.nodes, &mut state.root_nodes, id, target);
+                if let Some(tgt) = target {
+                    if me.modifiers.contains(KeyModifiers::CONTROL) {
+                        state.link_map.entry(id).or_default().push(tgt);
+                    } else if logic::node_depth(&state.nodes, id)
+                        == logic::node_depth(&state.nodes, tgt)
+                    {
+                        logic::merge_nodes(
+                            &mut state.nodes,
+                            &mut state.root_nodes,
+                            id,
+                            tgt,
+                        );
+                    } else {
+                        logic::reparent(&mut state.nodes, &mut state.root_nodes, id, Some(tgt));
+                    }
+                }
                 logic::adopt_orphans(&mut state.nodes, &mut state.root_nodes);
                 return true;
             }

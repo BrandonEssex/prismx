@@ -276,6 +276,9 @@ pub fn render<B: Backend>(
             if highlight && focus_nodes.contains(&node.id) {
                 para = para.style(trail_style(highlight_parent, tick, fade));
             }
+            if state.drag_hover_target == Some(node.id) {
+                para = para.style(trail_style(highlight_sibling, tick, 1.0));
+            }
             if debug && is_problem {
                 para = para.style(Style::default().fg(Color::LightRed));
             }
