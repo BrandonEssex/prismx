@@ -7,6 +7,7 @@ mod spotlight;
 mod history;
 mod drag;
 mod helpers;
+pub mod links;
 
 pub mod init;
 mod triage;

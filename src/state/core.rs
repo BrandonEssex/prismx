@@ -227,6 +227,7 @@ pub struct AppState {
     pub beam_animation: bool,
     pub spotlight_auto_width: bool,
     pub beam_shimmer: bool,
+    pub ghost_link_trails: bool,
     pub highlight_focus_branch: bool,
     pub focus_changed_at: Option<Instant>,
     pub zoom_grid: bool,
@@ -392,6 +393,7 @@ impl Default for AppState {
             beam_animation: true,
             spotlight_auto_width: false,
             beam_shimmer: true,
+            ghost_link_trails: true,
             highlight_focus_branch: false,
             focus_changed_at: None,
             zoom_grid: false,
@@ -431,6 +433,7 @@ impl Default for AppState {
         state.beam_animation = config.beam_animation;
         state.spotlight_auto_width = config.spotlight_auto_width;
         state.beam_shimmer = config.beam_shimmer;
+        state.ghost_link_trails = config.ghost_link_trails;
         state.highlight_focus_branch = config.highlight_focus_branch;
         state.zoom_grid = config.zoom_grid;
         state.sticky_notes = config.sticky_notes;
