@@ -4,6 +4,13 @@ use crate::triage::state::{TriageEntry, TriageSource};
 
 const TRIAGE_TAGS: &[&str] = &["#todo", "#triton", "#priority", "#now"];
 
+fn exists(state: &AppState, source: TriageSource, text: &str) -> bool {
+    state
+        .triage_entries
+        .iter()
+        .any(|e| e.source == source && e.text == text)
+}
+
 fn has_triage_tag(tags: &[String]) -> bool {
     tags.iter().any(|t| TRIAGE_TAGS.contains(&t.as_str()))
 }
@@ -13,10 +20,7 @@ pub fn capture_zen_entry(state: &mut AppState, entry: &ZenJournalEntry) {
     if !has_triage_tag(&entry.tags) {
         return;
     }
-    let exists = state.triage_entries.iter().any(|e| {
-        e.source == TriageSource::Zen && e.created == entry.timestamp && e.text == entry.text
-    });
-    if exists {
+    if exists(state, TriageSource::Zen, &entry.text) {
         return;
     }
     let mut triage_entry = TriageEntry::new(state.triage_entries.len(), &entry.text, TriageSource::Zen);
@@ -40,7 +44,7 @@ pub fn sync_from_plugins(state: &mut AppState) {
         if !TRIAGE_TAGS.iter().any(|t| text_lc.contains(t)) {
             continue;
         }
-        if state.triage_entries.iter().any(|e| e.source == TriageSource::Spotlight && e.text == task) {
+        if exists(state, TriageSource::Spotlight, &task) {
             continue;
         }
         let entry = TriageEntry::new(state.triage_entries.len(), &task, TriageSource::Spotlight);
