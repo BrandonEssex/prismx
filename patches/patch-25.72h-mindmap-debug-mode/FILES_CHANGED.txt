@@ -1,0 +1,3 @@
+- src/modules/settings/mod.rs
+- src/modules/gemx/input.rs
+- src/state/preferences.rs
