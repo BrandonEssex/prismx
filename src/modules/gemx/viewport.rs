@@ -47,6 +47,7 @@ pub fn ensure_visible(state: &mut AppState, node_id: NodeID) {
         state.scroll_target_x = state.scroll_x;
         state.scroll_target_y = state.scroll_y;
     }
+    super::layout::clamp_zoom_scroll(state);
 }
 
 /// Keep the currently focused node in view.

@@ -4,7 +4,11 @@ use super::viewport;
 pub use crate::layout::engine::sibling_offset;
 use crossterm::terminal;
 use ratatui::prelude::Rect;
-use crate::layout::GEMX_HEADER_HEIGHT;
+use crate::layout::{
+    GEMX_HEADER_HEIGHT,
+    SIBLING_SPACING_X,
+    CHILD_SPACING_Y,
+};
 
 /// Ensure the newly inserted node remains visible by centering on it.
 pub fn focus_new_node(state: &mut AppState, node_id: NodeID) {
@@ -30,7 +34,18 @@ pub fn reflow_around_focus(state: &mut AppState) {
 
 /// Clamp scroll offsets relative to zoom level to avoid jumpiness.
 pub fn clamp_zoom_scroll(state: &mut AppState) {
-    let limit = (1000.0 * state.zoom_scale) as i16;
+    let base_limit = (1000.0 * state.zoom_scale) as i16;
+
+    // Expand scroll limits based on farthest node positions so large mindmaps
+    // remain reachable without reflowing existing layout.
+    let mut max_x = 0i16;
+    let mut max_y = 0i16;
+    for n in state.nodes.values() {
+        max_x = max_x.max(n.x);
+        max_y = max_y.max(n.y);
+    }
+    let limit_x = base_limit.max(max_x + 10);
+    let limit_y = base_limit.max(max_y + 10);
 
     // Give the user some buffer space when fully zoomed out so nodes aren't
     // forced against the viewport edges. Padding increases as zoom decreases
@@ -50,18 +65,31 @@ pub fn clamp_zoom_scroll(state: &mut AppState) {
         10
     };
 
-    state.scroll_x = state.scroll_x.clamp(0, limit + pad_right);
-    state.scroll_y = state.scroll_y.clamp(0, limit + pad_vert);
-    state.scroll_target_x = state.scroll_target_x.clamp(0, limit + pad_right);
-    state.scroll_target_y = state.scroll_target_y.clamp(0, limit + pad_vert);
+    state.scroll_x = state.scroll_x.clamp(0, limit_x + pad_right);
+    state.scroll_y = state.scroll_y.clamp(0, limit_y + pad_vert);
+    state.scroll_target_x = state.scroll_target_x.clamp(0, limit_x + pad_right);
+    state.scroll_target_y = state.scroll_target_y.clamp(0, limit_y + pad_vert);
 }
 
 /// Ensure all nodes remain within the visible viewport area.
 pub fn enforce_viewport_bounds(nodes: &mut NodeMap, area: Rect) {
     let min_x = area.x as i16 + 1;
-    let max_x = area.right() as i16 - 2;
     let min_y = GEMX_HEADER_HEIGHT.max(area.y as i16 + 1);
-    let max_y = area.bottom() as i16 - 2;
+
+    // Start with the current viewport as the minimum bounding box then grow it
+    // if any nodes fall outside the visible region. This allows the logical
+    // grid to expand as the mindmap grows rather than clamping coordinates.
+    let mut max_x = area.right() as i16 - 2;
+    let mut max_y = area.bottom() as i16 - 2;
+    for n in nodes.values() {
+        if n.x >= max_x - 1 {
+            max_x = n.x + crate::layout::SIBLING_SPACING_X;
+        }
+        if n.y >= max_y - 1 {
+            max_y = n.y + crate::layout::CHILD_SPACING_Y;
+        }
+    }
+
     for node in nodes.values_mut() {
         node.x = node.x.clamp(min_x, max_x);
         node.y = node.y.clamp(min_y, max_y);
