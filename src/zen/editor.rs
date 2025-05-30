@@ -179,4 +179,5 @@ fn finalize_entry(state: &mut AppState) {
 
     state.zen_draft.text.clear();
     state.zen_draft.editing = None;
+    state.scroll_offset = 0;
 }

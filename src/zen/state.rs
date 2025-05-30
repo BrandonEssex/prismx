@@ -14,37 +14,61 @@ impl AppState {
         let content = self.zen_buffer.join("\n");
 
         if let Some(parent) = path.parent() {
-            let _ = fs::create_dir_all(parent);
+            if let Err(e) = fs::create_dir_all(parent) {
+                crate::log_warn!("Failed to create export directory {:?}: {}", parent, e);
+            }
         }
 
-        if let Ok(mut file) = File::create(&path) {
-            let _ = file.write_all(content.as_bytes());
+        match File::create(&path) {
+            Ok(mut file) => {
+                if let Err(e) = file.write_all(content.as_bytes()) {
+                    crate::log_warn!("Failed to write Zen export {:?}: {}", path, e);
+                }
+            }
+            Err(e) => {
+                crate::log_warn!("Failed to create Zen export file {:?}: {}", path, e);
+            }
         }
     }
 
     pub fn open_zen_file(&mut self, path: &str) {
-        if let Ok(content) = std::fs::read_to_string(path) {
-            self.zen_buffer = content.lines().map(|l| l.to_string()).collect();
-            self.zen_buffer.push(String::new());
-            self.zen_current_filename = path.to_string();
-            self.zen_current_syntax = Self::syntax_from_extension(path);
-            self.update_zen_word_count();
-            self.zen_dirty = false;
-            self.add_recent_file(path);
-            self.zen_last_saved = Some(std::time::Instant::now());
+        match std::fs::read_to_string(path) {
+            Ok(content) => {
+                self.zen_buffer = content.lines().map(|l| l.to_string()).collect();
+                self.zen_buffer.push(String::new());
+                self.zen_current_filename = path.to_string();
+                self.zen_current_syntax = Self::syntax_from_extension(path);
+                self.update_zen_word_count();
+                self.zen_dirty = false;
+                self.add_recent_file(path);
+                self.zen_last_saved = Some(std::time::Instant::now());
+            }
+            Err(e) => {
+                crate::log_warn!("Failed to open Zen file {:?}: {}", path, e);
+            }
         }
     }
 
     pub fn save_zen_file(&mut self, path: &str) {
         if let Some(parent) = std::path::Path::new(path).parent() {
-            let _ = std::fs::create_dir_all(parent);
+            if let Err(e) = std::fs::create_dir_all(parent) {
+                crate::log_warn!("Failed to create directory {:?}: {}", parent, e);
+            }
         }
-        if let Ok(mut file) = std::fs::File::create(path) {
-            let _ = file.write_all(self.zen_buffer.join("\n").as_bytes());
-            self.add_recent_file(path);
-            self.zen_current_filename = path.to_string();
-            self.zen_dirty = false;
-            self.zen_last_saved = Some(std::time::Instant::now());
+        match std::fs::File::create(path) {
+            Ok(mut file) => {
+                if let Err(e) = file.write_all(self.zen_buffer.join("\n").as_bytes()) {
+                    crate::log_warn!("Failed to write Zen file {:?}: {}", path, e);
+                } else {
+                    self.add_recent_file(path);
+                    self.zen_current_filename = path.to_string();
+                    self.zen_dirty = false;
+                    self.zen_last_saved = Some(std::time::Instant::now());
+                }
+            }
+            Err(e) => {
+                crate::log_warn!("Failed to create Zen file {:?}: {}", path, e);
+            }
         }
     }
 
@@ -117,9 +141,15 @@ impl AppState {
                 .zen_last_saved
                 .map_or(true, |t| t.elapsed().as_secs() > 10);
             if should_save {
-                let _ = std::fs::write(&self.zen_current_filename, self.zen_buffer.join("\n"));
-                self.zen_last_saved = Some(std::time::Instant::now());
-                self.zen_dirty = false;
+                match std::fs::write(&self.zen_current_filename, self.zen_buffer.join("\n")) {
+                    Ok(_) => {
+                        self.zen_last_saved = Some(std::time::Instant::now());
+                        self.zen_dirty = false;
+                    }
+                    Err(e) => {
+                        crate::log_warn!("Auto-save failed for {:?}: {}", self.zen_current_filename, e);
+                    }
+                }
             }
         }
     }
@@ -129,24 +159,31 @@ impl AppState {
             .unwrap_or_else(|| std::path::PathBuf::from("."))
             .join("prismx")
             .join("journals");
-        let _ = fs::create_dir_all(&dir);
+        if let Err(e) = fs::create_dir_all(&dir) {
+            crate::log_warn!("Failed to create journal directory {:?}: {}", dir, e);
+        }
         let path = dir.join(format!("{}.prismx", chrono::Local::now().format("%Y-%m-%d")));
-        if let Ok(content) = fs::read_to_string(&path) {
-            self.zen_journal_entries = content
-                .lines()
-                .filter_map(|line| {
-                    let (ts, text) = line.split_once('|')?;
-                    chrono::DateTime::parse_from_rfc3339(ts)
-                        .ok()
-                        .map(|dt| ZenJournalEntry {
-                            timestamp: dt.with_timezone(&chrono::Local),
-                            text: text.to_string(),
-                            prev_text: None,
-                            frame: 3,
-                            tags: crate::zen::utils::parse_tags(text),
-                        })
-                })
-                .collect();
+        match fs::read_to_string(&path) {
+            Ok(content) => {
+                self.zen_journal_entries = content
+                    .lines()
+                    .filter_map(|line| {
+                        let (ts, text) = line.split_once('|')?;
+                        chrono::DateTime::parse_from_rfc3339(ts)
+                            .ok()
+                            .map(|dt| ZenJournalEntry {
+                                timestamp: dt.with_timezone(&chrono::Local),
+                                text: text.to_string(),
+                                prev_text: None,
+                                frame: 3,
+                                tags: crate::zen::utils::parse_tags(text),
+                            })
+                    })
+                    .collect();
+            }
+            Err(e) => {
+                crate::log_warn!("Failed to read journal file {:?}: {}", path, e);
+            }
         }
     }
 
@@ -155,15 +192,24 @@ impl AppState {
             .unwrap_or_else(|| std::path::PathBuf::from("."))
             .join("prismx")
             .join("journals");
-        let _ = std::fs::create_dir_all(&dir);
+        if let Err(e) = std::fs::create_dir_all(&dir) {
+            crate::log_warn!("Failed to create journal directory {:?}: {}", dir, e);
+        }
         let path = dir.join(format!("{}.prismx", chrono::Local::now().format("%Y-%m-%d")));
-        if let Ok(mut file) = OpenOptions::new().create(true).append(true).open(&path) {
-            let _ = writeln!(
-                file,
-                "{}|{}",
-                entry.timestamp.to_rfc3339(),
-                entry.text.clone()
-            );
+        match OpenOptions::new().create(true).append(true).open(&path) {
+            Ok(mut file) => {
+                if let Err(e) = writeln!(
+                    file,
+                    "{}|{}",
+                    entry.timestamp.to_rfc3339(),
+                    entry.text.clone()
+                ) {
+                    crate::log_warn!("Failed to append journal entry to {:?}: {}", path, e);
+                }
+            }
+            Err(e) => {
+                crate::log_warn!("Failed to open journal file {:?}: {}", path, e);
+            }
         }
     }
 
