@@ -16,6 +16,13 @@ pub(crate) fn bright_color(c: Color) -> Color {
     }
 }
 
+/// Style used for highlighting active beam trails.
+pub fn trail_style(color: Color, tick: u64, ratio: f32) -> Style {
+    use crate::ui::animate::{scale_color, shimmer};
+    let c = scale_color(color, ratio);
+    shimmer(c, tick).add_modifier(Modifier::UNDERLINED)
+}
+
 /// Convenience helper for modules to render BeamX without constructing
 /// a [`BeamX`] instance.
 pub fn render_beam<B: Backend>(f: &mut Frame<B>, area: Rect, tick: u64, style: &BeamXStyle) {

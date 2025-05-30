@@ -46,7 +46,10 @@ impl AppState {
                 if self.selection_trail.len() > 8 {
                     self.selection_trail.pop_front();
                 }
+                self.focus_changed_at = Some(Instant::now());
             }
+        } else if id.is_some() {
+            self.focus_changed_at = Some(Instant::now());
         }
         self.selected = id;
         self.last_promoted_root = None;
@@ -68,6 +71,10 @@ impl AppState {
             .rev()
             .find(|(nid, _)| *nid == id)
             .map(|(_, t)| t.elapsed().as_millis())
+    }
+
+    pub fn focus_age(&self) -> Option<u128> {
+        self.focus_changed_at.map(|t| t.elapsed().as_millis())
     }
 
     pub fn dock_focus_prev(&mut self) {

@@ -13,7 +13,9 @@ use crate::ui::lines::{
 };
 use crate::theme::beam_color::{parent_line_color, sibling_line_color};
 use crate::beam_color::BeamColor;
-use crate::ui::beamx::{BeamXMode, BeamXStyle, InsertCursorKind, render_insert_cursor};
+use crate::ui::beamx::{BeamXMode, BeamXStyle, InsertCursorKind, render_insert_cursor, trail_style, bright_color};
+use crate::ui::animate::scale_color;
+use std::collections::HashSet;
 use crate::theme::icons::{ROOT_NODE, CHILD_NODE, SIBLING_NODE};
 use crate::theme::characters::{DOWN_ARROW, RIGHT_ARROW};
 
@@ -68,7 +70,25 @@ pub fn render<B: Backend>(
     let scale_x = |val: i16| -> i16 { area.x as i16 + ((val as f32) * zoom).round() as i16 };
     let scale_y = |val: i16| -> i16 { area.y as i16 + (((val - scroll) as f32) * zoom).round() as i16 };
 
-    if debug {
+    let highlight = state.highlight_focus_branch || state.debug_input_mode;
+    let mut focus_nodes: HashSet<NodeID> = HashSet::new();
+    let mut focus_pairs: HashSet<(NodeID, NodeID)> = HashSet::new();
+    if highlight {
+        if let Some(mut current) = state.selected {
+            focus_nodes.insert(current);
+            while let Some(parent) = nodes.get(&current).and_then(|n| n.parent) {
+                focus_pairs.insert((parent, current));
+                focus_nodes.insert(parent);
+                current = parent;
+            }
+        }
+    }
+    let age = state.focus_age().unwrap_or(0);
+    let fade = (age.min(600) as f32) / 600.0;
+    let highlight_parent = scale_color(bright_color(p_color), fade);
+    let highlight_sibling = scale_color(bright_color(s_color), fade);
+
+    if debug || highlight {
         for node in nodes.values() {
             if node.children.is_empty() {
                 continue;
@@ -76,12 +96,15 @@ pub fn render<B: Backend>(
 
             let px = scale_x(center_x(nodes, node.id));
             let beam_y = scale_y(node.y + (spacing_y - 1).max(1));
+            let on_path = focus_nodes.contains(&node.id);
 
             // vertical beam from parent to sibling bar
             let parent_start = (px, scale_y(node.y + 1));
             let parent_end = (px, beam_y);
-            if state.beam_shimmer {
-                draw_vertical_fade(f, parent_start, parent_end, tick, p_color);
+            let pcol = if on_path { highlight_parent } else { p_color };
+            let pshimmer = state.beam_shimmer || on_path;
+            if pshimmer {
+                draw_vertical_fade(f, parent_start, parent_end, tick, pcol);
             } else {
                 draw_line(f, parent_start, parent_end);
             }
@@ -89,9 +112,9 @@ pub fn render<B: Backend>(
                 f,
                 parent_end,
                 tick,
-                p_color,
+                pcol,
                 DOWN_ARROW,
-                state.beam_shimmer,
+                pshimmer,
             );
 
             // collect child centers
@@ -108,13 +131,15 @@ pub fn render<B: Backend>(
             let max_x = child_centers.iter().map(|c| c.1).max().unwrap();
 
             // horizontal connector across siblings
-            if state.beam_shimmer {
+            let scol = if on_path { highlight_sibling } else { s_color };
+            let sshimmer = state.beam_shimmer || on_path;
+            if sshimmer {
                 draw_horizontal_shimmer(
                     f,
                     (min_x, beam_y),
                     (max_x, beam_y),
                     tick,
-                    s_color,
+                    scol,
                 );
             } else {
                 draw_line(
@@ -130,9 +155,9 @@ pub fn render<B: Backend>(
                 f,
                 (mid, beam_y),
                 tick,
-                s_color,
+                scol,
                 RIGHT_ARROW,
-                state.beam_shimmer,
+                sshimmer,
             );
 
             // vertical drop to each child
@@ -141,11 +166,14 @@ pub fn render<B: Backend>(
                     let start = (cx, beam_y);
                     let end = (cx, scale_y(child.y));
                     let is_ghost = child.label.starts_with("node ");
-                    if state.beam_shimmer {
+                    let child_on_path = focus_pairs.contains(&(node.id, *cid));
+                    let ccol = if child_on_path { highlight_parent } else { p_color };
+                    let cshimmer = state.beam_shimmer || child_on_path;
+                    if cshimmer {
                         if is_ghost {
-                            draw_ghost_line(f, start, end, tick, p_color);
+                            draw_ghost_line(f, start, end, tick, ccol);
                         } else {
-                            draw_vertical_fade(f, start, end, tick, p_color);
+                            draw_vertical_fade(f, start, end, tick, ccol);
                         }
                     } else {
                         draw_line(f, start, end);
@@ -154,9 +182,9 @@ pub fn render<B: Backend>(
                         f,
                         end,
                         tick,
-                        p_color,
+                        ccol,
                         DOWN_ARROW,
-                        state.beam_shimmer,
+                        cshimmer,
                     );
                 }
             }
@@ -198,7 +226,11 @@ pub fn render<B: Backend>(
             let width = ((text.len() as f32) * zoom).ceil().max(1.0) as u16;
             let display = if zoom <= 0.5 { text } else { node.label.clone() };
             let rect = Rect::new(x as u16, y as u16, width, 1);
-            f.render_widget(Paragraph::new(display.clone()), rect);
+            let mut para = Paragraph::new(display.clone());
+            if highlight && focus_nodes.contains(&node.id) {
+                para = para.style(trail_style(highlight_parent, tick, fade));
+            }
+            f.render_widget(para, rect);
 
             if node.label.starts_with("node ") {
                 let kind = InsertCursorKind::Sibling;
