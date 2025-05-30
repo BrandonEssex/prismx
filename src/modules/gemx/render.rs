@@ -9,6 +9,7 @@ use crate::ui::lines::{
 };
 use crate::theme::beam_color::{parent_line_color, sibling_line_color};
 use crate::beam_color::BeamColor;
+use crate::ui::beamx::{BeamXMode, BeamXStyle, InsertCursorKind, render_insert_cursor};
 
 /// Render a simple mindmap using the vertical layout engine.
 pub fn render<B: Backend>(
@@ -22,6 +23,18 @@ pub fn render<B: Backend>(
         layout_vertical(nodes, root);
     }
 
+    let tick = (std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .unwrap_or_default()
+        .as_millis()
+        / 300) as u64;
+    let theme = BeamColor::Prism;
+    let p_color = parent_line_color(theme);
+    let s_color = sibling_line_color(theme);
+    let mut cursor_style = BeamXStyle::from(BeamXMode::Zen);
+    cursor_style.border_color = p_color;
+    cursor_style.status_color = s_color;
+
     // Determine scroll offset if content exceeds available height
     let max_y = nodes.values().map(|n| n.y).max().unwrap_or(0);
     let mut scroll = 0i16;
@@ -32,14 +45,6 @@ pub fn render<B: Backend>(
     if debug {
         let ox = area.x as i16;
         let oy = area.y as i16;
-        let tick = (std::time::SystemTime::now()
-            .duration_since(std::time::UNIX_EPOCH)
-            .unwrap_or_default()
-            .as_millis()
-            / 300) as u64;
-        let theme = BeamColor::Prism;
-        let p_color = parent_line_color(theme);
-        let s_color = sibling_line_color(theme);
 
         for node in nodes.values() {
             if node.children.is_empty() {
@@ -103,6 +108,17 @@ pub fn render<B: Backend>(
         if x >= 0 && y >= 0 && x < area.right() as i16 && y < area.bottom() as i16 {
             let rect = Rect::new(x as u16, y as u16, node.label.len() as u16, 1);
             f.render_widget(Paragraph::new(node.label.clone()), rect);
+
+            if node.label == "New Child" || node.label == "New Sibling" {
+                let kind = if node.label == "New Child" {
+                    InsertCursorKind::Child
+                } else {
+                    InsertCursorKind::Sibling
+                };
+                let cx = rect.x + rect.width;
+                let cy = rect.y;
+                render_insert_cursor(f, (cx, cy), tick, kind, &cursor_style);
+            }
         }
     }
 }
