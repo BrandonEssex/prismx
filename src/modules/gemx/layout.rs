@@ -10,6 +10,9 @@ use crate::layout::{
     CHILD_SPACING_Y,
 };
 
+/// Minimum node count before the logical grid is allowed to expand.
+const GRID_EXPANSION_THRESHOLD: usize = 50;
+
 /// Ensure the newly inserted node remains visible by centering on it.
 pub fn focus_new_node(state: &mut AppState, node_id: NodeID) {
     viewport::ensure_visible(state, node_id);
@@ -76,17 +79,18 @@ pub fn enforce_viewport_bounds(nodes: &mut NodeMap, area: Rect) {
     let min_x = area.x as i16 + 1;
     let min_y = GEMX_HEADER_HEIGHT.max(area.y as i16 + 1);
 
-    // Start with the current viewport as the minimum bounding box then grow it
-    // if any nodes fall outside the visible region. This allows the logical
-    // grid to expand as the mindmap grows rather than clamping coordinates.
+    // Start with the current viewport as the minimum bounding box. Only allow
+    // the grid to expand when the node count is large enough to justify it.
     let mut max_x = area.right() as i16 - 2;
     let mut max_y = area.bottom() as i16 - 2;
-    for n in nodes.values() {
-        if n.x >= max_x - 1 {
-            max_x = n.x + crate::layout::SIBLING_SPACING_X;
-        }
-        if n.y >= max_y - 1 {
-            max_y = n.y + crate::layout::CHILD_SPACING_Y;
+    if nodes.len() >= GRID_EXPANSION_THRESHOLD {
+        for n in nodes.values() {
+            if n.x >= max_x - 1 {
+                max_x = n.x + crate::layout::SIBLING_SPACING_X;
+            }
+            if n.y >= max_y - 1 {
+                max_y = n.y + crate::layout::CHILD_SPACING_Y;
+            }
         }
     }
 
@@ -112,14 +116,15 @@ pub fn clamp_child_spacing(state: &AppState, roots: &[NodeID], max_h: i16) -> i1
         CHILD_SPACING_Y
     };
 
-    if (state.zoom_scale - 1.0).abs() < f32::EPSILON {
-        spacing = (spacing - 1).max(MIN_CHILD_SPACING_Y);
-    } else if state.zoom_scale < 1.0 {
-        spacing = ((spacing as f32) * state.zoom_scale)
-            .floor()
-            .max(MIN_CHILD_SPACING_Y as f32) as i16;
-    } else if state.zoom_scale > 1.0 {
-        spacing = ((spacing as f32) * state.zoom_scale).ceil() as i16;
+    // Scale spacing relative to zoom level so nodes remain visually connected
+    // when zooming between 0.5x and 1.5x.
+    let zoom = state.zoom_scale.clamp(0.5, 1.5);
+    spacing = (((spacing as f32) * zoom) - 1.0).round() as i16;
+    if spacing < MIN_CHILD_SPACING_Y {
+        spacing = MIN_CHILD_SPACING_Y;
+    }
+    if spacing > CHILD_SPACING_Y * 2 {
+        spacing = CHILD_SPACING_Y * 2;
     }
 
     spacing
