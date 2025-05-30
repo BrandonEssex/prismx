@@ -10,19 +10,14 @@ use crate::state::AppState;
 use crate::ui::animate;
 use crate::config::theme::ThemeConfig;
 use crate::render::traits::{Renderable, RenderFrame};
+use crate::modules::switcher;
 
 pub fn render_module_switcher(
     f: &mut RenderFrame<'_>,
     area: Rect,
     state: &AppState,
 ) {
-    let modules = [
-        ("💭", "Mindmap"),
-        ("🧘", "Zen"),
-        ("🏥", "Triage"),
-        ("⚙️", "Settings"),
-        ("🔌", "Plugins"),
-    ];
+    let modules = switcher::MODULES;
 
     let count = modules.len();
     let index = state.module_switcher_index % count;

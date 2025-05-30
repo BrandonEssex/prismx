@@ -6,15 +6,10 @@ use ratatui::{
     widgets::{Block, Borders, Paragraph, Wrap},
     Frame,
 };
+use crate::modules::switcher;
 
 pub fn render_module_switcher<B: Backend>(f: &mut Frame<B>, area: Rect, index: usize) {
-    let modules = [
-        ("💭", "Mindmap"),
-        ("🧘", "Zen"),
-        ("🏥", "Triage"),
-        ("⚙️", "Settings"),
-        ("🔌", "Plugins"),
-    ];
+    let modules = switcher::MODULES;
 
     let lines: Vec<Line> = modules
         .iter()

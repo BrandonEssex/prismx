@@ -407,13 +407,7 @@ impl AppState {
     }
 
     pub fn get_module_by_index(&self) -> &str {
-        match self.module_switcher_index % 4 {
-            0 => "gemx",
-            1 => "zen",
-            2 => "triage",
-            3 => "settings",
-            _ => "gemx",
-        }
+        crate::modules::switcher::mode_for_index(self.module_switcher_index)
     }
 
     pub fn favorite_entries(&self) -> Vec<FavoriteEntry> {
