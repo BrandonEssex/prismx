@@ -9,6 +9,7 @@ use ratatui::{
 use crate::state::AppState;
 use crate::ui::status::status_line;
 use crate::ui::animate::breath_style;
+use crate::render::favorites::render_favorites_dock;
 
 pub fn render_status_bar<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppState) {
     use std::time::{Duration, SystemTime, UNIX_EPOCH};
@@ -46,4 +47,5 @@ pub fn render_status_bar<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut A
     f.render_widget(block, area);
     let inner_width = area.width.saturating_sub(2);
     f.render_widget(content, Rect::new(area.x + 1, area.y + 1, inner_width, 1));
+    render_favorites_dock(f, area, state);
 }

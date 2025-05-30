@@ -15,7 +15,6 @@ use crate::render::{
     render_spotlight,
     render_triage,
     render_module_icon,
-    render_favorites_dock,
     Renderable,
     ZenView,
     ModuleSwitcher,
@@ -114,7 +113,6 @@ pub fn draw(
 
         // status bar is rendered separately based on AppState
         render_module_icon(f, full, &state.mode);
-        render_favorites_dock(f, full, state);
         if state.show_logs {
             render_logs(f, full, state);
         }
@@ -613,14 +611,7 @@ pub fn launch_ui() -> std::io::Result<()> {
                         state.triage_set_filter(Some("#done"));
                     }
 
-                    KeyCode::Up if state.favorite_dock_enabled && modifiers == KeyModifiers::NONE => {
-                        state.dock_focus_prev();
-                        if state.mode == "gemx" { state.move_focus_up(); }
-                    }
-                    KeyCode::Down if state.favorite_dock_enabled && modifiers == KeyModifiers::NONE => {
-                        state.dock_focus_next();
-                        if state.mode == "gemx" { state.move_focus_down(); }
-                    }
+
 
                     KeyCode::Up if state.mode == "gemx" => state.move_focus_up(),
                     KeyCode::Down if state.mode == "gemx" => state.move_focus_down(),

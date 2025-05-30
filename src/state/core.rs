@@ -347,7 +347,7 @@ impl Default for AppState {
             loaded_plugins: Vec::new(),
             plugin_favorites: Vec::new(),
             favorite_dock_limit: 3,
-            favorite_dock_layout: DockLayout::Vertical,
+            favorite_dock_layout: DockLayout::Horizontal,
             favorite_dock_enabled: true,
             dock_focus_index: None,
             dock_hover_index: None,
