@@ -1,5 +1,6 @@
 auto_arrange = true
-debug_input_mode = true
+debug_input_mode = false
+debug_allow_empty_nodes = false
 dock_layout = "vertical"
 gemx_beam_color = "Prism"
 zen_beam_color = "Prism"
@@ -14,7 +15,7 @@ font_style = "Regular"
 beam_animation = true
 spotlight_auto_width = false
 beam_shimmer = true
-zoom_grid = true
+zoom_grid = false
 sticky_notes = true
-shortcut_overlay = "Contextual"
+shortcut_overlay = "Full"
 heartbeat_mode = "Pulse"
