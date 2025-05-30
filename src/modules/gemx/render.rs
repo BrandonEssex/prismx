@@ -1,7 +1,8 @@
 use ratatui::{prelude::*, widgets::Paragraph};
 use crate::node::{NodeID, NodeMap};
-use crate::layout::engine::layout_vertical;
-use crate::ui::lines::draw_line;
+use crate::layout::{CHILD_SPACING_Y};
+use crate::layout::engine::{layout_vertical, center_x};
+use crate::ui::lines::{draw_line, draw_line_with_arrow};
 
 /// Render a simple mindmap using the vertical layout engine.
 pub fn render<B: Backend>(
@@ -23,27 +24,56 @@ pub fn render<B: Backend>(
     }
 
     if debug {
-        // Draw connections first
-        let mut connections = Vec::new();
-        let all_ids: Vec<NodeID> = nodes.keys().copied().collect();
-        for id in all_ids {
-            if let Some(node) = nodes.get(&id) {
-                for child_id in &node.children {
-                    if let Some(child) = nodes.get(child_id) {
-                        connections.push(((node.x, node.y), (child.x, child.y)));
-                    }
-                }
-            }
-        }
+        let ox = area.x as i16;
+        let oy = area.y as i16;
 
-        for ((sx, sy), (ex, ey)) in connections {
-            let ox = area.x as i16;
-            let oy = area.y as i16;
+        for node in nodes.values() {
+            if node.children.is_empty() {
+                continue;
+            }
+
+            let px = center_x(nodes, node.id);
+            let beam_y = node.y + (CHILD_SPACING_Y - 1).max(1);
+
+            // vertical beam from parent to sibling bar
             draw_line(
                 f,
-                (sx + ox, sy + oy - scroll),
-                (ex + ox, ey + oy - scroll),
+                (px + ox, node.y + 1 + oy - scroll),
+                (px + ox, beam_y + oy - scroll),
             );
+
+            // collect child centers
+            let mut child_centers = Vec::new();
+            for cid in &node.children {
+                if nodes.contains_key(cid) {
+                    child_centers.push((cid, center_x(nodes, *cid)));
+                }
+            }
+            if child_centers.is_empty() {
+                continue;
+            }
+            let min_x = child_centers.iter().map(|c| c.1).min().unwrap();
+            let max_x = child_centers.iter().map(|c| c.1).max().unwrap();
+
+            // horizontal connector across siblings
+            draw_line_with_arrow(
+                f,
+                (min_x + ox, beam_y + oy - scroll),
+                (max_x + ox, beam_y + oy - scroll),
+                "→",
+            );
+
+            // vertical drop to each child
+            for (cid, cx) in child_centers {
+                if let Some(child) = nodes.get(cid) {
+                    draw_line_with_arrow(
+                        f,
+                        (cx + ox, beam_y + oy - scroll),
+                        (cx + ox, child.y + oy - scroll),
+                        "↓",
+                    );
+                }
+            }
         }
     }
 

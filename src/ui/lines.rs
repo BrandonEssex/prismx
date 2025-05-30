@@ -32,3 +32,18 @@ pub fn draw_line<B: Backend>(f: &mut Frame<B>, start: (i16, i16), end: (i16, i16
         draw_line(f, (sx, ey), end);
     }
 }
+
+/// Draw a line and place an arrow glyph at the end position.
+pub fn draw_line_with_arrow<B: Backend>(
+    f: &mut Frame<B>,
+    start: (i16, i16),
+    end: (i16, i16),
+    arrow: &str,
+) {
+    draw_line(f, start, end);
+    let (ex, ey) = end;
+    if ex >= 0 && ey >= 0 {
+        let rect = Rect::new(ex as u16, ey as u16, 1, 1);
+        f.render_widget(Paragraph::new(arrow), rect);
+    }
+}
