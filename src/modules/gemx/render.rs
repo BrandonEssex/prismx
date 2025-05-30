@@ -15,6 +15,7 @@ use crate::theme::beam_color::{parent_line_color, sibling_line_color};
 use crate::beam_color::BeamColor;
 use crate::ui::beamx::{BeamXMode, BeamXStyle, InsertCursorKind, render_insert_cursor, trail_style, bright_color};
 use crate::ui::animate::scale_color;
+use crate::ui::overlay::render_node_tooltip;
 use std::collections::HashSet;
 use crate::theme::icons::{ROOT_NODE, CHILD_NODE, SIBLING_NODE};
 use crate::theme::characters::{DOWN_ARROW, RIGHT_ARROW};
@@ -231,6 +232,12 @@ pub fn render<B: Backend>(
                 para = para.style(trail_style(highlight_parent, tick, fade));
             }
             f.render_widget(para, rect);
+
+            let show_hover = state.drag_hover_target == Some(node.id);
+            let show_focus = Some(node.id) == state.selected && age < 2000;
+            if show_hover || show_focus {
+                render_node_tooltip(f, area, rect, &node.label);
+            }
 
             if node.label.starts_with("node ") {
                 let kind = InsertCursorKind::Sibling;
