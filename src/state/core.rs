@@ -7,6 +7,7 @@ use crate::zen::image::JournalEntry;
 pub use crate::zen::state::*;
 
 use crate::hotkeys::load_hotkeys;
+use serde::{Serialize, Deserialize};
 
 #[derive(Clone, PartialEq)]
 pub struct LayoutSnapshot {
@@ -64,6 +65,27 @@ pub enum ZenViewMode {
 
 impl Default for ZenViewMode {
     fn default() -> Self { Self::Write }
+}
+
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+pub enum ShortcutOverlayMode {
+    Full,
+    Contextual,
+}
+
+impl Default for ShortcutOverlayMode {
+    fn default() -> Self { Self::Full }
+}
+
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+pub enum HeartbeatMode {
+    Pulse,
+    Test,
+    Silent,
+}
+
+impl Default for HeartbeatMode {
+    fn default() -> Self { Self::Pulse }
 }
 
 #[derive(Clone)]
@@ -160,6 +182,7 @@ pub struct AppState {
     pub last_mouse_click: Option<(u16, u16)>,
     pub settings_focus_index: usize,
     pub dock_entry_bounds: Vec<(ratatui::layout::Rect, String)>,
+    pub settings_toggle_bounds: Vec<(ratatui::layout::Rect, usize)>,
     pub favorite_focus_index: Option<usize>,
     pub dock_pulse_frames: u8,
     pub zen_toolbar_open: bool,
@@ -193,6 +216,12 @@ pub struct AppState {
     pub beamx_panel_visible: bool,
     pub font_style: crate::theme::fonts::FontStyle,
     pub beam_animation: bool,
+    pub spotlight_auto_width: bool,
+    pub beam_shimmer: bool,
+    pub zoom_grid: bool,
+    pub sticky_notes: bool,
+    pub shortcut_overlay: ShortcutOverlayMode,
+    pub heartbeat_mode: HeartbeatMode,
     pub triage_view_mode: crate::state::TriageViewMode,
     pub plugin_view_mode: crate::state::PluginViewMode,
     pub plugin_tag_filter: crate::state::PluginTagFilter,
@@ -300,6 +329,7 @@ impl Default for AppState {
             last_mouse_click: None,
             settings_focus_index: 0,
             dock_entry_bounds: Vec::new(),
+            settings_toggle_bounds: Vec::new(),
             favorite_focus_index: None,
             dock_pulse_frames: 0,
             zen_toolbar_open: false,
@@ -333,6 +363,12 @@ impl Default for AppState {
             beamx_panel_visible: default_beamx_panel_visible(),
             font_style: crate::theme::fonts::FontStyle::Regular,
             beam_animation: true,
+            spotlight_auto_width: false,
+            beam_shimmer: true,
+            zoom_grid: false,
+            sticky_notes: false,
+            shortcut_overlay: ShortcutOverlayMode::Full,
+            heartbeat_mode: HeartbeatMode::Pulse,
             triage_view_mode: crate::state::TriageViewMode::default(),
             plugin_view_mode: crate::state::PluginViewMode::default(),
             plugin_tag_filter: crate::state::PluginTagFilter::default(),
@@ -358,6 +394,12 @@ impl Default for AppState {
         state.mindmap_lanes = config.mindmap_lanes;
         state.font_style = config.font_style;
         state.beam_animation = config.beam_animation;
+        state.spotlight_auto_width = config.spotlight_auto_width;
+        state.beam_shimmer = config.beam_shimmer;
+        state.zoom_grid = config.zoom_grid;
+        state.sticky_notes = config.sticky_notes;
+        state.shortcut_overlay = config.shortcut_overlay;
+        state.heartbeat_mode = config.heartbeat_mode;
 
         for node in state.nodes.values_mut() {
             if node.label.starts_with("[F]") {
