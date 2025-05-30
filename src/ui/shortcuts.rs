@@ -1,5 +1,18 @@
 pub fn action_group(action: &str) -> &'static str {
-    if action.starts_with("zen_") || matches!(action, "mode_zen" | "save") {
+    if matches!(
+        action,
+        "quit"
+            | "switch_module"
+            | "open_module_switcher"
+            | "help"
+            | "toggle_keymap"
+            | "toggle_triage"
+            | "toggle_plugin"
+            | "toggle_settings"
+            | "mode_zen"
+    ) {
+        "Global"
+    } else if action.starts_with("zen_") || matches!(action, "save") {
         "Zen"
     } else if action.contains("triage") {
         "Triage"
