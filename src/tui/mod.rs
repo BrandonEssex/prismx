@@ -30,6 +30,7 @@ use crate::ui::components::plugin::render_plugin;
 use crate::ui::components::logs::render_logs;
 use crate::ui::input;
 use crate::modules::triage::input as triage_input;
+use crate::modules::switcher;
 
 use crate::hotkeys::match_hotkey;
 use crate::shortcuts::{match_shortcut, Shortcut};
@@ -337,9 +338,14 @@ pub fn launch_ui() -> std::io::Result<()> {
 
                 // 🧭 Module switcher
                 if state.module_switcher_open {
+                    let count = switcher::MODULES.len();
                     match code {
                         KeyCode::Tab => {
-                            state.module_switcher_index = (state.module_switcher_index + 1) % 4;
+                            state.module_switcher_index = (state.module_switcher_index + 1) % count;
+                            tracing::debug!("[INPUT] module switcher index {}", state.module_switcher_index);
+                        }
+                        KeyCode::BackTab => {
+                            state.module_switcher_index = (state.module_switcher_index + count - 1) % count;
                             tracing::debug!("[INPUT] module switcher index {}", state.module_switcher_index);
                         }
                         KeyCode::Enter => {
@@ -395,7 +401,7 @@ pub fn launch_ui() -> std::io::Result<()> {
                     state.redo();
                 } else if match_hotkey("open_module_switcher", code, modifiers, &state) {
                     state.module_switcher_open = true;
-                    state.module_switcher_index = 0;
+                    state.module_switcher_index = switcher::index_for_mode(&state.mode);
                     tracing::info!("[INPUT] module switcher opened");
                 } else if match_hotkey("start_drag", code, modifiers, &state) {
                     if state.selected_drag_source.is_some() {

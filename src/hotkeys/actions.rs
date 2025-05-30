@@ -30,7 +30,7 @@ pub fn redo(state: &mut AppState) {
 
 pub fn open_module_switcher(state: &mut AppState) {
     state.module_switcher_open = true;
-    state.module_switcher_index = 0;
+    state.module_switcher_index = crate::modules::switcher::index_for_mode(&state.mode);
 }
 
 pub fn start_drag(state: &mut AppState) {
