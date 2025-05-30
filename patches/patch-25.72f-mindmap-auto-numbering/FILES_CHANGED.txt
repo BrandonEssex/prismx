@@ -1,0 +1,3 @@
+- src/modules/gemx/logic.rs
+- src/modules/gemx/input.rs
+- src/modules/gemx/render.rs
