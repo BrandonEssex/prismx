@@ -328,6 +328,7 @@ fn layout_recursive_safe(
     let mut min_x_span = x;
     let mut max_x_span = x + label_width;
 
+    let len = node.children.len();
     let mut col_x = x;
     let mut col_y = child_y;
     for (index, child_id) in node.children.iter().enumerate() {
@@ -342,11 +343,10 @@ fn layout_recursive_safe(
             tracing::debug!("overflow node {} beyond height {}", child_id, term_height);
         }
 
-        let offset_x = index as i16 * MIN_SIBLING_SPACING_X;
         let (cy, mi, ma) = layout_recursive_safe(
             nodes,
             *child_id,
-            col_x + offset_x,
+            col_x,
             col_y,
             _term_width,
             term_height,
@@ -360,8 +360,14 @@ fn layout_recursive_safe(
         min_x_span = min_x_span.min(mi);
         max_x_span = max_x_span.max(ma);
 
-        col_y = cy + spacing_y;
-        let _ = child_w; // maintain consistent spacing calculations for now
+        if auto_arrange {
+            col_x += child_w;
+            if index + 1 < len {
+                col_x += engine::sibling_offset(index, len);
+            }
+        } else {
+            col_y = cy + spacing_y;
+        }
     }
 
     (max_y, min_x_span.min(x), max_x_span.max(x + label_width))

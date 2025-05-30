@@ -45,10 +45,7 @@ pub fn layout_vertical(nodes: &mut NodeMap, root: NodeID, spacing_y: i16) {
                 let child_w = cspan.max(label_w_child + MIN_NODE_GAP);
                 child_x += child_w;
                 if i + 1 < len {
-                    child_x += SIBLING_SPACING_X;
-                    if len > 4 && (i + 1) % 4 == 0 {
-                        child_x += MIN_SIBLING_SPACING_X;
-                    }
+                    child_x += sibling_offset(i, len);
                 }
             }
         }
@@ -97,4 +94,15 @@ pub fn center_x(nodes: &NodeMap, id: NodeID) -> i16 {
     } else {
         0
     }
+}
+
+/// Calculate horizontal spacing after sibling `index` within `len` siblings.
+///
+/// Adds a small buffer every four siblings to reduce visual crowding.
+pub fn sibling_offset(index: usize, len: usize) -> i16 {
+    let mut off = SIBLING_SPACING_X;
+    if len > 4 && (index + 1) % 4 == 0 {
+        off += MIN_SIBLING_SPACING_X;
+    }
+    off
 }
