@@ -6,8 +6,10 @@ use crossterm::terminal;
 /// Determine if the given node is currently visible on screen.
 pub fn node_visible(state: &AppState, node_id: NodeID) -> bool {
     let (tw, th) = terminal::size().unwrap_or((80, 20));
-    let zoom = state.zoom_scale as f32;
-    let (sx, sy) = spacing_for_zoom(state.zoom_scale);
+    // Clamp the effective zoom so spacing calculations stay within a
+    // predictable range.
+    let zoom = state.zoom_scale.clamp(0.5, 1.5) as f32;
+    let (sx, sy) = spacing_for_zoom(zoom);
 
     // When zoomed out it's easy for nodes to hug the terminal edges. Apply a
     // small visibility margin so centering leaves room on the right and bottom
