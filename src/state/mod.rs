@@ -28,4 +28,9 @@ impl AppState {
     pub fn handle_tab_key(&mut self) {
         self.add_child_node();
     }
+
+    /// Handle Shift+Tab by promoting the current node one level up.
+    pub fn handle_shift_tab_key(&mut self) {
+        self.promote_selected_node();
+    }
 }

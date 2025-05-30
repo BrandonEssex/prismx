@@ -43,6 +43,44 @@ impl AppState {
         }
     }
 
+    /// Move focus to the previous sibling if available.
+    pub fn focus_prev_sibling(&mut self) {
+        if let Some(current) = self.selected {
+            if let Some(parent_id) = self.nodes.get(&current).and_then(|n| n.parent) {
+                if let Some(parent) = self.nodes.get(&parent_id) {
+                    if let Some(pos) = parent.children.iter().position(|&c| c == current) {
+                        if pos > 0 {
+                            self.set_selected(Some(parent.children[pos - 1]));
+                        }
+                    }
+                }
+            } else if let Some(pos) = self.root_nodes.iter().position(|&r| r == current) {
+                if pos > 0 {
+                    self.set_selected(Some(self.root_nodes[pos - 1]));
+                }
+            }
+        }
+    }
+
+    /// Move focus to the next sibling if available.
+    pub fn focus_next_sibling(&mut self) {
+        if let Some(current) = self.selected {
+            if let Some(parent_id) = self.nodes.get(&current).and_then(|n| n.parent) {
+                if let Some(parent) = self.nodes.get(&parent_id) {
+                    if let Some(pos) = parent.children.iter().position(|&c| c == current) {
+                        if pos + 1 < parent.children.len() {
+                            self.set_selected(Some(parent.children[pos + 1]));
+                        }
+                    }
+                }
+            } else if let Some(pos) = self.root_nodes.iter().position(|&r| r == current) {
+                if pos + 1 < self.root_nodes.len() {
+                    self.set_selected(Some(self.root_nodes[pos + 1]));
+                }
+            }
+        }
+    }
+
     pub fn drill_down(&mut self) {
         if let Some(current) = self.get_selected_node() {
             if !current.children.is_empty() {

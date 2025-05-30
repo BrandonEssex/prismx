@@ -110,6 +110,8 @@ pub struct AppState {
     pub zen_buffer: Vec<String>,
     pub nodes: NodeMap,
     pub root_nodes: Vec<NodeID>,
+    /// ID to assign to the next created node for fast insertion
+    pub next_node_id: NodeID,
     pub last_promoted_root: Option<NodeID>,
     pub selected: Option<NodeID>,
     pub selection_trail: VecDeque<(NodeID, Instant)>,
@@ -268,6 +270,7 @@ impl Default for AppState {
             zen_buffer: vec![String::from(" ")],
             nodes,
             root_nodes: vec![node_a, node_b],
+            next_node_id: 3,
             last_promoted_root: None,
             selected: Some(node_a),
             selection_trail: VecDeque::new(),

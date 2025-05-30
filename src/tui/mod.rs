@@ -624,10 +624,10 @@ pub fn launch_ui() -> std::io::Result<()> {
 
                     KeyCode::Up if state.mode == "gemx" => state.move_focus_up(),
                     KeyCode::Down if state.mode == "gemx" => state.move_focus_down(),
-                    KeyCode::Left if state.mode == "gemx" => state.move_focus_left(),
-                    KeyCode::Right if state.mode == "gemx" => state.move_focus_right(),
-                    KeyCode::Tab if state.mode == "gemx" => state.move_focus_right(),
-                    KeyCode::BackTab if state.mode == "gemx" => state.move_focus_left(),
+                    KeyCode::Left if state.mode == "gemx" => state.focus_prev_sibling(),
+                    KeyCode::Right if state.mode == "gemx" => state.focus_next_sibling(),
+                    KeyCode::Tab if state.mode == "gemx" => state.focus_next_sibling(),
+                    KeyCode::BackTab if state.mode == "gemx" => state.handle_shift_tab_key(),
 
                     KeyCode::Char(c) if state.mode == "gemx" => {
                         let allowed = modifiers == KeyModifiers::NONE || modifiers == KeyModifiers::SHIFT;
