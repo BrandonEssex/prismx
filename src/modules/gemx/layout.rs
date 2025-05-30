@@ -6,11 +6,23 @@ pub use crate::layout::engine::sibling_offset;
 /// Ensure the newly inserted node remains visible by centering on it.
 pub fn focus_new_node(state: &mut AppState, node_id: NodeID) {
     viewport::ensure_visible(state, node_id);
+    // After inserting a node we want the immediate layout to remain coherent.
+    // Reflow sibling groups around the focused branch so the new node does not
+    // cause the entire tree to shift unpredictably.
+    reflow_around_focus(state);
 }
 
 /// Follow the currently selected node each frame.
 pub fn follow_focus_node(state: &mut AppState) {
     viewport::follow_focus(state);
+}
+
+/// Reposition root branches so the currently focused branch remains stationary
+/// while its siblings shift outward if necessary. This keeps horizontal
+/// alignment stable when inserting or expanding nodes.
+pub fn reflow_around_focus(state: &mut AppState) {
+    let focus = focused_root(state);
+    preserve_focused_branch(&mut state.nodes, &state.root_nodes, focus);
 }
 
 /// Clamp scroll offsets relative to zoom level to avoid jumpiness.
