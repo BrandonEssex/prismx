@@ -137,3 +137,20 @@ pub fn draw_ghost_line<B: Backend>(
         draw_ghost_line(f, (sx, ey), end, tick, color);
     }
 }
+
+/// Draw a shimmering anchor trail between two points.
+pub fn draw_anchor_trail<B: Backend>(
+    f: &mut Frame<B>,
+    start: (i16, i16),
+    end: (i16, i16),
+    tick: u64,
+    color: Color,
+) {
+    draw_ghost_line(f, start, end, tick, color);
+    let (ex, ey) = end;
+    let style = shimmer(color, tick);
+    if ex >= 0 && ey >= 0 {
+        let rect = Rect::new(ex as u16, ey as u16, 1, 1);
+        f.render_widget(Paragraph::new("●").style(style), rect);
+    }
+}
