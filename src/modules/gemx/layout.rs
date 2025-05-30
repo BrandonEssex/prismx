@@ -22,6 +22,27 @@ pub fn focus_new_node(state: &mut AppState, node_id: NodeID) {
     reflow_around_focus(state);
 }
 
+/// Attempt to focus the most recently visible node if `node_id` is missing.
+pub fn focus_or_recent(state: &mut AppState, node_id: Option<NodeID>) {
+    if let Some(id) = node_id {
+        state.set_selected(Some(id));
+        focus_new_node(state, id);
+        return;
+    }
+
+    let mut target = None;
+    for (nid, _) in state.selection_trail.iter().rev() {
+        if state.nodes.contains_key(nid) && viewport::node_visible(state, *nid) {
+            target = Some(*nid);
+            break;
+        }
+    }
+    if let Some(id) = target {
+        state.set_selected(Some(id));
+        focus_new_node(state, id);
+    }
+}
+
 /// Follow the currently selected node each frame.
 pub fn follow_focus_node(state: &mut AppState) {
     viewport::follow_focus(state);
