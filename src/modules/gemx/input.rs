@@ -20,7 +20,7 @@ pub fn handle_key(state: &mut AppState, code: KeyCode, mods: KeyModifiers) -> bo
                 state.push_undo();
                 state.handle_enter_key();
             } else {
-                state.status_message = "Cannot insert: empty node".into();
+                state.status_message = "Cannot insert: edit node label first".into();
                 state.status_message_last_updated = Some(Instant::now());
             }
             true
@@ -31,7 +31,7 @@ pub fn handle_key(state: &mut AppState, code: KeyCode, mods: KeyModifiers) -> bo
                 state.push_undo();
                 state.handle_tab_key();
             } else {
-                state.status_message = "Cannot insert: empty node".into();
+                state.status_message = "Cannot insert: edit node label first".into();
                 state.status_message_last_updated = Some(Instant::now());
             }
             true
