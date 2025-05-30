@@ -31,10 +31,19 @@ pub fn clamp_child_spacing(state: &AppState, roots: &[NodeID], max_h: i16) -> i1
         depth = depth.max(subtree_depth(&state.nodes, *r));
     }
     let required = depth * CHILD_SPACING_Y;
-    if max_h > 0 && required > max_h {
+    let mut spacing = if max_h > 0 && required > max_h {
         let ratio = max_h as f32 / required as f32;
         ((CHILD_SPACING_Y as f32 * ratio).floor() as i16).max(MIN_CHILD_SPACING_Y)
     } else {
         CHILD_SPACING_Y
+    };
+
+    if state.zoom_scale <= 0.5 {
+        spacing = ((spacing as f32) * state.zoom_scale).floor() as i16;
+        if spacing < MIN_CHILD_SPACING_Y {
+            spacing = MIN_CHILD_SPACING_Y;
+        }
     }
+
+    spacing
 }
