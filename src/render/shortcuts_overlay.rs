@@ -81,7 +81,8 @@ pub fn render_shortcuts_overlay<B: Backend>(f: &mut Frame<B>, area: Rect, state:
     let x = area.x + (area.width.saturating_sub(width)) / 2;
     let y = area.y + (area.height.saturating_sub(height)) / 2;
 
-    let block = Block::default().title("Shortcuts").borders(Borders::ALL);
+    let title = format!("{} Shortcuts", crate::theme::icons::ICON_TERMINAL);
+    let block = Block::default().title(title).borders(Borders::ALL);
     let content = Paragraph::new(lines).block(block);
 
     let rect = Rect::new(x, y, width, height);

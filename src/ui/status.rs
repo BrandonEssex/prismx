@@ -78,6 +78,9 @@ pub fn render_status<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState)
         status_line(state)
     };
 
+    // Prefix the active module icon for quick visual context
+    text = format!("{} {}", module_icon(&state.mode), text);
+
     let content_style = Style::default().fg(beam.status_color);
     let width = area.width.saturating_sub(2);
     if text.len() as u16 > width {

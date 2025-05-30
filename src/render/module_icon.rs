@@ -8,15 +8,16 @@ use ratatui::{
 use crate::ui::animate::breath_style;
 use std::time::{SystemTime, UNIX_EPOCH};
 use crate::beamx;
+use crate::theme::icons;
 use unicode_width::UnicodeWidthStr;
 
 pub fn module_icon(mode: &str) -> &'static str {
     match mode {
-        "gemx" => "💭",
-        "zen" => "🧘",
-        "triage" => "🏥",
-        "spotlight" => "🔍",
-        "settings" => "⚙️",
+        "gemx" => icons::ICON_GEMX,
+        "zen" => icons::ICON_ZEN,
+        "triage" => icons::ICON_TRIAGE,
+        "spotlight" => icons::ICON_SPOTLIGHT,
+        "settings" => icons::ICON_SETTINGS,
         "plugin" => "🔌",
         _ => "❓",
     }
