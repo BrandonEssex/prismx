@@ -29,6 +29,7 @@ use crate::render::render_settings;
 use crate::ui::components::plugin::render_plugin;
 use crate::ui::components::logs::render_logs;
 use crate::ui::input;
+use crate::modules::triage::input as triage_input;
 
 use crate::hotkeys::match_hotkey;
 use crate::shortcuts::{match_shortcut, Shortcut};
@@ -469,6 +470,8 @@ pub fn launch_ui() -> std::io::Result<()> {
                 } else if match_hotkey("toggle_settings", code, modifiers, &state) {
                     state.mode = "settings".into();
                     tracing::info!("[INPUT] mode switched to settings");
+                } else if match_hotkey("toggle_sticky_notes", code, modifiers, &state) && state.mode == "triage" {
+                    state.toggle_sticky_overlay();
                 } else if code == KeyCode::Char('.') && modifiers == KeyModifiers::CONTROL {
                     state.mode = "settings".into();
                     tracing::info!("[INPUT] mode switched to settings");
@@ -642,6 +645,7 @@ pub fn launch_ui() -> std::io::Result<()> {
                         }
                     }
 
+                    k @ _ if state.mode == "triage" && triage_input::handle_key(&mut state, k, modifiers) => {}
                     k @ _ if state.mode == "zen" => {
                         input::route_zen_keys(&mut state, k, modifiers);
                     }
@@ -674,17 +678,27 @@ pub fn launch_ui() -> std::io::Result<()> {
                             if !handled && state.mode == "gemx" {
                                 if let Some(id) = crate::gemx::interaction::node_at_position(&state, me.column, me.row) {
                                     crate::gemx::interaction::start_drag(&mut state, id, me.column, me.row);
+                                    handled = true;
                                 }
+                            }
+                            if !handled && state.mode == "triage" {
+                                if triage_input::handle_mouse(&mut state, me) { handled = true; }
                             }
                         }
                         MouseEventKind::Drag(MouseButton::Left) => {
                             if state.mode == "gemx" {
                                 crate::gemx::interaction::drag_update(&mut state, me.column, me.row);
                             }
+                            if state.mode == "triage" {
+                                triage_input::handle_mouse(&mut state, me);
+                            }
                         }
                         MouseEventKind::Up(MouseButton::Left) => {
                             if state.mode == "gemx" {
                                 crate::gemx::interaction::end_drag(&mut state);
+                            }
+                            if state.mode == "triage" {
+                                triage_input::handle_mouse(&mut state, me);
                             }
                         }
                         MouseEventKind::Moved => {

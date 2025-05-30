@@ -1,5 +1,6 @@
 use ratatui::prelude::*;
 use ratatui::widgets::{Block, Borders, Paragraph, Wrap};
+use crate::ui::drag::DragState;
 
 /// Draggable sticky note widget used in the Triage panel.
 #[derive(Clone, Debug)]
@@ -64,6 +65,27 @@ impl StickyNote {
 
         let body = Paragraph::new(self.body.clone()).wrap(Wrap { trim: true });
         f.render_widget(body, Rect::new(area.x + 1, area.y + 2, area.width - 2, area.height - 3));
+    }
+}
+
+#[derive(Default, Debug)]
+pub struct StickyPanel {
+    pub notes: Vec<StickyNote>,
+    pub visible: bool,
+    pub drag: DragState,
+    pub focus: Option<usize>,
+}
+
+impl StickyPanel {
+    pub fn note_at(&self, x: u16, y: u16) -> Option<usize> {
+        self.notes.iter().position(|n| n.contains(x, y))
+    }
+
+    pub fn render<B: Backend>(&self, f: &mut Frame<B>) {
+        if !self.visible { return; }
+        for note in &self.notes {
+            note.render(f);
+        }
     }
 }
 

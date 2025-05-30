@@ -102,4 +102,25 @@ impl AppState {
         self.triage_summary.triton = t;
         self.triage_summary.done = d;
     }
+
+    pub fn toggle_sticky_overlay(&mut self) {
+        self.sticky_overlay_visible = !self.sticky_overlay_visible;
+        if self.sticky_overlay_visible && self.sticky_notes_data.is_empty() {
+            self.sticky_notes_data.push(crate::modules::triage::sticky::StickyNote::new(
+                "Note",
+                "",
+                ratatui::style::Color::Yellow,
+                2,
+                2,
+            ));
+            self.sticky_focus = Some(0);
+            if let Some(n) = self.sticky_notes_data.get_mut(0) {
+                n.focused = true;
+            }
+        }
+    }
+
+    pub fn sticky_note_at(&self, x: u16, y: u16) -> Option<usize> {
+        self.sticky_notes_data.iter().position(|n| n.contains(x, y))
+    }
 }
