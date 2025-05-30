@@ -30,3 +30,14 @@ pub fn spotlight_width(area_width: u16) -> u16 {
     overlay_width(area_width)
 }
 
+/// Whether node labels should wrap to a second line when exceeding the maximum
+/// width instead of being truncated.
+pub const NODE_WRAP_LABELS: bool = false;
+
+/// Compute the maximum number of characters allowed for a node label at the
+/// given zoom scale. This prevents layout breakage from extremely long labels.
+pub fn node_max_width(zoom: f32) -> usize {
+    let base = (16.0 * zoom).round() as i32;
+    base.clamp(8, 32) as usize
+}
+
