@@ -1,5 +1,6 @@
 pub mod render;
 pub use crate::triage::*;
+pub use render::render_grouped;
 
 pub mod feed;
 pub mod sticky;
