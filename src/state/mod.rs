@@ -33,4 +33,11 @@ impl AppState {
     pub fn handle_shift_tab_key(&mut self) {
         self.promote_selected_node();
     }
+
+    /// Generate the next automatic node label.
+    pub fn next_label(&mut self) -> String {
+        let label = format!("node {:03}", self.next_node_label);
+        self.next_node_label += 1;
+        label
+    }
 }

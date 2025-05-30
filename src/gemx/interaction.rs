@@ -24,7 +24,8 @@ pub fn spawn_free_node(state: &mut AppState) {
         .unwrap_or(100)
         + 1;
 
-    let mut node = Node::new(new_id, "Free Node", None);
+    let label = state.next_label();
+    let mut node = Node::new(new_id, &label, None);
 
     if !state.auto_arrange {
         use std::collections::HashSet;

@@ -112,6 +112,8 @@ pub struct AppState {
     pub root_nodes: Vec<NodeID>,
     /// ID to assign to the next created node for fast insertion
     pub next_node_id: NodeID,
+    /// Sequence number for auto-generated node labels
+    pub next_node_label: u32,
     pub last_promoted_root: Option<NodeID>,
     pub selected: Option<NodeID>,
     pub selection_trail: VecDeque<(NodeID, Instant)>,
@@ -273,6 +275,7 @@ impl Default for AppState {
             nodes,
             root_nodes: vec![node_a, node_b],
             next_node_id: 3,
+            next_node_label: 1,
             last_promoted_root: None,
             selected: Some(node_a),
             selection_trail: VecDeque::new(),

@@ -27,7 +27,8 @@ impl AppState {
             }
         }
 
-        let mut child = Node::new(new_id, "New Child", Some(parent_id));
+        let label = self.next_label();
+        let mut child = Node::new(new_id, &label, Some(parent_id));
         if self.auto_arrange {
             if let Some(parent) = self.nodes.get(&parent_id) {
                 child.x = parent.x;
@@ -79,7 +80,8 @@ impl AppState {
 
         let new_id = self.next_node_id;
         self.next_node_id += 1;
-        let mut sibling = Node::new(new_id, "New Sibling", parent_id);
+        let label = self.next_label();
+        let mut sibling = Node::new(new_id, &label, parent_id);
 
         if let Some(selected) = self.nodes.get(&selected_id) {
             sibling.x = selected.x + SIBLING_SPACING_X;
@@ -147,7 +149,8 @@ impl AppState {
     pub fn add_free_node(&mut self) {
         let new_id = self.next_node_id;
         self.next_node_id += 1;
-        let mut node = Node::new(new_id, "Free Node", None);
+        let label = self.next_label();
+        let mut node = Node::new(new_id, &label, None);
 
         if !self.auto_arrange {
             node.x = (self.nodes.len() as i16 % 5) * SIBLING_SPACING_X;
