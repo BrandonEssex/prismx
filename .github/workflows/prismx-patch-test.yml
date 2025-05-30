@@ -104,7 +104,7 @@ jobs:
         run: ./bin/archive-patch.sh ${{ matrix.patch }}
 
       - name: ☁️ Upload Patch Artifacts
-        if: steps.runcheck.outputs.run == 'true'
+        if: steps.runcheck.outputs.run == 'true' && !startsWith(matrix.patch, 'patch-25.61') && !startsWith(matrix.patch, 'patch-25.62')
         uses: actions/upload-artifact@v3.1.2
         with:
           name: ${{ matrix.patch }}-artifact
