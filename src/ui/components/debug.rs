@@ -13,6 +13,8 @@ use ratatui::{
 use crate::ui::layout::Rect;
 
 use crate::layout::subtree_depth;
+use crate::layout::engine::{grid_size, detect_collisions, detect_overflow};
+use crossterm::terminal;
 
 
 /// Render debug information when [`AppState::debug_input_mode`] is enabled.
@@ -63,6 +65,10 @@ pub fn render_debug_panel<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppS
         .map(|id| subtree_depth(&state.nodes, *id) as usize)
         .max()
         .unwrap_or(0);
+    let (rows, cols) = grid_size(&state.nodes);
+    let collisions = detect_collisions(&state.nodes);
+    let (tw, th) = terminal::size().unwrap_or((80, 20));
+    let overflow = detect_overflow(&state.nodes, Rect::new(0, 0, tw, th));
 
     let selected = if state.mode == "gemx" {
         match state.selected {
@@ -82,8 +88,10 @@ pub fn render_debug_panel<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppS
         selected,
         format!("Auto-arrange: {}", if state.auto_arrange { "ON" } else { "OFF" }),
         format!("Nodes: {} Depth: {}", state.nodes.len(), depth),
+        format!("Grid: {}x{}", rows, cols),
+        format!("Collisions: {} Overflow: {}", collisions.len(), overflow.len()),
         format!("Plugins: {} / {}", state.plugin_host.active.len(), registry_filtered(PluginTagFilter::All)
-.len()),
+            .len()),
     ];
 
     if let Some(log) = last_log_line() {
