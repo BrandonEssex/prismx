@@ -150,3 +150,30 @@ impl From<BeamXMode> for BeamXStyle {
     }
 }
 
+#[derive(Copy, Clone)]
+pub enum InsertCursorKind {
+    Child,
+    Sibling,
+}
+
+/// Render a pulsing cursor at the given position using Zen-style animation.
+pub fn render_insert_cursor<B: Backend>(
+    f: &mut Frame<B>,
+    pos: (u16, u16),
+    tick: u64,
+    kind: InsertCursorKind,
+    style: &BeamXStyle,
+) {
+    use crate::ui::animate::breath_style;
+    let glyph = match kind {
+        InsertCursorKind::Child => "│",
+        InsertCursorKind::Sibling => crate::ui::animate::pulse(style.pulse, tick),
+    };
+    let color = match kind {
+        InsertCursorKind::Child => style.border_color,
+        InsertCursorKind::Sibling => style.status_color,
+    };
+    let s = breath_style(color, tick);
+    render_glyph(f, pos.0, pos.1, glyph, s);
+}
+
