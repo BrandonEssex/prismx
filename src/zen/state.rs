@@ -222,6 +222,31 @@ impl AppState {
         }
     }
 
+    /// Delete the specified journal entry.
+    pub fn delete_journal_entry(&mut self, index: usize) {
+        if index >= self.zen_journal_entries.len() {
+            return;
+        }
+        self.zen_journal_entries.remove(index);
+
+        if let Some(edit) = self.zen_draft.editing {
+            if edit == index {
+                self.zen_draft.editing = None;
+                self.zen_draft.text.clear();
+            } else if edit > index {
+                self.zen_draft.editing = Some(edit - 1);
+            }
+        }
+
+        if let Some(hist) = self.zen_history_index {
+            if hist == index {
+                self.zen_history_index = None;
+            } else if hist > index {
+                self.zen_history_index = Some(hist - 1);
+            }
+        }
+    }
+
     pub fn set_tag_filter(&mut self, tag: Option<&str>) {
         self.zen_tag_filter = tag.map(|t| t.to_string());
     }
