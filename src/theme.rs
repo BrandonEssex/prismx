@@ -10,6 +10,7 @@ pub mod previews;
 pub mod layout;
 pub mod characters;
 pub mod beam_color;
+pub mod icons;
 
 static CURRENT_THEME: Mutex<&str> = Mutex::new("dark");
 

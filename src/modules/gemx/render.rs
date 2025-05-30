@@ -12,6 +12,7 @@ use crate::ui::lines::{
 use crate::theme::beam_color::{parent_line_color, sibling_line_color};
 use crate::beam_color::BeamColor;
 use crate::ui::beamx::{BeamXMode, BeamXStyle, InsertCursorKind, render_insert_cursor};
+use crate::theme::icons::{ROOT_NODE, CHILD_NODE, SIBLING_NODE};
 
 /// Render a simple mindmap using the vertical layout engine.
 pub fn render<B: Backend>(
@@ -121,8 +122,24 @@ pub fn render<B: Backend>(
         let x = area.x as i16 + node.x;
         let y = area.y as i16 + node.y - scroll;
         if x >= 0 && y >= 0 && x < area.right() as i16 && y < area.bottom() as i16 {
-            let rect = Rect::new(x as u16, y as u16, node.label.len() as u16, 1);
-            f.render_widget(Paragraph::new(node.label.clone()), rect);
+            let mut text = node.label.clone();
+            if state.hierarchy_icons {
+                let icon = if node.parent.is_none() {
+                    ROOT_NODE
+                } else {
+                    let parent_id = node.parent.unwrap();
+                    if nodes.get(&parent_id)
+                        .and_then(|p| p.children.first().copied()) == Some(node.id)
+                    {
+                        CHILD_NODE
+                    } else {
+                        SIBLING_NODE
+                    }
+                };
+                text = format!("{} {}", icon, text);
+            }
+            let rect = Rect::new(x as u16, y as u16, text.len() as u16, 1);
+            f.render_widget(Paragraph::new(text.clone()), rect);
 
             if node.label == "New Child" || node.label == "New Sibling" {
                 let kind = if node.label == "New Child" {

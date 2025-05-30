@@ -76,6 +76,9 @@ fn toggle_beamx_panel_visibility(s: &mut AppState) { s.beamx_panel_visible = !s.
 fn is_mindmap_lanes(s: &AppState) -> bool { s.mindmap_lanes }
 fn toggle_mindmap_lanes(s: &mut AppState) { s.mindmap_lanes = !s.mindmap_lanes; save_user_settings(s); }
 
+fn is_hierarchy_icons(s: &AppState) -> bool { s.hierarchy_icons }
+fn toggle_hierarchy_icons(s: &mut AppState) { s.hierarchy_icons = !s.hierarchy_icons; save_user_settings(s); }
+
 fn toggle_font_style(s: &mut AppState) { s.font_style = s.font_style.next(); save_user_settings(s); }
 fn font_style_enabled(_: &AppState) -> bool { true }
 
@@ -126,6 +129,7 @@ pub static SETTING_TOGGLES: &[SettingToggle] = &[
     SettingToggle { icon: "📌", label: "Sticky Notes", is_enabled: is_sticky_notes, toggle: toggle_sticky_notes, category: SettingCategory::Modules },
     SettingToggle { icon: "⌨", label: "Shortcut Overlay", is_enabled: shortcut_overlay_enabled, toggle: toggle_shortcut_overlay, category: SettingCategory::Modules },
     SettingToggle { icon: "✨", label: "Mindmap Lanes", is_enabled: is_mindmap_lanes, toggle: toggle_mindmap_lanes, category: SettingCategory::Modules },
+    SettingToggle { icon: "🧠", label: "Hierarchy Icons", is_enabled: is_hierarchy_icons, toggle: toggle_hierarchy_icons, category: SettingCategory::Modules },
     SettingToggle { icon: "🐞", label: "Debug Input Mode", is_enabled: is_debug_mode, toggle: toggle_debug_mode, category: SettingCategory::UX },
     SettingToggle { icon: "❤️", label: "Heartbeat", is_enabled: heartbeat_active, toggle: toggle_heartbeat, category: SettingCategory::UX },
 ];
