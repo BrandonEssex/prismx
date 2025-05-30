@@ -71,3 +71,13 @@ pub fn compute_depths(nodes: &NodeMap) -> HashMap<NodeID, usize> {
 pub fn spacing_for_zoom(zoom: f32) -> (i16, i16) {
     spacing_scale(zoom)
 }
+
+/// Calculate the horizontal center position of a node's label.
+pub fn center_x(nodes: &NodeMap, id: NodeID) -> i16 {
+    if let Some(n) = nodes.get(&id) {
+        let (w, _) = label_bounds(&n.label);
+        n.x + w / 2
+    } else {
+        0
+    }
+}
