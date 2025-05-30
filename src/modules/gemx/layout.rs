@@ -1,8 +1,10 @@
 use crate::state::AppState;
-use crate::node::NodeID;
+use crate::node::{NodeID, NodeMap};
 use super::viewport;
 pub use crate::layout::engine::sibling_offset;
 use crossterm::terminal;
+use ratatui::prelude::Rect;
+use crate::layout::GEMX_HEADER_HEIGHT;
 
 /// Ensure the newly inserted node remains visible by centering on it.
 pub fn focus_new_node(state: &mut AppState, node_id: NodeID) {
@@ -52,6 +54,18 @@ pub fn clamp_zoom_scroll(state: &mut AppState) {
     state.scroll_y = state.scroll_y.clamp(0, limit + pad_vert);
     state.scroll_target_x = state.scroll_target_x.clamp(0, limit + pad_right);
     state.scroll_target_y = state.scroll_target_y.clamp(0, limit + pad_vert);
+}
+
+/// Ensure all nodes remain within the visible viewport area.
+pub fn enforce_viewport_bounds(nodes: &mut NodeMap, area: Rect) {
+    let min_x = area.x as i16 + 1;
+    let max_x = area.right() as i16 - 2;
+    let min_y = GEMX_HEADER_HEIGHT.max(area.y as i16 + 1);
+    let max_y = area.bottom() as i16 - 2;
+    for node in nodes.values_mut() {
+        node.x = node.x.clamp(min_x, max_x);
+        node.y = node.y.clamp(min_y, max_y);
+    }
 }
 
 /// Determine dynamic child spacing based on total depth.

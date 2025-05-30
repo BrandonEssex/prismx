@@ -2,7 +2,7 @@ use ratatui::{prelude::*, widgets::Paragraph};
 use crate::node::{NodeID, NodeMap};
 use crate::state::AppState;
 use crate::layout::engine::{center_x, layout_vertical};
-use super::layout::clamp_child_spacing;
+use super::layout::{clamp_child_spacing, enforce_viewport_bounds};
 use crate::ui::lines::{
     draw_vertical_fade,
     draw_horizontal_shimmer,
@@ -46,6 +46,7 @@ pub fn render<B: Backend>(
     for &root in roots {
         layout_vertical(nodes, root, spacing_y);
     }
+    enforce_viewport_bounds(nodes, area);
 
     let zoom = state.zoom_scale as f32;
 
