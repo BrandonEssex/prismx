@@ -9,6 +9,7 @@ use unicode_width::UnicodeWidthStr;
 use crate::ui::animate::cursor_blink;
 use std::time::{SystemTime, UNIX_EPOCH};
 use crate::ui::layout::Rect;
+use crate::theme::layout::spotlight_width;
 
 use crate::state::AppState;
 use crate::spotlight::{command_preview, command_suggestions_scored};
@@ -26,9 +27,9 @@ pub fn render_spotlight<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut Ap
     let display_input = format!("{}{}", raw_input, caret);
     let cfg = ThemeConfig::load();
     let palette = cfg.spotlight_palette();
-    let base_width = area.width.min(60);
-    let min_width = UnicodeWidthStr::width(display_input.as_str()) as u16 + 3; // "> " prefix
-    let width = base_width.min(min_width.max(3));
+
+    // Use a fixed width so the Spotlight panel doesn't resize with input length.
+    let width = spotlight_width(area.width);
     let x_offset = area.x + (area.width.saturating_sub(width)) / 2;
     let y_offset = area.y + area.height / 3;
 
