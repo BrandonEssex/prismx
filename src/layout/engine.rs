@@ -54,7 +54,17 @@ pub fn layout_vertical(nodes: &mut NodeMap, root: NodeID, spacing_y: i16) {
 
     let spacing_y = spacing_y.max(MIN_CHILD_SPACING_Y);
 
-    let start_x = nodes.get(&root).map(|n| n.x).unwrap_or(0);
+    let (label_w, _) = nodes
+        .get(&root)
+        .map(|n| label_bounds(&n.label))
+        .unwrap_or((2, 1));
+    let span = subtree_span(nodes, root);
+
+    // Preserve the root's center position so the active tree doesn't jitter
+    // when new children are inserted. Calculate the left anchor from the
+    // existing center position and span width.
+    let root_center = nodes.get(&root).map(|n| n.x).unwrap_or(0);
+    let start_x = root_center - (span - label_w) / 2;
     let start_y = nodes.get(&root).map(|n| n.y).unwrap_or(0);
     layout_subtree(nodes, root, start_x, start_y, spacing_y);
 }

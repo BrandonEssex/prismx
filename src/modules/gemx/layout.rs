@@ -53,3 +53,86 @@ pub fn clamp_child_spacing(state: &AppState, roots: &[NodeID], max_h: i16) -> i1
 
     spacing
 }
+
+/// Return the root ancestor for the currently selected node.
+pub fn focused_root(state: &AppState) -> Option<NodeID> {
+    let mut current = state.selected?;
+    while let Some(parent) = state.nodes.get(&current).and_then(|n| n.parent) {
+        current = parent;
+    }
+    Some(current)
+}
+
+fn subtree_bounds(nodes: &crate::node::NodeMap, id: NodeID) -> (i16, i16) {
+    use crate::layout::{label_bounds, subtree_span};
+    let span = subtree_span(nodes, id);
+    let (w, _) = nodes
+        .get(&id)
+        .map(|n| label_bounds(&n.label))
+        .unwrap_or((2, 1));
+    let left = nodes.get(&id).map(|n| n.x - (span - w) / 2).unwrap_or(0);
+    (left, left + span)
+}
+
+fn shift_subtree(nodes: &mut crate::node::NodeMap, id: NodeID, dx: i16) {
+    fn walk(nodes: &mut crate::node::NodeMap, nid: NodeID, dx: i16) {
+        if let Some(node) = nodes.get_mut(&nid) {
+            node.x += dx;
+            if !node.collapsed {
+                let children = node.children.clone();
+                for c in children {
+                    walk(nodes, c, dx);
+                }
+            }
+        }
+    }
+    if dx != 0 {
+        walk(nodes, id, dx);
+    }
+}
+
+/// Shift peer root trees horizontally so the focused branch remains stationary.
+pub fn preserve_focused_branch(
+    nodes: &mut crate::node::NodeMap,
+    roots: &[NodeID],
+    focus_root: Option<NodeID>,
+) {
+    use crate::layout::SIBLING_SPACING_X;
+    let Some(active) = focus_root else { return };
+
+    let mut data: Vec<(NodeID, i16, i16)> = roots
+        .iter()
+        .copied()
+        .map(|r| {
+            let (l, rgt) = subtree_bounds(nodes, r);
+            (r, l, rgt)
+        })
+        .collect();
+
+    data.sort_by_key(|d| d.1);
+    let idx = data.iter().position(|d| d.0 == active).unwrap_or(0);
+
+    // shift peers to the right of the active root
+    let mut bound = data[idx].2 + SIBLING_SPACING_X;
+    for (rid, left, right) in data.iter_mut().skip(idx + 1) {
+        if *left < bound {
+            let delta = bound - *left;
+            shift_subtree(nodes, *rid, delta);
+            *left += delta;
+            *right += delta;
+        }
+        bound = *right + SIBLING_SPACING_X;
+    }
+
+    // shift peers to the left of the active root
+    let mut bound_left = data[idx].1 - SIBLING_SPACING_X;
+    for (rid, left, right) in data[..idx].iter_mut().rev() {
+        if *right > bound_left {
+            let delta = *right - bound_left;
+            shift_subtree(nodes, *rid, -delta);
+            *left -= delta;
+            *right -= delta;
+        }
+        bound_left = *left - SIBLING_SPACING_X;
+    }
+}
