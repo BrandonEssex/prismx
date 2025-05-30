@@ -1,6 +1,9 @@
 use crossterm::event::{KeyCode, KeyModifiers, MouseEvent, MouseEventKind, MouseButton};
 use std::time::Instant;
 use crate::state::AppState;
+use crate::gemx::interaction::{self, node_at_position, start_drag as start_move,
+    drag_update, end_drag};
+use crate::modules::gemx::logic;
 
 /// Handle GemX (mindmap) specific keyboard shortcuts.
 pub fn handle_key(state: &mut AppState, code: KeyCode, mods: KeyModifiers) -> bool {
@@ -78,11 +81,41 @@ pub fn handle_key(state: &mut AppState, code: KeyCode, mods: KeyModifiers) -> bo
 }
 
 /// Handle GemX mouse interactions. Currently unused.
-pub fn handle_mouse(_state: &mut AppState, _me: MouseEvent) -> bool {
-    match _me.kind {
-        MouseEventKind::Down(MouseButton::Left)
-        | MouseEventKind::Drag(MouseButton::Left)
-        | MouseEventKind::Up(MouseButton::Left) => {}
+pub fn handle_mouse(state: &mut AppState, me: MouseEvent) -> bool {
+    match me.kind {
+        MouseEventKind::Down(MouseButton::Left) => {
+            if let Some(id) = node_at_position(state, me.column, me.row) {
+                state.push_undo();
+                start_move(state, id, me.column, me.row);
+                state.drag_hover_target = None;
+                state.start_drag();
+                return true;
+            }
+        }
+        MouseEventKind::Drag(MouseButton::Left) => {
+            if state.dragging.is_some() {
+                drag_update(state, me.column, me.row);
+                if let Some(tid) = node_at_position(state, me.column, me.row) {
+                    if Some(tid) != state.dragging {
+                        state.drag_hover_target = Some(tid);
+                    } else {
+                        state.drag_hover_target = None;
+                    }
+                } else {
+                    state.drag_hover_target = None;
+                }
+                return true;
+            }
+        }
+        MouseEventKind::Up(MouseButton::Left) => {
+            if let Some(id) = state.dragging {
+                end_drag(state);
+                let target = state.drag_hover_target.take();
+                logic::reparent(&mut state.nodes, &mut state.root_nodes, id, target);
+                logic::adopt_orphans(&mut state.nodes, &mut state.root_nodes);
+                return true;
+            }
+        }
         _ => {}
     }
     false

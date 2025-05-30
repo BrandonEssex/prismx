@@ -1,11 +1,13 @@
 use ratatui::{prelude::*, widgets::Paragraph};
 use crate::node::{NodeID, NodeMap};
+use crate::state::AppState;
 use crate::layout::{CHILD_SPACING_Y};
 use crate::layout::engine::{layout_vertical, center_x};
 use crate::ui::lines::{
     draw_vertical_fade,
     draw_horizontal_shimmer,
     draw_ghost_line,
+    draw_anchor_trail,
 };
 use crate::theme::beam_color::{parent_line_color, sibling_line_color};
 use crate::beam_color::BeamColor;
@@ -17,6 +19,7 @@ pub fn render<B: Backend>(
     area: Rect,
     nodes: &mut NodeMap,
     roots: &[NodeID],
+    state: &AppState,
     debug: bool,
 ) {
     for &root in roots {
@@ -98,6 +101,17 @@ pub fn render<B: Backend>(
                     }
                 }
             }
+        }
+    }
+
+    // Preview reparent link if dragging over a potential parent
+    if let (Some(src), Some(tgt)) = (state.dragging, state.drag_hover_target) {
+        if let (Some(s), Some(t)) = (nodes.get(&src), nodes.get(&tgt)) {
+            let sx = area.x as i16 + center_x(nodes, src);
+            let sy = area.y as i16 + s.y - scroll;
+            let tx = area.x as i16 + center_x(nodes, tgt);
+            let ty = area.y as i16 + t.y - scroll;
+            draw_anchor_trail(f, (sx, sy), (tx, ty), tick, p_color);
         }
     }
 
