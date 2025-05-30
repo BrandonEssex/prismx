@@ -12,12 +12,15 @@ pub struct PluginManifest {
     pub name: String,
     pub description: String,
     pub url: String,
+    /// Optional icon glyph for status dock display
+    #[serde(default)]
+    pub icon: Option<String>,
     pub tags: Vec<String>,
     #[serde(default)]
     pub trusted: bool,
     #[serde(default)]
     pub trust_chain: Option<String>,
-    pub version: String,                      
+    pub version: String,
 }
 
 
@@ -105,6 +108,22 @@ pub fn registry_filtered(filter: PluginTagFilter) -> Vec<PluginManifest> {
                 PluginTagFilter::All => true,
                 PluginTagFilter::Trusted => p.trusted,
                 PluginTagFilter::Debug => p.tags.iter().any(|t| t == "debug"),
+            })
+            .collect(),
+        Err(_) => vec![],
+    }
+}
+
+/// Return minimal information for displaying plugins in the dock.
+/// Each entry is `(icon, command)` where command will activate the plugin.
+pub fn dock_entries() -> Vec<(String, String)> {
+    match load_registry() {
+        Ok(registry) => registry
+            .into_iter()
+            .map(|p| {
+                let icon = p.icon.unwrap_or_else(|| "🔌".to_string());
+                let cmd = format!("/{}", p.id);
+                (icon, cmd)
             })
             .collect(),
         Err(_) => vec![],

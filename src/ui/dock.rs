@@ -1,16 +1,24 @@
-use ratatui::{backend::Backend, style::{Color, Modifier, Style}, widgets::Paragraph, Frame};
+use ratatui::{backend::Backend, style::{Modifier, Style}, widgets::Paragraph, Frame};
 use crate::ui::layout::Rect;
-use crate::ui::borders::draw_rounded_border;
-use crate::state::{AppState, DockLayout};
+use crate::state::AppState;
 use crate::config::theme::ThemeConfig;
-use crate::theme::characters::{HORIZONTAL, VERTICAL};
+use crate::modules::switcher::MODULES;
+use crate::plugin::registry;
 
 pub fn render_dock<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppState) {
     if !state.favorite_dock_enabled {
         return;
     }
 
-    let favorites = state.favorite_entries();
+    // Build entries from built-in modules
+    let mut entries: Vec<(String, String)> = MODULES
+        .iter()
+        .map(|(icon, label)| ((*icon).to_string(), format!("/{}", label.to_lowercase())))
+        .collect();
+
+    // Append any plugins discovered via the registry
+    entries.extend(registry::dock_entries());
+
     state.dock_entry_bounds.clear();
 
     let beam = state.beam_style_for_mode(&state.mode);
@@ -19,14 +27,14 @@ pub fn render_dock<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppStat
     let y = area.y + area.height.saturating_sub(2);
     let mut x = area.x + 1;
 
-    for (i, entry) in favorites.iter().enumerate() {
+    for (i, (icon, command)) in entries.iter().enumerate() {
         let rect = Rect::new(x, y, 2, 1);
         let mut style = Style::default().fg(beam.status_color);
         if state.favorite_focus_index == Some(i) || state.dock_hover_index == Some(i) {
             style = Style::default().fg(accent).add_modifier(Modifier::REVERSED);
         }
-        f.render_widget(Paragraph::new(entry.icon).style(style), rect);
-        state.dock_entry_bounds.push((rect, entry.command.to_string()));
+        f.render_widget(Paragraph::new(icon.as_str()).style(style), rect);
+        state.dock_entry_bounds.push((rect, command.clone()));
         x += 3;
     }
 
