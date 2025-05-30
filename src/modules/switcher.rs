@@ -1,3 +1,7 @@
+use crate::theme::layout::OVERLAY_WIDTH;
+
+pub const SWITCHER_WIDTH: u16 = OVERLAY_WIDTH;
+
 pub const MODULES: [(&str, &str); 5] = [
     ("\u{1F4AD}", "Mindmap"),    // 💭
     ("\u{1F9D8}", "Zen"),        // 🧘

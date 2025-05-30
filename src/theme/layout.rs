@@ -4,14 +4,25 @@ pub fn spacing_scale(zoom: f32) -> (i16, i16) {
     (x, y)
 }
 
+/// Standard width for small overlay panels like Spotlight and the module
+/// switcher.
+pub const OVERLAY_WIDTH: u16 = 60;
+
+/// Determine the width of an overlay panel based on the available area. The
+/// width never exceeds [`OVERLAY_WIDTH`].
+pub fn overlay_width(area_width: u16) -> u16 {
+    area_width.min(OVERLAY_WIDTH)
+}
+
 /// Fixed width for the Spotlight overlay in columns.
-pub const SPOTLIGHT_WIDTH: u16 = 60;
+///
+/// This constant is an alias for [`OVERLAY_WIDTH`] and retained for backwards
+/// compatibility with existing callers.
+pub const SPOTLIGHT_WIDTH: u16 = OVERLAY_WIDTH;
 
 /// Determine the width of Spotlight based on the available area.
-///
-/// The width never exceeds [`SPOTLIGHT_WIDTH`] and is independent of user input
-/// length so the panel remains stable as commands are typed.
+/// This simply forwards to [`overlay_width`].
 pub fn spotlight_width(area_width: u16) -> u16 {
-    area_width.min(SPOTLIGHT_WIDTH)
+    overlay_width(area_width)
 }
 

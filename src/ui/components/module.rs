@@ -6,6 +6,8 @@ use ratatui::{
 };
 use crate::ui::layout::Rect;
 
+use crate::theme::layout::overlay_width;
+
 use crate::state::AppState;
 use crate::ui::animate;
 use crate::config::theme::ThemeConfig;
@@ -62,14 +64,9 @@ pub fn render_module_switcher(
         })
         .collect();
 
-    let content_width = lines
-        .iter()
-        .map(|l| l.width() as u16)
-        .max()
-        .unwrap_or(0)
-        .saturating_add(4);
-
-    let base_width = content_width.min(area.width);
+    // Use a fixed width shared with Spotlight so the panel does not resize based
+    // on its content.
+    let base_width = overlay_width(area.width);
     let mut height = lines.len() as u16 + 2;
     height = height.min(area.height.saturating_sub(1));
 
