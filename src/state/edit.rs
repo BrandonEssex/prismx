@@ -12,7 +12,8 @@ impl AppState {
             return;
         }
 
-        let new_id = self.nodes.keys().max().copied().unwrap_or(100) + 1;
+        let new_id = self.next_node_id;
+        self.next_node_id += 1;
 
         if parent_id == new_id {
             tracing::warn!("❌ Invalid insert: node cannot parent itself.");
@@ -76,7 +77,8 @@ impl AppState {
         };
         let parent_id = self.nodes.get(&selected_id).and_then(|n| n.parent);
 
-        let new_id = self.nodes.keys().max().copied().unwrap_or(100) + 1;
+        let new_id = self.next_node_id;
+        self.next_node_id += 1;
         let mut sibling = Node::new(new_id, "New Sibling", parent_id);
 
         if let Some(selected) = self.nodes.get(&selected_id) {
@@ -143,7 +145,8 @@ impl AppState {
     }
 
     pub fn add_free_node(&mut self) {
-        let new_id = self.nodes.keys().max().copied().unwrap_or(100) + 1;
+        let new_id = self.next_node_id;
+        self.next_node_id += 1;
         let mut node = Node::new(new_id, "Free Node", None);
 
         if !self.auto_arrange {
@@ -159,5 +162,47 @@ impl AppState {
         self.ensure_valid_roots();
         self.audit_node_graph();
         self.audit_ancestry();
+    }
+
+    /// Promote the currently selected node one level up the hierarchy.
+    ///
+    /// If the node has a parent, it becomes a sibling of that parent. If the
+    /// parent is a root node, the promoted node becomes a new root. When the
+    /// node is already a root, this is a no-op.
+    pub fn promote_selected_node(&mut self) {
+        let Some(id) = self.selected else { return };
+        let Some(parent_id) = self.nodes.get(&id).and_then(|n| n.parent) else {
+            return;
+        };
+
+        // Detach from current parent
+        if let Some(parent) = self.nodes.get_mut(&parent_id) {
+            parent.children.retain(|&c| c != id);
+        }
+
+        // Determine new parent (grandparent)
+        let new_parent = self.nodes.get(&parent_id).and_then(|p| p.parent);
+        if let Some(node) = self.nodes.get_mut(&id) {
+            node.parent = new_parent;
+        }
+
+        match new_parent {
+            Some(pid) => {
+                if let Some(pp) = self.nodes.get_mut(&pid) {
+                    if !pp.children.contains(&id) {
+                        pp.children.push(id);
+                    }
+                }
+                self.root_nodes.retain(|&r| r != id);
+            }
+            None => {
+                if !self.root_nodes.contains(&id) {
+                    self.root_nodes.push(id);
+                }
+            }
+        }
+
+        self.ensure_valid_roots();
+        self.audit_node_graph();
     }
 }
