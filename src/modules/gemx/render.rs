@@ -1,8 +1,8 @@
-use ratatui::{prelude::*, widgets::Paragraph};
+use ratatui::{prelude::*, widgets::{Paragraph, Wrap}};
 use crate::node::{NodeID, NodeMap};
 use crate::state::AppState;
 use crate::layout::engine::{
-    center_x, layout_vertical, detect_collisions, detect_overflow,
+    layout_vertical, detect_collisions, detect_overflow,
 };
 use super::layout::{clamp_child_spacing, enforce_viewport_bounds};
 use crate::ui::lines::{
@@ -18,7 +18,8 @@ use crate::beam_color::BeamColor;
 use crate::ui::beamx::{BeamXMode, BeamXStyle, InsertCursorKind, render_insert_cursor, trail_style, bright_color};
 use crate::ui::animate::scale_color;
 use crate::ui::overlay::render_node_tooltip;
-use std::collections::HashSet;
+use std::collections::{HashSet, HashMap};
+use crate::theme::layout::{node_max_width, NODE_WRAP_LABELS};
 use crate::theme::icons::{ROOT_NODE, CHILD_NODE, SIBLING_NODE};
 use crate::theme::characters::{DOWN_ARROW, RIGHT_ARROW};
 
@@ -33,6 +34,27 @@ fn compressed_label(label: &str, zoom: f32) -> String {
         base.push('…');
     }
     base
+}
+
+fn clamp_display_label(text: String, zoom: f32) -> (String, usize) {
+    let limit = node_max_width(zoom);
+    if text.chars().count() > limit {
+        if NODE_WRAP_LABELS {
+            let chars: Vec<char> = text.chars().collect();
+            let first: String = chars[..limit].iter().collect();
+            let rest: String = chars[limit..].iter().collect();
+            let wrapped = format!("{}\n{}", first.trim_end(), rest);
+            let width = wrapped.lines().map(|l| l.chars().count()).max().unwrap_or(0);
+            return (wrapped, width);
+        } else {
+            let mut s: String = text.chars().take(limit.saturating_sub(1)).collect();
+            s.push('…');
+            let width = s.chars().count();
+            return (s, width);
+        }
+    }
+    let width = text.lines().map(|l| l.chars().count()).max().unwrap_or(0);
+    (text, width)
 }
 
 /// Render a simple mindmap using the vertical layout engine.
@@ -112,13 +134,46 @@ pub fn render<B: Backend>(
     let highlight_parent = scale_color(bright_color(p_color), fade);
     let highlight_sibling = scale_color(bright_color(s_color), fade);
 
+    let mut display_map: HashMap<NodeID, (String, usize)> = HashMap::new();
+    for node in nodes.values() {
+        let mut text = if zoom <= 0.5 {
+            compressed_label(&node.label, zoom)
+        } else {
+            node.label.clone()
+        };
+        let is_problem = problem_nodes.contains(&node.id);
+        if state.hierarchy_icons {
+            let icon = if node.parent.is_none() {
+                ROOT_NODE
+            } else {
+                let parent_id = node.parent.unwrap();
+                if nodes
+                    .get(&parent_id)
+                    .and_then(|p| p.children.first().copied())
+                    == Some(node.id)
+                {
+                    CHILD_NODE
+                } else {
+                    SIBLING_NODE
+                }
+            };
+            text = format!("{} {}", icon, text);
+        }
+        if debug && is_problem {
+            text.push_str(" ⚠");
+        }
+        let (disp, width) = clamp_display_label(text, zoom);
+        display_map.insert(node.id, (disp, width));
+    }
+
     if debug || highlight {
         for node in nodes.values() {
             if node.children.is_empty() {
                 continue;
             }
 
-            let px = scale_x(center_x(nodes, node.id));
+            let width_self = display_map.get(&node.id).map(|d| d.1 as i16).unwrap_or(0);
+            let px = scale_x(node.x + width_self / 2);
             let beam_y = scale_y(node.y + (spacing_y - 1).max(1));
             let on_path = focus_nodes.contains(&node.id);
 
@@ -144,8 +199,9 @@ pub fn render<B: Backend>(
             // collect child centers
             let mut child_centers = Vec::new();
             for cid in &node.children {
-                if nodes.contains_key(cid) {
-                    child_centers.push((cid, scale_x(center_x(nodes, *cid))));
+                if let Some(child) = nodes.get(cid) {
+                    let w = display_map.get(cid).map(|d| d.1 as i16).unwrap_or(0);
+                    child_centers.push((cid, scale_x(child.x + w / 2)));
                 }
             }
             if child_centers.is_empty() {
@@ -223,9 +279,11 @@ pub fn render<B: Backend>(
             for src in sources {
                 if nodes.get(&target).and_then(|n| n.parent) == Some(src) { continue; }
                 if let (Some(s), Some(t)) = (nodes.get(&src), nodes.get(&target)) {
-                    let ax = scale_x(center_x(nodes, src));
+                    let sa = display_map.get(&src).map(|d| d.1 as i16).unwrap_or(0);
+                    let ta = display_map.get(&target).map(|d| d.1 as i16).unwrap_or(0);
+                    let ax = scale_x(s.x + sa / 2);
                     let ay = scale_y(s.y);
-                    let bx = scale_x(center_x(nodes, target));
+                    let bx = scale_x(t.x + ta / 2);
                     let by = scale_y(t.y);
                     draw_ghost_line(f, (ax, ay), (bx, by), tick, p_color);
                 }
@@ -236,9 +294,11 @@ pub fn render<B: Backend>(
     // Preview reparent link if dragging over a potential parent
     if let (Some(src), Some(tgt)) = (state.dragging, state.drag_hover_target) {
         if let (Some(s), Some(t)) = (nodes.get(&src), nodes.get(&tgt)) {
-            let ax = scale_x(center_x(nodes, src));
+            let sw = display_map.get(&src).map(|d| d.1 as i16).unwrap_or(0);
+            let tw = display_map.get(&tgt).map(|d| d.1 as i16).unwrap_or(0);
+            let ax = scale_x(s.x + sw / 2);
             let ay = scale_y(s.y);
-            let bx = scale_x(center_x(nodes, tgt));
+            let bx = scale_x(t.x + tw / 2);
             let by = scale_y(t.y);
             draw_anchor_trail(f, (ax, ay), (bx, by), tick, p_color);
         }
@@ -249,52 +309,38 @@ pub fn render<B: Backend>(
         let x = scale_x(node.x);
         let y = scale_y(node.y);
         if x >= 0 && y >= 0 && x < area.right() as i16 && y < area.bottom() as i16 {
-            let mut text = compressed_label(&node.label, zoom);
             let is_problem = problem_nodes.contains(&node.id);
-            if state.hierarchy_icons {
-                let icon = if node.parent.is_none() {
-                    ROOT_NODE
-                } else {
-                    let parent_id = node.parent.unwrap();
-                    if nodes.get(&parent_id)
-                        .and_then(|p| p.children.first().copied()) == Some(node.id)
-                    {
-                        CHILD_NODE
-                    } else {
-                        SIBLING_NODE
-                    }
-                };
-                text = format!("{} {}", icon, text);
-            }
-            if debug && is_problem {
-                text.push_str(" ⚠");
-            }
-            let width = ((text.len() as f32) * zoom).ceil().max(1.0) as u16;
-            let display = if zoom <= 0.5 { text } else { node.label.clone() };
-            let rect = Rect::new(x as u16, y as u16, width, 1);
-            let mut para = Paragraph::new(display.clone());
+            if let Some((display, width_chars)) = display_map.get(&node.id) {
+                let width = (( *width_chars as f32) * zoom).ceil().max(1.0) as u16;
+                let height = display.lines().count() as u16;
+                let rect = Rect::new(x as u16, y as u16, width, height.max(1));
+                let mut para = Paragraph::new(display.clone());
+                if NODE_WRAP_LABELS {
+                    para = para.wrap(Wrap { trim: false });
+                }
             if highlight && focus_nodes.contains(&node.id) {
                 para = para.style(trail_style(highlight_parent, tick, fade));
             }
             if state.drag_hover_target == Some(node.id) {
                 para = para.style(trail_style(highlight_sibling, tick, 1.0));
             }
-            if debug && is_problem {
-                para = para.style(Style::default().fg(Color::LightRed));
-            }
-            f.render_widget(para, rect);
+                if debug && is_problem {
+                    para = para.style(Style::default().fg(Color::LightRed));
+                }
+                f.render_widget(para, rect);
 
-            let show_hover = state.drag_hover_target == Some(node.id);
-            let show_focus = Some(node.id) == state.selected && age < 2000;
-            if show_hover || show_focus {
-                render_node_tooltip(f, area, rect, &node.label);
-            }
+                let show_hover = state.drag_hover_target == Some(node.id);
+                let show_focus = Some(node.id) == state.selected && age < 2000;
+                if show_hover || show_focus {
+                    render_node_tooltip(f, area, rect, &node.label);
+                }
 
-            if node.label.starts_with("node ") {
-                let kind = InsertCursorKind::Sibling;
-                let cx = rect.x + rect.width;
-                let cy = rect.y;
-                render_insert_cursor(f, (cx, cy), tick, kind, &cursor_style);
+                if node.label.starts_with("node ") {
+                    let kind = InsertCursorKind::Sibling;
+                    let cx = rect.x + rect.width;
+                    let cy = rect.y;
+                    render_insert_cursor(f, (cx, cy), tick, kind, &cursor_style);
+                }
             }
         }
     }
