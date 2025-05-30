@@ -80,3 +80,8 @@ pub fn demote_prev_sibling(
         }
     }
 }
+
+/// Return the parent ID for `node_id`.
+pub fn parent_id(nodes: &NodeMap, node_id: NodeID) -> Option<NodeID> {
+    nodes.get(&node_id).and_then(|n| n.parent)
+}
