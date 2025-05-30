@@ -14,6 +14,22 @@ impl AppState {
         self.selected.and_then(|id| self.nodes.get_mut(&id))
     }
 
+    pub fn can_insert_node(&self) -> bool {
+        if let Some(id) = self.selected {
+            if let Some(node) = self.nodes.get(&id) {
+                if self.debug_allow_empty_nodes {
+                    true
+                } else {
+                    !node.label.trim().is_empty()
+                }
+            } else {
+                false
+            }
+        } else {
+            false
+        }
+    }
+
     pub fn set_selected(&mut self, id: Option<NodeID>) {
         if let Some(prev) = self.selected {
             if Some(prev) != id {

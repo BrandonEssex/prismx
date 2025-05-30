@@ -9,6 +9,7 @@ use std::fs;
 pub struct UserSettings {
     pub auto_arrange: bool,
     pub debug_input_mode: bool,
+    pub debug_allow_empty_nodes: bool,
     pub dock_layout: String,
     pub gemx_beam_color: BeamColor,
     pub zen_beam_color: BeamColor,
@@ -35,6 +36,7 @@ impl Default for UserSettings {
         Self {
             auto_arrange: true,
             debug_input_mode: true,
+            debug_allow_empty_nodes: false,
             dock_layout: "vertical".into(),
             gemx_beam_color: BeamColor::Prism,
             zen_beam_color: BeamColor::Prism,
@@ -72,6 +74,7 @@ pub fn save_user_settings(state: &AppState) {
     let config = UserSettings {
         auto_arrange: state.auto_arrange,
         debug_input_mode: state.debug_input_mode,
+        debug_allow_empty_nodes: state.debug_allow_empty_nodes,
         dock_layout: format!("{:?}", state.favorite_dock_layout).to_lowercase(),
         gemx_beam_color: state.gemx_beam_color,
         zen_beam_color: state.zen_beam_color,
