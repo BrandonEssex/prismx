@@ -1,9 +1,11 @@
 use ratatui::{
     backend::Backend,
-    widgets::{Block, Borders, Paragraph},
+    widgets::{Block, Borders, Paragraph, Clear},
+    layout::Rect,
     Frame,
 };
-use crate::ui::layout::Rect;
+
+use unicode_width::UnicodeWidthStr;
 
 use crate::state::AppState;
 
@@ -41,4 +43,40 @@ use crate::ui::components::debug::render_debug_panel;
 /// Render the developer diagnostic overlay.
 pub fn render_debug_overlay<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState, sticky: bool) {
     render_debug_panel(f, area, state, sticky);
+}
+
+/// Render a tooltip near a node label with its full text.
+pub fn render_node_tooltip<B: Backend>(
+    f: &mut Frame<B>,
+    area: Rect,
+    node_rect: Rect,
+    text: &str,
+) {
+    let mut width = UnicodeWidthStr::width(text) as u16 + 2;
+    if width > area.width {
+        width = area.width;
+    }
+
+    let mut x = node_rect.x;
+    if x + width > area.right() {
+        x = area.right().saturating_sub(width);
+    }
+
+    let mut y = node_rect.y.saturating_sub(1);
+    if y + 3 > area.bottom().saturating_sub(1) {
+        y = area.bottom().saturating_sub(3);
+    }
+
+    let rect = Rect::new(x, y, width, 3);
+    f.render_widget(Clear, rect);
+    f.render_widget(Block::default().borders(Borders::ALL), rect);
+
+    let mut content = text.to_string();
+    let inner_w = width.saturating_sub(2) as usize;
+    if UnicodeWidthStr::width(content.as_str()) as u16 > width - 2 {
+        content = content.chars().take(inner_w.saturating_sub(1)).collect();
+        content.push('…');
+    }
+
+    f.render_widget(Paragraph::new(content), Rect::new(x + 1, y + 1, width - 2, 1));
 }
