@@ -113,11 +113,7 @@ pub fn render_compose<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState
     let bg = Block::default().style(Style::default().bg(palette.background));
     f.render_widget(bg, area);
 
-    // Auto-scroll to the latest journal entry when composing
-    unsafe {
-        let ptr = state as *const AppState as *mut AppState;
-        (*ptr).scroll_offset = usize::MAX;
-    }
+    // Preserve manual scroll offset when reviewing history
 
     if state.zen_view_mode == ZenViewMode::Write {
         let chunks = Layout::default()
