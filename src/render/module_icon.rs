@@ -14,7 +14,7 @@ pub fn module_icon(mode: &str) -> &'static str {
     match mode {
         "gemx" => "💭",
         "zen" => "🧘",
-        "triage" => "🧭",
+        "triage" => "🏥",
         "spotlight" => "🔍",
         "settings" => "⚙️",
         "plugin" => "🔌",
