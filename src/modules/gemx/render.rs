@@ -1,8 +1,8 @@
 use ratatui::{prelude::*, widgets::Paragraph};
 use crate::node::{NodeID, NodeMap};
 use crate::state::AppState;
-use crate::layout::{CHILD_SPACING_Y};
-use crate::layout::engine::{layout_vertical, center_x};
+use crate::layout::engine::{center_x, layout_vertical};
+use super::layout::clamp_child_spacing;
 use crate::ui::lines::{
     draw_vertical_fade,
     draw_horizontal_shimmer,
@@ -22,8 +22,9 @@ pub fn render<B: Backend>(
     state: &AppState,
     debug: bool,
 ) {
+    let spacing_y = clamp_child_spacing(state, roots, area.height as i16);
     for &root in roots {
-        layout_vertical(nodes, root);
+        layout_vertical(nodes, root, spacing_y);
     }
 
     let tick = (std::time::SystemTime::now()
@@ -55,7 +56,7 @@ pub fn render<B: Backend>(
             }
 
             let px = center_x(nodes, node.id);
-            let beam_y = node.y + (CHILD_SPACING_Y - 1).max(1);
+            let beam_y = node.y + (spacing_y - 1).max(1);
 
             // vertical beam from parent to sibling bar
             draw_vertical_fade(

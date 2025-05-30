@@ -1,5 +1,12 @@
 use crate::node::{NodeID, NodeMap};
-use crate::layout::{label_bounds, subtree_span, CHILD_SPACING_Y, SIBLING_SPACING_X};
+use crate::layout::{
+    label_bounds,
+    subtree_span,
+    MIN_CHILD_SPACING_Y,
+    SIBLING_SPACING_X,
+    MIN_SIBLING_SPACING_X,
+    MIN_NODE_GAP,
+};
 use crate::theme::layout::spacing_scale;
 use std::collections::HashMap;
 
@@ -7,8 +14,8 @@ use std::collections::HashMap;
 /// while children stack vertically beneath their parent.
 ///
 /// Layout respects each subtree's span to prevent overlap.
-pub fn layout_vertical(nodes: &mut NodeMap, root: NodeID) {
-    fn layout_subtree(nodes: &mut NodeMap, id: NodeID, x: i16, y: i16) -> i16 {
+pub fn layout_vertical(nodes: &mut NodeMap, root: NodeID, spacing_y: i16) {
+    fn layout_subtree(nodes: &mut NodeMap, id: NodeID, x: i16, y: i16, spacing_y: i16) -> i16 {
         let span = subtree_span(nodes, id);
         let (label_w, _) = nodes
             .get(&id)
@@ -30,19 +37,29 @@ pub fn layout_vertical(nodes: &mut NodeMap, root: NodeID) {
             let len = children.len();
             for (i, child) in children.iter().copied().enumerate() {
                 let cspan = subtree_span(nodes, child);
-                layout_subtree(nodes, child, child_x, y + CHILD_SPACING_Y);
-                child_x += cspan;
+                layout_subtree(nodes, child, child_x, y + spacing_y, spacing_y);
+                let label_w_child = nodes
+                    .get(&child)
+                    .map(|c| label_bounds(&c.label).0)
+                    .unwrap_or(2);
+                let child_w = cspan.max(label_w_child + MIN_NODE_GAP);
+                child_x += child_w;
                 if i + 1 < len {
                     child_x += SIBLING_SPACING_X;
+                    if len > 4 && (i + 1) % 4 == 0 {
+                        child_x += MIN_SIBLING_SPACING_X;
+                    }
                 }
             }
         }
         span
     }
 
+    let spacing_y = spacing_y.max(MIN_CHILD_SPACING_Y);
+
     let start_x = nodes.get(&root).map(|n| n.x).unwrap_or(0);
     let start_y = nodes.get(&root).map(|n| n.y).unwrap_or(0);
-    layout_subtree(nodes, root, start_x, start_y);
+    layout_subtree(nodes, root, start_x, start_y, spacing_y);
 }
 
 /// Calculate the depth of each subtree.
