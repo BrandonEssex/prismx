@@ -5,6 +5,8 @@ use crate::layout::{GEMX_HEADER_HEIGHT, LayoutRole};
 use crate::plugin::{loader, PluginHost};
 use crate::zen::image::JournalEntry;
 pub use crate::zen::state::*;
+use crate::modules::triage::sticky::StickyNote;
+use crate::ui::drag::DragState;
 
 use crate::hotkeys::load_hotkeys;
 use serde::{Serialize, Deserialize};
@@ -220,6 +222,10 @@ pub struct AppState {
     pub beam_shimmer: bool,
     pub zoom_grid: bool,
     pub sticky_notes: bool,
+    pub sticky_overlay_visible: bool,
+    pub sticky_notes_data: Vec<StickyNote>,
+    pub sticky_focus: Option<usize>,
+    pub sticky_drag: DragState,
     pub shortcut_overlay: ShortcutOverlayMode,
     pub heartbeat_mode: HeartbeatMode,
     pub triage_view_mode: crate::state::TriageViewMode,
@@ -367,6 +373,10 @@ impl Default for AppState {
             beam_shimmer: true,
             zoom_grid: false,
             sticky_notes: false,
+            sticky_overlay_visible: false,
+            sticky_notes_data: Vec::new(),
+            sticky_focus: None,
+            sticky_drag: DragState::default(),
             shortcut_overlay: ShortcutOverlayMode::Full,
             heartbeat_mode: HeartbeatMode::Pulse,
             triage_view_mode: crate::state::TriageViewMode::default(),

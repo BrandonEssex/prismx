@@ -14,7 +14,7 @@ pub fn action_group(action: &str) -> &'static str {
         "Global"
     } else if action.starts_with("zen_") || matches!(action, "save") {
         "Zen"
-    } else if action.contains("triage") {
+    } else if action.contains("triage") || action.contains("sticky_notes") {
         "Triage"
     } else if action.contains("plugin") {
         "Plugins"
@@ -43,6 +43,7 @@ pub fn shortcuts_for(module: &str) -> &'static [(&'static str, &'static str)] {
             ("Enter", "Edit Tag"),
             ("Ctrl+D", "Delete Entry"),
             ("Ctrl+T", "Toggle Priority"),
+            ("Ctrl+Shift+N", "Sticky Notes"),
         ],
         "GemX" => &[
             ("Ctrl+N", "New Node"),

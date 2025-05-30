@@ -182,5 +182,11 @@ pub fn render_grouped<B: Backend>(
         .block(Block::default().borders(Borders::NONE).style(block_style));
     f.render_widget(feed, body);
 
+    if state.sticky_overlay_visible {
+        for note in &state.sticky_notes_data {
+            note.render(f);
+        }
+    }
+
     render_full_border(f, area, &style, true, false);
 }

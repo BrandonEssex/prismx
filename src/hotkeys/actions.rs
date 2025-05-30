@@ -123,3 +123,7 @@ pub fn toggle_settings(state: &mut AppState) {
     state.mode = "settings".into();
 }
 
+pub fn toggle_sticky_notes(state: &mut AppState) {
+    state.toggle_sticky_overlay();
+}
+
