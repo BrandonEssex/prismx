@@ -1,0 +1,3 @@
+- src/modules/triage/mod.rs
+- src/modules/triage/input.rs
+- src/modules/triage/sticky.rs
