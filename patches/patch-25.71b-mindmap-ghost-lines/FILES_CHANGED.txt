@@ -1,0 +1,2 @@
+- src/ui/lines.rs
+- src/modules/gemx/render.rs
