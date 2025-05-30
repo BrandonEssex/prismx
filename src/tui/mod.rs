@@ -661,6 +661,16 @@ pub fn launch_ui() -> std::io::Result<()> {
                                     break;
                                 }
                             }
+                            if !handled && state.mode == "settings" {
+                                for (rect, idx) in state.settings_toggle_bounds.iter() {
+                                    if rect_contains(*rect, me.column, me.row) {
+                                        state.settings_focus_index = *idx;
+                                        (crate::settings::SETTING_TOGGLES[*idx].toggle)(&mut state);
+                                        handled = true;
+                                        break;
+                                    }
+                                }
+                            }
                             if !handled && state.mode == "gemx" {
                                 if let Some(id) = crate::gemx::interaction::node_at_position(&state, me.column, me.row) {
                                     crate::gemx::interaction::start_drag(&mut state, id, me.column, me.row);

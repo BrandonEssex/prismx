@@ -21,6 +21,12 @@ pub struct UserSettings {
     pub mindmap_lanes: bool,
     pub font_style: FontStyle,
     pub beam_animation: bool,
+    pub spotlight_auto_width: bool,
+    pub beam_shimmer: bool,
+    pub zoom_grid: bool,
+    pub sticky_notes: bool,
+    pub shortcut_overlay: crate::state::ShortcutOverlayMode,
+    pub heartbeat_mode: crate::state::HeartbeatMode,
 }
 
 impl Default for UserSettings {
@@ -40,6 +46,12 @@ impl Default for UserSettings {
             mindmap_lanes: true,
             font_style: FontStyle::Regular,
             beam_animation: true,
+            spotlight_auto_width: false,
+            beam_shimmer: true,
+            zoom_grid: false,
+            sticky_notes: false,
+            shortcut_overlay: crate::state::ShortcutOverlayMode::Full,
+            heartbeat_mode: crate::state::HeartbeatMode::Pulse,
         }
     }
 }
@@ -70,6 +82,12 @@ pub fn save_user_settings(state: &AppState) {
         mindmap_lanes: state.mindmap_lanes,
         font_style: state.font_style,
         beam_animation: state.beam_animation,
+        spotlight_auto_width: state.spotlight_auto_width,
+        beam_shimmer: state.beam_shimmer,
+        zoom_grid: state.zoom_grid,
+        sticky_notes: state.sticky_notes,
+        shortcut_overlay: state.shortcut_overlay,
+        heartbeat_mode: state.heartbeat_mode,
     };
 
     if let Ok(serialized) = toml::to_string(&config) {
