@@ -110,7 +110,7 @@ pub fn render<B: Backend>(
                 if let Some(child) = nodes.get(cid) {
                     let start = (cx, beam_y);
                     let end = (cx, scale_y(child.y));
-                    let is_ghost = child.label == "New Child" || child.label == "New Sibling";
+                    let is_ghost = child.label.starts_with("node ");
                     if is_ghost {
                         draw_ghost_line(f, start, end, tick, p_color);
                     } else {
@@ -158,12 +158,8 @@ pub fn render<B: Backend>(
             let rect = Rect::new(x as u16, y as u16, width, 1);
             f.render_widget(Paragraph::new(display.clone()), rect);
 
-            if node.label == "New Child" || node.label == "New Sibling" {
-                let kind = if node.label == "New Child" {
-                    InsertCursorKind::Child
-                } else {
-                    InsertCursorKind::Sibling
-                };
+            if node.label.starts_with("node ") {
+                let kind = InsertCursorKind::Sibling;
                 let cx = rect.x + rect.width;
                 let cy = rect.y;
                 render_insert_cursor(f, (cx, cy), tick, kind, &cursor_style);

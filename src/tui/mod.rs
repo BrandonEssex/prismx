@@ -633,8 +633,7 @@ pub fn launch_ui() -> std::io::Result<()> {
                         let allowed = modifiers == KeyModifiers::NONE || modifiers == KeyModifiers::SHIFT;
                         if allowed && (c.is_ascii_graphic() || c == ' ') {
                             if let Some(node) = state.get_selected_node_mut() {
-                                if node.label == "New Child"
-                                    || node.label == "New Sibling"
+                                if node.label.starts_with("node ")
                                     || node.label == "Node A"
                                     || node.label == "Node B"
                                 {
