@@ -58,3 +58,24 @@ pub fn follow_focus(state: &mut AppState) {
         ensure_visible(state, id);
     }
 }
+
+/// Center the viewport on the provided node.
+///
+/// When `jump` is true the view jumps immediately. When false, the
+/// centering position is stored in `scroll_target_*` so animation can
+/// interpolate toward it.
+pub fn recenter_on_node(state: &mut AppState, node_id: NodeID, jump: bool) {
+    let prev_x = state.scroll_x;
+    let prev_y = state.scroll_y;
+
+    center_on_node(state, node_id);
+    state.scroll_target_x = state.scroll_x;
+    state.scroll_target_y = state.scroll_y;
+
+    if !jump {
+        state.scroll_x = prev_x;
+        state.scroll_y = prev_y;
+    }
+
+    super::layout::clamp_zoom_scroll(state);
+}
