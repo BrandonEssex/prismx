@@ -1,6 +1,7 @@
 use crate::state::AppState;
 use crate::node::NodeID;
 use super::viewport;
+pub use crate::layout::engine::sibling_offset;
 
 /// Ensure the newly inserted node remains visible by centering on it.
 pub fn focus_new_node(state: &mut AppState, node_id: NodeID) {
