@@ -125,7 +125,12 @@ impl AppState {
     }
 
     pub fn load_today_journal(&mut self) {
-        let path = format!("journals/{}.prismx", chrono::Local::now().format("%Y-%m-%d"));
+        let dir = dirs::document_dir()
+            .unwrap_or_else(|| std::path::PathBuf::from("."))
+            .join("prismx")
+            .join("journals");
+        let _ = fs::create_dir_all(&dir);
+        let path = dir.join(format!("{}.prismx", chrono::Local::now().format("%Y-%m-%d")));
         if let Ok(content) = fs::read_to_string(&path) {
             self.zen_journal_entries = content
                 .lines()
@@ -146,8 +151,12 @@ impl AppState {
     }
 
     pub fn append_journal_entry(&mut self, entry: &ZenJournalEntry) {
-        let _ = std::fs::create_dir_all("journals");
-        let path = format!("journals/{}.prismx", chrono::Local::now().format("%Y-%m-%d"));
+        let dir = dirs::document_dir()
+            .unwrap_or_else(|| std::path::PathBuf::from("."))
+            .join("prismx")
+            .join("journals");
+        let _ = std::fs::create_dir_all(&dir);
+        let path = dir.join(format!("{}.prismx", chrono::Local::now().format("%Y-%m-%d")));
         if let Ok(mut file) = OpenOptions::new().create(true).append(true).open(&path) {
             let _ = writeln!(
                 file,
