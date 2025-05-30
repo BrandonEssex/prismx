@@ -20,11 +20,20 @@ impl AppState {
                 if self.debug_allow_empty_nodes {
                     true
                 } else {
-                    !node.label.trim().is_empty()
+                    let label = node.label.trim();
+                    !label.is_empty() && !Self::label_is_default(label)
                 }
             } else {
                 false
             }
+        } else {
+            false
+        }
+    }
+
+    fn label_is_default(label: &str) -> bool {
+        if let Some(rest) = label.strip_prefix("node ") {
+            rest.len() == 3 && rest.chars().all(|c| c.is_ascii_digit())
         } else {
             false
         }

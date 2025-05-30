@@ -61,6 +61,9 @@ fn tab_after_enter_keeps_child_reachable() {
     if let Some(b) = state.nodes.get_mut(&2) { b.x = 10; }
     state.add_sibling_node();
     let sibling = state.selected.unwrap();
+    if let Some(n) = state.nodes.get_mut(&sibling) {
+        n.label = "edited".into();
+    }
     state.add_child_node();
     let child = state.selected.unwrap();
     let parent = state.nodes.get(&child).unwrap().parent;

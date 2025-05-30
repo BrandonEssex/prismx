@@ -2,6 +2,21 @@ use crate::node::{NodeID, NodeMap};
 
 /// Move `node_id` under `target` or promote to root when `target` is `None`.
 pub fn reparent(nodes: &mut NodeMap, roots: &mut Vec<NodeID>, node_id: NodeID, target: Option<NodeID>) {
+    if let Some(tid) = target {
+        if tid == node_id {
+            tracing::warn!("❌ Invalid reparent: node cannot be its own parent");
+            return;
+        }
+        let mut cur = Some(tid);
+        while let Some(cid) = cur {
+            if cid == node_id {
+                tracing::warn!("❌ Invalid reparent: cycle detected");
+                return;
+            }
+            cur = nodes.get(&cid).and_then(|n| n.parent);
+        }
+    }
+
     // Detach from current parent or root list
     if let Some(pid) = nodes.get(&node_id).and_then(|n| n.parent) {
         if let Some(parent) = nodes.get_mut(&pid) {
