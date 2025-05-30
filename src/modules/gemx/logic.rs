@@ -39,3 +39,29 @@ pub fn adopt_orphans(nodes: &mut NodeMap, roots: &mut Vec<NodeID>) {
     roots.sort_unstable();
     roots.dedup();
 }
+
+/// Promote `node_id` one level up in the hierarchy.
+pub fn promote(nodes: &mut NodeMap, roots: &mut Vec<NodeID>, node_id: NodeID) {
+    if let Some(parent_id) = nodes.get(&node_id).and_then(|n| n.parent) {
+        let grand = nodes.get(&parent_id).and_then(|p| p.parent);
+        reparent(nodes, roots, node_id, grand);
+    }
+}
+
+/// Demote `node_id` under its previous sibling if possible.
+pub fn demote_prev_sibling(
+    nodes: &mut NodeMap,
+    roots: &mut Vec<NodeID>,
+    node_id: NodeID,
+) {
+    if let Some(parent_id) = nodes.get(&node_id).and_then(|n| n.parent) {
+        if let Some(parent) = nodes.get(&parent_id) {
+            if let Some(pos) = parent.children.iter().position(|&c| c == node_id) {
+                if pos > 0 {
+                    let prev = parent.children[pos - 1];
+                    reparent(nodes, roots, node_id, Some(prev));
+                }
+            }
+        }
+    }
+}
