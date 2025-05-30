@@ -24,10 +24,46 @@ pub fn render_shortcuts_overlay<B: Backend>(f: &mut Frame<B>, area: Rect, state:
         groups.entry("Plugins").or_default().push((k, v));
     }
 
+    let active_group = match state.mode.as_str() {
+        "zen" => "Zen",
+        "triage" => "Triage",
+        "plugin" => "Plugins",
+        "settings" => "Settings",
+        _ => "GemX",
+    };
+
     let mut lines: Vec<Line> = Vec::new();
-    for (group, items) in groups {
-        lines.push(Line::from(Span::styled(group, Style::default().add_modifier(Modifier::BOLD))));
-        for (k, v) in items {
+
+    if let Some(mut items) = groups.remove(active_group) {
+        lines.push(Line::from(Span::styled(
+            active_group,
+            Style::default().add_modifier(Modifier::BOLD),
+        )));
+        for (k, v) in items.drain(..) {
+            lines.push(Line::from(format!("{} = {}", k, v)));
+        }
+        lines.push(Line::from(""));
+    }
+
+    if let Some(mut items) = groups.remove("Debug") {
+        if state.debug_overlay || state.debug_overlay_sticky {
+            lines.push(Line::from(Span::styled(
+                "Debug",
+                Style::default().add_modifier(Modifier::BOLD),
+            )));
+            for (k, v) in items.drain(..) {
+                lines.push(Line::from(format!("{} = {}", k, v)));
+            }
+            lines.push(Line::from(""));
+        }
+    }
+
+    if let Some(mut items) = groups.remove("Global") {
+        lines.push(Line::from(Span::styled(
+            "Global",
+            Style::default().add_modifier(Modifier::BOLD),
+        )));
+        for (k, v) in items.drain(..) {
             lines.push(Line::from(format!("{} = {}", k, v)));
         }
         lines.push(Line::from(""));
