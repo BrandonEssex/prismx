@@ -2,6 +2,7 @@ use crate::state::AppState;
 use crate::node::NodeID;
 use super::viewport;
 pub use crate::layout::engine::sibling_offset;
+use crossterm::terminal;
 
 /// Ensure the newly inserted node remains visible by centering on it.
 pub fn focus_new_node(state: &mut AppState, node_id: NodeID) {
@@ -119,14 +120,39 @@ fn shift_subtree(nodes: &mut crate::node::NodeMap, id: NodeID, dx: i16) {
     }
 }
 
+/// Calculate dynamic spacing between root clusters based on available width.
+fn root_spacing(nodes: &crate::node::NodeMap, roots: &[NodeID]) -> i16 {
+    use crate::layout::{subtree_span, SIBLING_SPACING_X, MIN_SIBLING_SPACING_X, RESERVED_ZONE_W};
+
+    let (tw, _) = terminal::size().unwrap_or((80, 20));
+    let max_w = tw as i16 - RESERVED_ZONE_W;
+
+    let mut total = 0i16;
+    for r in roots {
+        total += subtree_span(nodes, *r);
+    }
+    if roots.len() > 1 {
+        total += SIBLING_SPACING_X * (roots.len() as i16 - 1);
+    }
+
+    if max_w > 0 && total > max_w {
+        let ratio = max_w as f32 / total as f32;
+        let spacing = ((SIBLING_SPACING_X as f32) * ratio).floor() as i16;
+        spacing.max(MIN_SIBLING_SPACING_X)
+    } else {
+        SIBLING_SPACING_X
+    }
+}
+
 /// Shift peer root trees horizontally so the focused branch remains stationary.
 pub fn preserve_focused_branch(
     nodes: &mut crate::node::NodeMap,
     roots: &[NodeID],
     focus_root: Option<NodeID>,
 ) {
-    use crate::layout::SIBLING_SPACING_X;
     let Some(active) = focus_root else { return };
+
+    let spacing = root_spacing(nodes, roots);
 
     let mut data: Vec<(NodeID, i16, i16)> = roots
         .iter()
@@ -141,7 +167,7 @@ pub fn preserve_focused_branch(
     let idx = data.iter().position(|d| d.0 == active).unwrap_or(0);
 
     // shift peers to the right of the active root
-    let mut bound = data[idx].2 + SIBLING_SPACING_X;
+    let mut bound = data[idx].2 + spacing;
     for (rid, left, right) in data.iter_mut().skip(idx + 1) {
         if *left < bound {
             let delta = bound - *left;
@@ -149,11 +175,11 @@ pub fn preserve_focused_branch(
             *left += delta;
             *right += delta;
         }
-        bound = *right + SIBLING_SPACING_X;
+        bound = *right + spacing;
     }
 
     // shift peers to the left of the active root
-    let mut bound_left = data[idx].1 - SIBLING_SPACING_X;
+    let mut bound_left = data[idx].1 - spacing;
     for (rid, left, right) in data[..idx].iter_mut().rev() {
         if *right > bound_left {
             let delta = *right - bound_left;
@@ -161,6 +187,6 @@ pub fn preserve_focused_branch(
             *left -= delta;
             *right -= delta;
         }
-        bound_left = *left - SIBLING_SPACING_X;
+        bound_left = *left - spacing;
     }
 }

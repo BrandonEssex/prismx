@@ -110,10 +110,23 @@ pub fn center_x(nodes: &NodeMap, id: NodeID) -> i16 {
 ///
 /// Adds a small buffer every four siblings to reduce visual crowding.
 pub fn sibling_offset(index: usize, len: usize) -> i16 {
+    // Default horizontal spacing between siblings
     let mut off = SIBLING_SPACING_X;
+
+    // When clusters grow large, compress the spacing to avoid overflow.
+    if len > 8 {
+        let ratio = 8.0 / len as f32;
+        off = ((SIBLING_SPACING_X as f32) * ratio).ceil() as i16;
+        if off < MIN_SIBLING_SPACING_X {
+            off = MIN_SIBLING_SPACING_X;
+        }
+    }
+
+    // Small buffer every four siblings to reduce visual crowding.
     if len > 4 && (index + 1) % 4 == 0 {
         off += MIN_SIBLING_SPACING_X;
     }
+
     off
 }
 
