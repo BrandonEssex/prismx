@@ -235,6 +235,13 @@ pub struct AppState {
     pub show_plugin_preview: bool,
 }
 
+impl AppState {
+    /// Helper to check if the application is currently in the Triage module.
+    pub fn is_triage_mode(&self) -> bool {
+        self.mode == "triage"
+    }
+}
+
 pub fn default_beamx_panel_visible() -> bool {
     #[cfg(target_os = "macos")]
     {
