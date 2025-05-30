@@ -215,6 +215,24 @@ pub fn render<B: Backend>(
         }
     }
 
+    // Ghost trails showing multiple inbound references
+    if state.ghost_link_trails {
+        let refs = state.inbound_links();
+        for (target, sources) in refs {
+            if sources.len() < 2 { continue; }
+            for src in sources {
+                if nodes.get(&target).and_then(|n| n.parent) == Some(src) { continue; }
+                if let (Some(s), Some(t)) = (nodes.get(&src), nodes.get(&target)) {
+                    let ax = scale_x(center_x(nodes, src));
+                    let ay = scale_y(s.y);
+                    let bx = scale_x(center_x(nodes, target));
+                    let by = scale_y(t.y);
+                    draw_ghost_line(f, (ax, ay), (bx, by), tick, p_color);
+                }
+            }
+        }
+    }
+
     // Preview reparent link if dragging over a potential parent
     if let (Some(src), Some(tgt)) = (state.dragging, state.drag_hover_target) {
         if let (Some(s), Some(t)) = (nodes.get(&src), nodes.get(&tgt)) {

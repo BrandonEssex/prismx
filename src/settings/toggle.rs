@@ -100,6 +100,9 @@ fn toggle_beam_shimmer(s: &mut AppState) { s.beam_shimmer = !s.beam_shimmer; sav
 fn is_focus_trail(s: &AppState) -> bool { s.highlight_focus_branch }
 fn toggle_focus_trail(s: &mut AppState) { s.highlight_focus_branch = !s.highlight_focus_branch; save_user_settings(s); }
 
+fn ghost_trails_enabled(s: &AppState) -> bool { s.ghost_link_trails }
+fn toggle_ghost_trails(s: &mut AppState) { s.ghost_link_trails = !s.ghost_link_trails; save_user_settings(s); }
+
 fn is_zoom_grid(s: &AppState) -> bool { s.zoom_grid }
 fn toggle_zoom_grid(s: &mut AppState) { s.zoom_grid = !s.zoom_grid; save_user_settings(s); }
 
@@ -130,6 +133,7 @@ pub static SETTING_TOGGLES: &[SettingToggle] = &[
     SettingToggle { icon: "⚡", label: "Beam Animations", is_enabled: is_beam_animation, toggle: toggle_beam_animation, category: SettingCategory::Visuals },
     SettingToggle { icon: "💫", label: "Beam Shimmer", is_enabled: is_beam_shimmer, toggle: toggle_beam_shimmer, category: SettingCategory::Visuals },
     SettingToggle { icon: "🌀", label: "Focus Trail", is_enabled: is_focus_trail, toggle: toggle_focus_trail, category: SettingCategory::Visuals },
+    SettingToggle { icon: "👻", label: "Ghost Trails", is_enabled: ghost_trails_enabled, toggle: toggle_ghost_trails, category: SettingCategory::Visuals },
     SettingToggle { icon: "🎨", label: "Theme Preset", is_enabled: |_| true, toggle: toggle_theme, category: SettingCategory::Visuals },
     SettingToggle { icon: "#", label: "Zoom Grid", is_enabled: is_zoom_grid, toggle: toggle_zoom_grid, category: SettingCategory::Visuals },
     SettingToggle { icon: "↔", label: "Spotlight Auto-Width", is_enabled: is_spotlight_auto, toggle: toggle_spotlight_auto, category: SettingCategory::Interaction },

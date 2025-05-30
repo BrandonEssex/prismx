@@ -15,6 +15,7 @@ font_style = "Regular"
 beam_animation = true
 spotlight_auto_width = false
 beam_shimmer = true
+ghost_link_trails = true
 highlight_focus_branch = true
 zoom_grid = true
 sticky_notes = true
