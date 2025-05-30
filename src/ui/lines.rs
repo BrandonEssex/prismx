@@ -1,5 +1,5 @@
 use ratatui::{prelude::*, widgets::Paragraph};
-use ratatui::style::Color;
+use ratatui::style::{Color, Style};
 use crate::ui::animate::{shimmer, scale_color};
 
 /// Draw a straight line between two points using simple box-drawing glyphs.
@@ -48,6 +48,28 @@ pub fn draw_line_with_arrow<B: Backend>(
         let rect = Rect::new(ex as u16, ey as u16, 1, 1);
         f.render_widget(Paragraph::new(arrow), rect);
     }
+}
+
+/// Render an arrow glyph at the provided point using optional shimmer style.
+pub fn draw_arrow<B: Backend>(
+    f: &mut Frame<B>,
+    pos: (i16, i16),
+    tick: u64,
+    color: Color,
+    arrow: &str,
+    shimmer_enabled: bool,
+) {
+    let (x, y) = pos;
+    if x < 0 || y < 0 {
+        return;
+    }
+    let style = if shimmer_enabled {
+        shimmer(color, tick)
+    } else {
+        Style::default().fg(color)
+    };
+    let rect = Rect::new(x as u16, y as u16, 1, 1);
+    f.render_widget(Paragraph::new(arrow).style(style), rect);
 }
 
 /// Draw a vertical line that fades from `color` using a shimmer effect.

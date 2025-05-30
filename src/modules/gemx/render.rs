@@ -8,11 +8,14 @@ use crate::ui::lines::{
     draw_horizontal_shimmer,
     draw_ghost_line,
     draw_anchor_trail,
+    draw_line,
+    draw_arrow,
 };
 use crate::theme::beam_color::{parent_line_color, sibling_line_color};
 use crate::beam_color::BeamColor;
 use crate::ui::beamx::{BeamXMode, BeamXStyle, InsertCursorKind, render_insert_cursor};
 use crate::theme::icons::{ROOT_NODE, CHILD_NODE, SIBLING_NODE};
+use crate::theme::characters::{DOWN_ARROW, RIGHT_ARROW};
 
 fn compressed_label(label: &str, zoom: f32) -> String {
     if zoom > 0.5 {
@@ -75,12 +78,20 @@ pub fn render<B: Backend>(
             let beam_y = scale_y(node.y + (spacing_y - 1).max(1));
 
             // vertical beam from parent to sibling bar
-            draw_vertical_fade(
+            let parent_start = (px, scale_y(node.y + 1));
+            let parent_end = (px, beam_y);
+            if state.beam_shimmer {
+                draw_vertical_fade(f, parent_start, parent_end, tick, p_color);
+            } else {
+                draw_line(f, parent_start, parent_end);
+            }
+            draw_arrow(
                 f,
-                (px, scale_y(node.y + 1)),
-                (px, beam_y),
+                parent_end,
                 tick,
                 p_color,
+                DOWN_ARROW,
+                state.beam_shimmer,
             );
 
             // collect child centers
@@ -97,12 +108,31 @@ pub fn render<B: Backend>(
             let max_x = child_centers.iter().map(|c| c.1).max().unwrap();
 
             // horizontal connector across siblings
-            draw_horizontal_shimmer(
+            if state.beam_shimmer {
+                draw_horizontal_shimmer(
+                    f,
+                    (min_x, beam_y),
+                    (max_x, beam_y),
+                    tick,
+                    s_color,
+                );
+            } else {
+                draw_line(
+                    f,
+                    (min_x, beam_y),
+                    (max_x, beam_y),
+                );
+            }
+
+            // arrow across siblings
+            let mid = ((min_x + max_x) / 2) as i16;
+            draw_arrow(
                 f,
-                (min_x, beam_y),
-                (max_x, beam_y),
+                (mid, beam_y),
                 tick,
                 s_color,
+                RIGHT_ARROW,
+                state.beam_shimmer,
             );
 
             // vertical drop to each child
@@ -111,11 +141,23 @@ pub fn render<B: Backend>(
                     let start = (cx, beam_y);
                     let end = (cx, scale_y(child.y));
                     let is_ghost = child.label.starts_with("node ");
-                    if is_ghost {
-                        draw_ghost_line(f, start, end, tick, p_color);
+                    if state.beam_shimmer {
+                        if is_ghost {
+                            draw_ghost_line(f, start, end, tick, p_color);
+                        } else {
+                            draw_vertical_fade(f, start, end, tick, p_color);
+                        }
                     } else {
-                        draw_vertical_fade(f, start, end, tick, p_color);
+                        draw_line(f, start, end);
                     }
+                    draw_arrow(
+                        f,
+                        end,
+                        tick,
+                        p_color,
+                        DOWN_ARROW,
+                        state.beam_shimmer,
+                    );
                 }
             }
         }
