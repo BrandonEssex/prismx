@@ -1,9 +1,17 @@
-use ratatui::{backend::Backend, layout::Rect, style::Style, widgets::{Block, Borders, Paragraph}, Frame};
+use ratatui::{
+    backend::Backend,
+    layout::Rect,
+    style::{Color, Style},
+    text::{Span, Spans},
+    widgets::{Block, Borders, Paragraph},
+    Frame,
+};
 use crate::state::AppState;
 use crate::ui::status::status_line;
+use crate::ui::animate::breath_style;
 
 pub fn render_status_bar<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppState) {
-    use std::time::Duration;
+    use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
     if let Some(last) = state.status_message_last_updated {
         if last.elapsed() > Duration::from_secs(4) {
@@ -19,8 +27,22 @@ pub fn render_status_bar<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut A
         state.status_message.clone()
     };
 
+    let tick = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap_or_default()
+        .as_millis()
+        / 300;
+    let hearts = ["💚", "💛", "❤️", "💙", "🖤"];
+    let heart = hearts[((tick / 10) as usize) % hearts.len()];
+    let heart_style = breath_style(Color::White, tick as u64);
+    let spans = Spans::from(vec![
+        Span::styled(heart, heart_style),
+        Span::raw(" "),
+        Span::raw(display_string),
+    ]);
+
     let block = Block::default().borders(Borders::ALL).title("Status");
-    let content = Paragraph::new(display_string).style(Style::default());
+    let content = Paragraph::new(spans).style(Style::default());
     f.render_widget(block, area);
     let inner_width = area.width.saturating_sub(2);
     f.render_widget(content, Rect::new(area.x + 1, area.y + 1, inner_width, 1));
