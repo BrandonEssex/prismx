@@ -15,6 +15,13 @@ pub fn render<B: Backend>(
         layout_vertical(nodes, root);
     }
 
+    // Determine scroll offset if content exceeds available height
+    let max_y = nodes.values().map(|n| n.y).max().unwrap_or(0);
+    let mut scroll = 0i16;
+    if max_y >= area.height as i16 {
+        scroll = max_y - area.height as i16 + 1;
+    }
+
     if debug {
         // Draw connections first
         let mut connections = Vec::new();
@@ -32,14 +39,18 @@ pub fn render<B: Backend>(
         for ((sx, sy), (ex, ey)) in connections {
             let ox = area.x as i16;
             let oy = area.y as i16;
-            draw_line(f, (sx + ox, sy + oy), (ex + ox, ey + oy));
+            draw_line(
+                f,
+                (sx + ox, sy + oy - scroll),
+                (ex + ox, ey + oy - scroll),
+            );
         }
     }
 
     // Draw nodes
     for node in nodes.values() {
         let x = area.x as i16 + node.x;
-        let y = area.y as i16 + node.y;
+        let y = area.y as i16 + node.y - scroll;
         if x >= 0 && y >= 0 && x < area.right() as i16 && y < area.bottom() as i16 {
             let rect = Rect::new(x as u16, y as u16, node.label.len() as u16, 1);
             f.render_widget(Paragraph::new(node.label.clone()), rect);

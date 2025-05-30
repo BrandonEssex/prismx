@@ -330,7 +330,6 @@ fn layout_recursive_safe(
 
     let mut col_x = x;
     let mut col_y = child_y;
-    let mut column_width = 0;
     for (index, child_id) in node.children.iter().enumerate() {
         let child_h = subtree_depth(nodes, *child_id) * spacing_y + 1;
         let subtree_w = subtree_span(nodes, *child_id);
@@ -339,13 +338,6 @@ fn layout_recursive_safe(
             .map(|c| label_bounds(&c.label).0)
             .unwrap_or(2);
         let child_w = subtree_w.max(label_w_child + MIN_NODE_GAP);
-        if col_y + child_h > term_height {
-            tracing::debug!("wrap column for node {}", child_id);
-            col_y = child_y;
-            col_x += column_width + SIBLING_SPACING_X;
-            column_width = 0;
-        }
-
         if col_y + child_h > term_height {
             tracing::debug!("overflow node {} beyond height {}", child_id, term_height);
         }
@@ -369,7 +361,7 @@ fn layout_recursive_safe(
         max_x_span = max_x_span.max(ma);
 
         col_y = cy + spacing_y;
-        column_width = column_width.max(child_w);
+        let _ = child_w; // maintain consistent spacing calculations for now
     }
 
     (max_y, min_x_span.min(x), max_x_span.max(x + label_width))
