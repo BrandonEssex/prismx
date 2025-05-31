@@ -3,6 +3,7 @@ use ratatui::prelude::*;
 use ratatui::widgets::{Block, Borders, Paragraph};
 use ratatui::layout::{Layout, Constraint, Direction};
 use ratatui::text::{Line, Span};
+use ratatui::style::{Color, Modifier, Style};
 use std::collections::{BTreeMap, HashSet};
 
 use crate::modules::triage::feed;
@@ -10,6 +11,51 @@ use crate::modules::triage::feed;
 use crate::beamx::render_full_border;
 use crate::state::AppState;
 use crate::triage::state::{TriageEntry, TriageSource};
+
+fn highlight_entry_line(text: &str) -> Line<'static> {
+    let mut spans = Vec::new();
+    let mut chars = text.chars().peekable();
+    while let Some(c) = chars.next() {
+        if c == '#' {
+            let mut tag = String::from("#");
+            while let Some(&ch) = chars.peek() {
+                if ch.is_alphanumeric() || ch == '_' || ch == '-' {
+                    tag.push(ch);
+                    chars.next();
+                } else {
+                    break;
+                }
+            }
+            let style = if tag.eq_ignore_ascii_case("#now") {
+                Style::default().fg(Color::Green)
+            } else if tag.eq_ignore_ascii_case("#done") {
+                Style::default().fg(Color::Gray)
+            } else {
+                Style::default().fg(Color::Blue)
+            };
+            spans.push(Span::styled(tag, style));
+        } else if c == '@' {
+            let mut mention = String::from("@");
+            while let Some(&ch) = chars.peek() {
+                if ch.is_alphanumeric() || ch == '_' || ch == '-' {
+                    mention.push(ch);
+                    chars.next();
+                } else {
+                    break;
+                }
+            }
+            spans.push(Span::styled(
+                mention,
+                Style::default().fg(Color::Yellow).add_modifier(Modifier::ITALIC),
+            ));
+        } else if c == '💭' || c == '🧠' || c == '📌' {
+            spans.push(Span::styled(c.to_string(), Style::default().fg(Color::Magenta)));
+        } else {
+            spans.push(Span::raw(c.to_string()));
+        }
+    }
+    Line::from(spans)
+}
 
 /// Calculate consecutive days with at least one `#DONE` entry.
 pub fn completion_streak(entries: &[TriageEntry]) -> usize {
@@ -178,11 +224,11 @@ pub fn render_grouped<B: Backend>(
                     TriageSource::Spotlight => "Spotlight",
                 };
 
-                lines.push(Line::from(vec![
-                    Span::styled(format!("[{}] {}", entry.id, src), entry_style),
-                    Span::raw(" "),
-                    Span::styled(&entry.text, entry_style),
-                ]));
+                let mut line = highlight_entry_line(&entry.text);
+                line.spans.insert(0, Span::raw(" "));
+                line.spans.insert(0, Span::styled(format!("[{}] {}", entry.id, src), entry_style));
+                line.patch_style(entry_style);
+                lines.push(line);
 
                 if !entry.resolved {
                     lines.push(Line::from(
