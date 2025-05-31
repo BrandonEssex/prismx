@@ -9,6 +9,7 @@ pub fn handle_key(state: &mut AppState, code: KeyCode, mods: KeyModifiers) -> bo
         && mods.contains(KeyModifiers::SHIFT)
     {
         state.toggle_sticky_overlay();
+        println!("STICKY_NOTE_TOGGLED");
         return true;
     }
 
