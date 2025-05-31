@@ -1,0 +1,2 @@
+- src/modules/triage/render.rs
+- src/modules/triage/input.rs
