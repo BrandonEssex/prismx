@@ -80,3 +80,29 @@ pub fn reflow_siblings(nodes: &mut NodeMap, parent: NodeID, spacing_y: i16) {
         }
     }
 }
+
+/// Check if any node occupies the given position, excluding `skip` if provided.
+fn position_taken(nodes: &NodeMap, x: i16, y: i16, skip: Option<NodeID>) -> bool {
+    for n in nodes.values() {
+        if Some(n.id) != skip && n.x == x && n.y == y {
+            return true;
+        }
+    }
+    false
+}
+
+/// Find the next free horizontal slot starting from `x` at row `y`.
+pub fn next_free_horizontal(nodes: &NodeMap, mut x: i16, y: i16, step: i16, skip: NodeID) -> i16 {
+    while position_taken(nodes, x, y, Some(skip)) {
+        x += step;
+    }
+    x
+}
+
+/// Find the next free vertical slot starting from `y` at column `x`.
+pub fn next_free_vertical(nodes: &NodeMap, x: i16, mut y: i16, step: i16, skip: NodeID) -> i16 {
+    while position_taken(nodes, x, y, Some(skip)) {
+        y += step;
+    }
+    y
+}

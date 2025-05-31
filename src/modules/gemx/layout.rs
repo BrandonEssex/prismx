@@ -1,7 +1,7 @@
 use crate::state::{AppState, LayoutStyle};
 use crate::node::{NodeID, NodeMap};
 use super::viewport;
-pub use crate::layout::engine::sibling_offset;
+pub use crate::layout::engine::{sibling_offset, next_free_horizontal, next_free_vertical};
 use crossterm::terminal;
 use ratatui::prelude::Rect;
 use crate::layout::GEMX_HEADER_HEIGHT;
@@ -9,8 +9,51 @@ use crate::layout::GEMX_HEADER_HEIGHT;
 /// Minimum node count before the logical grid is allowed to expand.
 const GRID_EXPANSION_THRESHOLD: usize = 50;
 
+/// Ensure inserted nodes don't overlap existing ones.
+fn repair_insert(state: &mut AppState, node_id: NodeID) {
+    use crate::layout::{SIBLING_SPACING_X, CHILD_SPACING_Y};
+
+    let prev = state.selection_trail.back().map(|(id, _)| *id);
+    let parent = state.nodes.get(&node_id).and_then(|n| n.parent);
+
+    if let Some(prev_id) = prev {
+        if Some(prev_id) == parent {
+            if let Some(p) = state.nodes.get(&parent.unwrap()).cloned() {
+                let base_y = p.y + CHILD_SPACING_Y;
+                let new_y = next_free_vertical(&state.nodes, p.x, base_y, CHILD_SPACING_Y, node_id);
+                if let Some(n) = state.nodes.get_mut(&node_id) {
+                    n.x = p.x;
+                    n.y = new_y;
+                }
+            }
+        } else if state.nodes.get(&prev_id).and_then(|n| n.parent) == parent {
+            if let Some(sel) = state.nodes.get(&prev_id).cloned() {
+                let base_x = sel.x + SIBLING_SPACING_X;
+                let new_x = next_free_horizontal(&state.nodes, base_x, sel.y, SIBLING_SPACING_X, node_id);
+                if let Some(n) = state.nodes.get_mut(&node_id) {
+                    n.x = new_x;
+                    n.y = sel.y;
+                }
+            }
+        }
+    }
+
+    if parent.is_some() && state.nodes.get(&node_id).map(|n| (n.x, n.y)) == Some((0, 0)) {
+        let x = next_free_horizontal(&state.nodes, SIBLING_SPACING_X, 0, SIBLING_SPACING_X, node_id);
+        let y = CHILD_SPACING_Y;
+        if let Some(n) = state.nodes.get_mut(&node_id) {
+            n.x = x;
+            n.y = y;
+        }
+    }
+
+    if let Some(n) = state.nodes.get(&node_id) {
+        println!("LAYOUT_OK: node={} x={} y={}", n.id, n.x, n.y);
+    }
+}
 /// Ensure the newly inserted node remains visible by centering on it.
 pub fn focus_new_node(state: &mut AppState, node_id: NodeID) {
+    repair_insert(state, node_id);
     // Auto-arrange jumps immediately to avoid excessive animation when the
     // entire layout may shift, otherwise scroll smoothly toward the target.
     let jump = state.auto_arrange;
