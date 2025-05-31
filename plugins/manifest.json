@@ -1,0 +1,10 @@
+{
+  "plugins": [
+    {
+      "name": "ExamplePlugin",
+      "icon": "\ud83d\udc1e",
+      "entry": "libexample.so",
+      "version": "0.1.0"
+    }
+  ]
+}
