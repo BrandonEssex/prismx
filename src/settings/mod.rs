@@ -30,6 +30,7 @@ pub struct UserSettings {
     pub layout_style: LayoutStyle,
     pub zoom_grid: bool,
     pub sticky_notes: bool,
+    pub enable_image_drop: bool,
     pub shortcut_overlay: crate::state::ShortcutOverlayMode,
     pub heartbeat_mode: crate::state::HeartbeatMode,
 }
@@ -60,6 +61,7 @@ impl Default for UserSettings {
             layout_style: LayoutStyle::Compact,
             zoom_grid: false,
             sticky_notes: false,
+            enable_image_drop: false,
             shortcut_overlay: crate::state::ShortcutOverlayMode::Full,
             heartbeat_mode: crate::state::HeartbeatMode::Pulse,
         }
@@ -101,6 +103,7 @@ pub fn save_user_settings(state: &AppState) {
         layout_style: state.layout_style,
         zoom_grid: state.zoom_grid,
         sticky_notes: state.sticky_notes,
+        enable_image_drop: state.enable_image_drop,
         shortcut_overlay: state.shortcut_overlay,
         heartbeat_mode: state.heartbeat_mode,
     };

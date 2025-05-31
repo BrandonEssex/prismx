@@ -7,6 +7,7 @@ use crate::zen::journal::{render_zen_journal, render_history};
 use crate::beamx::render_full_border;
 use crate::render::traits::{Renderable, RenderFrame};
 use crate::theme::zen::zen_theme;
+use super::image::render_drop_zone;
 
 /// Dispatches the correct Zen view mode renderer
 pub fn render_zen<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
@@ -166,6 +167,11 @@ pub fn render_input<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState, 
 
     let widget = Paragraph::new(input).style(Style::default().fg(palette.text).bg(palette.background)).block(block);
     f.render_widget(widget, input_rect);
+
+    if state.enable_image_drop && state.zen_draft.text.is_empty() && state.zen_draft.editing.is_none() {
+        let drop_rect = Rect::new(area.x + padding, area.y + 1, usable_width, area.height.saturating_sub(3));
+        render_drop_zone(f, drop_rect);
+    }
 }
 
 /// Wrapper implementing [`Renderable`] for the Zen view.

@@ -254,6 +254,8 @@ pub struct AppState {
     pub focus_changed_at: Option<Instant>,
     pub zoom_grid: bool,
     pub sticky_notes: bool,
+    /// If true, show drop zone in Zen compose view.
+    pub enable_image_drop: bool,
     pub sticky_overlay_visible: bool,
     pub sticky_notes_data: Vec<StickyNote>,
     pub sticky_focus: Option<usize>,
@@ -428,6 +430,7 @@ impl Default for AppState {
             focus_changed_at: None,
             zoom_grid: false,
             sticky_notes: false,
+            enable_image_drop: false,
             sticky_overlay_visible: false,
             sticky_notes_data: Vec::new(),
             sticky_focus: None,
@@ -469,6 +472,7 @@ impl Default for AppState {
         state.layout_style = config.layout_style;
         state.zoom_grid = config.zoom_grid;
         state.sticky_notes = config.sticky_notes;
+        state.enable_image_drop = config.enable_image_drop;
         state.shortcut_overlay = config.shortcut_overlay;
         state.heartbeat_mode = config.heartbeat_mode;
 
