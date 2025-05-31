@@ -10,7 +10,7 @@ use ratatui::{
 use crate::state::AppState;
 use crate::config::theme::ThemeConfig;
 use super::{layout::settings_area, toggle::{SETTING_TOGGLES, SettingCategory}};
-use crate::state::{ShortcutOverlayMode, HeartbeatMode};
+use crate::state::{ShortcutOverlayMode, HeartbeatMode, LayoutStyle};
 use crate::theme::previews::preview_line;
 
 pub fn render_settings<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppState) {
@@ -46,9 +46,17 @@ pub fn render_settings<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut App
                 HeartbeatMode::Test => "test",
                 HeartbeatMode::Silent => "silent",
             });
+        } else if t.label == "Layout Style" {
+            label = format!(
+                "Layout Style: {}",
+                match state.layout_style {
+                    LayoutStyle::Compact => "Compact",
+                    LayoutStyle::Relaxed => "Relaxed",
+                }
+            );
         }
 
-        let status = if matches!(t.label, "Shortcut Overlay" | "Heartbeat" | "Font Style") {
+        let status = if matches!(t.label, "Shortcut Overlay" | "Heartbeat" | "Font Style" | "Layout Style") {
             "".to_string()
         } else if enabled { "[✔]".into() } else { "[ ]".into() };
 
