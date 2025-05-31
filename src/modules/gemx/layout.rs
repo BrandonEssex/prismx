@@ -17,8 +17,16 @@ pub fn focus_new_node(state: &mut AppState, node_id: NodeID) {
     viewport::recenter_on_node(state, node_id, jump);
 
     // After inserting a node we want the immediate layout to remain coherent.
-    // Reflow sibling groups around the focused branch so the new node does not
-    // cause the entire tree to shift unpredictably.
+    // Realign siblings around the parent to avoid overlap and maintain
+    // consistent spacing before the full layout pass.
+    if let Some(parent_id) = state.nodes.get(&node_id).and_then(|n| n.parent) {
+        let (_, th) = terminal::size().unwrap_or((80, 20));
+        let spacing = clamp_child_spacing(state, &[parent_id], th as i16);
+        crate::layout::engine::reflow_siblings(&mut state.nodes, parent_id, spacing);
+    }
+
+    // Reflow root clusters so the focused branch remains stationary while
+    // peers shift outward if needed.
     reflow_around_focus(state);
 }
 
