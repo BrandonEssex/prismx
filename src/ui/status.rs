@@ -78,8 +78,21 @@ pub fn render_status<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState)
         status_line(state)
     };
 
-    // Prefix the active module icon for quick visual context
-    text = format!("{} {}", module_icon(&state.mode), text);
+    // Prefix heartbeat and active module icon for quick visual context
+    if matches!(state.mode.as_str(), "zen" | "gemx") && state.heartbeat_mode != crate::state::HeartbeatMode::Silent {
+        let tick = if std::env::var("PRISMX_TEST").is_ok() {
+            0
+        } else {
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap_or_default()
+                .as_millis() / 600
+        } as u64;
+        let heart = crate::ui::beamx::heartbeat_glyph(tick / 2);
+        text = format!("{heart} {} {}", module_icon(&state.mode), text);
+    } else {
+        text = format!("{} {}", module_icon(&state.mode), text);
+    }
 
     let content_style = Style::default().fg(beam.status_color);
     let width = area.width.saturating_sub(2);

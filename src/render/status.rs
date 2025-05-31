@@ -8,8 +8,10 @@ use ratatui::{
 };
 use crate::state::AppState;
 use crate::ui::status::status_line;
-use crate::ui::animate::breath_style;
+use crate::ui::animate::{breath_style, shimmer};
 use crate::render::favorites::render_favorites_dock;
+use crate::ui::beamx::heartbeat_glyph;
+use crate::state::HeartbeatMode;
 
 pub fn render_status_bar<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppState) {
     use std::time::{Duration, SystemTime, UNIX_EPOCH};
@@ -28,19 +30,30 @@ pub fn render_status_bar<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut A
         state.status_message.clone()
     };
 
-    let tick = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .unwrap_or_default()
-        .as_millis()
-        / 300;
-    let hearts = ["💚", "💛", "❤️", "💙", "🖤"];
-    let heart = hearts[((tick / 10) as usize) % hearts.len()];
-    let heart_style = breath_style(Color::White, tick as u64);
-    let spans = Spans::from(vec![
-        Span::styled(heart, heart_style),
-        Span::raw(" "),
-        Span::raw(display_string),
-    ]);
+    let tick = if std::env::var("PRISMX_TEST").is_ok() {
+        0
+    } else {
+        SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap_or_default()
+            .as_millis()
+            / 600
+    } as u64;
+
+    let show_heart = matches!(state.mode.as_str(), "zen" | "gemx")
+        && !matches!(state.heartbeat_mode, HeartbeatMode::Silent);
+
+    let spans = if show_heart {
+        let heart_style = shimmer(Color::White, tick);
+        let heart = heartbeat_glyph(tick / 2);
+        Spans::from(vec![
+            Span::styled(heart, heart_style),
+            Span::raw(" "),
+            Span::raw(display_string),
+        ])
+    } else {
+        Spans::from(vec![Span::raw(display_string)])
+    };
 
     let block = Block::default().borders(Borders::ALL).title("Status");
     let content = Paragraph::new(spans).style(Style::default());
