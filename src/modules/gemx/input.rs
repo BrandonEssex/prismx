@@ -20,8 +20,9 @@ pub fn handle_key(state: &mut AppState, code: KeyCode, mods: KeyModifiers) -> bo
             if state.can_insert_node() {
                 state.push_undo();
                 state.handle_enter_key();
-                let id = state.selected;
-                layout::focus_or_recent(state, id);
+                if let Some(id) = state.selected {
+                    layout::focus_new_node(state, id);
+                }
             } else {
                 state.status_message = "Cannot insert: edit node label first".into();
                 state.status_message_last_updated = Some(Instant::now());
@@ -33,8 +34,9 @@ pub fn handle_key(state: &mut AppState, code: KeyCode, mods: KeyModifiers) -> bo
             if state.can_insert_node() {
                 state.push_undo();
                 state.handle_tab_key();
-                let id = state.selected;
-                layout::focus_or_recent(state, id);
+                if let Some(id) = state.selected {
+                    layout::focus_new_node(state, id);
+                }
             } else {
                 state.status_message = "Cannot insert: edit node label first".into();
                 state.status_message_last_updated = Some(Instant::now());

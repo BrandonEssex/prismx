@@ -15,7 +15,11 @@ const GRID_EXPANSION_THRESHOLD: usize = 50;
 
 /// Ensure the newly inserted node remains visible by centering on it.
 pub fn focus_new_node(state: &mut AppState, node_id: NodeID) {
-    viewport::ensure_visible(state, node_id);
+    // Auto-arrange jumps immediately to avoid excessive animation when the
+    // entire layout may shift, otherwise scroll smoothly toward the target.
+    let jump = state.auto_arrange;
+    viewport::recenter_on_node(state, node_id, jump);
+
     // After inserting a node we want the immediate layout to remain coherent.
     // Reflow sibling groups around the focused branch so the new node does not
     // cause the entire tree to shift unpredictably.
