@@ -38,11 +38,54 @@ pub fn render_dynamic_overlay<B: Backend>(
     f.render_widget(content, Rect::new(area.x + 1, area.y + 1, area.width - 2, inner_height));
 }
 
-use crate::ui::debug::render_debug_panel;
+use crate::layout::engine::grid_size;
 
 /// Render the developer diagnostic overlay.
-pub fn render_debug_overlay<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState, sticky: bool) {
-    render_debug_panel(f, area, state, sticky);
+///
+/// Displays minimal runtime information in a floating panel that can be toggled
+/// on demand. The panel shows the active module, current scroll offset, node
+/// count and calculated grid size. When BeamX is visible a darker background is
+/// used so the overlay remains readable against the animated border.
+pub fn render_debug_overlay<B: Backend>(
+    f: &mut Frame<B>,
+    area: Rect,
+    state: &AppState,
+    _sticky: bool,
+) {
+    use ratatui::style::{Color, Style};
+    use ratatui::widgets::{BorderType};
+
+    let (rows, cols) = grid_size(&state.nodes);
+
+    let lines = [
+        format!("Module: {}", state.mode),
+        format!("Scroll: {},{}", state.scroll_x, state.scroll_y),
+        format!("Nodes: {}", state.nodes.len()),
+        format!("Grid: {}x{}", rows, cols),
+    ];
+
+    let width = lines.iter().map(|l| l.len()).max().unwrap_or(0) as u16 + 2;
+    let height = lines.len() as u16 + 2;
+
+    // Position the overlay in the top-right with a small padding
+    let x = area.right().saturating_sub(width + 1);
+    let y = area.y + 1;
+
+    let style = if state.beamx_panel_visible {
+        Style::default().fg(Color::White).bg(Color::Rgb(40, 40, 40))
+    } else {
+        Style::default()
+    };
+
+    let rect = Rect::new(x, y, width, height);
+    f.render_widget(Clear, rect);
+    let block = Block::default()
+        .borders(Borders::ALL)
+        .border_type(BorderType::Rounded)
+        .style(style);
+    f.render_widget(block, rect);
+    let inner = Rect::new(x + 1, y + 1, width - 2, height - 2);
+    f.render_widget(Paragraph::new(lines.join("\n")).style(style), inner);
 }
 
 /// Render a tooltip near a node label with its full text.
