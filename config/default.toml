@@ -1,0 +1,12 @@
+version = 1
+
+[ui]
+show_logs = false
+dock_layout = "vertical"
+
+[theme]
+dark_mode = true
+accent_color = "cyan"
+
+[behavior]
+auto_arrange = true

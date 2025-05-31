@@ -9,6 +9,7 @@ use crate::modules::triage::sticky::StickyNote;
 use crate::ui::drag::DragState;
 
 use crate::hotkeys::load_hotkeys;
+use crate::state::config::Config as UserConfig;
 use serde::{Serialize, Deserialize};
 
 #[derive(Clone, PartialEq)]
@@ -254,6 +255,7 @@ pub struct AppState {
     pub plugin_tag_filter: crate::state::PluginTagFilter,
     pub plugin_registry_index: usize,
     pub show_plugin_preview: bool,
+    pub user_config: UserConfig,
 }
 
 impl AppState {
@@ -421,6 +423,7 @@ impl Default for AppState {
             plugin_tag_filter: crate::state::PluginTagFilter::default(),
             plugin_registry_index: 0,
             show_plugin_preview: false,
+            user_config: UserConfig::default(),
         };
 
         let config = crate::settings::load_user_settings();
@@ -452,6 +455,11 @@ impl Default for AppState {
         state.sticky_notes = config.sticky_notes;
         state.shortcut_overlay = config.shortcut_overlay;
         state.heartbeat_mode = config.heartbeat_mode;
+
+        let user_cfg = UserConfig::load();
+        state.user_config = user_cfg.clone();
+        state.show_logs = user_cfg.ui.show_logs;
+        state.auto_arrange = user_cfg.behavior.auto_arrange;
 
         for node in state.nodes.values_mut() {
             if node.label.starts_with("[F]") {
