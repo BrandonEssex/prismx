@@ -1,0 +1,3 @@
+- src/ui/status.rs
+- src/ui/dock.rs
+- src/ui/beamx.rs
