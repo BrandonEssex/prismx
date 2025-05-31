@@ -1,0 +1,4 @@
+- src/ui/status.rs
+- src/modules/gemx/render.rs
+- src/modules/zen/render.rs
+- src/modules/triage/render.rs
