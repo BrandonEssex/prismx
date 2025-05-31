@@ -12,12 +12,13 @@ use crate::theme::icons;
 use unicode_width::UnicodeWidthStr;
 
 pub fn module_icon(mode: &str) -> &'static str {
+    let nerd = icons::nerd_font_enabled();
     match mode {
-        "gemx" => icons::ICON_GEMX,
-        "zen" => icons::ICON_ZEN,
-        "triage" => icons::ICON_TRIAGE,
-        "spotlight" => icons::ICON_SPOTLIGHT,
-        "settings" => icons::ICON_SETTINGS,
+        "gemx" => if nerd { icons::ICON_GEMX } else { icons::FALLBACK_ICON_GEMX },
+        "zen" => if nerd { icons::ICON_ZEN } else { icons::FALLBACK_ICON_ZEN },
+        "triage" => if nerd { icons::ICON_TRIAGE } else { icons::FALLBACK_ICON_TRIAGE },
+        "spotlight" => if nerd { icons::ICON_SPOTLIGHT } else { icons::FALLBACK_ICON_SPOTLIGHT },
+        "settings" => if nerd { icons::ICON_SETTINGS } else { icons::FALLBACK_ICON_SETTINGS },
         "plugin" => "🔌",
         _ => "❓",
     }

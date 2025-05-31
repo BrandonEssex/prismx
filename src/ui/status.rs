@@ -1,4 +1,4 @@
-use ratatui::{backend::Backend, style::Style, widgets::Paragraph, Frame};
+use ratatui::{backend::Backend, style::Style, widgets::Paragraph, Frame, text::{Span, Spans}};
 use crate::ui::layout::Rect;
 use crate::state::AppState;
 use crate::ui::borders::draw_rounded_border;
@@ -65,10 +65,10 @@ pub fn render_status<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState)
     let border_style = Style::default().fg(beam.border_color);
     draw_rounded_border(f, area, border_style);
 
-    let mut text = if !state.status_message.is_empty() {
+    let mut message = if !state.status_message.is_empty() {
         state.status_message.clone()
     } else if state.show_keymap {
-        let module_name = state.mode.to_string(); // assumes Mode implements ToString
+        let module_name = state.mode.to_string();
         let shortcuts = crate::ui::shortcuts::shortcuts_for(&module_name);
         shortcuts
             .iter()
@@ -81,20 +81,24 @@ pub fn render_status<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState)
     };
 
     // Prefix heartbeat and active module icon for quick visual context
-    if matches!(state.mode.as_str(), "zen" | "gemx") && state.heartbeat_mode != crate::state::HeartbeatMode::Silent {
-        let tick = if std::env::var("PRISMX_TEST").is_ok() {
-            0
-        } else {
-            std::time::SystemTime::now()
-                .duration_since(std::time::UNIX_EPOCH)
-                .unwrap_or_default()
-                .as_millis() / 600
-        } as u64;
-        let heart = crate::ui::beamx::heartbeat_glyph(tick / 2);
-        text = format!("{heart} {} {}", module_icon(&state.mode), text);
+    let show_heart = matches!(state.mode.as_str(), "zen" | "gemx")
+        && state.heartbeat_mode != crate::state::HeartbeatMode::Silent;
+    let tick = if std::env::var("PRISMX_TEST").is_ok() {
+        0
     } else {
-        text = format!("{} {}", module_icon(&state.mode), text);
-    }
+        std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap_or_default()
+            .as_millis() / 600
+    } as u64;
+    let heart = crate::ui::beamx::heartbeat_glyph(tick / 2);
+    let heart_style = crate::ui::animate::breath_style(beam.status_color, tick);
+
+    let prefix = if show_heart {
+        format!("{heart} {}", module_icon(&state.mode))
+    } else {
+        module_icon(&state.mode).to_string()
+    };
 
     let content_style = Style::default().fg(beam.status_color);
     let width = area.width.saturating_sub(2);
@@ -107,13 +111,26 @@ pub fn render_status<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState)
     let offset = RESERVED_ZONE_W as u16 + icon_w + zoom_w + 1;
     let available = width.saturating_sub(dock_width + offset);
 
-    let mut display = text;
-    if display.len() as u16 > available {
-        display.truncate(available as usize);
+    let prefix_len = prefix.len() + 1; // include trailing space
+    let mut msg_display = message;
+    if msg_display.len() as u16 > available.saturating_sub(prefix_len as u16) {
+        msg_display.truncate(available.saturating_sub(prefix_len as u16) as usize);
     }
 
+    let spans = if show_heart {
+        Spans::from(vec![
+            Span::styled(heart, heart_style),
+            Span::raw(" "),
+            Span::raw(module_icon(&state.mode)),
+            Span::raw(" "),
+            Span::raw(msg_display),
+        ])
+    } else {
+        Spans::from(vec![Span::raw(module_icon(&state.mode)), Span::raw(" "), Span::raw(msg_display)])
+    };
+
     f.render_widget(
-        Paragraph::new(display).style(content_style),
+        Paragraph::new(spans).style(content_style),
         Rect::new(area.x + 1, area.y + 1, available, 1),
     );
 }
