@@ -1,8 +1,12 @@
+pub mod layout;
+pub mod widgets;
+pub mod events;
+
 use ratatui::Terminal;
 use ratatui::backend::CrosstermBackend;
 use std::io::Stdout;
 use crossterm::{
-    event::{self, Event, KeyCode, KeyEvent, KeyModifiers, EnableMouseCapture, DisableMouseCapture},
+    event::{Event, KeyCode, KeyEvent, KeyModifiers, EnableMouseCapture, DisableMouseCapture},
     execute,
     terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
 };
@@ -20,9 +24,7 @@ use crate::render::{
     ModuleSwitcher,
 };
 
-fn rect_contains(rect: ratatui::layout::Rect, x: u16, y: u16) -> bool {
-    x >= rect.x && x < rect.x + rect.width && y >= rect.y && y < rect.y + rect.height
-}
+use layout::rect_contains;
 use crate::screen::render_gemx;
 use crate::render::render_settings;
 use crate::ui::components::plugin::render_plugin;
@@ -33,7 +35,6 @@ use crate::modules::switcher;
 
 use crate::hotkeys::match_hotkey;
 use crate::shortcuts::{match_shortcut, Shortcut};
-use std::time::Duration;
 
 pub fn draw(
     terminal: &mut Terminal<CrosstermBackend<Stdout>>,
@@ -41,7 +42,6 @@ pub fn draw(
     _last_key: &str,
 ) -> std::io::Result<()> {
     use ratatui::layout::{Constraint, Direction, Layout, Rect};
-    use ratatui::widgets::Paragraph;
 
     if !state.auto_arrange {
         state.ensure_grid_positions();
@@ -90,8 +90,7 @@ pub fn draw(
             "triage" => render_triage(f, vertical[0], state),
             "plugin" => render_plugin(f, vertical[0], state),
             _ => {
-                let fallback = Paragraph::new("Unknown mode");
-                f.render_widget(fallback, vertical[0]);
+                widgets::render_unknown_mode(f, vertical[0]);
             }
         }
 
@@ -203,8 +202,8 @@ pub fn launch_ui() -> std::io::Result<()> {
             }
         }
 
-        if event::poll(std::time::Duration::from_millis(100))? {
-            match event::read()? {
+        if let Some(event) = events::next_event(std::time::Duration::from_millis(100))? {
+            match event {
                 Event::Key(KeyEvent { code, modifiers, .. }) => {
                     last_key = format!("{:?} + {:?}", code, modifiers);
                     if state.debug_input_mode {
