@@ -1,6 +1,7 @@
 use crate::plugins::api;
 use crate::state::{AppState, ZenJournalEntry};
 use crate::triage::state::{TriageEntry, TriageSource};
+use crate::triage::helpers::extract_tags;
 
 const TRIAGE_TAGS: &[&str] = &["#todo", "#triton", "#priority", "#now"];
 
@@ -27,32 +28,42 @@ pub fn capture_zen_entry(state: &mut AppState, entry: &ZenJournalEntry) {
     triage_entry.created = entry.timestamp;
     triage_entry.tags = entry.tags.clone();
     state.triage_entries.push(triage_entry);
-    state.triage_entries
-        .sort_by(|a, b| b.created.cmp(&a.created));
 }
 
 /// Pull all tagged Zen entries into triage.
 pub fn sync_from_zen(state: &mut AppState) {
-    let entries: Vec<ZenJournalEntry> = state.zen_journal_entries.clone();
+    let mut added = false;
+    let entries = state.zen_journal_entries.clone();
     for entry in entries {
+        let prev_len = state.triage_entries.len();
         capture_zen_entry(state, &entry);
+        if state.triage_entries.len() > prev_len {
+            added = true;
+        }
+    }
+    if added {
+        state.triage_entries.sort_by(|a, b| b.created.cmp(&a.created));
     }
 }
 
 /// Drain plugin-provided tasks into triage.
 pub fn sync_from_plugins(state: &mut AppState) {
+    let mut added = false;
     for task in api::drain_tasks() {
-        let text_lc = task.to_lowercase();
-        if !TRIAGE_TAGS.iter().any(|t| text_lc.contains(t)) {
+        let tags = extract_tags(&task);
+        if tags.is_empty() || !has_triage_tag(&tags) {
             continue;
         }
         if exists(state, TriageSource::Spotlight, &task) {
             continue;
         }
-        let entry = TriageEntry::new(state.triage_entries.len(), &task, TriageSource::Spotlight);
+        let mut entry = TriageEntry::new(state.triage_entries.len(), &task, TriageSource::Spotlight);
+        entry.tags = tags;
         state.triage_entries.push(entry);
-        state.triage_entries
-            .sort_by(|a, b| b.created.cmp(&a.created));
+        added = true;
+    }
+    if added {
+        state.triage_entries.sort_by(|a, b| b.created.cmp(&a.created));
     }
 }
 

@@ -2,9 +2,9 @@ use crossterm::event::{KeyCode, KeyModifiers, MouseEvent, MouseEventKind, MouseB
 use crate::state::AppState;
 
 pub fn handle_key(state: &mut AppState, code: KeyCode, mods: KeyModifiers) -> bool {
-    // Toggle sticky notes panel with Ctrl+Shift+N only while in Triage
+    // Toggle sticky notes panel with Alt+Shift+N only while in Triage
     if code == KeyCode::Char('n')
-        && mods.contains(KeyModifiers::CONTROL)
+        && mods.contains(KeyModifiers::ALT)
         && mods.contains(KeyModifiers::SHIFT)
     {
         state.toggle_sticky_overlay();
