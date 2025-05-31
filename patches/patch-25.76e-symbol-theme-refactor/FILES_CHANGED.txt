@@ -1,0 +1,4 @@
+- src/theme/icons.rs
+- src/ui/status.rs
+- src/ui/shortcuts.rs
+- src/state/core.rs
