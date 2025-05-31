@@ -1,5 +1,15 @@
+#![cfg_attr(not(feature = "std"), no_std)]
+
+#[cfg(not(feature = "std"))]
+extern crate alloc;
+
 use std::collections::{HashMap, HashSet, VecDeque};
+#[cfg(not(feature = "std"))]
+use alloc::collections::VecDeque;
+#[cfg(feature = "std")]
 use std::time::Instant;
+#[cfg(not(feature = "std"))]
+use core::time::Duration as Instant;
 use crate::node::{Node, NodeID, NodeMap};
 use crate::layout::{GEMX_HEADER_HEIGHT, LayoutRole};
 use crate::plugin::{loader, PluginHost};
@@ -158,7 +168,7 @@ pub struct AppState {
     pub redo_stack: Vec<LayoutSnapshot>,
     pub view_stack: Vec<Option<NodeID>>,
     pub selected_drag_source: Option<NodeID>,
-    pub link_map: std::collections::HashMap<NodeID, Vec<NodeID>>,
+    pub link_map: HashMap<NodeID, Vec<NodeID>>,
     pub auto_arrange: bool,
     pub zoom_scale: f32,
     pub zoom_locked_by_user: bool,
@@ -189,7 +199,7 @@ pub struct AppState {
     pub hierarchy_icons: bool,
     pub simulate_input_queue: VecDeque<SimInput>,
     pub status_message: String,
-    pub status_message_last_updated: Option<std::time::Instant>,
+    pub status_message_last_updated: Option<Instant>,
     pub zoom_preview_last: Option<Instant>,
     pub plugin_host: PluginHost,
     pub loaded_plugins: Vec<loader::LoadedPlugin>,
@@ -209,7 +219,7 @@ pub struct AppState {
     pub zen_recent_files: Vec<String>,
     pub zen_toolbar_index: usize,
     pub zen_dirty: bool,
-    pub zen_last_saved: Option<std::time::Instant>,
+    pub zen_last_saved: Option<Instant>,
     pub zen_current_filename: String,
     pub zen_word_count: usize,
     pub zen_current_syntax: ZenSyntax,
@@ -268,6 +278,7 @@ impl AppState {
 pub fn default_beamx_panel_visible() -> bool {
     #[cfg(target_os = "macos")]
     {
+        #[cfg(feature = "std")]
         if let Ok(term) = std::env::var("TERM_PROGRAM") {
             if term.to_lowercase().contains("iterm") {
                 return true;
@@ -326,7 +337,7 @@ impl Default for AppState {
             redo_stack: Vec::new(),
             view_stack: Vec::new(),
             selected_drag_source: None,
-            link_map: std::collections::HashMap::new(),
+            link_map: HashMap::new(),
             auto_arrange: true,
             zoom_scale: 1.0,
             zoom_locked_by_user: false,
@@ -350,7 +361,12 @@ impl Default for AppState {
             layout_key: (0, 0),
             debug_input_mode: true,
             debug_allow_empty_nodes: false,
-            debug_border: std::env::var("PRISMX_DEBUG_BORDER").is_ok(),
+            debug_border: {
+            #[cfg(feature = "std")]
+            { std::env::var("PRISMX_DEBUG_BORDER").is_ok() }
+            #[cfg(not(feature = "std"))]
+            { false }
+        },
             debug_overlay: false,
             debug_overlay_sticky: false,
             mindmap_lanes: true,
@@ -476,7 +492,12 @@ impl Default for AppState {
             crate::state::serialize::apply(&mut state, layout);
         }
 
-        state.loaded_plugins = loader::discover_plugins(std::path::Path::new("plugins"));
+        state.loaded_plugins = {
+            #[cfg(feature = "std")]
+            { loader::discover_plugins(std::path::Path::new("plugins")) }
+            #[cfg(not(feature = "std"))]
+            { Vec::new() }
+        };
 
         state.scroll_target_x = state.scroll_x;
         state.scroll_target_y = state.scroll_y;
