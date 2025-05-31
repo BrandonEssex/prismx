@@ -84,16 +84,37 @@ pub fn render_settings<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut App
     lines.push(Line::default());
     lines.push(preview_line(state.font_style, state.settings_beam_color));
 
+    // Compute layout rect safely clamped to the provided area
     let rect = settings_area(area, &lines);
+    let layout_ok = lines.len() as u16 + 2 <= area.height && rect.height >= 3;
+
+    if !layout_ok {
+        crate::log_warn!("SETTINGS_LAYOUT_FAIL");
+    } else {
+        crate::log_debug!(state, "SETTINGS_LAYOUT_OK");
+    }
 
     state.settings_toggle_bounds.clear();
-    for (idx, line_idx) in toggle_lines.iter().enumerate() {
-        let y = rect.y + 1 + (*line_idx as u16);
-        state.settings_toggle_bounds.push((Rect::new(rect.x + 1, y, rect.width - 2, 1), idx));
+    if layout_ok {
+        for (idx, line_idx) in toggle_lines.iter().enumerate() {
+            let y = rect.y + 1 + (*line_idx as u16);
+            if y < rect.y + rect.height.saturating_sub(1) {
+                state.settings_toggle_bounds.push((
+                    Rect::new(rect.x + 1, y, rect.width.saturating_sub(2), 1),
+                    idx,
+                ));
+            }
+        }
     }
 
     let block = Block::default().title("Settings").borders(Borders::ALL);
-    let content = Paragraph::new(lines).block(block).wrap(Wrap { trim: false });
+    let content = Paragraph::new(lines).block(block.clone()).wrap(Wrap { trim: false });
 
-    f.render_widget(content, rect);
+    if layout_ok {
+        f.render_widget(content, rect);
+    } else {
+        // Fallback placeholder when there is insufficient space
+        let empty = Paragraph::new("").block(block);
+        f.render_widget(empty, rect);
+    }
 }
