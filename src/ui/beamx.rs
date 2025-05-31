@@ -187,6 +187,11 @@ pub fn render_insert_cursor<B: Backend>(
 /// Simple two-frame heartbeat glyph used by the status bar.
 pub fn heartbeat_glyph(tick: u64) -> &'static str {
     const HEART: [&str; 2] = ["💓", "❤"];
-    crate::ui::animate::pulse(&HEART, tick)
+    const FALLBACK: [&str; 2] = ["<3", "<3"];
+    if crate::theme::icons::nerd_font_enabled() {
+        crate::ui::animate::pulse(&HEART, tick)
+    } else {
+        crate::ui::animate::pulse(&FALLBACK, tick)
+    }
 }
 

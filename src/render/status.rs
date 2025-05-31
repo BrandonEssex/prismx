@@ -8,7 +8,7 @@ use ratatui::{
 };
 use crate::state::AppState;
 use crate::ui::status::status_line;
-use crate::ui::animate::{breath_style, shimmer};
+use crate::ui::animate::breath_style;
 use crate::render::favorites::render_favorites_dock;
 use crate::ui::beamx::heartbeat_glyph;
 use crate::state::HeartbeatMode;
@@ -44,7 +44,7 @@ pub fn render_status_bar<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut A
         && !matches!(state.heartbeat_mode, HeartbeatMode::Silent);
 
     let spans = if show_heart {
-        let heart_style = shimmer(Color::White, tick);
+        let heart_style = breath_style(Color::White, tick);
         let heart = heartbeat_glyph(tick / 2);
         Spans::from(vec![
             Span::styled(heart, heart_style),
