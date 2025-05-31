@@ -10,6 +10,9 @@ use crate::config::theme::ThemeConfig;
 use crate::modules::switcher::MODULES;
 use crate::plugin::registry;
 use crate::ui::borders::draw_rounded_border;
+use crate::render::module_icon::{module_icon, module_label};
+use crate::layout::RESERVED_ZONE_W;
+use unicode_width::UnicodeWidthStr;
 
 use std::time::{SystemTime, UNIX_EPOCH};
 use crate::ui::animate;
@@ -33,8 +36,17 @@ pub fn render_dock<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppStat
     let beam = state.beam_style_for_mode(&state.mode);
     let accent = ThemeConfig::load().accent_color();
 
+    let dock_width = entries.len() as u16 * 3;
+
+    let zoom_text = format!("Zoom: {:.1}x", state.zoom_scale);
+    let zoom_w = zoom_text.len() as u16 + 2;
+    let icon_content = format!("{} {}", module_icon(&state.mode), module_label(&state.mode));
+    let icon_w = UnicodeWidthStr::width(icon_content.as_str()) as u16 + 2;
+    let offset = RESERVED_ZONE_W as u16 + icon_w + zoom_w + 1;
+
     let y = area.y + area.height.saturating_sub(2);
-    let mut x = area.x + 1;
+    let mut x = area.right().saturating_sub(dock_width + offset);
+    if x <= area.x { x = area.x + 1; }
 
     for (i, (icon, command)) in entries.iter().enumerate() {
         let rect = Rect::new(x, y, 2, 1);
