@@ -105,7 +105,7 @@ pub fn render_status<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppSt
     }
 
     let spans = Spans::from(vec![
-        Span::raw(module_icon(&state.mode)),
+        Span::styled(module_icon(&state.mode).to_string(), Style::default().fg(beam.border_color)),
         Span::raw(" "),
         Span::raw(msg_display),
     ]);

@@ -1,6 +1,8 @@
 use ratatui::prelude::*;
 use ratatui::text::{Line, Span};
 use ratatui::style::{Color, Modifier, Style};
+use ratatui::widgets::{Block, Borders};
+use crate::ui::animate::shimmer;
 use crate::canvas::prism::render_prism;
 use crate::state::AppState;
 use crate::state::view::ZenLayoutMode;
@@ -58,6 +60,18 @@ fn highlight_entry_line(text: &str) -> Line<'static> {
 
 /// Dispatches the correct Zen view mode renderer
 pub fn render_zen<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
+    let style = state.beam_style_for_mode("zen");
+    let tick = (std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .unwrap_or_default()
+        .as_millis()
+        / 300) as u64;
+    let title_style = shimmer(style.border_color, tick);
+    let block = Block::default()
+        .borders(Borders::NONE)
+        .title(Span::styled("Zen Mode", title_style.add_modifier(Modifier::BOLD)))
+        .title_alignment(Alignment::Center);
+    f.render_widget(block, area);
     match state.zen_layout_mode {
         ZenLayoutMode::Journal => {
             render_zen_journal(f, area, state);

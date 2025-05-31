@@ -1,4 +1,5 @@
-use ratatui::{prelude::*, widgets::{Paragraph, Wrap}, text::{Line, Span}};
+use ratatui::{prelude::*, widgets::{Paragraph, Wrap, Block, Borders}, text::{Line, Span}};
+use ratatui::style::{Style, Modifier};
 use regex::Regex;
 use crate::node::{NodeID, NodeMap};
 use crate::state::AppState;
@@ -19,7 +20,7 @@ use crate::ui::lines::{
 use crate::theme::beam_color::{parent_line_color, sibling_line_color};
 use crate::beam_color::BeamColor;
 use crate::ui::beamx::{BeamXMode, BeamXStyle, InsertCursorKind, render_insert_cursor, trail_style, bright_color};
-use crate::ui::animate::scale_color;
+use crate::ui::animate::{scale_color, shimmer};
 use crate::ui::overlay::{render_node_tooltip, render_layout_zones};
 use std::collections::{HashSet, HashMap};
 use crate::theme::layout::{node_max_width, NODE_WRAP_LABELS};
@@ -103,6 +104,18 @@ pub fn render<B: Backend>(
     state: &AppState,
     debug: bool,
 ) {
+    let style = state.beam_style_for_mode("gemx");
+    let tick = (std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .unwrap_or_default()
+        .as_millis()
+        / 300) as u64;
+    let title_style = shimmer(style.border_color, tick);
+    let block = Block::default()
+        .borders(Borders::NONE)
+        .title(Span::styled("GemX Mindmap", title_style.add_modifier(Modifier::BOLD)))
+        .title_alignment(Alignment::Center);
+    f.render_widget(block, area);
     let spacing_y = clamp_child_spacing(state, roots, area.height as i16);
     let mut focus_set: HashSet<NodeID> = HashSet::new();
     if let Some(mut current) = state.selected {

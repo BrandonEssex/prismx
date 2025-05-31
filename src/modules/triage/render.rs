@@ -1,6 +1,7 @@
 use chrono::{Duration, Local};
 use ratatui::prelude::*;
 use ratatui::widgets::{Block, Borders, Paragraph};
+use crate::ui::animate::shimmer;
 use ratatui::layout::{Layout, Constraint, Direction};
 use ratatui::text::{Line, Span};
 use ratatui::style::{Color, Modifier, Style};
@@ -143,6 +144,17 @@ pub fn render_grouped<B: Backend>(
 
     let style = state.beam_style_for_mode("triage");
     let block_style = Style::default().fg(style.border_color);
+    let tick = (std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .unwrap_or_default()
+        .as_millis()
+        / 300) as u64;
+    let title_style = shimmer(style.border_color, tick);
+    let block = Block::default()
+        .borders(Borders::NONE)
+        .title(Span::styled("Triage", title_style.add_modifier(Modifier::BOLD)))
+        .title_alignment(Alignment::Center);
+    f.render_widget(block, area);
 
     let zones = Layout::default()
         .direction(Direction::Vertical)
