@@ -1,4 +1,5 @@
-use ratatui::{prelude::*, widgets::{Paragraph, Wrap}};
+use ratatui::{prelude::*, widgets::{Paragraph, Wrap}, text::{Line, Span}};
+use regex::Regex;
 use crate::node::{NodeID, NodeMap};
 use crate::state::AppState;
 use crate::layout::engine::{
@@ -59,6 +60,38 @@ fn clamp_display_label(text: String, zoom: f32) -> (String, usize) {
     }
     let width = text.lines().map(|l| l.chars().count()).max().unwrap_or(0);
     (text, width)
+}
+
+fn styled_label_line(line: &str) -> Line<'static> {
+    let re = Regex::new(r"^([^0-9]*?)(\d+)(.*)$").unwrap();
+    if let Some(cap) = re.captures(line) {
+        let prefix = cap.get(1).map(|m| m.as_str()).unwrap_or("");
+        let number = cap.get(2).map(|m| m.as_str()).unwrap_or("");
+        let rest = cap.get(3).map(|m| m.as_str()).unwrap_or("");
+        let mut spans = Vec::new();
+        if !prefix.is_empty() {
+            spans.push(Span::styled(
+                prefix.to_string(),
+                Style::default().add_modifier(Modifier::ITALIC | Modifier::DIM),
+            ));
+        }
+        if !number.is_empty() {
+            spans.push(Span::styled(
+                number.to_string(),
+                Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD),
+            ));
+        }
+        if !rest.is_empty() {
+            spans.push(Span::raw(rest.to_string()));
+        }
+        Line::from(spans)
+    } else {
+        Line::from(line.to_string())
+    }
+}
+
+fn styled_lines(text: &str) -> Vec<Line<'static>> {
+    text.lines().map(styled_label_line).collect()
 }
 
 /// Render a simple mindmap using the vertical layout engine.
@@ -152,7 +185,7 @@ pub fn render<B: Backend>(
     let highlight_parent = scale_color(bright_color(p_color), fade);
     let highlight_sibling = scale_color(bright_color(s_color), fade);
 
-    let mut display_map: HashMap<NodeID, (String, usize)> = HashMap::new();
+    let mut display_map: HashMap<NodeID, (Vec<Line>, usize)> = HashMap::new();
     for node in nodes.values() {
         let mut text = if zoom <= 0.5 {
             compressed_label(&node.label, zoom)
@@ -181,7 +214,8 @@ pub fn render<B: Backend>(
             text.push_str(" ⚠");
         }
         let (disp, width) = clamp_display_label(text, zoom);
-        display_map.insert(node.id, (disp, width));
+        let lines = styled_lines(&disp);
+        display_map.insert(node.id, (lines, width));
     }
 
     if debug || highlight {
@@ -341,8 +375,8 @@ pub fn render<B: Backend>(
         if x >= 0 && y >= 0 && x < area.right() as i16 && y < area.bottom() as i16 {
             let is_problem = problem_nodes.contains(&node.id);
             if let Some((display, width_chars)) = display_map.get(&node.id) {
-                let width = (( *width_chars as f32) * zoom).ceil().max(1.0) as u16;
-                let height = display.lines().count() as u16;
+                let width = ((*width_chars as f32) * zoom).ceil().max(1.0) as u16;
+                let height = display.len() as u16;
                 let rect = Rect::new(x as u16, y as u16, width, height.max(1));
                 let mut para = Paragraph::new(display.clone());
                 if NODE_WRAP_LABELS {
