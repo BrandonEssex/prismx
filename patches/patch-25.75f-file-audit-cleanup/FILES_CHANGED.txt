@@ -1,0 +1,7 @@
+- src/keymap.rs (deleted)
+- src/module_switcher/control.rs (deleted)
+- src/bin/print_docs.rs (deleted)
+- src/plugins/interface.rs (deleted)
+- src/hotkeys/bindings.rs (deleted)
+- src/screen/tools.rs (deleted)
+- src/routineforge.rs (deleted or relocated to plugins/)
