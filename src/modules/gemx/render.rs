@@ -19,7 +19,7 @@ use crate::theme::beam_color::{parent_line_color, sibling_line_color};
 use crate::beam_color::BeamColor;
 use crate::ui::beamx::{BeamXMode, BeamXStyle, InsertCursorKind, render_insert_cursor, trail_style, bright_color};
 use crate::ui::animate::scale_color;
-use crate::ui::overlay::render_node_tooltip;
+use crate::ui::overlay::{render_node_tooltip, render_layout_zones};
 use std::collections::{HashSet, HashMap};
 use crate::theme::layout::{node_max_width, NODE_WRAP_LABELS};
 use crate::theme::icons::{ROOT_NODE, CHILD_NODE, SIBLING_NODE};
@@ -92,6 +92,10 @@ pub fn render<B: Backend>(
     };
 
     enforce_viewport_bounds(nodes, area);
+
+    if debug {
+        render_layout_zones(f, area);
+    }
 
     let collision_nodes = if debug {
         detect_collisions(nodes)
