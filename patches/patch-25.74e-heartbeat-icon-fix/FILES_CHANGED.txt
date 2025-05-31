@@ -1,0 +1,3 @@
+- src/ui/beamx.rs
+- src/ui/status.rs
+- src/theme/icons.rs
