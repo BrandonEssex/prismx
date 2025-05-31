@@ -12,6 +12,7 @@ pub mod links;
 pub mod init;
 mod triage;
 pub mod view;
+pub mod config;
 
 pub use core::*;
 pub mod serialize;
