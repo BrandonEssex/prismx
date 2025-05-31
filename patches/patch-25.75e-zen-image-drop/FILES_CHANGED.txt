@@ -1,0 +1,3 @@
+- src/modules/zen/image.rs
+- src/modules/zen/render.rs
+- src/settings/toggles.rs
