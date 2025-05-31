@@ -1,9 +1,11 @@
-use chrono::{Local, Duration};
+use chrono::{Duration, Local};
 use ratatui::prelude::*;
 use ratatui::widgets::{Block, Borders, Paragraph};
 use ratatui::layout::{Layout, Constraint, Direction};
 use ratatui::text::{Line, Span};
 use std::collections::{BTreeMap, HashSet};
+
+use crate::modules::triage::feed;
 
 use crate::beamx::render_full_border;
 use crate::state::AppState;
@@ -90,6 +92,9 @@ pub fn render_grouped<B: Backend>(
     show_icons: bool,
     collapsed: Option<&HashSet<&str>>,
 ) {
+    // Refresh triage feed on each render to keep entries current
+    feed::sync(state);
+
     let style = state.beam_style_for_mode("triage");
     let block_style = Style::default().fg(style.border_color);
 
@@ -119,6 +124,15 @@ pub fn render_grouped<B: Backend>(
 
     let order = ["#now", "#triton", "#done", "other"];
     let mut lines: Vec<Line> = Vec::new();
+    let filter_label = match &state.triage_tag_filter {
+        Some(tag) => tag.to_uppercase(),
+        None => "ALL".to_string(),
+    };
+    lines.push(Line::from(Span::styled(
+        format!(" Filter: {}", filter_label),
+        Style::default().fg(Color::Yellow),
+    )));
+    lines.push(Line::from(""));
     let mut visible_idx = 0usize;
 
     for tag in &order {
@@ -190,7 +204,8 @@ pub fn render_grouped<B: Backend>(
 
     let feed = Paragraph::new(lines)
         .block(Block::default().borders(Borders::NONE).style(block_style));
-    f.render_widget(feed, body);
+    let inner = Rect::new(body.x + 1, body.y + 1, body.width.saturating_sub(2), body.height.saturating_sub(2));
+    f.render_widget(feed, inner);
 
     if state.sticky_overlay_visible {
         for note in &state.sticky_notes_data {
