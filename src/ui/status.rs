@@ -80,36 +80,22 @@ pub fn render_status<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState)
         status_line(state)
     };
 
-    // Prefix heartbeat and active module icon for quick visual context
+    // Prefix active module icon for quick visual context
     let show_heart = matches!(state.mode.as_str(), "zen" | "gemx")
         && state.heartbeat_mode != crate::state::HeartbeatMode::Silent;
-    let tick = if std::env::var("PRISMX_TEST").is_ok() {
-        0
-    } else {
-        std::time::SystemTime::now()
-            .duration_since(std::time::UNIX_EPOCH)
-            .unwrap_or_default()
-            .as_millis() / 600
-    } as u64;
-    let heart = crate::ui::beamx::heartbeat_glyph(tick / 2);
-    let heart_style = crate::ui::animate::breath_style(beam.status_color, tick);
-
-    let prefix = if show_heart {
-        format!("{heart} {}", module_icon(&state.mode))
-    } else {
-        module_icon(&state.mode).to_string()
-    };
+    let prefix = module_icon(&state.mode).to_string();
 
     let content_style = Style::default().fg(beam.status_color);
     let width = area.width.saturating_sub(2);
 
     let dock_width = state.favorite_entries().len() as u16 * 3;
+    let heart_w = if show_heart { 3 } else { 0 };
     let zoom_text = format!("Zoom: {:.1}x", state.zoom_scale);
     let zoom_w = zoom_text.len() as u16 + 2;
     let icon_content = format!("{} {}", module_icon(&state.mode), module_label(&state.mode));
     let icon_w = UnicodeWidthStr::width(icon_content.as_str()) as u16 + 2;
     let offset = RESERVED_ZONE_W as u16 + icon_w + zoom_w + 1;
-    let available = width.saturating_sub(dock_width + offset);
+    let available = width.saturating_sub(dock_width + heart_w + offset);
 
     let prefix_len = prefix.len() + 1; // include trailing space
     let mut msg_display = message;
@@ -117,17 +103,11 @@ pub fn render_status<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState)
         msg_display.truncate(available.saturating_sub(prefix_len as u16) as usize);
     }
 
-    let spans = if show_heart {
-        Spans::from(vec![
-            Span::styled(heart, heart_style),
-            Span::raw(" "),
-            Span::raw(module_icon(&state.mode)),
-            Span::raw(" "),
-            Span::raw(msg_display),
-        ])
-    } else {
-        Spans::from(vec![Span::raw(module_icon(&state.mode)), Span::raw(" "), Span::raw(msg_display)])
-    };
+    let spans = Spans::from(vec![
+        Span::raw(module_icon(&state.mode)),
+        Span::raw(" "),
+        Span::raw(msg_display),
+    ]);
 
     f.render_widget(
         Paragraph::new(spans).style(content_style),
