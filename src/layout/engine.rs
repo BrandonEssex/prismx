@@ -19,13 +19,19 @@ use crate::theme::layout::spacing_scale;
 pub const DEEP_BRANCH_THRESHOLD: usize = 6;
 /// Horizontal offset step applied for each level beyond the threshold.
 pub const DEEP_BRANCH_STEP_X: i16 = 1;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 /// Recursively position nodes so siblings are laid out horizontally
 /// while children stack vertically beneath their parent.
 ///
 /// Layout respects each subtree's span to prevent overlap.
-pub fn layout_vertical(nodes: &mut NodeMap, root: NodeID, spacing_y: i16) {
+
+pub fn layout_vertical(
+    nodes: &mut NodeMap,
+    root: NodeID,
+    spacing_y: i16,
+    focus: Option<&HashSet<NodeID>>,
+) {
     fn depth_offset(depth: usize) -> i16 {
         if depth > DEEP_BRANCH_THRESHOLD {
             ((depth - DEEP_BRANCH_THRESHOLD) as i16) * DEEP_BRANCH_STEP_X
@@ -39,7 +45,8 @@ pub fn layout_vertical(nodes: &mut NodeMap, root: NodeID, spacing_y: i16) {
         id: NodeID,
         x: i16,
         y: i16,
-        spacing_y: i16,
+        base_spacing: i16,
+        focus: Option<&HashSet<NodeID>>,
         depth: usize,
     ) -> i16 {
         let span = subtree_span(nodes, id);
@@ -63,7 +70,15 @@ pub fn layout_vertical(nodes: &mut NodeMap, root: NodeID, spacing_y: i16) {
             let len = children.len();
             for (i, child) in children.iter().copied().enumerate() {
                 let cspan = subtree_span(nodes, child);
-                layout_subtree(nodes, child, child_x, y + spacing_y, spacing_y, depth + 1);
+                let mut next_spacing = base_spacing;
+                if let Some(set) = focus {
+                    if set.contains(&id) {
+                        next_spacing = next_spacing.saturating_sub(1);
+                    } else if !set.is_empty() {
+                        next_spacing += 1;
+                    }
+                }
+                layout_subtree(nodes, child, child_x, y + next_spacing, base_spacing, focus, depth + 1);
                 let label_w_child = nodes
                     .get(&child)
                     .map(|c| label_bounds(&c.label).0)
@@ -93,7 +108,7 @@ pub fn layout_vertical(nodes: &mut NodeMap, root: NodeID, spacing_y: i16) {
     let root_center = nodes.get(&root).map(|n| n.x).unwrap_or(0);
     let start_x = root_center - (span - label_w) / 2;
     let start_y = nodes.get(&root).map(|n| n.y).unwrap_or(0);
-    layout_subtree(nodes, root, start_x, start_y, spacing_y, 0);
+    layout_subtree(nodes, root, start_x, start_y, spacing_y, focus, 0);
 }
 
 /// Calculate the depth of each subtree.

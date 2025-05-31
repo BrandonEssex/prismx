@@ -71,8 +71,18 @@ pub fn render<B: Backend>(
     debug: bool,
 ) {
     let spacing_y = clamp_child_spacing(state, roots, area.height as i16);
+    let mut focus_set: HashSet<NodeID> = HashSet::new();
+    if let Some(mut current) = state.selected {
+        focus_set.insert(current);
+        while let Some(parent) = nodes.get(&current).and_then(|n| n.parent) {
+            focus_set.insert(parent);
+            current = parent;
+        }
+    }
+
+    let focus_opt = if focus_set.is_empty() { None } else { Some(&focus_set) };
     for &root in roots {
-        layout_vertical(nodes, root, spacing_y);
+        layout_vertical(nodes, root, spacing_y, focus_opt);
     }
 
     let overflow_nodes = if debug {

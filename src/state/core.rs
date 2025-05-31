@@ -90,6 +90,16 @@ impl Default for HeartbeatMode {
     fn default() -> Self { Self::Pulse }
 }
 
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+pub enum LayoutStyle {
+    Compact,
+    Relaxed,
+}
+
+impl Default for LayoutStyle {
+    fn default() -> Self { LayoutStyle::Compact }
+}
+
 #[derive(Clone)]
 pub struct ZenJournalEntry {
     pub timestamp: chrono::DateTime<chrono::Local>,
@@ -229,6 +239,7 @@ pub struct AppState {
     pub beam_shimmer: bool,
     pub ghost_link_trails: bool,
     pub highlight_focus_branch: bool,
+    pub layout_style: LayoutStyle,
     pub focus_changed_at: Option<Instant>,
     pub zoom_grid: bool,
     pub sticky_notes: bool,
@@ -395,6 +406,7 @@ impl Default for AppState {
             beam_shimmer: true,
             ghost_link_trails: true,
             highlight_focus_branch: false,
+            layout_style: LayoutStyle::Compact,
             focus_changed_at: None,
             zoom_grid: false,
             sticky_notes: false,
@@ -435,6 +447,7 @@ impl Default for AppState {
         state.beam_shimmer = config.beam_shimmer;
         state.ghost_link_trails = config.ghost_link_trails;
         state.highlight_focus_branch = config.highlight_focus_branch;
+        state.layout_style = config.layout_style;
         state.zoom_grid = config.zoom_grid;
         state.sticky_notes = config.sticky_notes;
         state.shortcut_overlay = config.shortcut_overlay;

@@ -1,14 +1,10 @@
-use crate::state::AppState;
+use crate::state::{AppState, LayoutStyle};
 use crate::node::{NodeID, NodeMap};
 use super::viewport;
 pub use crate::layout::engine::sibling_offset;
 use crossterm::terminal;
 use ratatui::prelude::Rect;
-use crate::layout::{
-    GEMX_HEADER_HEIGHT,
-    SIBLING_SPACING_X,
-    CHILD_SPACING_Y,
-};
+use crate::layout::GEMX_HEADER_HEIGHT;
 
 /// Minimum node count before the logical grid is allowed to expand.
 const GRID_EXPANSION_THRESHOLD: usize = 50;
@@ -145,6 +141,12 @@ pub fn clamp_child_spacing(state: &AppState, roots: &[NodeID], max_h: i16) -> i1
     // when zooming between 0.5x and 1.5x.
     let zoom = state.zoom_scale.clamp(0.5, 1.5);
     spacing = (((spacing as f32) * zoom) - 1.0).round() as i16;
+
+    // Apply style bias
+    spacing = match state.layout_style {
+        LayoutStyle::Compact => spacing.saturating_sub(1),
+        LayoutStyle::Relaxed => spacing + 1,
+    };
     if spacing < MIN_CHILD_SPACING_Y {
         spacing = MIN_CHILD_SPACING_Y;
     }

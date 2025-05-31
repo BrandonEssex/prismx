@@ -1,6 +1,6 @@
 // src/settings.rs
 use crate::beam_color::BeamColor;
-use crate::state::AppState;
+use crate::state::{AppState, LayoutStyle};
 use crate::theme::fonts::FontStyle;
 use serde::{Deserialize, Serialize};
 use std::fs;
@@ -27,6 +27,7 @@ pub struct UserSettings {
     pub beam_shimmer: bool,
     pub ghost_link_trails: bool,
     pub highlight_focus_branch: bool,
+    pub layout_style: LayoutStyle,
     pub zoom_grid: bool,
     pub sticky_notes: bool,
     pub shortcut_overlay: crate::state::ShortcutOverlayMode,
@@ -56,6 +57,7 @@ impl Default for UserSettings {
             beam_shimmer: true,
             ghost_link_trails: true,
             highlight_focus_branch: false,
+            layout_style: LayoutStyle::Compact,
             zoom_grid: false,
             sticky_notes: false,
             shortcut_overlay: crate::state::ShortcutOverlayMode::Full,
@@ -96,6 +98,7 @@ pub fn save_user_settings(state: &AppState) {
         beam_shimmer: state.beam_shimmer,
         ghost_link_trails: state.ghost_link_trails,
         highlight_focus_branch: state.highlight_focus_branch,
+        layout_style: state.layout_style,
         zoom_grid: state.zoom_grid,
         sticky_notes: state.sticky_notes,
         shortcut_overlay: state.shortcut_overlay,

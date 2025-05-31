@@ -3,6 +3,7 @@ use crate::state::{
     AppState,
     ShortcutOverlayMode,
     HeartbeatMode,
+    LayoutStyle,
 };
 use crate::theme::fonts::FontStyle;
 use super::save_user_settings;
@@ -106,6 +107,15 @@ fn toggle_ghost_trails(s: &mut AppState) { s.ghost_link_trails = !s.ghost_link_t
 fn is_zoom_grid(s: &AppState) -> bool { s.zoom_grid }
 fn toggle_zoom_grid(s: &mut AppState) { s.zoom_grid = !s.zoom_grid; save_user_settings(s); }
 
+fn layout_compact(s: &AppState) -> bool { matches!(s.layout_style, LayoutStyle::Compact) }
+fn toggle_layout_style(s: &mut AppState) {
+    s.layout_style = match s.layout_style {
+        LayoutStyle::Compact => LayoutStyle::Relaxed,
+        LayoutStyle::Relaxed => LayoutStyle::Compact,
+    };
+    save_user_settings(s);
+}
+
 fn is_sticky_notes(s: &AppState) -> bool { s.sticky_notes }
 fn toggle_sticky_notes(s: &mut AppState) { s.sticky_notes = !s.sticky_notes; save_user_settings(s); }
 
@@ -132,6 +142,7 @@ pub static SETTING_TOGGLES: &[SettingToggle] = &[
     SettingToggle { icon: "🔠", label: "Font Style", is_enabled: font_style_enabled, toggle: toggle_font_style, category: SettingCategory::Visuals },
     SettingToggle { icon: "⚡", label: "Beam Animations", is_enabled: is_beam_animation, toggle: toggle_beam_animation, category: SettingCategory::Visuals },
     SettingToggle { icon: "💫", label: "Beam Shimmer", is_enabled: is_beam_shimmer, toggle: toggle_beam_shimmer, category: SettingCategory::Visuals },
+    SettingToggle { icon: "📐", label: "Layout Style", is_enabled: layout_compact, toggle: toggle_layout_style, category: SettingCategory::Visuals },
     SettingToggle { icon: "🌀", label: "Focus Trail", is_enabled: is_focus_trail, toggle: toggle_focus_trail, category: SettingCategory::Visuals },
     SettingToggle { icon: "👻", label: "Ghost Trails", is_enabled: ghost_trails_enabled, toggle: toggle_ghost_trails, category: SettingCategory::Visuals },
     SettingToggle { icon: "🎨", label: "Theme Preset", is_enabled: |_| true, toggle: toggle_theme, category: SettingCategory::Visuals },
