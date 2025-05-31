@@ -5,6 +5,8 @@ use crate::ui::borders::draw_rounded_border;
 use crate::render::module_icon::{module_icon, module_label};
 use crate::ui::shortcuts::shortcuts_for;
 use crate::modules::triage::render::{completion_streak, done_sparkline, progress_bar};
+use crate::layout::RESERVED_ZONE_W;
+use unicode_width::UnicodeWidthStr;
 
 /// Utility to generate a default status string for the current mode.
 pub fn status_line(state: &AppState) -> String {
@@ -96,11 +98,22 @@ pub fn render_status<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState)
 
     let content_style = Style::default().fg(beam.status_color);
     let width = area.width.saturating_sub(2);
-    if text.len() as u16 > width {
-        text.truncate(width as usize);
+
+    let dock_width = state.favorite_entries().len() as u16 * 3;
+    let zoom_text = format!("Zoom: {:.1}x", state.zoom_scale);
+    let zoom_w = zoom_text.len() as u16 + 2;
+    let icon_content = format!("{} {}", module_icon(&state.mode), module_label(&state.mode));
+    let icon_w = UnicodeWidthStr::width(icon_content.as_str()) as u16 + 2;
+    let offset = RESERVED_ZONE_W as u16 + icon_w + zoom_w + 1;
+    let available = width.saturating_sub(dock_width + offset);
+
+    let mut display = text;
+    if display.len() as u16 > available {
+        display.truncate(available as usize);
     }
+
     f.render_widget(
-        Paragraph::new(text).style(content_style),
-        Rect::new(area.x + 1, area.y + 1, width, 1),
+        Paragraph::new(display).style(content_style),
+        Rect::new(area.x + 1, area.y + 1, available, 1),
     );
 }

@@ -27,6 +27,8 @@ pub fn capture_zen_entry(state: &mut AppState, entry: &ZenJournalEntry) {
     triage_entry.created = entry.timestamp;
     triage_entry.tags = entry.tags.clone();
     state.triage_entries.push(triage_entry);
+    state.triage_entries
+        .sort_by(|a, b| b.created.cmp(&a.created));
 }
 
 /// Pull all tagged Zen entries into triage.
@@ -49,6 +51,8 @@ pub fn sync_from_plugins(state: &mut AppState) {
         }
         let entry = TriageEntry::new(state.triage_entries.len(), &task, TriageSource::Spotlight);
         state.triage_entries.push(entry);
+        state.triage_entries
+            .sort_by(|a, b| b.created.cmp(&a.created));
     }
 }
 
