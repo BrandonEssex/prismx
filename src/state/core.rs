@@ -370,7 +370,7 @@ impl Default for AppState {
             zen_current_syntax: ZenSyntax::Markdown,
             zen_theme: ZenTheme::DarkGray,
             zen_view_mode: crate::state::ZenViewMode::default(),
-            zen_layout_mode: crate::state::ZenLayoutMode::default(),
+            zen_layout_mode: crate::state::view::ZenLayoutMode::Compose,
             zen_draft: DraftState::default(),
             zen_summary_mode: crate::state::ZenSummaryMode::default(),
             zen_compose_input: String::new(),
