@@ -197,6 +197,12 @@ pub fn heartbeat_glyph(tick: u64) -> &'static str {
 
 /// Style used for animating the heartbeat icon.
 pub fn heartbeat_style(color: Color, tick: u64) -> Style {
-    crate::ui::animate::breath_style(color, tick)
+    use ratatui::style::Modifier;
+    let base = crate::ui::animate::breath_style(color, tick);
+    if tick % 2 == 0 {
+        base.add_modifier(Modifier::BOLD)
+    } else {
+        base
+    }
 }
 

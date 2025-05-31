@@ -47,7 +47,8 @@ pub fn render_dock<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppStat
     let icon_content = format!("{} {}", module_icon(&state.mode), module_label(&state.mode));
     let icon_w = UnicodeWidthStr::width(icon_content.as_str()) as u16 + 2;
     // leave extra padding so dock never collides with debug overlays
-    let offset = RESERVED_ZONE_W as u16 + icon_w + zoom_w + 2;
+    // align dock flush against the rightmost edge of the status bar
+    let offset = RESERVED_ZONE_W as u16 + icon_w + zoom_w + 1;
 
     let y = area.y + area.height.saturating_sub(2);
     let total_width = dock_width + heart_space;
@@ -60,8 +61,11 @@ pub fn render_dock<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppStat
                 .duration_since(UNIX_EPOCH)
                 .unwrap_or_default()
                 .as_millis()
-                / 600) as u64
+                / 2000) as u64
         };
+        if state.debug_input_mode {
+            println!("HEARTBEAT_TICK {tick}");
+        }
         let heart = heartbeat_glyph(tick / 2);
         let heart_style = crate::ui::beamx::heartbeat_style(beam.status_color, tick);
         let rect = Rect::new(x, y, 2, 1);
