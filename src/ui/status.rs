@@ -5,6 +5,7 @@ use crate::ui::borders::draw_rounded_border;
 use crate::render::module_icon::{module_icon, module_label};
 use crate::ui::shortcuts::shortcuts_for;
 use crate::modules::triage::render::{completion_streak, done_sparkline, progress_bar};
+use crate::ui::dock::render_dock;
 use crate::layout::RESERVED_ZONE_W;
 use unicode_width::UnicodeWidthStr;
 
@@ -60,7 +61,7 @@ pub fn status_line(state: &AppState) -> String {
 }
 
 /// Render the contextual status bar with optional tips.
-pub fn render_status<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
+pub fn render_status<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppState) {
     let beam = state.beam_style_for_mode(&state.mode);
     let border_style = Style::default().fg(beam.border_color);
     draw_rounded_border(f, area, border_style);
@@ -94,7 +95,7 @@ pub fn render_status<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState)
     let zoom_w = zoom_text.len() as u16 + 2;
     let icon_content = format!("{} {}", module_icon(&state.mode), module_label(&state.mode));
     let icon_w = UnicodeWidthStr::width(icon_content.as_str()) as u16 + 2;
-    let offset = RESERVED_ZONE_W as u16 + icon_w + zoom_w + 1;
+    let offset = RESERVED_ZONE_W as u16 + icon_w + zoom_w + 2;
     let available = width.saturating_sub(dock_width + heart_w + offset);
 
     let prefix_len = prefix.len() + 1; // include trailing space
@@ -113,4 +114,7 @@ pub fn render_status<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState)
         Paragraph::new(spans).style(content_style),
         Rect::new(area.x + 1, area.y + 1, available, 1),
     );
+
+    // draw dock icons aligned to the right inside the same status bar
+    render_dock(f, area, state);
 }
