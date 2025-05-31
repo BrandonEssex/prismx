@@ -11,6 +11,8 @@ use crate::ui::lines::{
     draw_ghost_line,
     draw_anchor_trail,
     draw_line,
+    draw_dashed_line,
+    draw_curved_short,
     draw_arrow,
 };
 use crate::theme::beam_color::{parent_line_color, sibling_line_color};
@@ -22,6 +24,8 @@ use std::collections::{HashSet, HashMap};
 use crate::theme::layout::{node_max_width, NODE_WRAP_LABELS};
 use crate::theme::icons::{ROOT_NODE, CHILD_NODE, SIBLING_NODE};
 use crate::theme::characters::{DOWN_ARROW, RIGHT_ARROW};
+
+const LONG_JUMP: i16 = 10;
 
 fn compressed_label(label: &str, zoom: f32) -> String {
     if zoom > 0.5 {
@@ -222,11 +226,16 @@ pub fn render<B: Backend>(
                     scol,
                 );
             } else {
-                draw_line(
-                    f,
-                    (min_x, beam_y),
-                    (max_x, beam_y),
-                );
+                let hdist = (max_x - min_x).abs();
+                if hdist > LONG_JUMP {
+                    draw_dashed_line(f, (min_x, beam_y), (max_x, beam_y));
+                } else {
+                    draw_line(
+                        f,
+                        (min_x, beam_y),
+                        (max_x, beam_y),
+                    );
+                }
             }
 
             // arrow across siblings
@@ -256,7 +265,14 @@ pub fn render<B: Backend>(
                             draw_vertical_fade(f, start, end, tick, ccol);
                         }
                     } else {
-                        draw_line(f, start, end);
+                        let vdist = (end.1 - start.1).abs();
+                        if vdist <= 1 {
+                            draw_curved_short(f, start, (end.0, end.1 + 1));
+                        } else if vdist > LONG_JUMP {
+                            draw_dashed_line(f, start, end);
+                        } else {
+                            draw_line(f, start, end);
+                        }
                     }
                     draw_arrow(
                         f,
