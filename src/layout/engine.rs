@@ -10,9 +10,15 @@ use crate::layout::{
 use crate::theme::layout::spacing_scale;
 
 /// Depth at which additional horizontal spacing is applied for long branches.
-pub const DEEP_BRANCH_THRESHOLD: usize = 12;
+/// Depth at which long vertical branches begin tilting horizontally.
+///
+/// When a branch grows deeper than this value we slowly stagger child nodes
+/// to the right so the stack fans out diagonally rather than forming a
+/// perfectly vertical line. This helps avoid collisions with nearby branches
+/// while still keeping nodes tightly grouped.
+pub const DEEP_BRANCH_THRESHOLD: usize = 6;
 /// Horizontal offset step applied for each level beyond the threshold.
-pub const DEEP_BRANCH_STEP_X: i16 = 2;
+pub const DEEP_BRANCH_STEP_X: i16 = 1;
 use std::collections::HashMap;
 
 /// Recursively position nodes so siblings are laid out horizontally

@@ -193,6 +193,11 @@ fn shift_subtree(nodes: &mut crate::node::NodeMap, id: NodeID, dx: i16) {
 }
 
 /// Calculate dynamic spacing between root clusters based on available width.
+///
+/// When a tree contains extremely deep branches the layout engine begins to
+/// stagger child nodes horizontally (see [`DEEP_BRANCH_THRESHOLD`]). Each root
+/// cluster therefore requires additional horizontal padding to account for this
+/// diagonal fan-out so connectors remain clean and nodes don't collide.
 fn root_spacing(nodes: &crate::node::NodeMap, roots: &[NodeID]) -> i16 {
     use crate::layout::{subtree_span, subtree_depth, SIBLING_SPACING_X, MIN_SIBLING_SPACING_X, RESERVED_ZONE_W};
     use crate::layout::engine::{DEEP_BRANCH_THRESHOLD, DEEP_BRANCH_STEP_X};
