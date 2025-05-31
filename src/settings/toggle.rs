@@ -119,6 +119,9 @@ fn toggle_layout_style(s: &mut AppState) {
 fn is_sticky_notes(s: &AppState) -> bool { s.sticky_notes }
 fn toggle_sticky_notes(s: &mut AppState) { s.sticky_notes = !s.sticky_notes; save_user_settings(s); }
 
+fn is_image_drop(s: &AppState) -> bool { s.enable_image_drop }
+fn toggle_image_drop(s: &mut AppState) { s.enable_image_drop = !s.enable_image_drop; save_user_settings(s); }
+
 fn shortcut_overlay_enabled(s: &AppState) -> bool { matches!(s.shortcut_overlay, ShortcutOverlayMode::Full) }
 fn toggle_shortcut_overlay(s: &mut AppState) {
     s.shortcut_overlay = match s.shortcut_overlay {
@@ -152,6 +155,7 @@ pub static SETTING_TOGGLES: &[SettingToggle] = &[
     SettingToggle { icon: "🔒", label: "Lock Zoom Scale", is_enabled: is_zoom_locked, toggle: toggle_zoom_lock, category: SettingCategory::Interaction },
     SettingToggle { icon: "💠", label: "BeamX Panel", is_enabled: is_beamx_panel_visible, toggle: toggle_beamx_panel_visibility, category: SettingCategory::Modules },
     SettingToggle { icon: "📌", label: "Sticky Notes", is_enabled: is_sticky_notes, toggle: toggle_sticky_notes, category: SettingCategory::Modules },
+    SettingToggle { icon: "🖼", label: "Image Drop", is_enabled: is_image_drop, toggle: toggle_image_drop, category: SettingCategory::Modules },
     SettingToggle { icon: "⌨", label: "Shortcut Overlay", is_enabled: shortcut_overlay_enabled, toggle: toggle_shortcut_overlay, category: SettingCategory::Modules },
     SettingToggle { icon: "✨", label: "Mindmap Lanes", is_enabled: is_mindmap_lanes, toggle: toggle_mindmap_lanes, category: SettingCategory::Modules },
     SettingToggle { icon: "🧠", label: "Hierarchy Icons", is_enabled: is_hierarchy_icons, toggle: toggle_hierarchy_icons, category: SettingCategory::Modules },
