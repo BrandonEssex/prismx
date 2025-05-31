@@ -48,3 +48,7 @@ walkdir = "2"
 # [[bin]]
 # name = "wasm_build"
 # path = "build/wasm_build.rs"
+
+[features]
+default = ["std"]
+std = []
