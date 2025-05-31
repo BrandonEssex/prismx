@@ -58,6 +58,15 @@ pub fn toggle_zen_view(state: &mut AppState) {
     };
 }
 
+/// Toggle the floating debug overlay when `?` is pressed with no modifiers.
+pub fn toggle_debug_overlay_key(state: &mut AppState, code: KeyCode, mods: KeyModifiers) -> bool {
+    if code == KeyCode::Char('?') && mods.is_empty() {
+        state.debug_overlay = !state.debug_overlay;
+        return true;
+    }
+    false
+}
+
 /// Handle mouse input while in GemX/mindmap view.
 pub fn handle_gemx_mouse(state: &mut AppState, me: crossterm::event::MouseEvent) {
     use crossterm::event::{MouseButton, MouseEventKind};
