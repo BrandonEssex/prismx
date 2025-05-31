@@ -1,4 +1,6 @@
 use ratatui::prelude::*;
+use ratatui::text::{Line, Span};
+use ratatui::style::{Color, Modifier, Style};
 use crate::canvas::prism::render_prism;
 use crate::state::AppState;
 use crate::state::view::ZenLayoutMode;
@@ -8,6 +10,51 @@ use crate::beamx::render_full_border;
 use crate::render::traits::{Renderable, RenderFrame};
 use crate::theme::zen::zen_theme;
 use super::image::render_drop_zone;
+
+fn highlight_entry_line(text: &str) -> Line<'static> {
+    let mut spans = Vec::new();
+    let mut chars = text.chars().peekable();
+    while let Some(c) = chars.next() {
+        if c == '#' {
+            let mut tag = String::from("#");
+            while let Some(&ch) = chars.peek() {
+                if ch.is_alphanumeric() || ch == '_' || ch == '-' {
+                    tag.push(ch);
+                    chars.next();
+                } else {
+                    break;
+                }
+            }
+            let style = if tag.eq_ignore_ascii_case("#now") {
+                Style::default().fg(Color::Green)
+            } else if tag.eq_ignore_ascii_case("#done") {
+                Style::default().fg(Color::Gray)
+            } else {
+                Style::default().fg(Color::Blue)
+            };
+            spans.push(Span::styled(tag, style));
+        } else if c == '@' {
+            let mut mention = String::from("@");
+            while let Some(&ch) = chars.peek() {
+                if ch.is_alphanumeric() || ch == '_' || ch == '-' {
+                    mention.push(ch);
+                    chars.next();
+                } else {
+                    break;
+                }
+            }
+            spans.push(Span::styled(
+                mention,
+                Style::default().fg(Color::Yellow).add_modifier(Modifier::ITALIC),
+            ));
+        } else if c == '💭' || c == '🧠' || c == '📌' {
+            spans.push(Span::styled(c.to_string(), Style::default().fg(Color::Magenta)));
+        } else {
+            spans.push(Span::raw(c.to_string()));
+        }
+    }
+    Line::from(spans)
+}
 
 /// Dispatches the correct Zen view mode renderer
 pub fn render_zen<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
@@ -94,7 +141,7 @@ pub fn render_classic<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState
     let lines: Vec<Line> = state
         .zen_buffer
         .iter()
-        .map(|line| Line::from(line.as_str()))
+        .map(|line| highlight_entry_line(line.as_str()))
         .collect();
 
     let para = Paragraph::new(lines)
@@ -156,7 +203,8 @@ pub fn render_input<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState, 
         visible_text = visible_text.chars().skip(1).collect();
     }
 
-    let input = format!("{} {}{}", timestamp, visible_text, caret);
+    let mut line = highlight_entry_line(&format!("{} {}", timestamp, visible_text));
+    line.spans.push(Span::raw(caret.to_string()));
 
     let input_rect = Rect::new(area.x + padding, area.bottom().saturating_sub(2), usable_width, 1);
     let mut block = Block::default().borders(Borders::NONE).style(Style::default().bg(palette.background));
@@ -165,7 +213,7 @@ pub fn render_input<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState, 
         block = block.borders(Borders::ALL).border_style(Style::default().fg(Color::DarkGray));
     }
 
-    let widget = Paragraph::new(input).style(Style::default().fg(palette.text).bg(palette.background)).block(block);
+    let widget = Paragraph::new(line).style(Style::default().fg(palette.text).bg(palette.background)).block(block);
     f.render_widget(widget, input_rect);
 
     if state.enable_image_drop && state.zen_draft.text.is_empty() && state.zen_draft.editing.is_none() {
