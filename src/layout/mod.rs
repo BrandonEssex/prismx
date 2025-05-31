@@ -2,6 +2,9 @@ use std::collections::{HashMap, HashSet};
 use crate::node::{NodeID, NodeMap};
 
 pub mod roles;
+pub mod grid;
+pub mod nodes;
+pub mod connector;
 pub mod fallback;
 pub mod snapshot;
 pub mod engine;
