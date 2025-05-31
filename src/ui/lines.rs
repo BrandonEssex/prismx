@@ -176,3 +176,63 @@ pub fn draw_anchor_trail<B: Backend>(
         f.render_widget(Paragraph::new("●").style(style), rect);
     }
 }
+
+/// Draw a dashed line between two points.
+/// Used when connectors span long distances or rendering fails.
+pub fn draw_dashed_line<B: Backend>(
+    f: &mut Frame<B>,
+    start: (i16, i16),
+    end: (i16, i16),
+) {
+    let (sx, sy) = start;
+    let (ex, ey) = end;
+    if sx == ex {
+        let y0 = sy.min(ey);
+        let y1 = sy.max(ey);
+        let mut on = true;
+        for y in y0..=y1 {
+            if on {
+                let rect = Rect::new(sx as u16, y as u16, 1, 1);
+                f.render_widget(Paragraph::new("┊"), rect);
+            }
+            on = !on;
+        }
+    } else if sy == ey {
+        let x0 = sx.min(ex);
+        let x1 = sx.max(ex);
+        let mut on = true;
+        for x in x0..=x1 {
+            if on {
+                let rect = Rect::new(x as u16, sy as u16, 1, 1);
+                f.render_widget(Paragraph::new("┄"), rect);
+            }
+            on = !on;
+        }
+    } else {
+        draw_dashed_line(f, start, (sx, ey));
+        let glyph = if sy < ey {
+            if sx < ex { "┌" } else { "┐" }
+        } else if sx < ex {
+            "└"
+        } else {
+            "┘"
+        };
+        f.render_widget(Paragraph::new(glyph), Rect::new(sx as u16, ey as u16, 1, 1));
+        draw_dashed_line(f, (sx, ey), end);
+    }
+}
+
+/// Draw a short elbow connector when nodes are nearly overlapping.
+pub fn draw_curved_short<B: Backend>(
+    f: &mut Frame<B>,
+    start: (i16, i16),
+    end: (i16, i16),
+) {
+    let (sx, sy) = start;
+    let (ex, ey) = end;
+    // route to the right of the target point
+    let mid_x = sx + 1;
+    draw_line(f, start, (mid_x, sy));
+    draw_line(f, (mid_x, sy), (mid_x, ey));
+    draw_line(f, (mid_x, ey), (ex, ey));
+}
