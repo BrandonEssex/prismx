@@ -1,0 +1,3 @@
+- src/plugins/loader.rs
+- src/plugins/registry.rs
+- plugins/manifest.json
