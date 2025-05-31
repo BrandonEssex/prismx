@@ -13,9 +13,10 @@ use crate::ui::borders::draw_rounded_border;
 use crate::render::module_icon::{module_icon, module_label};
 use crate::layout::RESERVED_ZONE_W;
 use unicode_width::UnicodeWidthStr;
+use crate::state::HeartbeatMode;
+use crate::ui::beamx::heartbeat_glyph;
 
 use std::time::{SystemTime, UNIX_EPOCH};
-use crate::ui::animate;
 
 pub fn render_dock<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppState) {
     if !state.favorite_dock_enabled {
@@ -37,6 +38,9 @@ pub fn render_dock<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppStat
     let accent = ThemeConfig::load().accent_color();
 
     let dock_width = entries.len() as u16 * 3;
+    let show_heart = matches!(state.mode.as_str(), "zen" | "gemx")
+        && state.heartbeat_mode != HeartbeatMode::Silent;
+    let heart_space = if show_heart { 3 } else { 0 };
 
     let zoom_text = format!("Zoom: {:.1}x", state.zoom_scale);
     let zoom_w = zoom_text.len() as u16 + 2;
@@ -45,8 +49,24 @@ pub fn render_dock<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppStat
     let offset = RESERVED_ZONE_W as u16 + icon_w + zoom_w + 1;
 
     let y = area.y + area.height.saturating_sub(2);
-    let mut x = area.right().saturating_sub(dock_width + offset);
+    let total_width = dock_width + heart_space;
+    let mut x = area.right().saturating_sub(total_width + offset);
     if x <= area.x { x = area.x + 1; }
+
+    if show_heart {
+        let tick = if std::env::var("PRISMX_TEST").is_ok() { 0 } else {
+            (SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .unwrap_or_default()
+                .as_millis()
+                / 600) as u64
+        };
+        let heart = heartbeat_glyph(tick / 2);
+        let heart_style = crate::ui::beamx::heartbeat_style(beam.status_color, tick);
+        let rect = Rect::new(x, y, 2, 1);
+        f.render_widget(Paragraph::new(heart).style(heart_style), rect);
+        x += 3;
+    }
 
     for (i, (icon, command)) in entries.iter().enumerate() {
         let rect = Rect::new(x, y, 2, 1);
