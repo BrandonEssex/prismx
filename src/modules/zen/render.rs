@@ -126,6 +126,8 @@ pub fn render_compose<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState
     } else {
         render_history(f, area, state);
     }
+
+    render_full_border(f, area, &state.beam_style_for_mode(&state.mode), true, false);
 }
 
 /// One-line entry field at bottom of Compose mode

@@ -86,6 +86,8 @@ pub fn handle_key(state: &mut AppState, key: KeyCode) {
             if text.is_empty() && state.zen_draft.editing.is_none() {
                 if let Some(idx) = state.zen_history_index.take() {
                     state.start_edit_journal_entry(idx);
+                    let len = state.zen_journal_entries.len();
+                    state.scroll_offset = len.saturating_sub(1) - idx;
                 }
             } else if text == "/scroll" {
                 crate::ui::input::toggle_zen_view(state);
@@ -93,6 +95,8 @@ pub fn handle_key(state: &mut AppState, key: KeyCode) {
             } else if text.starts_with("/edit ") {
                 if let Ok(idx) = text[6..].trim().parse::<usize>() {
                     state.start_edit_journal_entry(idx);
+                    let len = state.zen_journal_entries.len();
+                    state.scroll_offset = len.saturating_sub(1) - idx;
                 }
                 state.zen_draft.text.clear();
             } else if text == "/cancel" {
@@ -117,6 +121,8 @@ pub fn handle_key(state: &mut AppState, key: KeyCode) {
                     state.status_message = lines.join(", ");
                 }
                 state.zen_draft.text.clear();
+            } else if state.zen_draft.editing.is_some() {
+                finalize_entry(state);
             } else if !text.is_empty() {
                 if crate::config::theme::ThemeConfig::load().zen_breathe() {
                     std::thread::sleep(std::time::Duration::from_millis(150));
@@ -164,6 +170,8 @@ fn finalize_entry(state: &mut AppState) {
         let entry = state.zen_journal_entries[idx].clone();
         state.append_journal_entry(&entry);
         crate::modules::triage::feed::capture_zen_entry(state, &entry);
+        let len = state.zen_journal_entries.len();
+        state.scroll_offset = len.saturating_sub(1) - idx;
     } else {
         let entry = ZenJournalEntry {
             timestamp: chrono::Local::now(),
@@ -175,9 +183,9 @@ fn finalize_entry(state: &mut AppState) {
         state.zen_journal_entries.push(entry.clone());
         state.append_journal_entry(&entry);
         crate::modules::triage::feed::capture_zen_entry(state, &entry);
+        state.scroll_offset = 0;
     }
 
     state.zen_draft.text.clear();
     state.zen_draft.editing = None;
-    state.scroll_offset = 0;
 }
