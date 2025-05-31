@@ -80,3 +80,37 @@ pub fn render_node_tooltip<B: Backend>(
 
     f.render_widget(Paragraph::new(content), Rect::new(x + 1, y + 1, width - 2, 1));
 }
+
+/// Render visual layout zones for debugging mindmap placement.
+pub fn render_layout_zones<B: Backend>(f: &mut Frame<B>, area: Rect) {
+    use ratatui::style::{Color, Style};
+    use crate::layout::{GEMX_HEADER_HEIGHT, RESERVED_ZONE_W, RESERVED_ZONE_H};
+
+    let dock_h = 2u16;
+    let emblem_rect = Rect::new(
+        area.right().saturating_sub(RESERVED_ZONE_W as u16),
+        area.y,
+        RESERVED_ZONE_W as u16,
+        RESERVED_ZONE_H as u16,
+    );
+    let dock_rect = Rect::new(
+        area.x,
+        area.bottom().saturating_sub(dock_h),
+        area.width,
+        dock_h,
+    );
+    let allowed_rect = Rect::new(
+        area.x,
+        area.y + GEMX_HEADER_HEIGHT as u16,
+        area.width.saturating_sub(RESERVED_ZONE_W as u16),
+        area.height.saturating_sub(GEMX_HEADER_HEIGHT as u16 + dock_h),
+    );
+    let gray = Style::default().bg(Color::DarkGray);
+    let red = Style::default().bg(Color::Red);
+    f.render_widget(Block::default().style(red), emblem_rect);
+    f.render_widget(Block::default().style(gray), dock_rect);
+    let zone = Block::default()
+        .borders(Borders::ALL)
+        .border_style(Style::default().fg(Color::Green));
+    f.render_widget(zone, allowed_rect);
+}
