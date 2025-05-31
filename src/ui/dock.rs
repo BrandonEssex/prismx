@@ -46,7 +46,8 @@ pub fn render_dock<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppStat
     let zoom_w = zoom_text.len() as u16 + 2;
     let icon_content = format!("{} {}", module_icon(&state.mode), module_label(&state.mode));
     let icon_w = UnicodeWidthStr::width(icon_content.as_str()) as u16 + 2;
-    let offset = RESERVED_ZONE_W as u16 + icon_w + zoom_w + 1;
+    // leave extra padding so dock never collides with debug overlays
+    let offset = RESERVED_ZONE_W as u16 + icon_w + zoom_w + 2;
 
     let y = area.y + area.height.saturating_sub(2);
     let total_width = dock_width + heart_space;
