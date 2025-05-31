@@ -1,6 +1,8 @@
 use libloading::{Library, Symbol};
 use std::path::{Path, PathBuf};
 
+use super::registry;
+
 pub trait PluginEntry {
     fn name(&self) -> &'static str;
     fn init(&mut self);
@@ -59,6 +61,24 @@ pub fn discover_plugins(dir: &Path) -> Vec<LoadedPlugin> {
                     plugins.push(plugin);
                 }
             }
+        }
+    }
+    plugins
+}
+
+/// Load plugins defined in `manifest.json` within the given directory.
+pub fn load_manifest_plugins(dir: &Path) -> Vec<LoadedPlugin> {
+    let manifest_path = dir.join("manifest.json");
+    let entries = registry::load_manifest(&manifest_path);
+    let mut plugins = Vec::new();
+    for entry in entries {
+        let path = dir.join(&entry.entry);
+        if path.exists() {
+            if let Some(plugin) = load_plugin(&path) {
+                plugins.push(plugin);
+            }
+        } else {
+            tracing::warn!("[PLUGIN] missing entry {}", path.display());
         }
     }
     plugins
