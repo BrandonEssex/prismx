@@ -135,6 +135,7 @@ pub fn render_input<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState, 
     use ratatui::widgets::{Paragraph, Block, Borders};
     use ratatui::style::Style;
     use crate::ui::animate::cursor_blink;
+    use unicode_width::UnicodeWidthStr;
     use chrono::Local;
     let palette = zen_theme();
 
@@ -143,7 +144,18 @@ pub fn render_input<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState, 
 
     let caret = cursor_blink(tick);
     let timestamp = Local::now().format("%H:%M").to_string();
-    let input = format!("{} {}{}", timestamp, state.zen_draft.text, caret);
+    let prefix = format!("{} ", timestamp);
+
+    let prefix_width = UnicodeWidthStr::width(prefix.as_str()) as u16;
+    let max_text_width = usable_width
+        .saturating_sub(prefix_width + 1) as usize; // +1 for caret
+
+    let mut visible_text = state.zen_draft.text.clone();
+    while UnicodeWidthStr::width(visible_text.as_str()) > max_text_width {
+        visible_text = visible_text.chars().skip(1).collect();
+    }
+
+    let input = format!("{} {}{}", timestamp, visible_text, caret);
 
     let input_rect = Rect::new(area.x + padding, area.bottom().saturating_sub(2), usable_width, 1);
     let mut block = Block::default().borders(Borders::NONE).style(Style::default().bg(palette.background));
