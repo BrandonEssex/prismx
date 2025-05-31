@@ -3,6 +3,7 @@ use crate::ui::layout::Rect;
 use crate::state::AppState;
 use crate::ui::borders::draw_rounded_border;
 use crate::render::module_icon::{module_icon, module_label};
+use crate::theme::icons;
 use crate::ui::shortcuts::shortcuts_for;
 use crate::modules::triage::render::{completion_streak, done_sparkline, progress_bar};
 use crate::ui::dock::render_dock;
@@ -13,11 +14,16 @@ use unicode_width::UnicodeWidthStr;
 pub fn status_line(state: &AppState) -> String {
     match state.mode.as_str() {
         "zen" => {
-            let dirty = if state.zen_dirty { " ✎" } else { "" };
+            let dirty = if state.zen_dirty { format!(" {}", icons::IC_EDIT) } else { String::new() };
             let layout = format!("{:?}", state.zen_layout_mode);
             format!(
-                "📄 {} ✍️ {} words{} [{}]",
-                state.zen_current_filename, state.zen_word_count, dirty, layout
+                "{} {} {} {} words{} [{}]",
+                icons::IC_DOC,
+                state.zen_current_filename,
+                icons::IC_PEN,
+                state.zen_word_count,
+                dirty,
+                layout
             )
         }
         "gemx" => {
@@ -46,11 +52,12 @@ pub fn status_line(state: &AppState) -> String {
                 .map(|e| e.text.clone())
                 .unwrap_or_default();
             format!(
-                "#NOW:{} #TRITON:{} #DONE:{} {} 🔥{} {} | {}",
+                "#NOW:{} #TRITON:{} #DONE:{} {} {}{} {} | {}",
                 now,
                 triton,
                 done,
                 bar,
+                icons::IC_FIRE,
                 streak,
                 spark,
                 current

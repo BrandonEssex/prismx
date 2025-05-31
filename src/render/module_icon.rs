@@ -14,11 +14,11 @@ use unicode_width::UnicodeWidthStr;
 pub fn module_icon(mode: &str) -> &'static str {
     let nerd = icons::nerd_font_enabled();
     match mode {
-        "gemx" => if nerd { icons::ICON_GEMX } else { icons::FALLBACK_ICON_GEMX },
-        "zen" => if nerd { icons::ICON_ZEN } else { icons::FALLBACK_ICON_ZEN },
-        "triage" => if nerd { icons::ICON_TRIAGE } else { icons::FALLBACK_ICON_TRIAGE },
-        "spotlight" => if nerd { icons::ICON_SPOTLIGHT } else { icons::FALLBACK_ICON_SPOTLIGHT },
-        "settings" => if nerd { icons::ICON_SETTINGS } else { icons::FALLBACK_ICON_SETTINGS },
+        "gemx" => if nerd { icons::IC_GEMX } else { icons::FALLBACK_IC_GEMX },
+        "zen" => if nerd { icons::IC_ZEN_MODE } else { icons::FALLBACK_IC_ZEN_MODE },
+        "triage" => if nerd { icons::IC_TAG } else { icons::FALLBACK_IC_TAG },
+        "spotlight" => if nerd { icons::IC_SPOTLIGHT } else { icons::FALLBACK_IC_SPOTLIGHT },
+        "settings" => if nerd { icons::IC_SETTINGS } else { icons::FALLBACK_IC_SETTINGS },
         "plugin" => "🔌",
         _ => "❓",
     }
