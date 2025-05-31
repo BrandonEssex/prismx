@@ -128,8 +128,9 @@ pub fn render_grouped<B: Backend>(
         Some(tag) => tag.to_uppercase(),
         None => "ALL".to_string(),
     };
+    lines.push(Line::from(""));
     lines.push(Line::from(Span::styled(
-        format!(" Filter: {}", filter_label),
+        format!("Filter: {}", filter_label),
         Style::default().fg(Color::Yellow),
     )));
     lines.push(Line::from(""));
