@@ -1,0 +1,4 @@
+- src/tui/mod.rs
+- src/tui/layout.rs
+- src/tui/widgets.rs
+- src/tui/events.rs
