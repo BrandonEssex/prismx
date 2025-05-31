@@ -6,6 +6,9 @@ use crossterm::terminal;
 use ratatui::prelude::Rect;
 use crate::layout::GEMX_HEADER_HEIGHT;
 
+/// Columns on the far right reserved for UI chrome.
+const RESERVED_COLUMNS: i16 = 8;
+
 /// Minimum node count before the logical grid is allowed to expand.
 const GRID_EXPANSION_THRESHOLD: usize = 50;
 
@@ -47,7 +50,21 @@ fn repair_insert(state: &mut AppState, node_id: NodeID) {
         }
     }
 
-    if let Some(n) = state.nodes.get(&node_id) {
+    if let Some(n) = state.nodes.get_mut(&node_id) {
+        let (tw, _) = terminal::size().unwrap_or((80, 20));
+        let reserve_x = tw as i16 - RESERVED_COLUMNS;
+        let mut clamped = false;
+        if n.y < GEMX_HEADER_HEIGHT {
+            n.y = GEMX_HEADER_HEIGHT;
+            clamped = true;
+        }
+        if n.x >= reserve_x {
+            n.x = reserve_x - 1;
+            clamped = true;
+        }
+        if clamped {
+            println!("ZONE_CLAMP_TRIGGERED: node={}", node_id);
+        }
         println!("LAYOUT_OK: node={} x={} y={}", n.id, n.x, n.y);
     }
 }
@@ -150,6 +167,7 @@ pub fn clamp_zoom_scroll(state: &mut AppState) {
 pub fn enforce_viewport_bounds(nodes: &mut NodeMap, area: Rect) {
     let min_x = area.x as i16 + 1;
     let min_y = GEMX_HEADER_HEIGHT.max(area.y as i16 + 1);
+    let reserve_x = area.right() as i16 - RESERVED_COLUMNS;
 
     // Start with the current viewport as the minimum bounding box. Only allow
     // the grid to expand when the node count is large enough to justify it.
@@ -166,7 +184,13 @@ pub fn enforce_viewport_bounds(nodes: &mut NodeMap, area: Rect) {
         }
     }
 
+    if max_x >= reserve_x {
+        max_x = reserve_x - 1;
+    }
+
     for node in nodes.values_mut() {
+        if node.y < min_y { node.y = min_y; }
+        if node.x >= reserve_x { node.x = reserve_x - 1; }
         node.x = node.x.clamp(min_x, max_x);
         node.y = node.y.clamp(min_y, max_y);
     }
