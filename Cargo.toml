@@ -52,3 +52,6 @@ walkdir = "2"
 [features]
 default = ["std"]
 std = []
+
+[workspace]
+members = [".", "crates/prismx_macros", "wasm"]
