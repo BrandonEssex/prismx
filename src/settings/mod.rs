@@ -120,4 +120,11 @@ pub mod toggle;
 pub mod layout;
 pub mod render;
 
-pub use toggle::{SettingToggle, SETTING_TOGGLES, settings_len, current_theme};
+pub use toggle::{
+    SettingToggle,
+    SETTING_TOGGLES,
+    settings_len,
+    current_theme,
+    SETTING_CATEGORIES,
+    toggles_for_category,
+};
