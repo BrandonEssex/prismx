@@ -3,7 +3,7 @@ use crate::layout::{
     label_bounds, subtree_span, MIN_CHILD_SPACING_Y, MIN_NODE_GAP, SIBLING_SPACING_X,
     GEMX_HEADER_HEIGHT,
 };
-use crate::node::{NodeID, NodeMap};
+use crate::node::{Node, NodeID, NodeMap};
 use crate::settings;
 use ratatui::layout::Rect;
 
@@ -53,6 +53,33 @@ fn node_depth(nodes: &NodeMap, id: NodeID) -> usize {
         }
     }
     depth
+}
+
+/// Insert `new_node` as a sibling of `selected_id` without altering existing
+/// parent-child relationships.
+///
+/// The new node inherits the parent of `selected_id` and is appended to that
+/// parent's child list. The original node hierarchy remains unchanged.
+pub fn insert_sibling(nodes: &mut NodeMap, selected_id: NodeID, mut new_node: Node) {
+    if !nodes.contains_key(&selected_id) {
+        return;
+    }
+    let parent_id = nodes.get(&selected_id).and_then(|n| n.parent);
+    new_node.parent = parent_id;
+    let nid = new_node.id;
+    nodes.insert(nid, new_node);
+    if let Some(pid) = parent_id {
+        if let Some(p) = nodes.get_mut(&pid) {
+            if !p.children.contains(&nid) {
+                p.children.push(nid);
+            }
+        }
+    }
+    if let Some(pid) = parent_id {
+        println!("SIBLING_OK: parent_id={}", pid);
+    } else {
+        println!("SIBLING_OK: parent_id=ROOT");
+    }
 }
 
 /// Reflow an existing set of siblings so they remain horizontally aligned
