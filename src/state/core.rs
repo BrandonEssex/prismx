@@ -11,7 +11,7 @@ use std::time::Instant;
 #[cfg(not(feature = "std"))]
 use core::time::Duration as Instant;
 use crate::node::{Node, NodeID, NodeMap};
-use crate::layout::{GEMX_HEADER_HEIGHT, LayoutRole};
+use crate::layout::{engine::LayoutStatus, GEMX_HEADER_HEIGHT, LayoutRole};
 use crate::plugin::{loader, PluginHost};
 use crate::zen::image::JournalEntry;
 pub use crate::zen::state::*;
@@ -190,6 +190,7 @@ pub struct AppState {
     pub layout_warning_logged: bool,
     pub layout_fail_count: u8,
     pub layout_key: (usize, u64),
+    pub layout_status: LayoutStatus,
     pub debug_input_mode: bool,
     pub debug_allow_empty_nodes: bool,
     pub debug_border: bool,
@@ -363,6 +364,7 @@ impl Default for AppState {
             layout_warning_logged: false,
             layout_fail_count: 0,
             layout_key: (0, 0),
+            layout_status: LayoutStatus::Valid,
             debug_input_mode: true,
             debug_allow_empty_nodes: false,
             debug_border: {

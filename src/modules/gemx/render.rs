@@ -4,7 +4,7 @@ use regex::Regex;
 use crate::node::{NodeID, NodeMap};
 use crate::state::AppState;
 use crate::layout::engine::{
-    layout_vertical, detect_collisions, detect_overflow,
+    layout_vertical, validate_layout, LayoutStatus,
 };
 use super::layout::{clamp_child_spacing, enforce_viewport_bounds};
 use crate::ui::lines::{
@@ -101,7 +101,7 @@ pub fn render<B: Backend>(
     area: Rect,
     nodes: &mut NodeMap,
     roots: &[NodeID],
-    state: &AppState,
+    state: &mut AppState,
     debug: bool,
 ) {
     let style = state.beam_style_for_mode("gemx");
@@ -131,11 +131,8 @@ pub fn render<B: Backend>(
         layout_vertical(nodes, root, spacing_y, focus_opt);
     }
 
-    let overflow_nodes = if debug {
-        detect_overflow(nodes, area)
-    } else {
-        Vec::new()
-    };
+    let check = validate_layout(nodes, area);
+    state.layout_status = check.status;
 
     enforce_viewport_bounds(nodes, area);
 
@@ -143,15 +140,9 @@ pub fn render<B: Backend>(
         render_layout_zones(f, area);
     }
 
-    let collision_nodes = if debug {
-        detect_collisions(nodes)
-    } else {
-        Vec::new()
-    };
-
     let mut problem_nodes: HashSet<NodeID> = HashSet::new();
     if debug {
-        for id in overflow_nodes.into_iter().chain(collision_nodes.into_iter()) {
+        for id in check.offenders {
             problem_nodes.insert(id);
         }
     }
