@@ -58,6 +58,18 @@ fn highlight_entry_line(text: &str) -> Line<'static> {
     Line::from(spans)
 }
 
+fn tag_color(tags: &[String]) -> Color {
+    if tags.iter().any(|t| t.eq_ignore_ascii_case("#now")) {
+        Color::Green
+    } else if tags.iter().any(|t| t.eq_ignore_ascii_case("#triton")) {
+        Color::Cyan
+    } else if tags.iter().any(|t| t.eq_ignore_ascii_case("#done")) {
+        Color::Gray
+    } else {
+        Color::Blue
+    }
+}
+
 /// Calculate consecutive days with at least one `#DONE` entry.
 pub fn completion_streak(entries: &[TriageEntry]) -> usize {
     let days: HashSet<_> = entries
@@ -141,6 +153,7 @@ pub fn render_grouped<B: Backend>(
 ) {
     // Refresh triage feed on each render to keep entries current
     feed::sync(state);
+    feed::load_sample(state);
 
     let style = state.beam_style_for_mode("triage");
     let block_style = Style::default().fg(style.border_color);
@@ -218,7 +231,7 @@ pub fn render_grouped<B: Backend>(
             }
 
             for (idx, entry) in entries {
-                let mut entry_style = Style::default();
+                let mut entry_style = Style::default().fg(tag_color(&entry.tags));
                 if *idx == state.triage_focus_index {
                     entry_style = entry_style
                         .add_modifier(Modifier::BOLD)
@@ -262,6 +275,7 @@ pub fn render_grouped<B: Backend>(
     }
 
     let feed = Paragraph::new(lines)
+        .scroll((state.scroll_y.max(0) as u16, 0))
         .block(Block::default().borders(Borders::NONE).style(block_style));
     let inner = Rect::new(body.x + 1, body.y + 1, body.width.saturating_sub(2), body.height.saturating_sub(2));
     f.render_widget(feed, inner);
