@@ -35,6 +35,52 @@ pub fn draw_line<B: Backend>(f: &mut Frame<B>, start: (i16, i16), end: (i16, i16
     }
 }
 
+/// Draw a straight line between two points using box-drawing glyphs with color.
+pub fn draw_line_colored<B: Backend>(
+    f: &mut Frame<B>,
+    start: (i16, i16),
+    end: (i16, i16),
+    color: Color,
+) {
+    let style = Style::default().fg(color);
+    let (sx, sy) = start;
+    let (ex, ey) = end;
+    if sx == ex {
+        let y0 = sy.min(ey);
+        let y1 = sy.max(ey);
+        for y in y0..=y1 {
+            if sx < 0 || y < 0 {
+                continue;
+            }
+            let rect = Rect::new(sx as u16, y as u16, 1, 1);
+            f.render_widget(Paragraph::new("│").style(style), rect);
+        }
+    } else if sy == ey {
+        let x0 = sx.min(ex);
+        let x1 = sx.max(ex);
+        for x in x0..=x1 {
+            if x < 0 || sy < 0 {
+                continue;
+            }
+            let rect = Rect::new(x as u16, sy as u16, 1, 1);
+            f.render_widget(Paragraph::new("─").style(style), rect);
+        }
+    } else {
+        draw_line_colored(f, start, (sx, ey), color);
+        let glyph = if sy < ey {
+            if sx < ex { "┌" } else { "┐" }
+        } else if sx < ex {
+            "└"
+        } else {
+            "┘"
+        };
+        if sx >= 0 && ey >= 0 {
+            f.render_widget(Paragraph::new(glyph).style(style), Rect::new(sx as u16, ey as u16, 1, 1));
+        }
+        draw_line_colored(f, (sx, ey), end, color);
+    }
+}
+
 /// Draw a line and place an arrow glyph at the end position.
 pub fn draw_line_with_arrow<B: Backend>(
     f: &mut Frame<B>,
