@@ -222,16 +222,16 @@ pub fn render<B: Backend>(
         display_map.insert(node.id, (lines, width));
     }
 
-    if debug || highlight {
-        for node in nodes.values() {
-            if node.children.is_empty() {
-                continue;
-            }
+    let lane_offset = if state.mindmap_lanes { 2 } else { 0 };
+    for node in nodes.values() {
+        if node.children.is_empty() {
+            continue;
+        }
 
-            let width_self = display_map.get(&node.id).map(|d| d.1 as i16).unwrap_or(0);
-            let px = scale_x(node.x + width_self / 2);
-            let beam_y = scale_y(node.y + (spacing_y - 1).max(1));
-            let on_path = focus_nodes.contains(&node.id);
+        let width_self = display_map.get(&node.id).map(|d| d.1 as i16).unwrap_or(0);
+        let px = scale_x(node.x + width_self / 2 + lane_offset);
+        let beam_y = scale_y(node.y + (spacing_y - 1).max(1));
+        let on_path = focus_nodes.contains(&node.id);
 
             // vertical beam from parent to sibling bar
             let parent_start = (px, scale_y(node.y + 1));
@@ -253,13 +253,13 @@ pub fn render<B: Backend>(
             );
 
             // collect child centers
-            let mut child_centers = Vec::new();
-            for cid in &node.children {
-                if let Some(child) = nodes.get(cid) {
-                    let w = display_map.get(cid).map(|d| d.1 as i16).unwrap_or(0);
-                    child_centers.push((cid, scale_x(child.x + w / 2)));
-                }
+        let mut child_centers = Vec::new();
+        for cid in &node.children {
+            if let Some(child) = nodes.get(cid) {
+                let w = display_map.get(cid).map(|d| d.1 as i16).unwrap_or(0);
+                child_centers.push((cid, scale_x(child.x + w / 2 + lane_offset)));
             }
+        }
             if child_centers.is_empty() {
                 continue;
             }
@@ -337,8 +337,7 @@ pub fn render<B: Backend>(
                 }
             }
         }
-    }
-
+    
     // Ghost trails showing multiple inbound references
     if state.ghost_link_trails {
         let refs = state.inbound_links();

@@ -1,6 +1,7 @@
 use super::{connector, grid, nodes};
-use crate::layout::{label_bounds, subtree_span, MIN_CHILD_SPACING_Y, MIN_NODE_GAP};
+use crate::layout::{label_bounds, subtree_span, MIN_CHILD_SPACING_Y, MIN_NODE_GAP, SIBLING_SPACING_X};
 use crate::node::{NodeID, NodeMap};
+use crate::settings;
 use ratatui::layout::Rect;
 
 pub use grid::{
@@ -20,6 +21,15 @@ pub use nodes::{
 };
 
 pub use connector::{beam_y, parent_line, child_line};
+
+/// Horizontal spacing used between sibling connectors based on user settings.
+pub fn lane_spacing() -> i16 {
+    if settings::load_user_settings().mindmap_lanes {
+        SIBLING_SPACING_X
+    } else {
+        2
+    }
+}
 
 fn depth_offset(depth: usize) -> i16 {
     if depth > DEEP_BRANCH_THRESHOLD {
@@ -77,7 +87,7 @@ pub fn reflow_siblings(nodes: &mut NodeMap, parent: NodeID, spacing_y: i16) {
         child_w += offset;
         child_x += child_w;
         if i + 1 < len {
-            child_x += sibling_offset(i, len);
+            child_x += lane_spacing();
         }
     }
 }
