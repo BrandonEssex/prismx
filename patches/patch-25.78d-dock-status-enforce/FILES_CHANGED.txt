@@ -1,0 +1,2 @@
+- src/ui/status.rs
+- src/ui/dock.rs
