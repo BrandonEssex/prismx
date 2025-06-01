@@ -50,7 +50,10 @@ pub fn handle_key(state: &mut AppState, key: KeyCode) {
                 if len > 0 {
                     let idx = state.zen_history_index.unwrap_or(len).saturating_sub(1);
                     state.zen_history_index = Some(idx);
-                    state.scroll_offset = len.saturating_sub(1) - idx;
+                    let desired = len.saturating_sub(1) - idx;
+                    if state.scroll_offset < desired {
+                        state.scroll_offset = desired;
+                    }
                 }
             }
         }
@@ -61,7 +64,10 @@ pub fn handle_key(state: &mut AppState, key: KeyCode) {
                     if idx + 1 < len {
                         idx += 1;
                         state.zen_history_index = Some(idx);
-                        state.scroll_offset = len.saturating_sub(1) - idx;
+                        let desired = len.saturating_sub(1) - idx;
+                        if state.scroll_offset > desired {
+                            state.scroll_offset = desired;
+                        }
                     } else {
                         state.zen_history_index = None;
                         state.scroll_offset = 0;
