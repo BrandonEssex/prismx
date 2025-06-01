@@ -124,6 +124,8 @@ pub struct ZenJournalEntry {
 pub struct DraftState {
     pub text: String,
     pub editing: Option<usize>,
+    /// Prevent Enter key auto-repeat from creating duplicate entries
+    pub was_submitted: bool,
 }
 
 pub struct AppState {

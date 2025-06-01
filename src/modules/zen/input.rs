@@ -13,6 +13,10 @@ pub fn handle_key(state: &mut AppState, key: KeyCode) {
         return;
     }
 
+    if key != KeyCode::Enter {
+        state.zen_draft.was_submitted = false;
+    }
+
     match key {
         KeyCode::Char(c) => {
             // Spawn a new entry on first character when not editing
@@ -82,6 +86,7 @@ pub fn handle_key(state: &mut AppState, key: KeyCode) {
             state.cancel_edit_journal_entry();
             state.zen_history_index = None;
             state.zen_draft.text.clear();
+            state.zen_draft.was_submitted = false;
         }
         KeyCode::Backspace => {
             state.zen_draft.text.pop();
@@ -91,6 +96,9 @@ pub fn handle_key(state: &mut AppState, key: KeyCode) {
             }
         }
         KeyCode::Enter => {
+            if state.zen_draft.was_submitted {
+                return;
+            }
             let text = state.zen_draft.text.trim().to_string();
             if text.is_empty() && state.zen_draft.editing.is_none() {
                 if let Some(idx) = state.zen_history_index.take() {
@@ -154,6 +162,7 @@ pub fn handle_key(state: &mut AppState, key: KeyCode) {
             }
 
             state.status_message_last_updated = Some(std::time::Instant::now());
+            state.zen_draft.was_submitted = true;
         }
         _ => {}
     }
@@ -201,6 +210,7 @@ fn finalize_entry(state: &mut AppState) {
 
     state.zen_draft.text.clear();
     state.zen_draft.editing = None;
+    state.zen_draft.was_submitted = true;
 }
 
 /// Clamp scroll offset so it never exceeds the final entry index minus
