@@ -18,6 +18,7 @@ pub const IC_ZEN_MODE: &str = IC_ZEN;
 pub const IC_TAG: &str = "🏷️";
 pub const IC_SETTINGS: &str = "⚙️";
 pub const IC_SPOTLIGHT: &str = "🔍";
+pub const IC_PLUGIN: &str = "🔌";
 
 // Simple ASCII fallbacks when Nerd Font icons aren't available
 pub const FALLBACK_IC_GEMX: &str = "[G]";
@@ -25,6 +26,7 @@ pub const FALLBACK_IC_ZEN_MODE: &str = "[Z]";
 pub const FALLBACK_IC_TAG: &str = "[T]";
 pub const FALLBACK_IC_SETTINGS: &str = "[S]";
 pub const FALLBACK_IC_SPOTLIGHT: &str = "[?]";
+pub const FALLBACK_IC_PLUGIN: &str = "[P]";
 
 // ───── Status Icons ─────
 pub const IC_SYNC: &str = "";    // nf-fa-wifi
