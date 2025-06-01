@@ -24,7 +24,9 @@ enum DockAlign {
     Right,
 }
 
-const DOCK_ALIGN: DockAlign = DockAlign::Left;
+// Draw dock icons starting from the right-most slot so the group is
+// right-aligned within the status bar.
+const DOCK_ALIGN: DockAlign = DockAlign::Right;
 
 pub fn render_dock<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppState) {
     if !state.favorite_dock_enabled {
