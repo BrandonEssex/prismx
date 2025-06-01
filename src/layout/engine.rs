@@ -1,6 +1,7 @@
-use super::{grid, nodes, connector};
-use crate::node::{NodeID, NodeMap};
+use super::{connector, grid, nodes};
 use crate::layout::{label_bounds, subtree_span, MIN_CHILD_SPACING_Y, MIN_NODE_GAP};
+use crate::node::{NodeID, NodeMap};
+use ratatui::layout::Rect;
 
 pub use grid::{
     spacing_for_zoom,
@@ -105,4 +106,31 @@ pub fn next_free_vertical(nodes: &NodeMap, x: i16, mut y: i16, step: i16, skip: 
         y += step;
     }
     y
+}
+
+/// Overall validity level for a node layout.
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+pub enum LayoutStatus {
+    Valid,
+    Overlap,
+    OutOfBounds,
+}
+
+/// Result of a layout validation pass.
+pub struct LayoutCheck {
+    pub status: LayoutStatus,
+    pub offenders: Vec<NodeID>,
+}
+
+/// Validate a mindmap layout. Returns the status and offending node IDs.
+pub fn validate_layout(nodes: &NodeMap, area: Rect) -> LayoutCheck {
+    let overflow = detect_overflow(nodes, area);
+    if !overflow.is_empty() {
+        return LayoutCheck { status: LayoutStatus::OutOfBounds, offenders: overflow };
+    }
+    let collisions = detect_collisions(nodes);
+    if !collisions.is_empty() {
+        return LayoutCheck { status: LayoutStatus::Overlap, offenders: collisions };
+    }
+    LayoutCheck { status: LayoutStatus::Valid, offenders: Vec::new() }
 }

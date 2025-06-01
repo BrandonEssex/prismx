@@ -8,6 +8,7 @@ use crate::ui::shortcuts::shortcuts_for;
 use crate::modules::triage::render::{completion_streak, done_sparkline, progress_bar};
 use crate::ui::dock::render_dock;
 use crate::layout::RESERVED_ZONE_W;
+use crate::layout::engine::LayoutStatus;
 use unicode_width::UnicodeWidthStr;
 
 /// Utility to generate a default status string for the current mode.
@@ -33,11 +34,17 @@ pub fn status_line(state: &AppState) -> String {
                 .and_then(|id| state.nodes.get(&id))
                 .map(|n| n.label.clone())
                 .unwrap_or_default();
+            let status = match state.layout_status {
+                LayoutStatus::Valid => "VALID",
+                LayoutStatus::Overlap => "\u{26A0} OVERLAP",
+                LayoutStatus::OutOfBounds => "\u{274C} OUT OF BOUNDS",
+            };
             format!(
-                "Nodes: {} Layout: {} Focus: {}",
+                "Nodes: {} Layout: {} Focus: {} [{}]",
                 state.nodes.len(),
                 layout,
-                focus
+                focus,
+                status
             )
         }
         "triage" => {
