@@ -157,6 +157,15 @@ fn toggle_heartbeat(s: &mut AppState) {
     save_user_settings(s);
 }
 
+fn plugin_tabs_enabled(s: &AppState) -> bool { !s.plugin_tabs.is_empty() }
+fn toggle_plugin_tabs(s: &mut AppState) {
+    if s.plugin_tabs.is_empty() {
+        s.plugin_tabs = crate::plugins::registry::plugin_tabs();
+    } else {
+        s.plugin_tabs.clear();
+    }
+}
+
 pub static SETTING_TOGGLES: &[SettingToggle] = &[
     SettingToggle { icon: "🔠", label: "Font Style", is_enabled: font_style_enabled, toggle: toggle_font_style, category: SettingCategory::Visuals },
     SettingToggle { icon: "⚡", label: "Beam Animations", is_enabled: is_beam_animation, toggle: toggle_beam_animation, category: SettingCategory::Visuals },
@@ -175,6 +184,7 @@ pub static SETTING_TOGGLES: &[SettingToggle] = &[
     SettingToggle { icon: "⌨", label: "Shortcut Overlay", is_enabled: shortcut_overlay_enabled, toggle: toggle_shortcut_overlay, category: SettingCategory::Modules },
     SettingToggle { icon: "✨", label: "Mindmap Lanes", is_enabled: is_mindmap_lanes, toggle: toggle_mindmap_lanes, category: SettingCategory::Visuals },
     SettingToggle { icon: "🧠", label: "Hierarchy Icons", is_enabled: is_hierarchy_icons, toggle: toggle_hierarchy_icons, category: SettingCategory::Modules },
+    SettingToggle { icon: "🔌", label: "Plugin Tabs", is_enabled: plugin_tabs_enabled, toggle: toggle_plugin_tabs, category: SettingCategory::Modules },
     SettingToggle { icon: "🐞", label: "Debug Input Mode", is_enabled: is_debug_mode, toggle: toggle_debug_mode, category: SettingCategory::Developer },
     SettingToggle { icon: "⚠", label: "Allow Empty Nodes", is_enabled: is_allow_empty_nodes, toggle: toggle_allow_empty_nodes, category: SettingCategory::Developer },
     SettingToggle { icon: "❤️", label: "Heartbeat", is_enabled: heartbeat_active, toggle: toggle_heartbeat, category: SettingCategory::Developer },
