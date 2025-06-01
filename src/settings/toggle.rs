@@ -160,7 +160,7 @@ pub static SETTING_TOGGLES: &[SettingToggle] = &[
     SettingToggle { icon: "📌", label: "Sticky Notes", is_enabled: is_sticky_notes, toggle: toggle_sticky_notes, category: SettingCategory::Modules },
     SettingToggle { icon: "🖼", label: "Image Drop", is_enabled: is_image_drop, toggle: toggle_image_drop, category: SettingCategory::Modules },
     SettingToggle { icon: "⌨", label: "Shortcut Overlay", is_enabled: shortcut_overlay_enabled, toggle: toggle_shortcut_overlay, category: SettingCategory::Modules },
-    SettingToggle { icon: "✨", label: "Mindmap Lanes", is_enabled: is_mindmap_lanes, toggle: toggle_mindmap_lanes, category: SettingCategory::Modules },
+    SettingToggle { icon: "✨", label: "Mindmap Lanes", is_enabled: is_mindmap_lanes, toggle: toggle_mindmap_lanes, category: SettingCategory::Visuals },
     SettingToggle { icon: "🧠", label: "Hierarchy Icons", is_enabled: is_hierarchy_icons, toggle: toggle_hierarchy_icons, category: SettingCategory::Modules },
     SettingToggle { icon: "🐞", label: "Debug Input Mode", is_enabled: is_debug_mode, toggle: toggle_debug_mode, category: SettingCategory::UX },
     SettingToggle { icon: "⚠", label: "Allow Empty Nodes", is_enabled: is_allow_empty_nodes, toggle: toggle_allow_empty_nodes, category: SettingCategory::UX },

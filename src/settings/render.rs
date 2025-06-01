@@ -21,6 +21,9 @@ pub fn render_settings<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut App
     let category = SETTING_CATEGORIES[state.settings_selected_tab % SETTING_CATEGORIES.len()];
     let toggles = toggles_for_category(category);
     let mut lines: Vec<Line> = Vec::new();
+    let header_style = Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD);
+    lines.push(Line::from(Span::styled(category.name(), header_style)));
+    lines.push(Line::default());
     let mut toggle_lines: Vec<usize> = Vec::new();
 
     for (display_idx, (_idx, t)) in toggles.iter().enumerate() {
