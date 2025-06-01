@@ -3,6 +3,8 @@ use crate::state::{AppState, ZenJournalEntry};
 use crate::triage::state::{TriageEntry, TriageSource};
 use crate::triage::helpers::extract_tags;
 
+use tracing::info;
+
 const TRIAGE_TAGS: &[&str] = &["#todo", "#triton", "#priority", "#now"];
 
 fn exists(state: &AppState, source: TriageSource, text: &str) -> bool {
@@ -71,4 +73,27 @@ pub fn sync_from_plugins(state: &mut AppState) {
 pub fn sync(state: &mut AppState) {
     sync_from_zen(state);
     sync_from_plugins(state);
+}
+
+/// Load sample feed items for debug preview.
+pub fn load_sample(state: &mut AppState) {
+    if !state.triage_entries.is_empty() {
+        return;
+    }
+
+    let samples = [
+        "Fix crash #now",
+        "Add tag @UX #todo",
+        "✓ Completed #done",
+        "Refactor module #todo",
+        "Design plugin @infra #triton",
+    ];
+
+    for text in samples.iter() {
+        let mut entry = TriageEntry::new(state.triage_entries.len(), text, TriageSource::Zen);
+        entry.tags = extract_tags(text);
+        state.triage_entries.push(entry);
+    }
+
+    info!("TRIAGE_FEED[✓]");
 }
