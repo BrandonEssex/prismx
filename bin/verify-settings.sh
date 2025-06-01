@@ -24,15 +24,22 @@ fi
 FIELDS=$(grep -o '\b\(s\|state\)\.[A-Za-z_][A-Za-z0-9_]*\b' "$TOGGLE_FILE" | sed 's/.*\.//' | sort -u)
 
 unused=()
+used_count=0
+total_count=$(echo "$FIELDS" | wc -w | tr -d ' ')
+
 for field in $FIELDS; do
+  # Search for direct usage of the state field outside the toggle file
   count=$(grep -R "$field" src | grep -v "$TOGGLE_FILE" | wc -l)
   if [ "$count" -gt 0 ]; then
     echo "✅ $field"
+    used_count=$((used_count + 1))
   else
     echo "❌ $field"
     unused+=("$field")
   fi
 done
+
+echo "Toggle coverage: $used_count/$total_count"
 
 if [ "${#unused[@]}" -ne 0 ]; then
   echo "Unused toggles: ${unused[*]}" >&2
