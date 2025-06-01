@@ -7,6 +7,8 @@ use crate::state::{
 };
 use crate::theme::fonts::FontStyle;
 use super::save_user_settings;
+use ratatui::text::Line;
+use ratatui::style::{Color, Style};
 
 // NOTE: When introducing a new visual feature, a corresponding toggle
 // must be defined here and surfaced in the Settings UI.
@@ -52,6 +54,7 @@ pub enum SettingCategory {
     Interaction,
     Modules,
     UX,
+    Developer,
 }
 
 impl SettingCategory {
@@ -61,6 +64,16 @@ impl SettingCategory {
             SettingCategory::Interaction => "Interaction",
             SettingCategory::Modules => "Modules",
             SettingCategory::UX => "UX",
+            SettingCategory::Developer => "Developer",
+        }
+    }
+
+    pub fn tab_title(self) -> Line<'static> {
+        match self {
+            SettingCategory::Developer => {
+                Line::styled("⚠ Dev", Style::default().fg(Color::Red))
+            }
+            _ => Line::from(self.name()),
         }
     }
 }
@@ -162,20 +175,21 @@ pub static SETTING_TOGGLES: &[SettingToggle] = &[
     SettingToggle { icon: "⌨", label: "Shortcut Overlay", is_enabled: shortcut_overlay_enabled, toggle: toggle_shortcut_overlay, category: SettingCategory::Modules },
     SettingToggle { icon: "✨", label: "Mindmap Lanes", is_enabled: is_mindmap_lanes, toggle: toggle_mindmap_lanes, category: SettingCategory::Visuals },
     SettingToggle { icon: "🧠", label: "Hierarchy Icons", is_enabled: is_hierarchy_icons, toggle: toggle_hierarchy_icons, category: SettingCategory::Modules },
-    SettingToggle { icon: "🐞", label: "Debug Input Mode", is_enabled: is_debug_mode, toggle: toggle_debug_mode, category: SettingCategory::UX },
-    SettingToggle { icon: "⚠", label: "Allow Empty Nodes", is_enabled: is_allow_empty_nodes, toggle: toggle_allow_empty_nodes, category: SettingCategory::UX },
-    SettingToggle { icon: "❤️", label: "Heartbeat", is_enabled: heartbeat_active, toggle: toggle_heartbeat, category: SettingCategory::UX },
+    SettingToggle { icon: "🐞", label: "Debug Input Mode", is_enabled: is_debug_mode, toggle: toggle_debug_mode, category: SettingCategory::Developer },
+    SettingToggle { icon: "⚠", label: "Allow Empty Nodes", is_enabled: is_allow_empty_nodes, toggle: toggle_allow_empty_nodes, category: SettingCategory::Developer },
+    SettingToggle { icon: "❤️", label: "Heartbeat", is_enabled: heartbeat_active, toggle: toggle_heartbeat, category: SettingCategory::Developer },
 ];
 
 pub fn settings_len() -> usize {
     SETTING_TOGGLES.len()
 }
 
-pub const SETTING_CATEGORIES: [SettingCategory; 4] = [
+pub const SETTING_CATEGORIES: [SettingCategory; 5] = [
     SettingCategory::Visuals,
     SettingCategory::Interaction,
     SettingCategory::Modules,
     SettingCategory::UX,
+    SettingCategory::Developer,
 ];
 
 pub fn toggles_for_category(cat: SettingCategory) -> Vec<(usize, &'static SettingToggle)> {
