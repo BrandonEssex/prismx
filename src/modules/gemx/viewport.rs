@@ -3,12 +3,15 @@ use crate::node::NodeID;
 use crate::layout::{center_on_node, spacing_for_zoom};
 use crossterm::terminal;
 
+/// Minimum zoom level allowed when calculating viewport metrics.
+const MIN_ZOOM: f32 = 0.5;
+
 /// Determine if the given node is currently visible on screen.
 pub fn node_visible(state: &AppState, node_id: NodeID) -> bool {
     let (tw, th) = terminal::size().unwrap_or((80, 20));
     // Clamp the effective zoom so spacing calculations stay within a
     // predictable range.
-    let zoom = state.zoom_scale.clamp(0.5, 1.5) as f32;
+    let zoom = state.zoom_scale.clamp(MIN_ZOOM, 1.5) as f32;
     let (sx, sy) = spacing_for_zoom(zoom);
 
     // When zoomed out it's easy for nodes to hug the terminal edges. Apply a
@@ -17,19 +20,19 @@ pub fn node_visible(state: &AppState, node_id: NodeID) -> bool {
     // header.
     let right_pad = if zoom <= 0.3 {
         6.0
-    } else if zoom <= 0.5 {
+    } else if zoom <= MIN_ZOOM {
         4.0
     } else {
         2.0
     };
     let bottom_pad = if zoom <= 0.3 {
         3.0
-    } else if zoom <= 0.5 {
+    } else if zoom <= MIN_ZOOM {
         2.0
     } else {
         1.0
     };
-    let top_pad = if zoom <= 0.5 { 1.0 } else { 0.0 };
+    let top_pad = if zoom <= MIN_ZOOM { 1.0 } else { 0.0 };
 
     if let Some(node) = state.nodes.get(&node_id) {
         let dx = ((node.x - state.scroll_x) as f32 * sx as f32 * zoom).round();
