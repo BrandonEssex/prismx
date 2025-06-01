@@ -1,0 +1,3 @@
+- src/ui/dock.rs
+- src/plugins/registry.rs
+- src/theme/icons.rs
