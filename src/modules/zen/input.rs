@@ -54,6 +54,7 @@ pub fn handle_key(state: &mut AppState, key: KeyCode) {
                     if state.scroll_offset < desired {
                         state.scroll_offset = desired;
                     }
+                    clamp_scroll_limit(state, len);
                 }
             }
         }
@@ -68,9 +69,11 @@ pub fn handle_key(state: &mut AppState, key: KeyCode) {
                         if state.scroll_offset > desired {
                             state.scroll_offset = desired;
                         }
+                        clamp_scroll_limit(state, len);
                     } else {
                         state.zen_history_index = None;
                         state.scroll_offset = 0;
+                        clamp_scroll_limit(state, len);
                     }
                 }
             }
@@ -94,6 +97,7 @@ pub fn handle_key(state: &mut AppState, key: KeyCode) {
                     state.start_edit_journal_entry(idx);
                     let len = state.zen_journal_entries.len();
                     state.scroll_offset = len.saturating_sub(1) - idx;
+                    clamp_scroll_limit(state, len);
                 }
             } else if text == "/scroll" {
                 crate::ui::input::toggle_zen_view(state);
@@ -103,6 +107,7 @@ pub fn handle_key(state: &mut AppState, key: KeyCode) {
                     state.start_edit_journal_entry(idx);
                     let len = state.zen_journal_entries.len();
                     state.scroll_offset = len.saturating_sub(1) - idx;
+                    clamp_scroll_limit(state, len);
                 }
                 state.zen_draft.text.clear();
             } else if text == "/cancel" {
@@ -178,6 +183,7 @@ fn finalize_entry(state: &mut AppState) {
         crate::modules::triage::feed::capture_zen_entry(state, &entry);
         let len = state.zen_journal_entries.len();
         state.scroll_offset = len.saturating_sub(1) - idx;
+        clamp_scroll_limit(state, len);
     } else {
         let entry = ZenJournalEntry {
             timestamp: chrono::Local::now(),
@@ -190,8 +196,22 @@ fn finalize_entry(state: &mut AppState) {
         state.append_journal_entry(&entry);
         crate::modules::triage::feed::capture_zen_entry(state, &entry);
         state.scroll_offset = 0;
+        clamp_scroll_limit(state, state.zen_journal_entries.len());
     }
 
     state.zen_draft.text.clear();
     state.zen_draft.editing = None;
+}
+
+/// Clamp scroll offset so it never exceeds the final entry index minus
+/// the available window height.
+fn clamp_scroll_limit(state: &mut AppState, len: usize) {
+    use crossterm::terminal::size;
+    let (_, h) = size().unwrap_or((80, 20));
+    let window_height = h as usize;
+    let max_offset = len.saturating_sub(window_height);
+    if state.scroll_offset > max_offset {
+        state.scroll_offset = max_offset;
+    }
+    // scroll_offset should never be negative but saturating_sub ensures it.
 }

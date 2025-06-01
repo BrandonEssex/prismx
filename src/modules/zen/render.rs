@@ -140,6 +140,7 @@ fn render_history<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
 
         let mut block = Block::default().borders(Borders::NONE);
         let mut style = Style::default();
+        let is_active = Some(idx) == state.zen_draft.editing || Some(idx) == state.zen_history_index;
         if Some(idx) == state.zen_draft.editing {
             block = block.border_style(Style::default().fg(Color::DarkGray)).borders(Borders::ALL);
         } else if Some(idx) == state.zen_history_index {
@@ -147,6 +148,9 @@ fn render_history<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
                 .border_style(Style::default().fg(Color::Gray).add_modifier(Modifier::DIM))
                 .borders(Borders::ALL);
             style = Style::default().add_modifier(Modifier::REVERSED | Modifier::UNDERLINED);
+        }
+        if !is_active {
+            style = Style::default().fg(Color::Gray).add_modifier(Modifier::DIM);
         }
 
         let ratio = entry.frame as f32 / 3.0;
@@ -164,8 +168,13 @@ fn render_history<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState) {
         .map(|(h, _, _)| *h + 1)
         .sum::<u16>()
         .saturating_sub(1);
+
+    // Clamp scroll offset so we never scroll past the final entry
+    let max_offset = blocks.len().saturating_sub(area.height as usize);
+    let scroll_offset = state.scroll_offset.min(max_offset);
+
     let overflow = total_height.saturating_sub(area.height);
-    let mut skip = overflow.saturating_sub(state.scroll_offset.min(overflow as usize) as u16);
+    let mut skip = overflow.saturating_sub(scroll_offset.min(overflow as usize) as u16);
 
     let mut y = area.bottom();
     for (h, para, frame) in blocks.into_iter().rev() {
