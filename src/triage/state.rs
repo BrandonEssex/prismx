@@ -160,3 +160,8 @@ pub fn tag_counts(state: &AppState) -> (usize, usize, usize) {
     }
     (now, triton, done)
 }
+
+/// Return the number of non-archived triage entries.
+pub fn feed_count(state: &AppState) -> usize {
+    state.triage_entries.iter().filter(|e| !e.archived).count()
+}

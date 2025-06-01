@@ -49,6 +49,7 @@ pub fn status_line(state: &AppState) -> String {
         }
         "triage" => {
             let (now, triton, done) = crate::triage::state::tag_counts(state);
+            let feed_total = crate::triage::state::feed_count(state);
             let bar = progress_bar(now, triton, done);
             let streak = completion_streak(&state.triage_entries);
             let spark = done_sparkline(&state.triage_entries, 7);
@@ -59,7 +60,8 @@ pub fn status_line(state: &AppState) -> String {
                 .map(|e| e.text.clone())
                 .unwrap_or_default();
             format!(
-                "#NOW:{} #TRITON:{} #DONE:{} {} {}{} {} | {}",
+                "Triage Feed: {} | #NOW:{} #TRITON:{} #DONE:{} {} {}{} {} | {}",
+                feed_total,
                 now,
                 triton,
                 done,

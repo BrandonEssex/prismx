@@ -82,11 +82,13 @@ pub fn load_sample(state: &mut AppState) {
     }
 
     let samples = [
-        "Fix crash #now",
-        "Add tag @UX #todo",
-        "✓ Completed #done",
-        "Refactor module #todo",
-        "Design plugin @infra #triton",
+        "[🔥] #now Fix crash on startup",
+        "[🧠] #triton Refactor rendering engine",
+        "[✅] #done Write unit tests",
+        "[💡] #todo Research plugin API",
+        "[📝] #todo Update documentation",
+        "[🔍] #triton Investigate memory leak",
+        "[🚀] #now Optimize build pipeline",
     ];
 
     for text in samples.iter() {
