@@ -1,3 +1,9 @@
+pub mod render;
+pub mod input;
+
+pub use render::AppSwitcher;
+pub use input::handle_key;
+
 use crate::theme::layout::{OVERLAY_WIDTH, SWITCHER_ITEM_WIDTH};
 
 pub const SWITCHER_WIDTH: u16 = OVERLAY_WIDTH;
