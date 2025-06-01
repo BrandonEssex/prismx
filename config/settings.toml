@@ -1,5 +1,5 @@
 auto_arrange = true
-debug_input_mode = false
+debug_input_mode = true
 debug_allow_empty_nodes = true
 dock_layout = "vertical"
 gemx_beam_color = "Ice"
