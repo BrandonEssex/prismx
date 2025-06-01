@@ -1,4 +1,5 @@
 use crossterm::event::{KeyCode, KeyModifiers, MouseEvent, MouseEventKind, MouseButton};
+use crate::layout::clamp_scroll;
 use crate::state::AppState;
 
 pub fn handle_key(state: &mut AppState, code: KeyCode, mods: KeyModifiers) -> bool {
@@ -49,11 +50,15 @@ pub fn handle_key(state: &mut AppState, code: KeyCode, mods: KeyModifiers) -> bo
         KeyCode::Up if mods.is_empty() => {
             state.triage_focus_prev();
             state.triage_recalc_counts();
+            state.scroll_y = state.scroll_y.saturating_sub(1);
+            clamp_scroll(state);
             true
         }
         KeyCode::Down if mods.is_empty() => {
             state.triage_focus_next();
             state.triage_recalc_counts();
+            state.scroll_y = state.scroll_y.saturating_add(1);
+            clamp_scroll(state);
             true
         }
         _ => false,
