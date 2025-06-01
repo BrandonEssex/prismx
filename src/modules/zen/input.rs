@@ -157,6 +157,9 @@ pub fn handle_key(state: &mut AppState, key: KeyCode) {
                 state.append_journal_entry(&entry);
                 state.zen_draft.text.clear();
                 state.zen_draft.editing = None;
+                // Auto-scroll to show the newly added entry
+                state.scroll_offset = 0;
+                clamp_scroll_limit(state, state.zen_journal_entries.len());
             } else {
                 finalize_entry(state);
             }
