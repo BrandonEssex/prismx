@@ -1,0 +1,6 @@
+- bin/verify-zen.sh
+- bin/verify-triage.sh
+- bin/verify-mindmap.sh
+- bin/verify-dock.sh
+- bin/verify-heartbeat.sh
+- .github/workflows/test-behavior.yml
