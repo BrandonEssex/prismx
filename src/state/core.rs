@@ -347,7 +347,7 @@ impl Default for AppState {
             selected_drag_source: None,
             link_map: HashMap::new(),
             auto_arrange: true,
-            zoom_scale: 1.0,
+            zoom_scale: 0.5,
             zoom_locked_by_user: false,
             scroll_x: 0,
             scroll_y: 0,
