@@ -76,6 +76,7 @@ pub struct ZenJournalEntry {
 pub struct DraftState {
     pub text: String,
     pub editing: Option<usize>,
+    pub was_submitted: bool,
 }
 
 pub struct AppState {
