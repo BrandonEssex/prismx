@@ -120,7 +120,7 @@ pub fn render_settings<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut App
 
         let tab_titles: Vec<Line> = SETTING_CATEGORIES
             .iter()
-            .map(|c| Line::from(c.name()))
+            .map(|c| c.tab_title())
             .chain(state.plugin_tabs.iter().map(|t| Line::from(t.title.as_str())))
             .collect();
         let tabs = Tabs::new(tab_titles)
