@@ -35,3 +35,8 @@ jobs:
 
       - name: 🛠️ Build project
         run: cargo build --release
+
+      - name: 🔎 Verify settings usage
+        run: |
+          chmod +x bin/verify-settings.sh
+          bin/verify-settings.sh
