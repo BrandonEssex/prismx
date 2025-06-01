@@ -5,12 +5,23 @@ use std::{fs, path::Path, sync::Mutex};
 use super::settings::{self, PluginSettingsTab};
 
 #[derive(Debug, Deserialize, Clone)]
+pub struct PluginModule {
+    #[serde(default)]
+    pub dock_icon: Option<String>,
+    #[serde(default)]
+    pub hover_title: Option<String>,
+    pub route_id: String,
+}
+
+#[derive(Debug, Deserialize, Clone)]
 pub struct PluginInfo {
     pub name: String,
     #[serde(default)]
     pub icon: Option<String>,
     pub entry: String,
     pub version: String,
+    #[serde(default)]
+    pub modules: Vec<PluginModule>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -39,21 +50,61 @@ pub fn entries() -> Vec<PluginInfo> {
     MANIFEST.get().map(|m| m.lock().unwrap().clone()).unwrap_or_default()
 }
 
-pub fn dock_entries() -> Vec<(String, String)> {
-    entries()
-        .into_iter()
-        .map(|e| {
-            let icon = e.icon.unwrap_or_else(|| "🔌".to_string());
-            (icon, format!("/{}", e.entry))
-        })
-        .collect()
+#[derive(Debug, Clone)]
+pub struct DockEntry {
+    pub icon: String,
+    pub title: String,
+    pub route: String,
+}
+
+pub fn dock_entries() -> Vec<DockEntry> {
+    let mut entries_out = Vec::new();
+    for plugin in entries() {
+        if plugin.modules.is_empty() {
+            let icon = plugin
+                .icon
+                .clone()
+                .unwrap_or_else(|| "🔌".to_string());
+            entries_out.push(DockEntry {
+                icon,
+                title: plugin.name.clone(),
+                route: format!("/{}", plugin.entry),
+            });
+        } else {
+            for m in plugin.modules {
+                let icon = m
+                    .dock_icon
+                    .or_else(|| plugin.icon.clone())
+                    .unwrap_or_else(|| "🔌".to_string());
+                let title = m.hover_title.unwrap_or_else(|| plugin.name.clone());
+                entries_out.push(DockEntry {
+                    icon,
+                    title,
+                    route: format!("/{}", m.route_id),
+                });
+            }
+        }
+    }
+    entries_out
 }
 
 pub fn module_entries() -> Vec<(String, String)> {
-    entries()
-        .into_iter()
-        .map(|e| (e.icon.unwrap_or_else(|| "🔌".to_string()), e.name))
-        .collect()
+    let mut mods = Vec::new();
+    for plugin in entries() {
+        if plugin.modules.is_empty() {
+            mods.push((plugin.icon.clone().unwrap_or_else(|| "🔌".to_string()), plugin.name.clone()));
+        } else {
+            for m in plugin.modules {
+                let icon = m
+                    .dock_icon
+                    .or_else(|| plugin.icon.clone())
+                    .unwrap_or_else(|| "🔌".to_string());
+                let title = m.hover_title.unwrap_or_else(|| plugin.name.clone());
+                mods.push((icon, title));
+            }
+        }
+    }
+    mods
 }
 
 /// Retrieve all plugin-defined settings tabs.

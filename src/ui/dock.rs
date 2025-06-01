@@ -8,7 +8,7 @@ use crate::ui::layout::Rect;
 use crate::state::AppState;
 use crate::config::theme::ThemeConfig;
 use crate::modules::switcher::MODULES;
-use crate::plugin::registry;
+use crate::plugins::registry::{self, DockEntry};
 use crate::ui::borders::draw_rounded_border;
 use crate::render::module_icon::{module_icon, module_label};
 use crate::layout::RESERVED_ZONE_W;
@@ -18,15 +18,27 @@ use crate::ui::beamx::heartbeat_glyph;
 
 use std::time::{SystemTime, UNIX_EPOCH};
 
+#[derive(Copy, Clone, PartialEq)]
+enum DockAlign {
+    Left,
+    Right,
+}
+
+const DOCK_ALIGN: DockAlign = DockAlign::Left;
+
 pub fn render_dock<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppState) {
     if !state.favorite_dock_enabled {
         return;
     }
 
     // Build entries from built-in modules
-    let mut entries: Vec<(String, String)> = MODULES
+    let mut entries: Vec<DockEntry> = MODULES
         .iter()
-        .map(|(icon, label)| ((*icon).to_string(), format!("/{}", label.to_lowercase())))
+        .map(|(icon, label)| DockEntry {
+            icon: (*icon).to_string(),
+            title: label.to_string(),
+            route: format!("/{}", label.to_lowercase()),
+        })
         .collect();
 
     // Append any plugins discovered via the registry
@@ -73,14 +85,20 @@ pub fn render_dock<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppStat
         x += 3;
     }
 
-    for (i, (icon, command)) in entries.iter().enumerate() {
+    let display_entries: Vec<DockEntry> = if DOCK_ALIGN == DockAlign::Right {
+        entries.iter().cloned().rev().collect()
+    } else {
+        entries.clone()
+    };
+
+    for (i, entry) in display_entries.iter().enumerate() {
         let rect = Rect::new(x, y, 2, 1);
         let mut style = Style::default().fg(beam.status_color);
         if state.favorite_focus_index == Some(i) || state.dock_hover_index == Some(i) {
             style = Style::default().fg(accent).add_modifier(Modifier::REVERSED);
         }
-        f.render_widget(Paragraph::new(icon.as_str()).style(style), rect);
-        state.dock_entry_bounds.push((rect, command.clone()));
+        f.render_widget(Paragraph::new(entry.icon.as_str()).style(style), rect);
+        state.dock_entry_bounds.push((rect, entry.route.clone()));
         x += 3;
     }
 
@@ -88,20 +106,20 @@ pub fn render_dock<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppStat
         state.dock_pulse_frames -= 1;
     }
 
-    render_dock_preview(f, area, state, &entries, true);
+    render_dock_preview(f, area, state, &display_entries, true);
 }
 
 fn render_dock_preview<B: Backend>(
     f: &mut Frame<B>,
     area: Rect,
     state: &mut AppState,
-    entries: &[(String, String)],
+    entries: &[DockEntry],
     horizontal: bool,
 ) {
     if let Some(idx) = state.dock_hover_index {
         if let Some((rect, _)) = state.dock_entry_bounds.get(idx) {
-            if let Some((icon, cmd)) = entries.get(idx) {
-                let text = format!("{} {}", icon, cmd);
+            if let Some(entry) = entries.get(idx) {
+                let text = format!("{} {}", entry.icon, entry.title);
                 let width = text.len() as u16 + 2;
                 let (x, y) = if horizontal {
                     (rect.x.saturating_sub(1), rect.y.saturating_sub(3))
