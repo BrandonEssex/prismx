@@ -196,6 +196,21 @@ pub fn enforce_viewport_bounds(nodes: &mut NodeMap, area: Rect) {
     }
 }
 
+/// Normalize node positions when switching layout modes.
+///
+/// This clamps every node to the visible grid and recenters the viewport so the
+/// currently selected node remains in view after the toggle.
+pub fn revalidate_after_toggle(state: &mut AppState) {
+    let (tw, th) = terminal::size().unwrap_or((80, 20));
+    let area = Rect::new(0, 0, tw, th);
+    crate::layout::engine::clamp_nodes(&mut state.nodes, area);
+    enforce_viewport_bounds(&mut state.nodes, area);
+    clamp_zoom_scroll(state);
+    if let Some(id) = state.selected {
+        viewport::ensure_visible(state, id);
+    }
+}
+
 /// Determine dynamic child spacing based on total depth.
 pub fn clamp_child_spacing(state: &AppState, roots: &[NodeID], max_h: i16) -> i16 {
     use crate::layout::{CHILD_SPACING_Y, MIN_CHILD_SPACING_Y, subtree_depth};
