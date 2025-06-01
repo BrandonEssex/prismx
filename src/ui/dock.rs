@@ -64,9 +64,11 @@ pub fn render_dock<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppStat
     // align dock flush against the rightmost edge of the status bar
     let offset = RESERVED_ZONE_W as u16 + icon_w + zoom_w + 1;
 
-    let y = area.y + area.height.saturating_sub(2);
+    let y = area.bottom().saturating_sub(2);
     let total_width = dock_width + heart_space;
-    let mut x = area.right().saturating_sub(total_width + offset);
+    // Anchor against the right edge while keeping icons fully visible.
+    let right_edge = area.right().saturating_sub(offset);
+    let mut x = right_edge.saturating_sub(total_width);
     if x <= area.x { x = area.x + 1; }
 
     if show_heart {

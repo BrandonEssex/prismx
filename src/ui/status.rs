@@ -82,6 +82,24 @@ pub fn render_status<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppSt
     let border_style = Style::default().fg(beam.border_color);
     draw_rounded_border(f, area, border_style);
 
+    // Pre-calculate layout metrics so the dock can be drawn first. Rendering the
+    // dock before the status text ensures debug overlays remain on top.
+    let show_heart = matches!(state.mode.as_str(), "zen" | "gemx")
+        && state.heartbeat_mode != crate::state::HeartbeatMode::Silent;
+    let width = area.width.saturating_sub(2);
+    let dock_width = state.favorite_entries().len() as u16 * 3;
+    let heart_w = if show_heart { 3 } else { 0 };
+    let zoom_text = format!("Zoom: {:.1}x", state.zoom_scale);
+    let zoom_w = zoom_text.len() as u16 + 2;
+    let icon_content = format!("{} {}", module_icon(&state.mode), module_label(&state.mode));
+    let icon_w = UnicodeWidthStr::width(icon_content.as_str()) as u16 + 2;
+    let offset = RESERVED_ZONE_W as u16 + icon_w + zoom_w + 1;
+    let available = width.saturating_sub(dock_width + heart_w + offset);
+
+    // Draw dock icons first so later layers (status text, debug overlays)
+    // appear above them.
+    render_dock(f, area, state);
+
     let mut message = if !state.status_message.is_empty() {
         state.status_message.clone()
     } else if state.show_keymap {
@@ -98,23 +116,9 @@ pub fn render_status<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppSt
     };
 
     // Prefix active module icon for quick visual context
-    let show_heart = matches!(state.mode.as_str(), "zen" | "gemx")
-        && state.heartbeat_mode != crate::state::HeartbeatMode::Silent;
     let prefix = module_icon(&state.mode).to_string();
 
     let content_style = Style::default().fg(beam.status_color);
-    let width = area.width.saturating_sub(2);
-
-    let dock_width = state.favorite_entries().len() as u16 * 3;
-    let heart_w = if show_heart { 3 } else { 0 };
-    let zoom_text = format!("Zoom: {:.1}x", state.zoom_scale);
-    let zoom_w = zoom_text.len() as u16 + 2;
-    let icon_content = format!("{} {}", module_icon(&state.mode), module_label(&state.mode));
-    let icon_w = UnicodeWidthStr::width(icon_content.as_str()) as u16 + 2;
-    // Reserve space for zoom level, module label, and the right-side HUD
-    // while keeping a single space padding between the dock and zoom text.
-    let offset = RESERVED_ZONE_W as u16 + icon_w + zoom_w + 1;
-    let available = width.saturating_sub(dock_width + heart_w + offset);
 
     let prefix_len = prefix.len() + 1; // include trailing space
     let mut msg_display = message;
@@ -132,7 +136,4 @@ pub fn render_status<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppSt
         Paragraph::new(spans).style(content_style),
         Rect::new(area.x + 1, area.y + 1, available, 1),
     );
-
-    // draw dock icons aligned to the right inside the same status bar
-    render_dock(f, area, state);
 }
