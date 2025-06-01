@@ -70,6 +70,18 @@ fn tag_color(tags: &[String]) -> Color {
     }
 }
 
+fn tag_icon(tags: &[String]) -> &'static str {
+    if tags.iter().any(|t| t.eq_ignore_ascii_case("#now")) {
+        "🔥"
+    } else if tags.iter().any(|t| t.eq_ignore_ascii_case("#triton")) {
+        "🧠"
+    } else if tags.iter().any(|t| t.eq_ignore_ascii_case("#done")) {
+        "✅"
+    } else {
+        "🏷️"
+    }
+}
+
 /// Calculate consecutive days with at least one `#DONE` entry.
 pub fn completion_streak(entries: &[TriageEntry]) -> usize {
     let days: HashSet<_> = entries
@@ -251,6 +263,9 @@ pub fn render_grouped<B: Backend>(
 
                 let mut line = highlight_entry_line(&entry.text);
                 line.spans.insert(0, Span::raw(" "));
+                if show_icons {
+                    line.spans.insert(0, Span::raw(format!("{} ", tag_icon(&entry.tags))));
+                }
                 line.spans.insert(0, Span::styled(format!("[{}] {}", entry.id, src), entry_style));
                 line.patch_style(entry_style);
                 lines.push(line);
