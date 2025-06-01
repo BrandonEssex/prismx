@@ -10,9 +10,8 @@ use crate::config::theme::ThemeConfig;
 use crate::modules::switcher::MODULES;
 use crate::plugins::registry::{self, DockEntry};
 use crate::ui::borders::draw_rounded_border;
-use crate::render::module_icon::{module_icon, module_label};
-use crate::layout::RESERVED_ZONE_W;
-use unicode_width::UnicodeWidthStr;
+// Module and plugin icons are discovered dynamically. The dock itself is
+// positioned by the caller so no layout metrics are required here.
 use crate::state::HeartbeatMode;
 use crate::ui::beamx::heartbeat_glyph;
 
@@ -28,7 +27,9 @@ enum DockAlign {
 // right-aligned within the status bar.
 const DOCK_ALIGN: DockAlign = DockAlign::Right;
 
-pub fn render_dock<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppState) {
+/// Render dock icons within the provided slot rectangle. The dock will align to
+/// the right edge of the slot while respecting heartbeat spacing.
+pub fn render_dock<B: Backend>(f: &mut Frame<B>, slot: Rect, state: &mut AppState) {
     if !state.favorite_dock_enabled {
         return;
     }
@@ -56,20 +57,11 @@ pub fn render_dock<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppStat
         && state.heartbeat_mode != HeartbeatMode::Silent;
     let heart_space = if show_heart { 3 } else { 0 };
 
-    let zoom_text = format!("Zoom: {:.1}x", state.zoom_scale);
-    let zoom_w = zoom_text.len() as u16 + 2;
-    let icon_content = format!("{} {}", module_icon(&state.mode), module_label(&state.mode));
-    let icon_w = UnicodeWidthStr::width(icon_content.as_str()) as u16 + 2;
-    // leave extra padding so dock never collides with debug overlays
-    // align dock flush against the rightmost edge of the status bar
-    let offset = RESERVED_ZONE_W as u16 + icon_w + zoom_w + 1;
-
-    let y = area.bottom().saturating_sub(2);
+    let y = slot.y;
     let total_width = dock_width + heart_space;
-    // Anchor against the right edge while keeping icons fully visible.
-    let right_edge = area.right().saturating_sub(offset);
-    let mut x = right_edge.saturating_sub(total_width);
-    if x <= area.x { x = area.x + 1; }
+    // Anchor against the right edge while keeping icons fully visible within the slot.
+    let mut x = slot.right().saturating_sub(total_width);
+    if x < slot.x { x = slot.x; }
 
     if show_heart {
         let tick = if std::env::var("PRISMX_TEST").is_ok() { 0 } else {
@@ -110,7 +102,7 @@ pub fn render_dock<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppStat
         state.dock_pulse_frames -= 1;
     }
 
-    render_dock_preview(f, area, state, &display_entries, true);
+    render_dock_preview(f, slot, state, &display_entries, true);
 }
 
 fn render_dock_preview<B: Backend>(

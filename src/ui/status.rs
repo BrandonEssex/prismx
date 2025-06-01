@@ -7,6 +7,8 @@ use crate::theme::icons;
 use crate::ui::shortcuts::shortcuts_for;
 use crate::modules::triage::render::{completion_streak, done_sparkline, progress_bar};
 use crate::ui::dock::render_dock;
+use crate::modules::switcher::MODULES;
+use crate::plugins::registry;
 use crate::layout::RESERVED_ZONE_W;
 use crate::layout::engine::LayoutStatus;
 use unicode_width::UnicodeWidthStr;
@@ -87,7 +89,9 @@ pub fn render_status<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppSt
     let show_heart = matches!(state.mode.as_str(), "zen" | "gemx")
         && state.heartbeat_mode != crate::state::HeartbeatMode::Silent;
     let width = area.width.saturating_sub(2);
-    let dock_width = state.favorite_entries().len() as u16 * 3;
+    // Dock width is based on built-in modules plus any plugin provided entries.
+    let dock_count = MODULES.len() + registry::dock_entries().len();
+    let dock_width = dock_count as u16 * 3;
     let heart_w = if show_heart { 3 } else { 0 };
     let zoom_text = format!("Zoom: {:.1}x", state.zoom_scale);
     let zoom_w = zoom_text.len() as u16 + 2;
@@ -96,9 +100,15 @@ pub fn render_status<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppSt
     let offset = RESERVED_ZONE_W as u16 + icon_w + zoom_w + 1;
     let available = width.saturating_sub(dock_width + heart_w + offset);
 
+    // Determine the slot reserved for dock icons anchored to the right.
+    let right_edge = area.right().saturating_sub(offset);
+    let mut dock_x = right_edge.saturating_sub(dock_width + heart_w);
+    if dock_x <= area.x { dock_x = area.x + 1; }
+    let dock_slot = Rect::new(dock_x, area.y + 1, dock_width + heart_w, 1);
+
     // Draw dock icons first so later layers (status text, debug overlays)
     // appear above them.
-    render_dock(f, area, state);
+    render_dock(f, dock_slot, state);
 
     let mut message = if !state.status_message.is_empty() {
         state.status_message.clone()
