@@ -21,7 +21,6 @@ use crate::render::{
     render_module_icon,
     Renderable,
     ZenView,
-    ModuleSwitcher,
 };
 
 use layout::rect_contains;
@@ -33,6 +32,7 @@ use crate::ui::components::logs::render_logs;
 use crate::ui::input;
 use crate::modules::triage::input as triage_input;
 use crate::modules::switcher;
+use crate::modules::switcher::render::AppSwitcher;
 
 use crate::hotkeys::match_hotkey;
 use crate::shortcuts::{match_shortcut, Shortcut};
@@ -96,7 +96,7 @@ pub fn draw(
         }
 
         if state.module_switcher_open || state.module_switcher_closing {
-            views.push(Box::new(ModuleSwitcher::new(state)));
+            views.push(Box::new(AppSwitcher::new(state)));
         }
 
         for mut view in views {
@@ -335,28 +335,7 @@ pub fn launch_ui() -> std::io::Result<()> {
                 }
 
                 // 🧭 Module switcher
-                if state.module_switcher_open {
-                    let count = switcher::MODULES.len();
-                    match code {
-                        KeyCode::Tab => {
-                            state.module_switcher_index = (state.module_switcher_index + 1) % count;
-                            tracing::debug!("[INPUT] module switcher index {}", state.module_switcher_index);
-                        }
-                        KeyCode::BackTab => {
-                            state.module_switcher_index = (state.module_switcher_index + count - 1) % count;
-                            tracing::debug!("[INPUT] module switcher index {}", state.module_switcher_index);
-                        }
-                        KeyCode::Enter => {
-                            state.mode = state.get_module_by_index().into();
-                            state.module_switcher_open = false;
-                            tracing::info!("[INPUT] mode switched to {}", state.mode);
-                        }
-                        KeyCode::Esc => {
-                            state.module_switcher_open = false;
-                            tracing::debug!("[INPUT] module switcher closed");
-                        }
-                        _ => {}
-                    }
+                if switcher::input::handle_key(&mut state, code, modifiers) {
                     draw(&mut terminal, &mut state, &last_key)?;
                     continue;
                 }
