@@ -1,5 +1,8 @@
 use super::{connector, grid, nodes};
-use crate::layout::{label_bounds, subtree_span, MIN_CHILD_SPACING_Y, MIN_NODE_GAP, SIBLING_SPACING_X};
+use crate::layout::{
+    label_bounds, subtree_span, MIN_CHILD_SPACING_Y, MIN_NODE_GAP, SIBLING_SPACING_X,
+    GEMX_HEADER_HEIGHT,
+};
 use crate::node::{NodeID, NodeMap};
 use crate::settings;
 use ratatui::layout::Rect;
@@ -143,4 +146,25 @@ pub fn validate_layout(nodes: &NodeMap, area: Rect) -> LayoutCheck {
         return LayoutCheck { status: LayoutStatus::Overlap, offenders: collisions };
     }
     LayoutCheck { status: LayoutStatus::Valid, offenders: Vec::new() }
+}
+
+/// Clamp node coordinates so all entries remain within the provided area.
+///
+/// When switching between auto and manual layout modes it's possible for nodes
+/// to inherit invalid positions (0,0) or fall outside the visible grid. This
+/// helper normalizes every node so manual mode always starts from sane bounds.
+pub fn clamp_nodes(nodes: &mut NodeMap, area: Rect) {
+    let min_x = area.x as i16 + 1;
+    let min_y = GEMX_HEADER_HEIGHT.max(area.y as i16 + 1);
+    let max_x = area.right() as i16 - 2;
+    let max_y = area.bottom() as i16 - 2;
+
+    for node in nodes.values_mut() {
+        if node.x == 0 && node.y == 0 {
+            node.x = min_x;
+            node.y = min_y;
+        }
+        node.x = node.x.clamp(min_x, max_x);
+        node.y = node.y.clamp(min_y, max_y);
+    }
 }
