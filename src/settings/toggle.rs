@@ -7,6 +7,9 @@ use crate::state::{
 };
 use crate::theme::fonts::FontStyle;
 use super::save_user_settings;
+
+// NOTE: When introducing a new visual feature, a corresponding toggle
+// must be defined here and surfaced in the Settings UI.
 use std::sync::atomic::{AtomicU8, Ordering};
 
 // Theme preset logic

@@ -6,6 +6,7 @@ use serde::{Deserialize, Serialize};
 use std::fs;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(default)]
 pub struct UserSettings {
     pub auto_arrange: bool,
     pub debug_input_mode: bool,
