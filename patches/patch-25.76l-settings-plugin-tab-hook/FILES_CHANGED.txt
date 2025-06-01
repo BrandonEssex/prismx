@@ -1,0 +1,3 @@
+- src/modules/settings/state.rs
+- src/plugins/registry.rs
+- src/plugins/settings.rs
