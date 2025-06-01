@@ -1,0 +1,64 @@
+name: PrismX Behavior Verification
+
+on:
+  push:
+    branches:
+      - 'patch/**'
+    paths:
+      - 'patches/patch-*/*'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'patches/patch-*/*'
+
+jobs:
+  behavior:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v3
+
+      - name: 🔍 Check for test_plan.sh
+        id: check
+        run: |
+          if ls patches/patch-*/test_plan.sh 1>/dev/null 2>&1; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "run=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: 🧪 Run behavior scripts
+        if: steps.check.outputs.run == 'true'
+        run: |
+          chmod +x bin/verify-*.sh
+          set -e
+          bin/verify-zen.sh
+          bin/verify-triage.sh
+          bin/verify-mindmap.sh
+          bin/verify-dock.sh
+          bin/verify-heartbeat.sh
+
+      - name: 🏷️ Label PR ✅
+        if: steps.check.outputs.run == 'true' && github.event_name == 'pull_request' && success()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          PR_NUMBER=${{ github.event.pull_request.number }}
+          LABEL='✅'
+          if ! gh label list --limit 100 | grep -q "^$LABEL"; then
+            gh label create "$LABEL" --color "0E8A16" --description "Behavior tests passed"
+          fi
+          gh pr edit "$PR_NUMBER" --add-label "$LABEL"
+
+      - name: 🏷️ Label PR ❌
+        if: steps.check.outputs.run == 'true' && github.event_name == 'pull_request' && failure()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          PR_NUMBER=${{ github.event.pull_request.number }}
+          LABEL='❌'
+          if ! gh label list --limit 100 | grep -q "^$LABEL"; then
+            gh label create "$LABEL" --color "B60205" --description "Behavior tests failed"
+          fi
+          gh pr edit "$PR_NUMBER" --add-label "$LABEL"
