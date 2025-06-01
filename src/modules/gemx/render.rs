@@ -217,8 +217,34 @@ pub fn render<B: Backend>(
         if debug && is_problem {
             text.push_str(" ⚠");
         }
-        let (disp, width) = clamp_display_label(text, zoom);
-        let lines = styled_lines(&disp);
+        let (disp, mut width) = clamp_display_label(text, zoom);
+        let mut lines = styled_lines(&disp);
+
+        if let Some(pid) = node.parent {
+            let is_last = nodes
+                .get(&pid)
+                .and_then(|p| p.children.last().copied())
+                == Some(node.id);
+            let color = p_color;
+            let prefix: Vec<Span> = vec![
+                Span::styled("│".to_string(), Style::default().fg(color)),
+                Span::raw(" "),
+                Span::styled(
+                    if is_last { "└─" } else { "├─" }.to_string(),
+                    Style::default().fg(color),
+                ),
+            ];
+            if let Some(first) = lines.first_mut() {
+                let mut new = prefix.clone();
+                new.extend(first.spans.clone());
+                *first = Line::from(new);
+            } else {
+                lines.push(Line::from(prefix.clone()));
+            }
+            width += 4;
+            println!("CONNECTOR_OK: child_id={} to parent_id={}", node.id, pid);
+        }
+
         display_map.insert(node.id, (lines, width));
     }
 
