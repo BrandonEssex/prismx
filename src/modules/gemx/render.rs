@@ -174,14 +174,14 @@ pub fn render<B: Backend>(
     let highlight = state.highlight_focus_branch || state.debug_input_mode;
     let mut focus_nodes: HashSet<NodeID> = HashSet::new();
     let mut focus_pairs: HashSet<(NodeID, NodeID)> = HashSet::new();
-    if highlight {
-        if let Some(mut current) = state.selected {
-            focus_nodes.insert(current);
-            while let Some(parent) = nodes.get(&current).and_then(|n| n.parent) {
+    if let Some(mut current) = state.selected {
+        focus_nodes.insert(current);
+        while let Some(parent) = nodes.get(&current).and_then(|n| n.parent) {
+            if highlight {
                 focus_pairs.insert((parent, current));
-                focus_nodes.insert(parent);
-                current = parent;
             }
+            focus_nodes.insert(parent);
+            current = parent;
         }
     }
     let age = state.focus_age().unwrap_or(0);
@@ -390,6 +390,27 @@ pub fn render<B: Backend>(
             }
             if state.drag_hover_target == Some(node.id) {
                 para = para.style(trail_style(highlight_sibling, tick, 1.0));
+            }
+            if state.dark_children {
+                let on_path = focus_set.contains(&node.id);
+                let child_of_focus = if let Some(sel) = state.selected {
+                    nodes
+                        .get(&sel)
+                        .map_or(false, |n| n.children.contains(&node.id))
+                } else {
+                    false
+                };
+                let parent_of_focus = if let Some(sel) = state.selected {
+                    nodes
+                        .get(&sel)
+                        .and_then(|n| n.parent)
+                        .map_or(false, |p| p == node.id)
+                } else {
+                    false
+                };
+                if !on_path && !child_of_focus && !parent_of_focus {
+                    para = para.style(Style::default().dim());
+                }
             }
                 if debug && is_problem {
                     para = para.style(Style::default().fg(Color::LightRed));

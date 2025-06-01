@@ -255,6 +255,7 @@ pub struct AppState {
     pub beam_shimmer: bool,
     pub ghost_link_trails: bool,
     pub highlight_focus_branch: bool,
+    pub dark_children: bool,
     pub layout_style: LayoutStyle,
     pub focus_changed_at: Option<Instant>,
     pub zoom_grid: bool,
@@ -434,6 +435,7 @@ impl Default for AppState {
             beam_shimmer: true,
             ghost_link_trails: true,
             highlight_focus_branch: false,
+            dark_children: false,
             layout_style: LayoutStyle::Compact,
             focus_changed_at: None,
             zoom_grid: false,
@@ -477,6 +479,7 @@ impl Default for AppState {
         state.beam_shimmer = config.beam_shimmer;
         state.ghost_link_trails = config.ghost_link_trails;
         state.highlight_focus_branch = config.highlight_focus_branch;
+        state.dark_children = config.dark_children;
         state.layout_style = config.layout_style;
         state.zoom_grid = config.zoom_grid;
         state.sticky_notes = config.sticky_notes;

@@ -120,6 +120,9 @@ fn toggle_focus_trail(s: &mut AppState) { s.highlight_focus_branch = !s.highligh
 fn ghost_trails_enabled(s: &AppState) -> bool { s.ghost_link_trails }
 fn toggle_ghost_trails(s: &mut AppState) { s.ghost_link_trails = !s.ghost_link_trails; save_user_settings(s); }
 
+fn dark_children_enabled(s: &AppState) -> bool { s.dark_children }
+fn toggle_dark_children(s: &mut AppState) { s.dark_children = !s.dark_children; save_user_settings(s); }
+
 fn is_zoom_grid(s: &AppState) -> bool { s.zoom_grid }
 fn toggle_zoom_grid(s: &mut AppState) { s.zoom_grid = !s.zoom_grid; save_user_settings(s); }
 
@@ -173,6 +176,7 @@ pub static SETTING_TOGGLES: &[SettingToggle] = &[
     SettingToggle { icon: "📐", label: "Layout Style", is_enabled: layout_compact, toggle: toggle_layout_style, category: SettingCategory::Visuals },
     SettingToggle { icon: "🌀", label: "Focus Trail", is_enabled: is_focus_trail, toggle: toggle_focus_trail, category: SettingCategory::Visuals },
     SettingToggle { icon: "👻", label: "Ghost Trails", is_enabled: ghost_trails_enabled, toggle: toggle_ghost_trails, category: SettingCategory::Visuals },
+    SettingToggle { icon: "🌒", label: "Dark Children", is_enabled: dark_children_enabled, toggle: toggle_dark_children, category: SettingCategory::Visuals },
     SettingToggle { icon: "🎨", label: "Theme Preset", is_enabled: |_| true, toggle: toggle_theme, category: SettingCategory::Visuals },
     SettingToggle { icon: "#", label: "Zoom Grid", is_enabled: is_zoom_grid, toggle: toggle_zoom_grid, category: SettingCategory::Visuals },
     SettingToggle { icon: "↔", label: "Spotlight Auto-Width", is_enabled: is_spotlight_auto, toggle: toggle_spotlight_auto, category: SettingCategory::Interaction },
