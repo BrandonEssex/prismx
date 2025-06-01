@@ -538,18 +538,20 @@ pub fn launch_ui() -> std::io::Result<()> {
                     }
 
                     KeyCode::Left if state.mode == "settings" => {
+                        let total_tabs = crate::settings::SETTING_CATEGORIES.len() + state.plugin_tabs.len();
                         if state.settings_selected_tab == 0 {
-                            state.settings_selected_tab = crate::settings::SETTING_CATEGORIES.len() - 1;
+                            state.settings_selected_tab = total_tabs.saturating_sub(1);
                         } else {
                             state.settings_selected_tab -= 1;
                         }
                         state.settings_focus_index = 0;
                     }
                     KeyCode::Right if state.mode == "settings" => {
-                        state.settings_selected_tab = (state.settings_selected_tab + 1) % crate::settings::SETTING_CATEGORIES.len();
+                        let total_tabs = crate::settings::SETTING_CATEGORIES.len() + state.plugin_tabs.len();
+                        state.settings_selected_tab = (state.settings_selected_tab + 1) % total_tabs;
                         state.settings_focus_index = 0;
                     }
-                    KeyCode::Up if state.mode == "settings" => {
+                    KeyCode::Up if state.mode == "settings" && state.settings_selected_tab < crate::settings::SETTING_CATEGORIES.len() => {
                         let toggles = crate::settings::toggles_for_category(crate::settings::SETTING_CATEGORIES[state.settings_selected_tab]);
                         if !toggles.is_empty() {
                             if state.settings_focus_index == 0 {
@@ -559,13 +561,13 @@ pub fn launch_ui() -> std::io::Result<()> {
                             }
                         }
                     }
-                    KeyCode::Down if state.mode == "settings" => {
+                    KeyCode::Down if state.mode == "settings" && state.settings_selected_tab < crate::settings::SETTING_CATEGORIES.len() => {
                         let toggles = crate::settings::toggles_for_category(crate::settings::SETTING_CATEGORIES[state.settings_selected_tab]);
                         if !toggles.is_empty() {
                             state.settings_focus_index = (state.settings_focus_index + 1) % toggles.len();
                         }
                     }
-                    KeyCode::Enter | KeyCode::Char(' ') if state.mode == "settings" => {
+                    KeyCode::Enter | KeyCode::Char(' ') if state.mode == "settings" && state.settings_selected_tab < crate::settings::SETTING_CATEGORIES.len() => {
                         let toggles = crate::settings::toggles_for_category(crate::settings::SETTING_CATEGORIES[state.settings_selected_tab]);
                         if !toggles.is_empty() {
                             let global_idx = toggles[state.settings_focus_index % toggles.len()].0;
@@ -682,7 +684,7 @@ pub fn launch_ui() -> std::io::Result<()> {
                                     break;
                                 }
                             }
-                            if !handled && state.mode == "settings" {
+                            if !handled && state.mode == "settings" && state.settings_selected_tab < crate::settings::SETTING_CATEGORIES.len() {
                                 for (rect, idx) in state.settings_toggle_bounds.iter() {
                                     if rect_contains(*rect, me.column, me.row) {
                                         state.settings_focus_index = *idx;

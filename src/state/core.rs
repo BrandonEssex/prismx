@@ -203,6 +203,7 @@ pub struct AppState {
     pub zoom_preview_last: Option<Instant>,
     pub plugin_host: PluginHost,
     pub loaded_plugins: Vec<loader::LoadedPlugin>,
+    pub plugin_tabs: Vec<crate::plugins::settings::PluginSettingsTab>,
     pub plugin_favorites: Vec<FavoriteEntry>,
     pub favorite_dock_limit: usize,
     pub favorite_dock_layout: DockLayout,
@@ -380,6 +381,7 @@ impl Default for AppState {
             zoom_preview_last: None,
             plugin_host: PluginHost::new(),
             loaded_plugins: Vec::new(),
+            plugin_tabs: Vec::new(),
             plugin_favorites: Vec::new(),
             favorite_dock_limit: 3,
             favorite_dock_layout: DockLayout::Horizontal,
@@ -504,6 +506,9 @@ impl Default for AppState {
             #[cfg(not(feature = "std"))]
             { Vec::new() }
         };
+
+        // Retrieve any plugin-defined settings tabs registered during plugin initialization
+        state.plugin_tabs = crate::plugins::registry::plugin_tabs();
 
         state.scroll_target_x = state.scroll_x;
         state.scroll_target_y = state.scroll_y;
