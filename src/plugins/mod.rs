@@ -5,6 +5,7 @@ pub mod state;
 pub mod countdown;
 pub mod pomodoro;
 pub mod api;
+pub mod settings;
 
 use ratatui::{backend::CrosstermBackend, layout::Rect, Frame};
 use std::io::Stdout;

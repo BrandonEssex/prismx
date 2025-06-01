@@ -2,6 +2,8 @@ use once_cell::sync::OnceCell;
 use serde::Deserialize;
 use std::{fs, path::Path, sync::Mutex};
 
+use super::settings::{self, PluginSettingsTab};
+
 #[derive(Debug, Deserialize, Clone)]
 pub struct PluginInfo {
     pub name: String,
@@ -52,4 +54,9 @@ pub fn module_entries() -> Vec<(String, String)> {
         .into_iter()
         .map(|e| (e.icon.unwrap_or_else(|| "🔌".to_string()), e.name))
         .collect()
+}
+
+/// Retrieve all plugin-defined settings tabs.
+pub fn plugin_tabs() -> Vec<PluginSettingsTab> {
+    settings::drain_tabs()
 }

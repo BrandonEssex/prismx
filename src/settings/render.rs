@@ -13,17 +13,34 @@ use super::{
     layout::settings_area,
     toggle::{toggles_for_category, SettingCategory, SETTING_CATEGORIES},
 };
+use crate::plugins::settings::PluginSettingsTab;
 use crate::state::{ShortcutOverlayMode, HeartbeatMode, LayoutStyle};
 use crate::theme::previews::preview_line;
 
 pub fn render_settings<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut AppState) {
     let theme = ThemeConfig::load();
-    let category = SETTING_CATEGORIES[state.settings_selected_tab % SETTING_CATEGORIES.len()];
-    let toggles = toggles_for_category(category);
+    let system_tabs = SETTING_CATEGORIES.len();
+    let total_tabs = system_tabs + state.plugin_tabs.len();
+    let selected = state.settings_selected_tab % total_tabs;
+
+    let (category, toggles) = if selected < system_tabs {
+        let cat = SETTING_CATEGORIES[selected];
+        (Some(cat), toggles_for_category(cat))
+    } else {
+        (None, Vec::new())
+    };
     let mut lines: Vec<Line> = Vec::new();
     let header_style = Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD);
-    lines.push(Line::from(Span::styled(category.name(), header_style)));
-    lines.push(Line::default());
+    if let Some(cat) = category {
+        lines.push(Line::from(Span::styled(cat.name(), header_style)));
+        lines.push(Line::default());
+    } else {
+        if let Some(tab) = state.plugin_tabs.get_mut(selected - system_tabs) {
+            lines.push(Line::from(Span::styled(tab.title.clone(), header_style)));
+            lines.push(Line::default());
+            (tab.render_fn)();
+        }
+    }
     let mut toggle_lines: Vec<usize> = Vec::new();
 
     for (display_idx, (_idx, t)) in toggles.iter().enumerate() {
@@ -104,6 +121,7 @@ pub fn render_settings<B: Backend>(f: &mut Frame<B>, area: Rect, state: &mut App
         let tab_titles: Vec<Line> = SETTING_CATEGORIES
             .iter()
             .map(|c| Line::from(c.name()))
+            .chain(state.plugin_tabs.iter().map(|t| Line::from(t.title.as_str())))
             .collect();
         let tabs = Tabs::new(tab_titles)
             .select(state.settings_selected_tab)
