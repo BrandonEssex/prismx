@@ -27,6 +27,7 @@ use crate::render::{
 use layout::rect_contains;
 use crate::screen::render_gemx;
 use crate::render::render_settings;
+use crate::settings::{SETTING_CATEGORIES, toggles_for_category};
 use crate::ui::components::plugin::render_plugin;
 use crate::ui::components::logs::render_logs;
 use crate::ui::input;
@@ -536,19 +537,40 @@ pub fn launch_ui() -> std::io::Result<()> {
                         state.toggle_snap_grid();
                     }
 
-                    KeyCode::Up if state.mode == "settings" => {
-                        if state.settings_focus_index > 0 {
-                            state.settings_focus_index -= 1;
+                    KeyCode::Left if state.mode == "settings" => {
+                        if state.settings_selected_tab == 0 {
+                            state.settings_selected_tab = crate::settings::SETTING_CATEGORIES.len() - 1;
                         } else {
-                            state.settings_focus_index = crate::settings::settings_len() - 1;
+                            state.settings_selected_tab -= 1;
+                        }
+                        state.settings_focus_index = 0;
+                    }
+                    KeyCode::Right if state.mode == "settings" => {
+                        state.settings_selected_tab = (state.settings_selected_tab + 1) % crate::settings::SETTING_CATEGORIES.len();
+                        state.settings_focus_index = 0;
+                    }
+                    KeyCode::Up if state.mode == "settings" => {
+                        let toggles = crate::settings::toggles_for_category(crate::settings::SETTING_CATEGORIES[state.settings_selected_tab]);
+                        if !toggles.is_empty() {
+                            if state.settings_focus_index == 0 {
+                                state.settings_focus_index = toggles.len() - 1;
+                            } else {
+                                state.settings_focus_index -= 1;
+                            }
                         }
                     }
                     KeyCode::Down if state.mode == "settings" => {
-                        state.settings_focus_index = (state.settings_focus_index + 1) % crate::settings::settings_len();
+                        let toggles = crate::settings::toggles_for_category(crate::settings::SETTING_CATEGORIES[state.settings_selected_tab]);
+                        if !toggles.is_empty() {
+                            state.settings_focus_index = (state.settings_focus_index + 1) % toggles.len();
+                        }
                     }
                     KeyCode::Enter | KeyCode::Char(' ') if state.mode == "settings" => {
-                        let idx = state.settings_focus_index % crate::settings::settings_len();
-                        (crate::settings::SETTING_TOGGLES[idx].toggle)(&mut state);
+                        let toggles = crate::settings::toggles_for_category(crate::settings::SETTING_CATEGORIES[state.settings_selected_tab]);
+                        if !toggles.is_empty() {
+                            let global_idx = toggles[state.settings_focus_index % toggles.len()].0;
+                            (crate::settings::SETTING_TOGGLES[global_idx].toggle)(&mut state);
+                        }
                     }
 
                     KeyCode::Up if state.mode == "plugin" && !state.show_plugin_preview => {
@@ -664,7 +686,11 @@ pub fn launch_ui() -> std::io::Result<()> {
                                 for (rect, idx) in state.settings_toggle_bounds.iter() {
                                     if rect_contains(*rect, me.column, me.row) {
                                         state.settings_focus_index = *idx;
-                                        (crate::settings::SETTING_TOGGLES[*idx].toggle)(&mut state);
+                                        let toggles = crate::settings::toggles_for_category(crate::settings::SETTING_CATEGORIES[state.settings_selected_tab]);
+                                        if !toggles.is_empty() {
+                                            let global_idx = toggles[*idx].0;
+                                            (crate::settings::SETTING_TOGGLES[global_idx].toggle)(&mut state);
+                                        }
                                         handled = true;
                                         break;
                                     }

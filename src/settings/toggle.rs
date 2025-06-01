@@ -170,3 +170,18 @@ pub static SETTING_TOGGLES: &[SettingToggle] = &[
 pub fn settings_len() -> usize {
     SETTING_TOGGLES.len()
 }
+
+pub const SETTING_CATEGORIES: [SettingCategory; 4] = [
+    SettingCategory::Visuals,
+    SettingCategory::Interaction,
+    SettingCategory::Modules,
+    SettingCategory::UX,
+];
+
+pub fn toggles_for_category(cat: SettingCategory) -> Vec<(usize, &'static SettingToggle)> {
+    SETTING_TOGGLES
+        .iter()
+        .enumerate()
+        .filter(|(_, t)| t.category == cat)
+        .collect()
+}
