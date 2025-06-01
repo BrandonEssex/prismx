@@ -316,13 +316,16 @@ pub fn render_compose<B: Backend>(f: &mut Frame<B>, area: Rect, state: &AppState
     // Preserve manual scroll offset when reviewing history
 
     if state.zen_view_mode == ZenViewMode::Write {
-        let chunks = Layout::default()
-            .direction(Direction::Vertical)
-            .constraints([Constraint::Percentage(75), Constraint::Percentage(25)].as_ref())
-            .split(area);
-
-        render_history(f, chunks[0], state);
-        render_input(f, chunks[1], state, tick);
+        // Keep the input bar anchored to the bottom of the viewport
+        // while allowing history to scroll above it.
+        let history_area = Rect {
+            x: area.x,
+            y: area.y,
+            width: area.width,
+            height: area.height.saturating_sub(2),
+        };
+        render_history(f, history_area, state);
+        render_input(f, area, state, tick);
     } else {
         render_history(f, area, state);
     }
