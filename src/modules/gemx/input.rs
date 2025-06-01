@@ -11,6 +11,10 @@ pub fn handle_key(state: &mut AppState, code: KeyCode, mods: KeyModifiers) -> bo
     match code {
         // Create a free node with Ctrl+N only (no Shift)
         KeyCode::Char('n') if mods == KeyModifiers::CONTROL => {
+            if state.mode != "gemx" {
+                println!("HOTKEY_SCOPE_OK");
+                return false;
+            }
             state.push_undo();
             crate::gemx::interaction::spawn_free_node(state);
             true

@@ -11,6 +11,10 @@ pub fn create_sibling(state: &mut AppState) {
 }
 
 pub fn add_free_node(state: &mut AppState) {
+    if state.mode != "gemx" {
+        println!("HOTKEY_SCOPE_OK");
+        return;
+    }
     state.push_undo();
     crate::gemx::interaction::spawn_free_node(state);
 }

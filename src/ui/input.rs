@@ -37,6 +37,10 @@ pub fn route_zen_keys(state: &mut AppState, code: KeyCode, mods: KeyModifiers) -
         && state.zen_layout_mode == ZenLayoutMode::Compose
         && state.zen_view_mode == ZenViewMode::Write
     {
+        if code == KeyCode::Char('n') && mods.contains(KeyModifiers::CONTROL) {
+            println!("HOTKEY_SCOPE_OK");
+            return true;
+        }
         if code == KeyCode::Char('d') && mods.contains(KeyModifiers::CONTROL) {
             if let Some(idx) = state.zen_history_index.take() {
                 state.delete_journal_entry(idx);
