@@ -282,3 +282,20 @@ pub fn draw_curved_short<B: Backend>(
     draw_line(f, (mid_x, sy), (mid_x, ey));
     draw_line(f, (mid_x, ey), (ex, ey));
 }
+
+/// Draw a connector from a parent point to a child point using an
+/// L-shaped path through their midpoint.
+pub fn draw_midpoint_connector<B: Backend>(
+    f: &mut Frame<B>,
+    start: (i16, i16),
+    end: (i16, i16),
+    color: Color,
+) {
+    let (sx, sy) = start;
+    let (ex, ey) = end;
+
+    let mid_y = (sy + ey) / 2;
+    draw_line_colored(f, (sx, sy), (sx, mid_y), color);
+    draw_line_colored(f, (sx, mid_y), (ex, mid_y), color);
+    draw_line_colored(f, (ex, mid_y), (ex, ey), color);
+}

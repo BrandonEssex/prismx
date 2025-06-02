@@ -15,6 +15,7 @@ use crate::ui::lines::{
     draw_line,
     draw_dashed_line,
     draw_curved_short,
+    draw_midpoint_connector,
     draw_arrow,
 };
 use crate::theme::beam_color::{parent_line_color, sibling_line_color};
@@ -242,13 +243,36 @@ pub fn render<B: Backend>(
                 lines.push(Line::from(prefix.clone()));
             }
             width += 4;
-            println!("CONNECTOR_OK: child_id={} to parent_id={}", node.id, pid);
         }
 
         display_map.insert(node.id, (lines, width));
     }
 
     let lane_offset = if state.mindmap_lanes { 2 } else { 0 };
+
+    // connector lines between each parent and child node
+    let connector_color = Color::DarkGray;
+    for node in nodes.values() {
+        if let Some(pid) = node.parent {
+            if let (Some(parent), Some((_, pw)), Some((_, cw))) = (
+                nodes.get(&pid),
+                display_map.get(&pid),
+                display_map.get(&node.id),
+            ) {
+                let start_x = scale_x(parent.x + (*pw as i16) / 2 + lane_offset);
+                let start_y = scale_y(parent.y);
+                let end_x = scale_x(node.x + (*cw as i16) / 2 + lane_offset);
+                let end_y = scale_y(node.y);
+                draw_midpoint_connector(
+                    f,
+                    (start_x, start_y),
+                    (end_x, end_y),
+                    connector_color,
+                );
+            }
+        }
+    }
+
     for node in nodes.values() {
         if node.children.is_empty() {
             continue;
