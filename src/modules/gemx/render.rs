@@ -250,51 +250,51 @@ pub fn render<B: Backend>(
 
     let lane_offset = if state.mindmap_lanes { 2 } else { 0 };
 
-    // Draw connector lines between parent and child with shared vertical stubs
-    let connector_color = Color::DarkGray;
-    for node in nodes.values() {
-        if let Some(pid) = node.parent {
-            if let (Some(parent), Some((_, pw)), Some((_, cw))) = (
-                nodes.get(&pid),
-                display_map.get(&pid),
-                display_map.get(&node.id),
-            ) {
-                let start_x = scale_x(parent.x + (*pw as i16) / 2 + lane_offset);
-                let start_y = scale_y(parent.y);
-                let end_x = scale_x(node.x + (*cw as i16) / 2 + lane_offset);
-                let end_y = scale_y(node.y);
+        // Draw connector lines between parent and child with shared vertical stubs
+        let connector_color = Color::DarkGray;
+        for node in nodes.values() {
+            if let Some(pid) = node.parent {
+                if let (Some(parent), Some((_, pw)), Some((_, cw))) = (
+                    nodes.get(&pid),
+                    display_map.get(&pid),
+                    display_map.get(&node.id),
+                ) {
+                    let start_x = scale_x(parent.x + (*pw as i16) / 2 + lane_offset);
+                    let start_y = scale_y(parent.y);
+                    let end_x = scale_x(node.x + (*cw as i16) / 2 + lane_offset);
+                    let end_y = scale_y(node.y);
 
-                // L-shaped elbow connector from parent to child
-                draw_midpoint_connector(f, (start_x, start_y), (end_x, end_y), connector_color);
+                    // L-shaped elbow connector from parent to child
+                    draw_midpoint_connector(f, (start_x, start_y), (end_x, end_y), connector_color);
+                }
             }
         }
-    }
 
-    // Add vertical connector lines shared across all children of each node
-    for node in nodes.values() {
-        if node.children.len() < 2 {
-            continue;
+        // Add vertical connector lines shared across all children of each node
+        for node in nodes.values() {
+            if node.children.len() < 2 {
+                continue;
+            }
+
+            let width_self = display_map.get(&node.id).map(|d| d.1 as i16).unwrap_or(0);
+            let px = scale_x(node.x + width_self / 2 + lane_offset);
+
+            let mut child_ys: Vec<i16> = node
+                .children
+                .iter()
+                .filter_map(|cid| nodes.get(cid))
+                .map(|c| scale_y(c.y))
+                .collect();
+
+            if child_ys.len() < 2 {
+                continue;
+            }
+
+            let min_y = *child_ys.iter().min().unwrap();
+            let max_y = *child_ys.iter().max().unwrap();
+
+            draw_line_colored(f, (px, min_y), (px, max_y), connector_color);
         }
-
-        let width_self = display_map.get(&node.id).map(|d| d.1 as i16).unwrap_or(0);
-        let px = scale_x(node.x + width_self / 2 + lane_offset);
-
-        let mut child_ys: Vec<i16> = node
-            .children
-            .iter()
-            .filter_map(|cid| nodes.get(cid))
-            .map(|c| scale_y(c.y))
-            .collect();
-
-        if child_ys.len() < 2 {
-            continue;
-        }
-
-        let min_y = *child_ys.iter().min().unwrap();
-        let max_y = *child_ys.iter().max().unwrap();
-
-        draw_line_colored(f, (px, min_y), (px, max_y), connector_color);
-    }
 
 
             // collect child centers
