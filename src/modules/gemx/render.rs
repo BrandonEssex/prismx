@@ -250,7 +250,7 @@ pub fn render<B: Backend>(
 
     let lane_offset = if state.mindmap_lanes { 2 } else { 0 };
 
-    // connector lines between each parent and child node
+    // Draw connector lines between parent and child with shared vertical stubs
     let connector_color = Color::DarkGray;
     for node in nodes.values() {
         if let Some(pid) = node.parent {
@@ -263,44 +263,39 @@ pub fn render<B: Backend>(
                 let start_y = scale_y(parent.y);
                 let end_x = scale_x(node.x + (*cw as i16) / 2 + lane_offset);
                 let end_y = scale_y(node.y);
-                draw_midpoint_connector(
-                    f,
-                    (start_x, start_y),
-                    (end_x, end_y),
-                    connector_color,
-                );
+
+                // L-shaped elbow connector from parent to child
+                draw_midpoint_connector(f, (start_x, start_y), (end_x, end_y), connector_color);
             }
         }
     }
 
+    // Add vertical connector lines shared across all children of each node
     for node in nodes.values() {
-        if node.children.is_empty() {
+        if node.children.len() < 2 {
             continue;
         }
 
         let width_self = display_map.get(&node.id).map(|d| d.1 as i16).unwrap_or(0);
         let px = scale_x(node.x + width_self / 2 + lane_offset);
-        let beam_y = scale_y(node.y + (spacing_y - 1).max(1));
-        let on_path = focus_nodes.contains(&node.id);
 
-            // vertical beam from parent to sibling bar
-            let parent_start = (px, scale_y(node.y + 1));
-            let parent_end = (px, beam_y);
-            let pcol = if on_path { highlight_parent } else { p_color };
-            let pshimmer = state.beam_shimmer || on_path;
-            if pshimmer {
-                draw_vertical_fade(f, parent_start, parent_end, tick, pcol);
-            } else {
-                draw_line(f, parent_start, parent_end);
-            }
-            draw_arrow(
-                f,
-                parent_end,
-                tick,
-                pcol,
-                DOWN_ARROW,
-                pshimmer,
-            );
+        let mut child_ys: Vec<i16> = node
+            .children
+            .iter()
+            .filter_map(|cid| nodes.get(cid))
+            .map(|c| scale_y(c.y))
+            .collect();
+
+        if child_ys.len() < 2 {
+            continue;
+        }
+
+        let min_y = *child_ys.iter().min().unwrap();
+        let max_y = *child_ys.iter().max().unwrap();
+
+        draw_line_colored(f, (px, min_y), (px, max_y), connector_color);
+    }
+
 
             // collect child centers
         let mut child_centers = Vec::new();
