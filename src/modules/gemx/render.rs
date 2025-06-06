@@ -380,7 +380,7 @@ pub fn render<B: Backend>(
                     );
                 }
             }
-        }
+        
     
     // Ghost trails showing multiple inbound references
     if state.ghost_link_trails {
