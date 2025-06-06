@@ -17,6 +17,7 @@ use crate::ui::lines::{
     draw_curved_short,
     draw_midpoint_connector,
     draw_arrow,
+    draw_line_colored,
 };
 use crate::theme::beam_color::{parent_line_color, sibling_line_color};
 use crate::beam_color::BeamColor;
@@ -65,7 +66,7 @@ fn clamp_display_label(text: String, zoom: f32) -> (String, usize) {
 }
 
 fn styled_label_line(line: &str) -> Line<'static> {
-    let re = Regex::new(r"^([^0-9]*?)(\d+)(.*)$").unwrap();
+    let re = Regex::new(r"^([^0-9]*?)(\\d+)(.*)$").unwrap();
     if let Some(cap) = re.captures(line) {
         let prefix = cap.get(1).map(|m| m.as_str()).unwrap_or("");
         let number = cap.get(2).map(|m| m.as_str()).unwrap_or("");
@@ -95,7 +96,6 @@ fn styled_label_line(line: &str) -> Line<'static> {
 fn styled_lines(text: &str) -> Vec<Line<'static>> {
     text.lines().map(styled_label_line).collect()
 }
-
 /// Render a simple mindmap using the vertical layout engine.
 pub fn render<B: Backend>(
     f: &mut Frame<B>,
@@ -117,7 +117,9 @@ pub fn render<B: Backend>(
         .title(Span::styled("GemX Mindmap", title_style.add_modifier(Modifier::BOLD)))
         .title_alignment(Alignment::Center);
     f.render_widget(block, area);
+
     let spacing_y = clamp_child_spacing(state, roots, area.height as i16);
+
     let mut focus_set: HashSet<NodeID> = HashSet::new();
     if let Some(mut current) = state.selected {
         focus_set.insert(current);
@@ -149,12 +151,12 @@ pub fn render<B: Backend>(
     }
 
     let zoom = state.zoom_scale as f32;
-
     let tick = (std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
         .unwrap_or_default()
         .as_millis()
         / 300) as u64;
+
     let theme = BeamColor::Prism;
     let p_color = parent_line_color(theme);
     let s_color = sibling_line_color(theme);
@@ -162,7 +164,6 @@ pub fn render<B: Backend>(
     cursor_style.border_color = p_color;
     cursor_style.status_color = s_color;
 
-    // Determine scroll offset if content exceeds available height
     let max_y = nodes.values().map(|n| n.y).max().unwrap_or(0);
     let mut scroll = 0i16;
     if max_y >= area.height as i16 {
@@ -171,7 +172,6 @@ pub fn render<B: Backend>(
 
     let scale_x = |val: i16| -> i16 { area.x as i16 + ((val as f32) * zoom).round() as i16 };
     let scale_y = |val: i16| -> i16 { area.y as i16 + (((val - scroll) as f32) * zoom).round() as i16 };
-
     let highlight = state.highlight_focus_branch || state.debug_input_mode;
     let mut focus_nodes: HashSet<NodeID> = HashSet::new();
     let mut focus_pairs: HashSet<(NodeID, NodeID)> = HashSet::new();
@@ -185,6 +185,7 @@ pub fn render<B: Backend>(
             current = parent;
         }
     }
+
     let age = state.focus_age().unwrap_or(0);
     let fade = (age.min(600) as f32) / 600.0;
     let highlight_parent = scale_color(bright_color(p_color), fade);
@@ -197,17 +198,13 @@ pub fn render<B: Backend>(
         } else {
             node.label.clone()
         };
-        let is_problem = problem_nodes.contains(&node.id);
+
         if state.hierarchy_icons {
             let icon = if node.parent.is_none() {
                 ROOT_NODE
             } else {
                 let parent_id = node.parent.unwrap();
-                if nodes
-                    .get(&parent_id)
-                    .and_then(|p| p.children.first().copied())
-                    == Some(node.id)
-                {
+                if nodes.get(&parent_id).and_then(|p| p.children.first().copied()) == Some(node.id) {
                     CHILD_NODE
                 } else {
                     SIBLING_NODE
@@ -215,9 +212,11 @@ pub fn render<B: Backend>(
             };
             text = format!("{} {}", icon, text);
         }
-        if debug && is_problem {
+
+        if debug && problem_nodes.contains(&node.id) {
             text.push_str(" ⚠");
         }
+
         let (disp, mut width) = clamp_display_label(text, zoom);
         let mut lines = styled_lines(&disp);
 
@@ -226,13 +225,12 @@ pub fn render<B: Backend>(
                 .get(&pid)
                 .and_then(|p| p.children.last().copied())
                 == Some(node.id);
-            let color = p_color;
             let prefix: Vec<Span> = vec![
-                Span::styled("│".to_string(), Style::default().fg(color)),
+                Span::styled("│".to_string(), Style::default().fg(p_color)),
                 Span::raw(" "),
                 Span::styled(
                     if is_last { "└─" } else { "├─" }.to_string(),
-                    Style::default().fg(color),
+                    Style::default().fg(p_color),
                 ),
             ];
             if let Some(first) = lines.first_mut() {
@@ -240,7 +238,7 @@ pub fn render<B: Backend>(
                 new.extend(first.spans.clone());
                 *first = Line::from(new);
             } else {
-                lines.push(Line::from(prefix.clone()));
+                lines.push(Line::from(prefix));
             }
             width += 4;
         }
@@ -249,54 +247,45 @@ pub fn render<B: Backend>(
     }
 
     let lane_offset = if state.mindmap_lanes { 2 } else { 0 };
-
     let connector_color = Color::DarkGray;
-    for node in nodes.values() {
-        if let Some(pid) = node.parent {
-            if let (Some(parent), Some((_, pw)), Some((_, cw))) = (
-                nodes.get(&pid),
-                display_map.get(&pid),
-                display_map.get(&node.id),
-            ) {
-                let start_x = scale_x(parent.x + (*pw as i16) / 2 + lane_offset);
-                let start_y = scale_y(parent.y);
-                let end_x = scale_x(node.x + (*cw as i16) / 2 + lane_offset);
-                let end_y = scale_y(node.y);
 
-                // 🔧 L-shaped connector (same as before)
-                draw_midpoint_connector(f, (start_x, start_y), (end_x, end_y), connector_color);
-            }
-        }
-    }
-
-    // 🆕 Draw vertical connectors for all parents with multiple children
     for node in nodes.values() {
-        if node.children.len() < 2 {
+        if node.children.is_empty() {
             continue;
         }
 
         let width_self = display_map.get(&node.id).map(|d| d.1 as i16).unwrap_or(0);
         let px = scale_x(node.x + width_self / 2 + lane_offset);
+        let beam_y = scale_y(node.y + (spacing_y - 1).max(1));
+        let on_path = focus_nodes.contains(&node.id);
 
-        let mut child_ys: Vec<i16> = node
-            .children
-            .iter()
-            .filter_map(|cid| nodes.get(cid))
-            .map(|c| scale_y(c.y))
-            .collect();
+        // Vertical beam from node to beam bar
+        let parent_start = (px, scale_y(node.y + 1));
+        let parent_end = (px, beam_y);
+        let pcol = if on_path { highlight_parent } else { p_color };
+        let pshimmer = state.beam_shimmer || on_path;
+        if pshimmer {
+            draw_vertical_fade(f, parent_start, parent_end, tick, pcol);
+        } else {
+            draw_line(f, parent_start, parent_end);
+        }
+        draw_arrow(f, parent_end, tick, pcol, DOWN_ARROW, pshimmer);
 
-        if child_ys.len() < 2 {
-            continue;
+        // Vertical connector between all children
+        if node.children.len() > 1 {
+            let child_ys: Vec<i16> = node.children
+                .iter()
+                .filter_map(|cid| nodes.get(cid))
+                .map(|c| scale_y(c.y))
+                .collect();
+
+            let min_y = *child_ys.iter().min().unwrap();
+            let max_y = *child_ys.iter().max().unwrap();
+
+            draw_line_colored(f, (px, min_y), (px, max_y), connector_color);
         }
 
-        let min_y = *child_ys.iter().min().unwrap();
-        let max_y = *child_ys.iter().max().unwrap();
-
-        // 🔧 Shared vertical line connecting all children under this parent
-        draw_line_colored(f, (px, min_y), (px, max_y), connector_color);
-    }
-
-            // collect child centers
+        // Horizontal beam and drops
         let mut child_centers = Vec::new();
         for cid in &node.children {
             if let Some(child) = nodes.get(cid) {
@@ -304,175 +293,109 @@ pub fn render<B: Backend>(
                 child_centers.push((cid, scale_x(child.x + w / 2 + lane_offset)));
             }
         }
-            if child_centers.is_empty() {
-                continue;
-            }
-            let min_x = child_centers.iter().map(|c| c.1).min().unwrap();
-            let max_x = child_centers.iter().map(|c| c.1).max().unwrap();
 
-            // horizontal connector across siblings
-            let scol = if on_path { highlight_sibling } else { s_color };
-            let sshimmer = state.beam_shimmer || on_path;
-            if sshimmer {
-                draw_horizontal_shimmer(
-                    f,
-                    (min_x, beam_y),
-                    (max_x, beam_y),
-                    tick,
-                    scol,
-                );
+        if child_centers.is_empty() {
+            continue;
+        }
+
+        let min_x = child_centers.iter().map(|c| c.1).min().unwrap();
+        let max_x = child_centers.iter().map(|c| c.1).max().unwrap();
+        let scol = if on_path { highlight_sibling } else { s_color };
+        let sshimmer = state.beam_shimmer || on_path;
+
+        if sshimmer {
+            draw_horizontal_shimmer(f, (min_x, beam_y), (max_x, beam_y), tick, scol);
+        } else {
+            let hdist = (max_x - min_x).abs();
+            if hdist > LONG_JUMP {
+                draw_dashed_line(f, (min_x, beam_y), (max_x, beam_y));
             } else {
-                let hdist = (max_x - min_x).abs();
-                if hdist > LONG_JUMP {
-                    draw_dashed_line(f, (min_x, beam_y), (max_x, beam_y));
-                } else {
-                    draw_line(
-                        f,
-                        (min_x, beam_y),
-                        (max_x, beam_y),
-                    );
-                }
+                draw_line(f, (min_x, beam_y), (max_x, beam_y));
             }
+        }
 
-            // arrow across siblings
-            let mid = ((min_x + max_x) / 2) as i16;
-            draw_arrow(
-                f,
-                (mid, beam_y),
-                tick,
-                scol,
-                RIGHT_ARROW,
-                sshimmer,
-            );
+        let mid = (min_x + max_x) / 2;
+        draw_arrow(f, (mid, beam_y), tick, scol, RIGHT_ARROW, sshimmer);
 
-            // vertical drop to each child
-            for (cid, cx) in child_centers {
-                if let Some(child) = nodes.get(cid) {
-                    let start = (cx, beam_y);
-                    let end = (cx, scale_y(child.y));
-                    let is_ghost = child.label.starts_with("node ");
-                    let child_on_path = focus_pairs.contains(&(node.id, *cid));
-                    let ccol = if child_on_path { highlight_parent } else { p_color };
-                    let cshimmer = state.beam_shimmer || child_on_path;
-                    if cshimmer {
-                        if is_ghost {
-                            draw_ghost_line(f, start, end, tick, ccol);
-                        } else {
-                            draw_vertical_fade(f, start, end, tick, ccol);
-                        }
+        for (cid, cx) in child_centers {
+            if let Some(child) = nodes.get(cid) {
+                let start = (cx, beam_y);
+                let end = (cx, scale_y(child.y));
+                let is_ghost = child.label.starts_with("node ");
+                let child_on_path = focus_pairs.contains(&(node.id, *cid));
+                let ccol = if child_on_path { highlight_parent } else { p_color };
+                let cshimmer = state.beam_shimmer || child_on_path;
+                if cshimmer {
+                    if is_ghost {
+                        draw_ghost_line(f, start, end, tick, ccol);
                     } else {
-                        let vdist = (end.1 - start.1).abs();
-                        if vdist <= 1 {
-                            draw_curved_short(f, start, (end.0, end.1 + 1));
-                        } else if vdist > LONG_JUMP {
-                            draw_dashed_line(f, start, end);
-                        } else {
-                            draw_line(f, start, end);
-                        }
+                        draw_vertical_fade(f, start, end, tick, ccol);
                     }
-                    draw_arrow(
-                        f,
-                        end,
-                        tick,
-                        ccol,
-                        DOWN_ARROW,
-                        cshimmer,
-                    );
+                } else {
+                    let vdist = (end.1 - start.1).abs();
+                    if vdist <= 1 {
+                        draw_curved_short(f, start, (end.0, end.1 + 1));
+                    } else if vdist > LONG_JUMP {
+                        draw_dashed_line(f, start, end);
+                    } else {
+                        draw_line(f, start, end);
+                    }
                 }
-            }
-        
-    
-    // Ghost trails showing multiple inbound references
-    if state.ghost_link_trails {
-        let refs = state.inbound_links();
-        for (target, sources) in refs {
-            if sources.len() < 2 { continue; }
-            for src in sources {
-                if nodes.get(&target).and_then(|n| n.parent) == Some(src) { continue; }
-                if let (Some(s), Some(t)) = (nodes.get(&src), nodes.get(&target)) {
-                    let sa = display_map.get(&src).map(|d| d.1 as i16).unwrap_or(0);
-                    let ta = display_map.get(&target).map(|d| d.1 as i16).unwrap_or(0);
-                    let ax = scale_x(s.x + sa / 2);
-                    let ay = scale_y(s.y);
-                    let bx = scale_x(t.x + ta / 2);
-                    let by = scale_y(t.y);
-                    draw_ghost_line(f, (ax, ay), (bx, by), tick, p_color);
-                }
+                draw_arrow(f, end, tick, ccol, DOWN_ARROW, cshimmer);
             }
         }
     }
 
-    // Preview reparent link if dragging over a potential parent
-    if let (Some(src), Some(tgt)) = (state.dragging, state.drag_hover_target) {
-        if let (Some(s), Some(t)) = (nodes.get(&src), nodes.get(&tgt)) {
-            let sw = display_map.get(&src).map(|d| d.1 as i16).unwrap_or(0);
-            let tw = display_map.get(&tgt).map(|d| d.1 as i16).unwrap_or(0);
-            let ax = scale_x(s.x + sw / 2);
-            let ay = scale_y(s.y);
-            let bx = scale_x(t.x + tw / 2);
-            let by = scale_y(t.y);
-            draw_anchor_trail(f, (ax, ay), (bx, by), tick, p_color);
-        }
-    }
-
-    // Draw nodes
+    // Node rendering
     for node in nodes.values() {
         let x = scale_x(node.x);
         let y = scale_y(node.y);
-        if x >= 0 && y >= 0 && x < area.right() as i16 && y < area.bottom() as i16 {
-            let is_problem = problem_nodes.contains(&node.id);
-            if let Some((display, width_chars)) = display_map.get(&node.id) {
-                let width = ((*width_chars as f32) * zoom).ceil().max(1.0) as u16;
-                let height = display.len() as u16;
-                let rect = Rect::new(x as u16, y as u16, width, height.max(1));
-                let mut para = Paragraph::new(display.clone());
-                if NODE_WRAP_LABELS {
-                    para = para.wrap(Wrap { trim: false });
-                }
+        if x < 0 || y < 0 || x >= area.right() as i16 || y >= area.bottom() as i16 {
+            continue;
+        }
+
+        if let Some((display, width_chars)) = display_map.get(&node.id) {
+            let width = ((*width_chars as f32) * zoom).ceil().max(1.0) as u16;
+            let height = display.len() as u16;
+            let rect = Rect::new(x as u16, y as u16, width, height.max(1));
+            let mut para = Paragraph::new(display.clone());
+
+            if NODE_WRAP_LABELS {
+                para = para.wrap(Wrap { trim: false });
+            }
+
             if highlight && focus_nodes.contains(&node.id) {
                 para = para.style(trail_style(highlight_parent, tick, fade));
             }
+
             if state.drag_hover_target == Some(node.id) {
                 para = para.style(trail_style(highlight_sibling, tick, 1.0));
             }
+
             if state.dark_children {
                 let on_path = focus_set.contains(&node.id);
-                let child_of_focus = if let Some(sel) = state.selected {
-                    nodes
-                        .get(&sel)
-                        .map_or(false, |n| n.children.contains(&node.id))
-                } else {
-                    false
-                };
-                let parent_of_focus = if let Some(sel) = state.selected {
-                    nodes
-                        .get(&sel)
-                        .and_then(|n| n.parent)
-                        .map_or(false, |p| p == node.id)
-                } else {
-                    false
-                };
+                let child_of_focus = state.selected.map_or(false, |sel| {
+                    nodes.get(&sel).map_or(false, |n| n.children.contains(&node.id))
+                });
+                let parent_of_focus = state.selected.map_or(false, |sel| {
+                    nodes.get(&sel).and_then(|n| n.parent).map_or(false, |p| p == node.id)
+                });
                 if !on_path && !child_of_focus && !parent_of_focus {
                     para = para.style(Style::default().dim());
                 }
             }
-                if debug && is_problem {
-                    para = para.style(Style::default().fg(Color::LightRed));
-                }
-                f.render_widget(para, rect);
 
-                let show_hover = state.drag_hover_target == Some(node.id);
-                let show_focus = Some(node.id) == state.selected && age < 2000;
-                if show_hover || show_focus {
-                    render_node_tooltip(f, area, rect, &node.label);
-                }
+            f.render_widget(para, rect);
 
-                if node.label.starts_with("node ") {
-                    let kind = InsertCursorKind::Sibling;
-                    let cx = rect.x + rect.width;
-                    let cy = rect.y;
-                    render_insert_cursor(f, (cx, cy), tick, kind, &cursor_style);
-                }
+            if state.drag_hover_target == Some(node.id) || (state.selected == Some(node.id) && age < 2000) {
+                render_node_tooltip(f, area, rect, &node.label);
+            }
+
+            if node.label.starts_with("node ") {
+                let kind = InsertCursorKind::Sibling;
+                let cx = rect.x + rect.width;
+                let cy = rect.y;
+                render_insert_cursor(f, (cx, cy), tick, kind, &cursor_style);
             }
         }
     }
